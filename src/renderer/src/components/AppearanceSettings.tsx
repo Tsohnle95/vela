@@ -37,7 +37,7 @@ export function AppearanceSettings(): ReactNode {
             onClick={() => setTheme(option.id)}
           >
             <span
-              className="theme-preview"
+              className={`theme-preview theme-preview-${option.id}`}
               style={{
                 "--preview-base": option.colors.base,
                 "--preview-pane": option.colors.pane,

@@ -1,0 +1,95 @@
+// The artwork is decorative; the existing panel remains the owner of scrolling,
+// prompts and menus. Keep the scene clipped without clipping those controls.
+.observatory-scene, .observatory-wordmark { display: none; }
+
+:root[data-theme="observatory"] {
+  .app { box-shadow: inset 0 0 0 1px #5732a2; }
+  .titlebar { background: linear-gradient(110deg, #090b1a, #050611 70%); border-bottom: 1px solid var(--border); }
+  .titlebar::after { display: none; }
+  .observatory-wordmark { display: block; width: 67px; height: 25px; flex: 0 0 67px; margin-right: 15px; }
+  .titlebar-leading-actions { overflow: visible; }
+
+  .activity-tool { color: #b6a0ff; border-radius: 4px; }
+  .activity-tool.active { color: #d2bdff; background: #171137; }
+  .tree-row { border-radius: 4px; }
+  .tree-row.selected { background: #170d43; box-shadow: inset 0 0 0 1px #48317f; }
+  .tree-row.dir .tree-name::before {
+    content: "";
+    display: inline-block;
+    width: 13px;
+    height: 11px;
+    margin-right: 7px;
+    vertical-align: -1px;
+    background: #aa83ff;
+    clip-path: polygon(0 0, 40% 0, 52% 20%, 100% 20%, 100% 100%, 0 100%);
+  }
+  .sidebar-brand { color: #b5a9ef; }
+
+  .tab-list .tab { border: 1px solid var(--border); border-radius: 5px 5px 0 0; background: #080a19; font-size: 11px; box-shadow: none; }
+  .tab-list .tab.active { border-color: #6945bd; background: #150b3b; color: #e0dcff; }
+  .tab.active .tab-file-icon { color: #f143ef; }
+  .breadcrumbs { color: #b5a9ef; }
+
+  .agent-panel { isolation: isolate; background: #050611; border-color: #392371; }
+  .observatory-scene {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: url("../assets/agent-scenes/observatory.png") 22% center / cover no-repeat;
+  }
+  .agent-panel[data-conversation="true"] .observatory-scene {
+    background-image: linear-gradient(#050611eb, #050611eb), url("../assets/agent-scenes/observatory.png");
+  }
+  .agent-panel[data-panel-mode="tui"] .observatory-scene { display: none; }
+  .agent-empty { display: none; }
+  .agent-panel .agent-scroll { background: transparent; }
+  .agent-header { min-height: 44px; background: linear-gradient(#050611a6, #05061100); border-bottom: 0; }
+  .agent-panel:not([data-conversation="true"]) .agent-header::before {
+    content: "✦  MIRA Agent";
+    color: #b695ff;
+    font: 600 12px/1.5 var(--font-family-mono);
+    letter-spacing: .6px;
+    text-shadow: 0 0 10px #7139ff;
+    margin-right: auto;
+  }
+  .agent-panel [data-component="session-prompt-dock"] { padding: clamp(10px, 3cqw, 28px); }
+  .agent-panel [data-component="session-prompt-dock"] > .composer { width: min(100%, 700px); max-width: 700px; }
+  .agent-panel .composer-body {
+    min-height: 106px;
+    background: var(--agent-composer-background);
+    border: 1px solid #8d70df;
+    border-radius: 26px;
+    box-shadow: var(--agent-composer-shadow);
+    backdrop-filter: blur(18px);
+  }
+  .agent-panel .composer-input { padding: 12px 10px 4px; color: #e0dcff; }
+  .agent-panel .composer-input::placeholder { color: #9b95b4; }
+  .agent-panel .composer-selector { border: 1px solid #4b3b83; border-radius: 999px; color: #d6cdef; background: #0c0c1b80; }
+  .agent-panel .composer-selector.model { max-width: 230px; }
+  .agent-panel .composer-attach { border: 1px solid #4b3b83; border-radius: 50%; color: #d6cdef; }
+  .agent-panel .composer-send { background: #a58aff; color: #160d38; }
+  .agent-panel .composer-send:disabled { opacity: .85; }
+  .agent-panel .composer-send.stop { background: var(--red); color: #fff; }
+
+  .theme-card:has(.theme-preview-observatory) .theme-preview-agent {
+    background: url("../assets/agent-scenes/observatory.png") 25% center / cover;
+  }
+}
+
+@container (min-width: 760px) {
+  :root[data-theme="observatory"] .observatory-scene { background-position: center; }
+}
+
+@container (max-width: 360px) {
+  :root[data-theme="observatory"] .agent-panel {
+    .composer-body { border-radius: 18px; }
+    .composer-selector { padding-inline: 5px; }
+    .composer-selector.strength { display: none; }
+    .composer-selector.agent .codicon-chevron-down,
+    .composer-selector.agent > span,
+    .composer-selector.model > span { display: none; }
+  }
+}

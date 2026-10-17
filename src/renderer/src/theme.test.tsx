@@ -78,4 +78,23 @@ describe("theme and UI shell", () => {
     await act(async () => { ctx.setTheme("papertrail"); });
     expect(document.documentElement.style.getPropertyValue("--trees-icon-gray")).toBe("");
   });
+
+  it("persists Observatory and clears its glyph and composer overrides when switching", async () => {
+    await render();
+    await act(async () => { ctx.setTheme("observatory"); });
+    expect(document.documentElement.dataset.theme).toBe("observatory");
+    expect(document.documentElement.style.getPropertyValue("--editor-surface")).toBe("#060912");
+    expect(document.documentElement.style.getPropertyValue("--trees-icon-indigo")).toBe("#aa83ff");
+    expect(document.documentElement.style.getPropertyValue("--agent-composer-border")).toBe("#8d70df");
+    await act(async () => { ctx.setUiShell("classic"); });
+    expect(document.documentElement.style.getPropertyValue("--trees-icon-indigo")).toBe("#aa83ff");
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await render();
+    expect(ctx.theme).toBe("observatory");
+    expect(ctx.uiShell).toBe("classic");
+    await act(async () => { ctx.setTheme("papertrail"); });
+    expect(document.documentElement.style.getPropertyValue("--trees-icon-indigo")).toBe("");
+    expect(document.documentElement.style.getPropertyValue("--agent-composer-border")).not.toBe("#8d70df");
+  });
 });

@@ -41,6 +41,16 @@ const DARK_TREE_ICONS: Record<string, string> = {
   "--trees-icon-mauve": "#79697b"
 };
 
+const OBSERVATORY_VARIABLES: Record<string, string> = {
+  "--trees-icon-gray": "#b5a9ef",
+  "--trees-icon-indigo": "#aa83ff",
+  "--trees-icon-purple": "#f143ef",
+  "--trees-icon-pink": "#f143ef",
+  "--trees-icon-yellow": "#ffd658",
+  "--agent-composer-border": "#8d70df",
+  "--agent-send-background": "#a58aff"
+};
+
 function storedShell(): UiShell {
   return (window.localStorage.getItem(SHELL_KEY) ?? window.localStorage.getItem(LEGACY_SHELL_KEY)) === "classic" ? "classic" : "codex";
 }
@@ -179,6 +189,7 @@ function applyAppearance(theme: ThemeId, uiShell: UiShell): void {
   });
   if (theme === "original") Object.assign(variables, originalVariables(colors));
   if (uiShell === "codex") Object.assign(variables, codexShellVariables(colors, scheme));
+  if (theme === "observatory") Object.assign(variables, OBSERVATORY_VARIABLES);
   root.dataset.theme = theme;
   root.dataset.shell = uiShell;
   root.style.colorScheme = scheme;

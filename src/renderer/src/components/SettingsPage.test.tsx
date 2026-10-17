@@ -122,7 +122,8 @@ describe("SettingsPage", () => {
       expect.stringContaining("Stillness"),
       expect.stringContaining("Bloom"),
       expect.stringContaining("Kitty Glass"),
-      expect.stringContaining("Original Dark")
+      expect.stringContaining("Original Dark"),
+      expect.stringContaining("Observatory")
     ]);
     expect(document.documentElement.dataset.theme).toBe("codex");
     expect(window.localStorage.getItem("mira.theme")).toBe("codex");

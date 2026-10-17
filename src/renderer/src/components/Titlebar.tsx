@@ -1,5 +1,6 @@
 import type { ReactNode, Ref } from "react";
 import { IconPanelLeft, IconPanelLeftDashed, IconPanelRight, IconPanelRightDashed } from "./icons";
+import observatoryWordmark from "../assets/observatory-wordmark.svg";
 
 export function Titlebar({
   sidebarOpen,
@@ -27,6 +28,7 @@ export function Titlebar({
   return (
     <div className="titlebar">
       <span className="titlebar-leading-actions" ref={leadingRef}>
+        <img className="observatory-wordmark" src={observatoryWordmark} alt="Mira" draggable={false} />
         <button
           className="icon-btn"
           data-panel-action="toggle-sidebar"

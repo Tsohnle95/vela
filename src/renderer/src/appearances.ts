@@ -12,6 +12,7 @@ export type AppearanceId =
   | "stillness"
   | "bloom"
   | "kitty"
+  | "observatory"
   | "original";
 
 export interface AppearanceColors {
@@ -223,6 +224,17 @@ export const APPEARANCES: AppearanceProfile[] = [
       base: "#171412", top: "#171412", pane: "#262220", editor: "#262220", editorOpaque: "#262220", agent: "rgba(38,34,32,.92)", rail: "#171412", tab: "#201d1b", console: "#121317", status: "#171412",
       ink: "#e8e3dd", muted: "#a8a29e", faint: "#8f8880", line: "rgba(255,255,255,.05)", lineStrong: "rgba(255,255,255,.10)", lineSoft: "rgba(255,255,255,.04)", selected: "#37322e", user: "#37322e", card: "#2d2926", compose: "#262220", composeShadow: "0 4px 16px rgba(0,0,0,.28)",
       accent: "#9eb4a1", good: "#a9cbad", danger: "#e2988a", icon: "#8fbcd9", sendInk: "#172019", glow: "rgba(158,180,161,.06)", syntaxKeyword: "#e8875f", syntaxFunction: "#ead9c8", syntaxString: "#a8c69a", syntaxComment: "#78716c", syntaxNumber: "#e5b567"
+    }
+  },
+  {
+    id: "observatory",
+    name: "Observatory",
+    description: "Midnight violet, neon syntax and a pixel-art observatory beneath the stars.",
+    scheme: "dark",
+    colors: {
+      base: "#050611", top: "#070814", pane: "#080a16", editor: "#060912", editorOpaque: "#060912", agent: "#050611", rail: "#090b1b", tab: "#090a1c", console: "#050611", status: "#070814",
+      ink: "#e0dcff", muted: "#b5a9ef", faint: "#8279ad", line: "#29205c", lineStrong: "#554099", lineSoft: "#171333", selected: "#161040", user: "#171331", card: "#111025", compose: "linear-gradient(115deg, #101020ed, #25223eef)", composeShadow: "0 8px 26px #00000066, inset 0 1px #cec0ff12",
+      accent: "#aa83ff", good: "#00dfb0", danger: "#ff5478", icon: "#b6a0ff", sendInk: "#160d38", glow: "#24104d", syntaxKeyword: "#f143ef", syntaxFunction: "#45e6e1", syntaxString: "#26dfcb", syntaxComment: "#71688e", syntaxNumber: "#26dfcb", syntaxVariable: "#45e6e1", syntaxAttribute: "#45e6e1", syntaxOperator: "#c9adff", syntaxPunctuation: "#ffd658", syntaxTag: "#f143ef", syntaxType: "#c9adff"
     }
   }
 ];

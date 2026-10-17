@@ -204,9 +204,12 @@ export function AgentPanel({
   return (
     <div
       className="agent-panel"
+      data-conversation={conversationStarted}
+      data-panel-mode={panelMode}
       ref={panelRef}
       onMouseDownCapture={onFocus}
     >
+      <div className="observatory-scene" aria-hidden="true" />
       {onResizeLeft && <div className="panel-resize-handle panel-resize-left" onMouseDown={onResizeLeft} />}
       {onResizeRight && <div className="panel-resize-handle panel-resize-right" onMouseDown={onResizeRight} />}
       <div className="agent-header" ref={headerRef} onMouseDown={startPanelDrag}>

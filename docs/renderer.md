@@ -825,6 +825,12 @@ palettes. `applyAppearance` layers the shell's tokens (flat workspace, composer
 border, send colours, dark file-tree glyphs) over the palette and removes any
 token the new combination no longer sets, so switching palettes or interfaces
 cannot leave stale inline variables behind.
+The Observatory appearance also supplies a decorative pixel-art observatory
+backdrop and violet pixel wordmark. The backdrop covers the panel, frames the
+observatory in narrow panels and reveals the galaxy in wide Agent Mode. It dims
+behind conversations and is absent in the TUI; prompts, scrolling and menus
+retain their existing owners. These decorations are scoped to the appearance
+and work in both interfaces.
 The selected appearance supplies the color palette for both embedded xterm
 surfaces. Prism uses alpha-backed violet panels; Kitty Glass restores the
 transparent glass surfaces and terminal backgrounds of the earlier app, and
