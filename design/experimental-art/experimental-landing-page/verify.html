@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbit launch verification</title>
+<style>
+body{background:#15111c;color:#d9cce9;font:14px/1.7 monospace;margin:30px}a{color:#c9a6ff}h1{font:28px sans-serif}#stage{width:864px;height:520px;max-width:100%;overflow:hidden;border:1px solid #534361}iframe{width:1440px;height:850px;border:0;transform:scale(.6);transform-origin:top left}li{padding:3px}li[data-pass=false]{color:#ff9b9b}li[data-pass=true]{color:#aad5ac}
+</style>
+<h1>Orbit / launch verification</h1>
+<p><a href="index.html">← Gallery</a> · Checks run in this browser against the actual preview pages.</p>
+<h2 id="summary">Running…</h2>
+<ul id="results"></ul><div id="stage"><iframe title="Launch under test"></iframe></div>
+<script type="module">
+const results=[];
+const report=(name,pass,detail='')=>{
+  results.push({name,pass,detail});
+  const li=document.createElement('li');li.dataset.pass=String(pass);li.textContent=`${pass?'PASS':'FAIL'} — ${name}${detail?' / '+detail:''}`;document.querySelector('#results').append(li);
+};
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const until=async(predicate,ms=5000)=>{const start=performance.now();while(!predicate()){if(performance.now()-start>ms)throw new Error('Timed out');await sleep(30);}};
+const frame=document.querySelector('iframe');
+const load=async(url)=>{await new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject;frame.src=url;});};
+try{
+  const concepts=await fetch('concepts.json').then(r=>r.json());
+  let decoded=0;
+  await Promise.all(concepts.map(async c=>{const img=new Image();img.src=`concepts/${c.slug}.svg?v=${c.version}`;await img.decode();if(img.naturalWidth===1440&&img.naturalHeight===900)decoded++;}));
+  report('Every artwork decodes',decoded===30,`${decoded}/30`);
+  await load(`concepts/${concepts[0].slug}.html`);
+  const doc=()=>frame.contentDocument;
+  await until(()=>doc().body.dataset.artworkAt);
+  report('Initial launch has art and no workspace picker',!doc().querySelector('#splash').hidden&&doc().querySelector('#workspace').hidden);
+  await sleep(2500);
+  report('Artwork remains before three seconds',doc().body.dataset.phase==='artwork');
+  await until(()=>doc().body.dataset.phase==='workspace');
+  const elapsed=Number(doc().body.dataset.workspaceAt)-Number(doc().body.dataset.artworkAt);
+  report('Transition occurs three seconds after artwork paint',elapsed>=2990&&elapsed<3500,`${Math.round(elapsed)} ms`);
+  report('Destination is empty and waits for workspace selection',doc().querySelector('#workspace-choice').textContent===''&&doc().querySelectorAll('[data-choose]').length===2&&!doc().querySelector('#workspace').hidden);
+  doc().querySelector('#hold').click();
+  await sleep(3250);
+  report('Hold prevents automatic transition',doc().body.dataset.phase==='artwork'&&doc().querySelector('#hold').getAttribute('aria-pressed')==='true');
+  doc().querySelector('#replay').click();
+  await until(()=>doc().body.dataset.phase==='workspace');
+  report('Replay completes a new three-second launch',Number(doc().body.dataset.workspaceAt)-Number(doc().body.dataset.artworkAt)>=2990);
+  await load(`concepts/${concepts[29].slug}.html?still=1&immersive=1`);
+  report('Concept 30 wraps to concept 01',doc().querySelector('#next').href.includes(concepts[0].slug));
+  report('Immersive view hides review controls',getComputedStyle(doc().querySelector('.review-bar')).display==='none');
+  await until(()=>doc().querySelector('#hold').getAttribute('aria-pressed')==='true');
+  report('Still URL holds artwork on arrival',doc().body.dataset.phase==='artwork');
+}catch(error){report('Verification completed',false,error.message);}
+document.querySelector('#summary').textContent=`${results.filter(r=>r.pass).length}/${results.length} checks passed`;
+</script>
+</html>
