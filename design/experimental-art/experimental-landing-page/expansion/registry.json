@@ -1,0 +1,702 @@
+[
+  {
+    "id": "31",
+    "name": "Dome of tomorrow",
+    "domain": "environments",
+    "brief": "Cutaway greenhouse dome with terraced botanical beds at lower-left, overhead light shaft; wide title upper-right",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+  },
+  {
+    "id": "32",
+    "name": "Below the surface",
+    "domain": "environments",
+    "brief": "Subterranean library section with staggered rooms and diagonal descending stairs; title built into a dark shelf void",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+  },
+  {
+    "id": "33",
+    "name": "Coastlight",
+    "domain": "environments",
+    "brief": "Tall lighthouse on a jagged right-hand cliff with a horizontal light beam extending left; small title within beam",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_22 PM-7.png"
+  },
+  {
+    "id": "34",
+    "name": "Between worlds",
+    "domain": "environments",
+    "brief": "Thin bridge crosses a very deep split canyon, close foreground rock cropped to both sides; type suspended over gap",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_29 PM-10.png"
+  },
+  {
+    "id": "35",
+    "name": "Quiet harbor",
+    "domain": "environments",
+    "brief": "Birds-eye irregular floating harbor with finger piers and tiny spacecraft, off-axis anchorage; lettering follows empty water",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "36",
+    "name": "Cabin window",
+    "domain": "environments",
+    "brief": "Interior cabin doorway looks onto a snowy alien clearing; large off-center near doorframe and low floor perspective",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+  },
+  {
+    "id": "37",
+    "name": "Polar curtain",
+    "domain": "environments",
+    "brief": "Wide zigzag aurora rises behind angular mountains, tiny explorer at far lower-left; title within dark valley sky",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_16 PM-6.png"
+  },
+  {
+    "id": "38",
+    "name": "Under the canopy",
+    "domain": "environments",
+    "brief": "Low camera looks up through huge luminous mushroom umbrellas; title in an irregular canopy clearing",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_17 PM-8.png"
+  },
+  {
+    "id": "39",
+    "name": "Last departure",
+    "domain": "environments",
+    "brief": "Open space-train platform on steep diagonal with train cropped off left; platform stripe carries typography",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_18 PM-9.png"
+  },
+  {
+    "id": "40",
+    "name": "Tidal intelligence",
+    "domain": "environments",
+    "brief": "Underwater coral data reef seen from below a rippling surface; text follows high waterline, seabed cropped",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_28 PM-9.png"
+  },
+  {
+    "id": "41",
+    "name": "Cloud forge",
+    "domain": "environments",
+    "brief": "Floating anvil and stone forge connected by little cloud platforms; chunky stepped side elevation and compact corner wordmark",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+  },
+  {
+    "id": "42",
+    "name": "Falling upward",
+    "domain": "environments",
+    "brief": "Very tall waterfall links hanging islands in a narrow central strip; two unequal blank side fields carry separated type",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+  },
+  {
+    "id": "43",
+    "name": "Dust caravan",
+    "domain": "environments",
+    "brief": "Overhead desert dunes crossed by one winding procession of tiny rovers; massive negative-space sand with sand-etched type",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_22 PM-7.png"
+  },
+  {
+    "id": "44",
+    "name": "Roofline commons",
+    "domain": "environments",
+    "brief": "Dense stepped rooftop terraces with lit studios and connecting ladders, no dominant planet; huge type hidden behind roofs",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_29 PM-10.png"
+  },
+  {
+    "id": "45",
+    "name": "Elevator to elsewhere",
+    "domain": "environments",
+    "brief": "Slender space-elevator cable and tiny capsule crosses several atmospheric strata; stacked vertical type on distant left edge",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "46",
+    "name": "Glow beneath",
+    "domain": "environments",
+    "brief": "Irregular bioluminescent cave mouth and long watery reflection; organic asymmetric silhouette and title tucked in lower rock",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+  },
+  {
+    "id": "47",
+    "name": "Moon allotments",
+    "domain": "environments",
+    "brief": "Tilted aerial crop plots with geodesic farm pods and irrigation diagonals; diagrammatic terrain and one corner label block",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_16 PM-6.png"
+  },
+  {
+    "id": "48",
+    "name": "Night counter",
+    "domain": "environments",
+    "brief": "Retro space-diner counter interior with chrome stools and portholes, intimate close framing; no neon sign hero",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_17 PM-8.png"
+  },
+  {
+    "id": "49",
+    "name": "Bamboo receiver",
+    "domain": "environments",
+    "brief": "Sparse vertical bamboo-like antenna grove with one horizontal hanging receiver; extreme thin vertical rhythm and tall margin title",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_18 PM-9.png"
+  },
+  {
+    "id": "50",
+    "name": "The listening bowl",
+    "domain": "environments",
+    "brief": "Top-down stepped semicircular amphitheater with tiny luminous central stage offset low; title occupies rectangular missing quarter",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_28 PM-9.png"
+  },
+  {
+    "id": "51",
+    "name": "Specimen bench",
+    "domain": "environments",
+    "brief": "Wide laboratory workbench with differently sized glass botanical specimens, extreme horizontal grounded silhouette; title above bench",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+  },
+  {
+    "id": "52",
+    "name": "Caldera",
+    "domain": "environments",
+    "brief": "Oblique volcanic crater cutaway exposing a bright orange lava chamber; technical geological mass low-left and high-right type",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+  },
+  {
+    "id": "53",
+    "name": "Paper flight",
+    "domain": "environments",
+    "brief": "Tiny folded glider over a patchwork agricultural plain, camera looking straight down; large white contrail bends into a title gap",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_22 PM-7.png"
+  },
+  {
+    "id": "54",
+    "name": "One-room universe",
+    "domain": "environments",
+    "brief": "Isometric open-corner studio room containing desk, shelf and overhead window; intimate cuboid vignette and offset side caption",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_29 PM-10.png"
+  },
+  {
+    "id": "55",
+    "name": "A night outside",
+    "domain": "environments",
+    "brief": "Large triangular tent foreground with a distant line of small celestial peaks; title arcs through asymmetric empty sky",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "56",
+    "name": "Soft shelter",
+    "domain": "environments",
+    "brief": "Textile curtains form a sweeping diagonal canopy over a low platform, tactile woven marks; typographic baseline sits high at side",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+  },
+  {
+    "id": "57",
+    "name": "Rain passage",
+    "domain": "environments",
+    "brief": "Vertical narrow rain-lit alley viewed obliquely downward, reflective paving as focal plane; type runs down foreground wall",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_16 PM-6.png"
+  },
+  {
+    "id": "58",
+    "name": "Messages aloft",
+    "domain": "environments",
+    "brief": "Unequal sky lanterns suspended in broad diagonal stream with tiny star maps on paper skins; title in lower-left stillness",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_17 PM-8.png"
+  },
+  {
+    "id": "59",
+    "name": "Asteroid works",
+    "domain": "environments",
+    "brief": "Stepped quarry excavation cut into irregular floating asteroid, tiny machinery around edge; geological cross-section with high title",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_18 PM-9.png"
+  },
+  {
+    "id": "60",
+    "name": "The sailing room",
+    "domain": "environments",
+    "brief": "Side-on observatory sailboat with large translucent triangular sails over midnight water; long mast offsets small horizontal title",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_28 PM-9.png"
+  },
+  {
+    "id": "61",
+    "name": "Cable to the clouds",
+    "domain": "environments",
+    "brief": "A single cable car suspended across two clipped mountain faces, high sagging cable and distant mist; type mounted to top cable",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+  },
+  {
+    "id": "62",
+    "name": "Pocket cosmos",
+    "domain": "environments",
+    "brief": "Open clamshell laptop contains an impossible mini landscape spilling over keyboard; oblique close object and oversized cropped side word",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+  },
+  {
+    "id": "63",
+    "name": "Starlight bakery",
+    "domain": "environments",
+    "brief": "Cutaway tiny storefront with arched oven, bread-like stars and awning, orthographic shopfront rather than landscape; title on awning",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_22 PM-7.png"
+  },
+  {
+    "id": "64",
+    "name": "Terraces of water",
+    "domain": "environments",
+    "brief": "Stacked stair-step water gardens traversed by one thin figure, water at several levels; long diagonal stair silhouette and vertical type",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_29 PM-10.png"
+  },
+  {
+    "id": "65",
+    "name": "Chromatic crossing",
+    "domain": "graphic-objects",
+    "brief": "Risograph overprinted angular translucent planes crossing a wide white field; type interrupted across one sharp diagonal seam",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "66",
+    "name": "Pressure of words",
+    "domain": "graphic-objects",
+    "brief": "Blind-embossed ORBIT sunk into matte paper at extreme low baseline; raking light and large empty upper field",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+  },
+  {
+    "id": "67",
+    "name": "Unfold",
+    "domain": "graphic-objects",
+    "brief": "Accordion-folded paper ribbon snakes laterally through screen and lifts a single large letter on each fold; no celestial map",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+  },
+  {
+    "id": "68",
+    "name": "Hard line",
+    "domain": "graphic-objects",
+    "brief": "Brutal stencil OR / BI / T split into three unequal floor-to-ceiling columns; punched counters and hard crop",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+  },
+  {
+    "id": "69",
+    "name": "Ribbon memory",
+    "domain": "graphic-objects",
+    "brief": "Typewriter mechanism cropped at bottom with horizontal ink ribbon carrying a small wordmark; empty cream paper dominates",
+    "sourceSuggested": "MIRA Agent Mode_ Pixel Space Concepts.png"
+  },
+  {
+    "id": "70",
+    "name": "Balanced thought",
+    "domain": "graphic-objects",
+    "brief": "Bauhaus hanging mobile of asymmetrical flat triangles, bars and a suspended dot; tilted weights and tall left-aligned title",
+    "sourceSuggested": "mira-logo.png"
+  },
+  {
+    "id": "71",
+    "name": "Departure board",
+    "domain": "graphic-objects",
+    "brief": "Airport split-flap tiles form a broad stepped wordmark with visibly different physical hinges; isolated lower-right data strip",
+    "sourceSuggested": "Pasted 2026-10-14 at 6.03.56 PM.png"
+  },
+  {
+    "id": "72",
+    "name": "Between the stripes",
+    "domain": "graphic-objects",
+    "brief": "Lenticular vertical stripes reveal a jagged distant citadel silhouette as negative space; small text left in unstriped gutter",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "73",
+    "name": "Frames in motion",
+    "domain": "graphic-objects",
+    "brief": "A diagonal perforated film strip curls from lower-left to upper-right with unequal cosmic frames; type uses uncovered corners",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+  },
+  {
+    "id": "74",
+    "name": "Made of metal",
+    "domain": "graphic-objects",
+    "brief": "Flush industrial nameplate mounted into a brushed-metal full-screen surface, huge skew reflection and tiny engraved wordmark",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+  },
+  {
+    "id": "75",
+    "name": "Through the tear",
+    "domain": "graphic-objects",
+    "brief": "One giant torn-paper fissure exposes violet star light below warm paper, ragged side-lit edges; two fragments of type across rip",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+  },
+  {
+    "id": "76",
+    "name": "Flat to form",
+    "domain": "graphic-objects",
+    "brief": "Unfolded packaging dieline cross with asymmetric tabs and one folded corner floating upward; restrained typesetting inside central flap",
+    "sourceSuggested": "MIRA Agent Mode_ Pixel Space Concepts.png"
+  },
+  {
+    "id": "77",
+    "name": "Open fan",
+    "domain": "graphic-objects",
+    "brief": "Pleated folding fan occupies upper-right three quarters with radial paper wedges, no circles or orbital labels; small lower-left serif",
+    "sourceSuggested": "mira-logo.png"
+  },
+  {
+    "id": "78",
+    "name": "Flight in pieces",
+    "domain": "graphic-objects",
+    "brief": "Tangram bird assembled from seven flat pieces at high-right with spare pieces on bottom baseline; typographic weight low-left",
+    "sourceSuggested": "Pasted 2026-10-14 at 6.03.56 PM.png"
+  },
+  {
+    "id": "79",
+    "name": "A place held",
+    "domain": "graphic-objects",
+    "brief": "Oversized ribbon bookmark turns around upper-left corner of a nearly empty book page; long vertical accent and marginal typography",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "80",
+    "name": "Letters to get lost in",
+    "domain": "graphic-objects",
+    "brief": "ORBIT letterforms constructed as a compact orthogonal maze on one side; map-free unbalanced composition and separate wide serif",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+  },
+  {
+    "id": "81",
+    "name": "Ticker thought",
+    "domain": "graphic-objects",
+    "brief": "Continuous zigzag ticker paper strips weave across lower two thirds with alternating type directions; broad unprinted upper margin",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+  },
+  {
+    "id": "82",
+    "name": "Friendly machine",
+    "domain": "graphic-objects",
+    "brief": "Asymmetric pixel mosaic robot face cropped hard into the right edge, tiny satellite components separated on left; stacked small title",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+  },
+  {
+    "id": "83",
+    "name": "The spines",
+    "domain": "graphic-objects",
+    "brief": "Close crop of book spines with wildly unequal widths and vertical typographic baselines; one gap reveals a narrow violet universe",
+    "sourceSuggested": "MIRA Agent Mode_ Pixel Space Concepts.png"
+  },
+  {
+    "id": "84",
+    "name": "Woven alphabet",
+    "domain": "graphic-objects",
+    "brief": "A distorted interlaced typographic checkerboard forms a large corner-to-corner textile mass; one smooth caption island",
+    "sourceSuggested": "mira-logo.png"
+  },
+  {
+    "id": "85",
+    "name": "Afterglow sign",
+    "domain": "graphic-objects",
+    "brief": "A freeform neon Orbit sign mounted on dark bricks, long exposed cable trailing across negative space; luminous script as focal shape",
+    "sourceSuggested": "Pasted 2026-10-14 at 6.03.56 PM.png"
+  },
+  {
+    "id": "86",
+    "name": "Notes from orbit",
+    "domain": "graphic-objects",
+    "brief": "Spiral-bound notebook turned 20 degrees with a hand-drawn celestial sketch, page corner lifted into blank ground; masthead on spine",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "87",
+    "name": "Word gravity",
+    "domain": "graphic-objects",
+    "brief": "Concrete poetry arranged into a crescent-shaped cloud of micro-words, no planet disc; very large narrow vertical ORBIT at opposing edge",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+  },
+  {
+    "id": "88",
+    "name": "Blueprint botany",
+    "domain": "graphic-objects",
+    "brief": "Cyanotype skeleton leaves laid asymmetrically across deep blue paper; specimen imprint and tightly arranged tiny white title",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+  },
+  {
+    "id": "89",
+    "name": "Paper currents",
+    "domain": "graphic-objects",
+    "brief": "Close macro crop of curled paper-quilling strips whose shadows make a loose current; lower strip contains large debossed title",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+  },
+  {
+    "id": "90",
+    "name": "Built with letters",
+    "domain": "graphic-objects",
+    "brief": "ORBIT extruded into architectural block letters viewed from overhead oblique, cropped front foreground; strong shadow-shaped negative space",
+    "sourceSuggested": "MIRA Agent Mode_ Pixel Space Concepts.png"
+  },
+  {
+    "id": "91",
+    "name": "The next move",
+    "domain": "graphic-objects",
+    "brief": "One violet knight and one pale pawn in opposing corners of an otherwise empty checkerboard floor; typographic horizon low and off-center",
+    "sourceSuggested": "mira-logo.png"
+  },
+  {
+    "id": "92",
+    "name": "Time in grains",
+    "domain": "graphic-objects",
+    "brief": "An hourglass made from two polygonal glass cones with pixel sand forming a small mountain; text placed on opposing vertical axes",
+    "sourceSuggested": "Pasted 2026-10-14 at 6.03.56 PM.png"
+  },
+  {
+    "id": "93",
+    "name": "Beautiful repair",
+    "domain": "graphic-objects",
+    "brief": "Asymmetric broken ceramic fragments joined with gold seams forming an incomplete open vessel; extreme close texture and small upper text",
+    "sourceSuggested": "Untitled.png"
+  },
+  {
+    "id": "94",
+    "name": "Impossible step",
+    "domain": "graphic-objects",
+    "brief": "Penrose triangular stair object on pale peach with one violet step, unusual overhead angle; huge ultrathin title behind object",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+  },
+  {
+    "id": "95",
+    "name": "Crease study",
+    "domain": "graphic-objects",
+    "brief": "Four stages of an origami crane arranged as an ascending staircase of unequal sizes; tiny crease annotations and tall end title",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+  },
+  {
+    "id": "96",
+    "name": "Crossing words",
+    "domain": "graphic-objects",
+    "brief": "Giant ORBIT letter crossword interlocked in an L shape on warm paper; asymmetric typographic structure with small dot-matrix caption",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+  },
+  {
+    "id": "97",
+    "name": "Liquid language",
+    "domain": "graphic-objects",
+    "brief": "Chrome-like typographic puddle pooled against bottom edge with stretched letter reflections rising into empty dark field",
+    "sourceSuggested": "MIRA Agent Mode_ Pixel Space Concepts.png"
+  },
+  {
+    "id": "98",
+    "name": "Crystal fault",
+    "domain": "systems",
+    "brief": "Off-axis Voronoi fracture of translucent polygonal crystals, sharp broken wedge at left; airy right-side typography",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_20 PM-5.png"
+  },
+  {
+    "id": "99",
+    "name": "Negative-space engine",
+    "domain": "systems",
+    "brief": "Asymmetric treemap of differently sized filled rectangular cells leaves a large irregular O-shaped void; type embedded in two cells",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_26 PM-8.png"
+  },
+  {
+    "id": "100",
+    "name": "Simple rules",
+    "domain": "systems",
+    "brief": "Sierpinski cellular automaton forms a downward triangular pixel cascade, small seed at top and broad jagged base; type split along side edges",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_21 PM-6.png"
+  },
+  {
+    "id": "101",
+    "name": "Pendulum choir",
+    "domain": "systems",
+    "brief": "An unequal diagonal array of hanging pendulum weights with varied arc traces; upper-right anchor line and left-bottom typographic mass",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_14 PM-4.png"
+  },
+  {
+    "id": "102",
+    "name": "White light",
+    "domain": "systems",
+    "brief": "Triangular glass prism refracts one narrow incoming beam into a broad angular spectrum; sharply asymmetric optics and small top label",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_19 PM-10.png"
+  },
+  {
+    "id": "103",
+    "name": "Misalignment",
+    "domain": "systems",
+    "brief": "Two giant square grids rotated against one another form noncircular moire interference cropped at screen edges; wide low type",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_13 PM-3.png"
+  },
+  {
+    "id": "104",
+    "name": "Sorting thoughts",
+    "domain": "systems",
+    "brief": "Sorting-network horizontal wires cross in staged vertical comparator columns; stepped rectangular network shape and narrow vertical heading",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_16 PM-7.png"
+  },
+  {
+    "id": "105",
+    "name": "Chain reaction",
+    "domain": "systems",
+    "brief": "An isometric serpentine run of dominoes, some fallen and some standing, turns around an empty corner; title tracks the open corner",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_17 PM-3.png"
+  },
+  {
+    "id": "106",
+    "name": "Invisible pull",
+    "domain": "systems",
+    "brief": "Iron-filings-style dashes flow between two separated offset magnetic poles; close material field and high isolated typography",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_20 PM-5.png"
+  },
+  {
+    "id": "107",
+    "name": "Particle weather",
+    "domain": "systems",
+    "brief": "Broad funnel of pixel particles enters from left edge and narrows toward a high-right focal point; title anchored within hollow lower wedge",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_26 PM-8.png"
+  },
+  {
+    "id": "108",
+    "name": "A mountain of facets",
+    "domain": "systems",
+    "brief": "Algorithmic triangulated mountain net unfolds partly into flat triangular mesh; geometric orange mass with visible labeled vertices and side serif",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_21 PM-6.png"
+  },
+  {
+    "id": "109",
+    "name": "Small building blocks",
+    "domain": "systems",
+    "brief": "Dense voxel cube dismantles at only one corner into differently sized floating cubes; off-axis cropped mass and title threaded through gap",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_14 PM-4.png"
+  },
+  {
+    "id": "110",
+    "name": "Branch logic",
+    "domain": "systems",
+    "brief": "Recursive ink-like branching structure grows laterally from right edge across a large pale field; single small wordmark near root",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_19 PM-10.png"
+  },
+  {
+    "id": "111",
+    "name": "One continuous line",
+    "domain": "systems",
+    "brief": "Hilbert space-filling curve packs a dense square path into lower-left with one long escape route to top-right title; no letter-shaped maze",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_13 PM-3.png"
+  },
+  {
+    "id": "112",
+    "name": "Cultures of thought",
+    "domain": "systems",
+    "brief": "Asymmetric microscope petri colonies of organic irregular blobs, translucent membranes and close details; typography laid in an empty curved channel",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_16 PM-7.png"
+  },
+  {
+    "id": "113",
+    "name": "Two paths",
+    "domain": "systems",
+    "brief": "Double-slit interference fans two sets of wave arcs through a vertical aperture barrier; distinct half-plane geometry with title parallel to barrier",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_17 PM-3.png"
+  },
+  {
+    "id": "114",
+    "name": "Light carried",
+    "domain": "systems",
+    "brief": "A braided bundle of differently colored optical fibers sweeps from bottom edge and separates into fine lit ends at high-left; type high-right",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_20 PM-5.png"
+  },
+  {
+    "id": "115",
+    "name": "Printed circuit",
+    "domain": "systems",
+    "brief": "Copper rectilinear PCB tracks with large off-center processor and tiny surface components; dense flat system with routed negative-space title",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_26 PM-8.png"
+  },
+  {
+    "id": "116",
+    "name": "Order from grains",
+    "domain": "systems",
+    "brief": "Sandpile cellular diamond patterns seen as an oblique macro tiled field with missing corner; italic low title in the empty corner",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_21 PM-6.png"
+  },
+  {
+    "id": "117",
+    "name": "Escapement",
+    "domain": "systems",
+    "brief": "Oversized unequal interlocking gears cropped at three corners with one tiny escapement needle in center-left gap; metal hatch texture",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_14 PM-4.png"
+  },
+  {
+    "id": "118",
+    "name": "Surface tension",
+    "domain": "systems",
+    "brief": "A liquid droplet splash crown frozen in a displaced oval pool, extreme low close camera and mostly blank upper half; tall thin wordmark",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_19 PM-10.png"
+  },
+  {
+    "id": "119",
+    "name": "Keys to somewhere",
+    "domain": "systems",
+    "brief": "Piano-roll notes step diagonally through space above one cropped keyboard corner; music notation rhythm and lower-right slab typography",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_13 PM-3.png"
+  },
+  {
+    "id": "120",
+    "name": "The weight of an idea",
+    "domain": "systems",
+    "brief": "Checker fabric deforms into a deep off-center gravitational well with warped corner grid; sparse micro-title along top straight edge",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_16 PM-7.png"
+  },
+  {
+    "id": "121",
+    "name": "Aperture",
+    "domain": "systems",
+    "brief": "Overlapping mechanical iris blades leave a small pentagonal light opening high-right, giant faceted shutters cropped; narrow bottom-left title",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_17 PM-3.png"
+  },
+  {
+    "id": "122",
+    "name": "Shared sky",
+    "domain": "systems",
+    "brief": "Interlocking tessellated bird silhouettes gradually separate from a dense rectangular field into one free bird; type sits in newly empty wedge",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_20 PM-5.png"
+  },
+  {
+    "id": "123",
+    "name": "Signal waterfall",
+    "domain": "systems",
+    "brief": "Two-dimensional spectrogram heatmap descends like a jagged textile panel from top edge, wide horizontal contrast strip below; title offset at base",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_26 PM-8.png"
+  },
+  {
+    "id": "124",
+    "name": "Beyond three",
+    "domain": "systems",
+    "brief": "Transparent wireframe hypercube with offset vertices, long projection lines and spatial labels, no filled floating planes; low horizontal wordmark",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_21 PM-6.png"
+  },
+  {
+    "id": "125",
+    "name": "Flock",
+    "domain": "systems",
+    "brief": "Thousands of tiny bird-like marks form an asymmetric murmuration comma, dense head and long thin trailing curl; type inhabits open lower-right",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_14 PM-4.png"
+  },
+  {
+    "id": "126",
+    "name": "Living pattern",
+    "domain": "systems",
+    "brief": "Reaction-diffusion coral-like cellular maze cropped at macro scale on pale violet field; one sharply cut rectangular blank label near top",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_19 PM-10.png"
+  },
+  {
+    "id": "127",
+    "name": "Paper computation",
+    "domain": "systems",
+    "brief": "Kirigami laser-cut lattice lifted into uneven stepped paper relief; oblique vanishing edges and type hidden under lifted plane",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_13 PM-3.png"
+  },
+  {
+    "id": "128",
+    "name": "Measure the spark",
+    "domain": "systems",
+    "brief": "An enormous mechanical caliper measures one tiny luminous star near the far-left jaw; stark asymmetric instrument silhouette and opposing type",
+    "sourceSuggested": "ChatGPT Image Oct 13, 2026, 08_37_16 PM-7.png"
+  },
+  {
+    "id": "129",
+    "name": "Punched possibilities",
+    "domain": "systems",
+    "brief": "Several offset punch cards show a diagonally interrupted slot matrix, one card rising from stack; angled long shadows and printed heading",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_17 PM-3.png"
+  },
+  {
+    "id": "130",
+    "name": "The long now",
+    "domain": "systems",
+    "brief": "Faceted wedge sundial casts one very long diagonal shadow across an incomplete angular time scale; warm pale field with low corner wordmark",
+    "sourceSuggested": "ChatGPT Image Oct 14, 2026, 05_22_20 PM-5.png"
+  }
+]
