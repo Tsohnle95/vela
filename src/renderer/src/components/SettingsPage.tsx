@@ -40,6 +40,23 @@ function miraUpdateErrorMessage(error: unknown): string {
   return message;
 }
 
+function SettingsHeader({ section, onClose }: { section: SettingsSection; onClose: () => void }): ReactNode {
+  const copy = sectionCopy[section];
+  return (
+    <header className="settings-page-header">
+      <div className="settings-page-brand"><MiraMark size={34} /></div>
+      <div>
+        <p className="settings-page-kicker">Mira preferences</p>
+        <h1>{copy.title}</h1>
+        <p>{copy.description}</p>
+      </div>
+      <button className="settings-close" onClick={onClose} aria-label="Back to workspace" title="Back to workspace">
+        {section === "appearance" ? <i className="codicon codicon-close" aria-hidden="true" /> : "Back to workspace"}
+      </button>
+    </header>
+  );
+}
+
 export function SettingsPage({ section, onClose }: { section: SettingsSection; onClose: () => void }): ReactNode {
   const { theme } = useTheme();
   const {
@@ -72,7 +89,6 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
   const [miraUpdateAction, setMiraUpdateAction] = useState<"check" | "update" | null>(null);
   const [miraUpdateFeedback, setMiraUpdateFeedback] = useState("");
   const miraUpdateOperationRef = useRef(0);
-  const copy = sectionCopy[section];
   const runtime = (runtimes ?? []).find((item) => item.id === (session?.runtimeID ?? "opencode"));
   const openCodeRuntime = (runtimes ?? []).find((item) => item.id === "opencode");
 
@@ -205,16 +221,8 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
   }, [section, session?.id, refreshProviderUsage]);
 
   return (
-    <main className="settings-page">
-      <header className="settings-page-header">
-        <div className="settings-page-brand"><MiraMark size={34} /></div>
-        <div>
-          <p className="settings-page-kicker">Mira preferences</p>
-          <h1>{copy.title}</h1>
-          <p>{copy.description}</p>
-        </div>
-        <button className="settings-close" onClick={onClose}>Back to workspace</button>
-      </header>
+    <main className="settings-page" data-settings-section={section}>
+      <SettingsHeader section={section} onClose={onClose} />
 
       {section === "appearance" && <AppearanceSettings />}
 

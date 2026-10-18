@@ -2,6 +2,10 @@
 // prompts and menus. Keep the scene clipped without clipping those controls.
 .observatory-scene, .observatory-wordmark { display: none; }
 
+.theme-preview-observatory .theme-preview-agent {
+  background: url("../assets/agent-scenes/observatory.png") 25% center / cover;
+}
+
 :root[data-theme="observatory"] {
   .app { box-shadow: inset 0 0 0 1px #5732a2; }
   .titlebar { background: linear-gradient(110deg, #090b1a, #050611 70%); border-bottom: 1px solid var(--border); }
@@ -74,9 +78,6 @@
   .agent-panel .composer-send:disabled { opacity: .85; }
   .agent-panel .composer-send.stop { background: var(--red); color: #fff; }
 
-  .theme-card:has(.theme-preview-observatory) .theme-preview-agent {
-    background: url("../assets/agent-scenes/observatory.png") 25% center / cover;
-  }
 }
 
 @container (min-width: 760px) {

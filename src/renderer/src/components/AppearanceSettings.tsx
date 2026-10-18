@@ -12,20 +12,30 @@ export function AppearanceSettings(): ReactNode {
   const { theme, setTheme, uiShell, setUiShell } = useTheme();
 
   return (
-    <section className="settings-section" aria-label="Appearance settings">
-      <div className="ui-choice" role="radiogroup" aria-label="Interface">
-        {UI_SHELLS.map((option) => (
-          <button
-            key={option.id}
-            className={`ui-choice-card ${uiShell === option.id ? "selected" : ""}`}
-            role="radio"
-            aria-checked={uiShell === option.id}
-            onClick={() => setUiShell(option.id)}
-          >
-            <strong>{option.name}</strong>
-            <small>{option.description}</small>
-          </button>
-        ))}
+    <section className="settings-section appearance-settings" aria-label="Appearance settings">
+      <div className="appearance-interface-row">
+        <div className="appearance-label">
+          <h2>Interface</h2>
+          <p>Choose your workspace layout.</p>
+        </div>
+        <div className="ui-choice" role="radiogroup" aria-label="Interface">
+          {UI_SHELLS.map((option) => (
+            <button
+              key={option.id}
+              className={`ui-choice-card ${uiShell === option.id ? "selected" : ""}`}
+              role="radio"
+              aria-checked={uiShell === option.id}
+              title={option.description}
+              onClick={() => setUiShell(option.id)}
+            >
+              <strong>{option.name}</strong>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="appearance-label appearance-theme-heading">
+        <h2>Color theme</h2>
+        <p>Applies to your workspace, editor and terminal.</p>
       </div>
       <div className="theme-grid" role="radiogroup" aria-label="Color theme">
         {APPEARANCES.map((option) => (
@@ -34,10 +44,13 @@ export function AppearanceSettings(): ReactNode {
             className={`theme-card ${theme === option.id ? "selected" : ""}`}
             role="radio"
             aria-checked={theme === option.id}
+            aria-label={option.name}
+            title={option.description}
             onClick={() => setTheme(option.id)}
           >
             <span
               className={`theme-preview theme-preview-${option.id}`}
+              aria-hidden="true"
               style={{
                 "--preview-base": option.colors.base,
                 "--preview-pane": option.colors.pane,
@@ -55,9 +68,10 @@ export function AppearanceSettings(): ReactNode {
               <span className="theme-preview-agent" />
               <span className="theme-preview-terminal" />
             </span>
-            <span className="theme-card-copy"><strong>{option.name}</strong><small>{option.description}</small></span>
-            <span className="theme-swatches">{[option.colors.base, option.colors.pane, option.colors.accent, option.colors.good, option.colors.muted].map((color) => <i key={color} style={{ background: color }} />)}</span>
-            <span className="theme-check">{theme === option.id ? "Selected" : "Select"}</span>
+            <span className="theme-card-copy"><strong>{option.name}</strong></span>
+            <span className="theme-check" aria-hidden="true">
+              {theme === option.id && <i className="codicon codicon-check" />}
+            </span>
           </button>
         ))}
       </div>
