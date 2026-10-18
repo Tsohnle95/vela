@@ -21,14 +21,20 @@ const until=async(predicate,ms=5000)=>{const start=performance.now();while(!pred
 const frame=document.querySelector('iframe');
 const load=async(url)=>{await new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject;frame.src=url;});};
 try{
-  const concepts=await fetch('concepts.json').then(r=>r.json());
+  const concepts=await fetch('concepts.json',{cache:'no-store'}).then(r=>r.json());
+  report('Original thirty plus one hundred additions',concepts.length===130&&concepts.filter(c=>c.batch==='new').length===100);
   let decoded=0;
-  await Promise.all(concepts.map(async c=>{const img=new Image();img.src=`concepts/${c.slug}.svg?v=${c.version}`;await img.decode();if(img.naturalWidth===1440&&img.naturalHeight===900)decoded++;}));
-  report('Every artwork decodes',decoded===30,`${decoded}/30`);
-  await load(`concepts/${concepts[0].slug}.html`);
+  for(let start=0;start<concepts.length;start+=6){
+    await Promise.all(concepts.slice(start,start+6).map(async c=>{const img=new Image();img.src=`concepts/${c.slug}.svg?v=${c.version}`;await img.decode();if(img.naturalWidth===1440&&img.naturalHeight===900)decoded++;}));
+  }
+  report('Every artwork decodes',decoded===130,`${decoded}/130`);
+  await load(`concepts/${concepts[97].slug}.html`);
   const doc=()=>frame.contentDocument;
   await until(()=>doc().body.dataset.artworkAt);
   report('Initial launch has art and no workspace picker',!doc().querySelector('#splash').hidden&&doc().querySelector('#workspace').hidden);
+  const outer=doc().querySelector('#splash').getBoundingClientRect();
+  const art=doc().querySelector('#artwork').getBoundingClientRect();
+  report('Artwork fits within the available launch viewport',art.left>=outer.left-1&&art.top>=outer.top-1&&art.right<=outer.right+1&&art.bottom<=outer.bottom+1);
   await sleep(2500);
   report('Artwork remains before three seconds',doc().body.dataset.phase==='artwork');
   await until(()=>doc().body.dataset.phase==='workspace');
@@ -38,14 +44,30 @@ try{
   doc().querySelector('#hold').click();
   await sleep(3250);
   report('Hold prevents automatic transition',doc().body.dataset.phase==='artwork'&&doc().querySelector('#hold').getAttribute('aria-pressed')==='true');
+  doc().querySelector('#notes-toggle').click();
+  report('Design notes expose the composition and keep artwork held',!doc().querySelector('#design-notes').hidden&&doc().querySelector('#hold').getAttribute('aria-pressed')==='true'&&doc().querySelector('#design-notes').textContent.includes(concepts[97].composition));
   doc().querySelector('#replay').click();
   await until(()=>doc().body.dataset.phase==='workspace');
   report('Replay completes a new three-second launch',Number(doc().body.dataset.workspaceAt)-Number(doc().body.dataset.artworkAt)>=2990);
-  await load(`concepts/${concepts[29].slug}.html?still=1&immersive=1`);
-  report('Concept 30 wraps to concept 01',doc().querySelector('#next').href.includes(concepts[0].slug));
+  report('Replay closes review notes',doc().querySelector('#design-notes').hidden);
+  await load(`concepts/${concepts[29].slug}.html?still=1`);
+  report('Original thirty continue directly into new one hundred',doc().querySelector('#next').href.includes(concepts[30].slug));
+  await load(`concepts/${concepts[129].slug}.html?still=1&immersive=1`);
+  report('Concept 130 wraps to concept 01',doc().querySelector('#next').href.includes(concepts[0].slug));
   report('Immersive view hides review controls',getComputedStyle(doc().querySelector('.review-bar')).display==='none');
   await until(()=>doc().querySelector('#hold').getAttribute('aria-pressed')==='true');
   report('Still URL holds artwork on arrival',doc().body.dataset.phase==='artwork');
+  await load('index.html?group=new');
+  await until(()=>doc().querySelector('#result-count').textContent.includes('of 130'));
+  const visible=()=>[...doc().querySelectorAll('.card')].filter(card=>!card.hidden);
+  report('New-design gallery filter shows exactly one hundred',visible().length===100);
+  doc().querySelector('[data-group="original"]').click();
+  report('Original-design filter shows exactly thirty',visible().length===30);
+  doc().querySelector('[data-group="all"]').click();
+  const search=doc().querySelector('#search');search.value='130';search.dispatchEvent(new Event('input',{bubbles:true}));
+  report('Searching a design number finds only that design',visible().length===1&&visible()[0].querySelector('.number').textContent==='130');
+  search.value='no-such-design';search.dispatchEvent(new Event('input',{bubbles:true}));
+  report('Empty searches show a clear no-results state',visible().length===0&&!doc().querySelector('#no-results').hidden);
 }catch(error){report('Verification completed',false,error.message);}
 document.querySelector('#summary').textContent=`${results.filter(r=>r.pass).length}/${results.length} checks passed`;
 </script>

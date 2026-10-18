@@ -5,6 +5,9 @@
     "family": "Emblem",
     "description": "A luminous orbital emblem suspended above a pixel wordmark.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "01-first-light",
     "version": "82bc3af3ea"
   },
@@ -14,6 +17,9 @@
     "family": "Typography",
     "description": "Oversized cropped lettering becomes the landscape; a tiny orbit gives it scale.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "02-type-in-space",
     "version": "dcdd9140f7"
   },
@@ -23,6 +29,9 @@
     "family": "Landscape",
     "description": "A low lunar horizon and a small rising star create a cinematic opening.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "03-lunar-rise",
     "version": "40a6caf337"
   },
@@ -32,6 +41,9 @@
     "family": "Instrument",
     "description": "A precise circular radar fills the right side while launch information stays on the left.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "04-acquisition",
     "version": "ceb73d4772"
   },
@@ -41,6 +53,9 @@
     "family": "Editorial",
     "description": "A cream book-jacket layout pairs elegant type with a tall astronomical plate.",
     "bg": "#f0eddf",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "light",
     "slug": "05-the-field-guide",
     "version": "4a41c7d3b3"
   },
@@ -50,6 +65,9 @@
     "family": "Pixel world",
     "description": "A quiet pixel landscape, a distant moon, and a small illuminated workstation.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "06-night-garden",
     "version": "bba632d46d"
   },
@@ -59,6 +77,9 @@
     "family": "Terminal",
     "description": "An amber monochrome terminal treats startup as a short, carefully typeset poem.",
     "bg": "#12120f",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "07-boot-poetry",
     "version": "4554ee5f12"
   },
@@ -68,6 +89,9 @@
     "family": "Architecture",
     "description": "A vaulted window frames a dense star field in a quiet plum interior.",
     "bg": "#241c2d",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "08-observatory",
     "version": "29c6f766fe"
   },
@@ -77,6 +101,9 @@
     "family": "Schematic",
     "description": "An engineering drawing with offset ellipses, measured axes, and restrained labels.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "09-orbital-mechanics",
     "version": "dbb6ec6081"
   },
@@ -86,6 +113,9 @@
     "family": "Atmosphere",
     "description": "A monumental eclipsed disc; the wordmark is a tiny whisper beneath it.",
     "bg": "#070710",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "10-totality",
     "version": "2c02f46439"
   },
@@ -95,6 +125,9 @@
     "family": "Collectible",
     "description": "A lilac postage stamp on paper, with a circular cancellation and tiny orbital engraving.",
     "bg": "#eee9dd",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "light",
     "slug": "11-special-delivery",
     "version": "c1f875b75f"
   },
@@ -104,6 +137,9 @@
     "family": "Object",
     "description": "A huge grooved vinyl disc sits half off-screen beside a modest record-sleeve title.",
     "bg": "#211a2e",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "12-long-play",
     "version": "252fcafc70"
   },
@@ -113,6 +149,9 @@
     "family": "Hardware",
     "description": "A chunky pixel cartridge floating on a powder-lilac background.",
     "bg": "#cfbfdf",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "light",
     "slug": "13-memory-card",
     "version": "e92b2f449c"
   },
@@ -122,6 +161,9 @@
     "family": "Constellation",
     "description": "A wide constellation connects isolated points into one open-ended system.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "14-connected-dots",
     "version": "32d20862f9"
   },
@@ -131,6 +173,9 @@
     "family": "Panels",
     "description": "Three tall art panels turn a star, an orbit, and a moon into a graphic sequence.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "15-three-bodies",
     "version": "86afb25d99"
   },
@@ -140,6 +185,9 @@
     "family": "Graphic",
     "description": "A bright Swiss composition with a huge vertical rule and flat orbital geometry.",
     "bg": "#cbb6e1",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "light",
     "slug": "16-soft-geometry",
     "version": "4ab56f3983"
   },
@@ -149,6 +197,9 @@
     "family": "Motion",
     "description": "A diagonal pixel comet cuts through a restrained, left-aligned title.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "17-departure",
     "version": "74d0f2c192"
   },
@@ -158,6 +209,9 @@
     "family": "Cartography",
     "description": "An unfolded celestial map with coordinates, contour lines, and a single marked destination.",
     "bg": "#30283d",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "18-uncharted",
     "version": "0992ceb517"
   },
@@ -167,6 +221,9 @@
     "family": "Perspective",
     "description": "A wireframe rectangular tunnel pulls the eye toward a single distant light.",
     "bg": "#100d20",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "19-event-horizon",
     "version": "39351086ca"
   },
@@ -176,6 +233,9 @@
     "family": "Sculpture",
     "description": "A tall slab of violet light stands on a silent plane; the title stays low and small.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "20-the-monolith",
     "version": "b8aad6da48"
   },
@@ -185,6 +245,9 @@
     "family": "Signal",
     "description": "A full-width violet waveform with a tiny centered title and generous silence.",
     "bg": "#0e0c19",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "21-resonance",
     "version": "79819cda92"
   },
@@ -194,6 +257,9 @@
     "family": "Spatial",
     "description": "Exploded translucent isometric planes surround a central star.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "22-layer-by-layer",
     "version": "80f2104a79"
   },
@@ -203,6 +269,9 @@
     "family": "Print",
     "description": "A bold newspaper masthead and a large halftone moon on warm lavender paper.",
     "bg": "#d5c7dd",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "light",
     "slug": "23-moon-bulletin",
     "version": "c04087946d"
   },
@@ -212,6 +281,9 @@
     "family": "Generative",
     "description": "A woven torus made of intersecting orbital ribbons becomes an intricate central object.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "24-continuum",
     "version": "0d459d1a24"
   },
@@ -221,6 +293,9 @@
     "family": "Letterform",
     "description": "The wordmark becomes a circular typographic orbit around a small violet planet.",
     "bg": "#121020",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "25-around-the-idea",
     "version": "54f8a6ff5f"
   },
@@ -230,6 +305,9 @@
     "family": "Topography",
     "description": "Fluid contour lines form a terrain of possibility beside spare typography.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "26-unknown-terrain",
     "version": "a198d8898e"
   },
@@ -239,6 +317,9 @@
     "family": "Industrial",
     "description": "A pixel launch tower holds a star-shaped payload above a violet exhaust field.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "27-launch-structure",
     "version": "50eca9303f"
   },
@@ -248,6 +329,9 @@
     "family": "Code",
     "description": "Columns of binary dissolve into a calm central clearing and a compact pixel mark.",
     "bg": "#090a17",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "28-source-of-light",
     "version": "943dc2e3a0"
   },
@@ -257,6 +341,9 @@
     "family": "Minimal",
     "description": "A single bright pixel, a restrained wordmark, and almost nothing else.",
     "bg": "#15111c",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "29-one-small-beginning",
     "version": "fa5696f264"
   },
@@ -266,7 +353,2016 @@
     "family": "Archive",
     "description": "Fifteen little celestial plates form a structured atlas beneath a quiet editorial heading.",
     "bg": "#14111f",
+    "batch": "original",
+    "domain": "Original 30",
+    "tone": "dark",
     "slug": "30-the-star-atlas",
     "version": "6d9d0faf0a"
+  },
+  {
+    "id": "31",
+    "name": "Dome of tomorrow",
+    "family": "Botanical cutaway",
+    "description": "An open glass greenhouse shelters five planted terraces beneath a broad shaft of pale light.",
+    "bg": "#131d29",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png",
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Low oblique cutaway occupies lower-left; wide serif-free title floats high-right with an unequal quiet margin.",
+    "silhouette": "Quarter-sphere shell over five descending green terraces.",
+    "typography": "Large thin title at upper-right; two small editorial lines below the open field.",
+    "material": "Transparent glass ribs, hard polygon soil beds and discrete botanical strokes.",
+    "nearest": "08 Observatory: open low dome replaces upright vaulted window; no central planet, title outside structure, terraced depth instead of frontal symmetry.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "31-dome-of-tomorrow",
+    "version": "1978ea2c3d"
+  },
+  {
+    "id": "32",
+    "name": "Below the surface",
+    "family": "Subterranean section",
+    "description": "Staggered book-lined rooms and a descending staircase are excavated from layers of plum-colored rock.",
+    "bg": "#241e2c",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Frontal geological section fills all edges; stair cuts a left-to-right downward vector; title lives in lower-right shelf void.",
+    "silhouette": "Broken rectangle of underground rooms linked by one stair.",
+    "typography": "Warm oversized Georgia title integrated into an empty room, top strip set in spaced monospace.",
+    "material": "Dry geological contour strokes, book-spine rectangles and warm masonry cuts.",
+    "nearest": "44 Roofline commons: buried interior rather than exterior skyline; descending section versus rising terraces, warm serif void versus giant obscured sans title.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "32-below-the-surface",
+    "version": "f593d58d37"
+  },
+  {
+    "id": "33",
+    "name": "Coastlight",
+    "family": "Lateral beacon",
+    "description": "A pale lighthouse on the far-right cliff sends a long wedge of light across calm midnight water.",
+    "bg": "#131b30",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Distant side elevation, lighthouse clipped to right quarter and vast beam/water field to left; wordmark hangs inside beam.",
+    "silhouette": "Needle tower on a jagged cliff with an elongated trapezoid of light.",
+    "typography": "Widely tracked medium title floats left within beam; one low sentence.",
+    "material": "Graphic maritime planes, narrow water hatch and soft transparent illumination.",
+    "nearest": "61 Cable to the clouds: single vertical coastal tower and lateral light wedge versus suspended capsule on sagging cable; water horizon, open left field, wide tracking.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "33-coastlight",
+    "version": "c3cc9a9448"
+  },
+  {
+    "id": "34",
+    "name": "Between worlds",
+    "family": "Chasm crop",
+    "description": "A fragile suspended bridge spans a luminous abyss between two immense cropped rock faces.",
+    "bg": "#1d1930",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png",
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Close frontal canyon, foreground rocks extend past three edges; centered letters hover in narrow sky over the sagging bridge.",
+    "silhouette": "Two irregular near-black walls separated by one very deep violet slit.",
+    "typography": "Airy uppercase title held in a narrow central opening; tiny spaced subtitle.",
+    "material": "Faceted rock strata, hairline suspension ropes, depth fading into violet.",
+    "nearest": "19 Event horizon: organic solid walls and physical bridge replace repeated rectangular wireframes; close crop, high title, tiny walker, open vertical drop.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "34-between-worlds",
+    "version": "02a992621f"
+  },
+  {
+    "id": "35",
+    "name": "Quiet harbor",
+    "family": "Aerial anchorage",
+    "description": "Five crooked piers shelter small pale spacecraft along the edge of a teal floating harbor.",
+    "bg": "#163842",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Bird’s-eye view; inhabited left shoreline advances irregularly across frame, empty right water holds rotated elegant lettering.",
+    "silhouette": "Crooked stepped coastline and horizontal finger piers with tiny tapered craft.",
+    "typography": "Angled large Georgia title in open water; no top masthead.",
+    "material": "Muted maritime aerial drawing with rectilinear dock details and watery line currents.",
+    "nearest": "47 Moon allotments: irregular shoreline and craft on dark water versus regular farm diamonds on pale terrain; rotated serif, full-bleed coast and many short horizontal piers.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "35-quiet-harbor",
+    "version": "b9eca32b56"
+  },
+  {
+    "id": "36",
+    "name": "Cabin window",
+    "family": "Threshold interior",
+    "description": "A heavy cabin doorway opens onto a snowy clearing while a warm mug rests on a near table.",
+    "bg": "#302a38",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Low interior camera; near wall and floor occupy left and bottom while an off-center rectangular exterior opens right.",
+    "silhouette": "Large deep doorjamb, truncated table and pale snow path.",
+    "typography": "Warm serif wordmark on solid near wall, small tracked line immediately below.",
+    "material": "Painterly flat wood planes, geometric snow and soft slate conifers.",
+    "nearest": "08 Observatory: rectangular open doorway with visible thickness, foreground floor and table, exterior snow and trees, off-center wall typography instead of symmetrical vault.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "36-cabin-window",
+    "version": "647a32974f"
+  },
+  {
+    "id": "37",
+    "name": "Polar curtain",
+    "family": "Aurora panorama",
+    "description": "Mint and lavender curtains of aurora twist above sharp snowy mountains and a tiny lone explorer.",
+    "bg": "#10182e",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Broad horizon panorama; bright ribbons occupy upper half, title nestles in right valley and near explorer sits far lower-left.",
+    "silhouette": "Undulating vertical curtains over jagged serrated peaks.",
+    "typography": "Medium thin title follows a low valley; tiny widely tracked line under it.",
+    "material": "Repeated narrow translucent aurora strokes over hard snowy facets and sparse pixel sky.",
+    "nearest": "107 Particle weather: vertical translucent ribbons and grounded mountains versus a horizontal particulate funnel; low valley wordmark, tiny explorer and full-width horizon.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "37-polar-curtain",
+    "version": "1cbd1f0729"
+  },
+  {
+    "id": "38",
+    "name": "Under the canopy",
+    "family": "Upward forest",
+    "description": "Enormous luminous mushroom canopies lean into the frame around a small irregular clearing of night sky.",
+    "bg": "#152230",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Worm’s-eye camera; cropped umbrellas press down from upper corners, curling stems rise from lower edge, tilted type in upper clearing.",
+    "silhouette": "Three broad asymmetrical umbrella caps on bowed stems.",
+    "typography": "Large tilted serif in the negative shape between canopies; compact monospace beneath.",
+    "material": "Biomorphic filled curves, fine radial gill engraving and cool luminous undersides.",
+    "nearest": "88 Blueprint botany: immersive upward forest with giant organic depth, cropped caps and curved stems versus flat leaf specimens on paper; tilted large serif and luminous color.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "38-under-the-canopy",
+    "version": "c43dd58dbf"
+  },
+  {
+    "id": "39",
+    "name": "Last departure",
+    "family": "Transit diagonal",
+    "description": "A silver space train cuts out of the left edge beside a steeply receding platform with a warm warning stripe.",
+    "bg": "#14182a",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Aggressive diagonal from lower-left to high-right; close train cropped left/top, platform foreground fills lower-right and carries rotated title.",
+    "silhouette": "Long serrated train edge against a single diagonal yellow platform line.",
+    "typography": "Bold uppercase title aligned to platform perspective; small upper-left sentence.",
+    "material": "Metal plates, pale glass windows and hard geometric perspective without tunnel lines.",
+    "nearest": "17 Departure: physical cropped train and planar platform replace comet particles; title lies on foreground floor, diagonal moves in opposite direction, dense near architecture.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "39-last-departure",
+    "version": "177a79df49"
+  },
+  {
+    "id": "40",
+    "name": "Tidal intelligence",
+    "family": "Submerged forest",
+    "description": "Rectilinear coral branches rise through deep teal water toward a rippling sunlit surface.",
+    "bg": "#0c2736",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png",
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Underwater low camera; waterline crops the top, coral presses up from full lower edge, wordmark follows high-left waterline.",
+    "silhouette": "Angular branching reef beneath an uneven bright surface band.",
+    "typography": "Spaced thin uppercase title across high-left surface; small accompanying label.",
+    "material": "Translucent water gradients, sparse suspended pixels and square-ended luminous coral.",
+    "nearest": "126 Living pattern: recognizable upright underwater branches with surface and depth replace macro cellular maze; high large type, full-bleed dark immersion and vertical reef.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "40-tidal-intelligence",
+    "version": "911b0f9bec"
+  },
+  {
+    "id": "41",
+    "name": "Cloud forge",
+    "family": "Floating elevation",
+    "description": "A soot-colored stone furnace and broad anvil rest on separate clouds joined by a trail of small stepping clouds.",
+    "bg": "#bcc4d3",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Side-on horizontal elevation on a pale sky; forge low-left, anvil high-right, compact type in near lower-left margin.",
+    "silhouette": "Three uneven floating cloud shelves with a chimney and broad anvil silhouette.",
+    "typography": "Small heavy title at bottom-left, narrow monospace line below; art dominates height.",
+    "material": "Solid muted stone, pixel-step cloud edges, amber flame and soft smoke curves.",
+    "nearest": "27 Launch structure: wide anvil and furnace across pale separate islands replace single tall gantry; asymmetric side elevation, small low title and warm forge interior.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "41-cloud-forge",
+    "version": "1a7ef231bb"
+  },
+  {
+    "id": "42",
+    "name": "Falling upward",
+    "family": "Vertical seam",
+    "description": "A narrow silver waterfall links three suspended rock islands between two unequal pale typographic fields.",
+    "bg": "#d4d6d3",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Thin full-height central landscape separates two unequal blank fields; close frontal drop; OR and BIT stagger on opposite sides.",
+    "silhouette": "Narrow vertical cascade interrupted by three jagged ledges.",
+    "typography": "Very large split wordmark with different weights and baselines; small labels keep the split legible.",
+    "material": "Flat print fields around finely ruled falling water and chiseled muted rock.",
+    "nearest": "45 Elevator to elsewhere: thick watery illustrated seam between pale blocks versus hairline cable over full atmospheric bands; split giant title, three islands and fluid lower splash.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "42-falling-upward",
+    "version": "ff69c64bbf"
+  },
+  {
+    "id": "43",
+    "name": "Dust caravan",
+    "family": "Sand aerial",
+    "description": "A curved procession of tiny pale rovers traces its way through broad peach dunes and an etched Orbit wordmark.",
+    "bg": "#d7ae86",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Straight-down full-bleed land; caravan snakes bottom-left to upper-right while a huge low-right title sits etched into an open sand field.",
+    "silhouette": "Long S-shaped track against broad irregular dune ribbons.",
+    "typography": "Large open tracked lettering angled with dune face; tiny two-line label at opposite top corner.",
+    "material": "Warm flat sand layers, granular pixels, fine crest highlights and small rover shadows.",
+    "nearest": "26 Unknown terrain: filled warm aerial dunes and an actual rover procession replace concentric contour rings; etched diagonal type, overhead framing, full-bleed land and sinuous narrative.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "43-dust-caravan",
+    "version": "0fe095346a"
+  },
+  {
+    "id": "44",
+    "name": "Roofline commons",
+    "family": "Occupied skyline",
+    "description": "A dense stepped town of lit studios, rooftop planters and ladders obscures the lower half of a huge pale Orbit title.",
+    "bg": "#191b30",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png",
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Frontal upward-stepping skyline fills lower two-thirds, wordmark is a distant architectural backdrop cropped behind foreground roof masses.",
+    "silhouette": "Unequal dense stair-step rooftops with tiny ladders and plants.",
+    "typography": "Huge heavy uppercase word behind buildings; small upper-left editorial sentence balances scale.",
+    "material": "Opaque plum masonry, rectangular window light and warm rooftop edges.",
+    "nearest": "32 Below the surface: exterior upward skyline and background giant sans letters replace buried rooms and descending stairs; dense foreground occupancy versus excavated sectional voids.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "44-roofline-commons",
+    "version": "ed00b19e86"
+  },
+  {
+    "id": "45",
+    "name": "Elevator to elsewhere",
+    "family": "Atmospheric strata",
+    "description": "A tiny pale capsule follows a nearly invisible elevator cable through five broad bands of atmosphere.",
+    "bg": "#77758a",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Distant extreme wide view; slightly diagonal cable sits right-of-center, full-width strata cross horizontally, title descends separate left margin.",
+    "silhouette": "Almost weightless line crossing a stack of broad color bands.",
+    "typography": "Five oversized thin letters stacked vertically; one low horizontal small title sentence.",
+    "material": "Matte atmospheric planes, gently scalloped cloud bands and a sharply detailed tiny capsule.",
+    "nearest": "42 Falling upward: hairline industrial tether over uninterrupted wide strata versus thick watery central landscape; tiny capsule, left vertical letters, no split-page title or rock islands.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "45-elevator-to-elsewhere",
+    "version": "12743a55f9"
+  },
+  {
+    "id": "46",
+    "name": "Glow beneath",
+    "family": "Luminous grotto",
+    "description": "A low lopsided cave mouth frames pale hanging light and long broken reflections in a sheltered teal pool.",
+    "bg": "#252b32",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Low water-level view through a wide organic opening; heavy cave frame covers upper and side edges; title rests in solid near bottom-left rock.",
+    "silhouette": "Irregular flattened cave aperture with dangling glow and horizontal pool reflection.",
+    "typography": "Large low serif and tiny aligned side label; no text in central opening.",
+    "material": "Mineral hatching, organic aperture curves, luminous droplets and short reflective marks.",
+    "nearest": "34 Between worlds: wide low cave opening and horizontal water replace two vertical canyon faces and bridge; bottom rock typography, organic material and low close camera.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "46-glow-beneath",
+    "version": "b74521d247"
+  },
+  {
+    "id": "47",
+    "name": "Moon allotments",
+    "family": "Agricultural print",
+    "description": "Tilted crop plots, blue irrigation channels and three geodesic farm pods form a pale lunar allotment plan.",
+    "bg": "#dcdcc7",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Oblique overhead landscape fills left four-fifths; narrow pale right rail holds title and aligned editorial copy.",
+    "silhouette": "Repeating tilted diamonds broken by three half-dome pods and blue diagonals.",
+    "typography": "Compact sans title at top of slim right rail; low serif two-line caption.",
+    "material": "Pale survey-print geometry, thin planted rows, outlined translucent pod ribs and grain.",
+    "nearest": "35 Quiet harbor: gridded solid farmland and domed pods versus irregular water/coast with spacecraft; right title rail, muted light print, oblique crop geometry.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "47-moon-allotments",
+    "version": "e7b22685ba"
+  },
+  {
+    "id": "48",
+    "name": "Night counter",
+    "family": "After-hours interior",
+    "description": "A curved chrome diner counter, four burgundy stools and dark space portholes fill an intimate late-night interior.",
+    "bg": "#333c4d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Close eye-level interior, counter sweeps from left edge toward near lower-right; portholes span back wall; title is painted into upper-left wall.",
+    "silhouette": "Broad chrome counter arc with four repeated low stool discs.",
+    "typography": "Medium light sans title and small stacked label on upper-left wall.",
+    "material": "Satin chrome bands, muted upholstered seats, glass portholes and warm pendant light.",
+    "nearest": "36 Cabin window: broad close counter and repeated round portholes replace single rectangular snowy doorway; chrome material, curved near floor, higher wall type and intimate horizontal focus.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "48-night-counter",
+    "version": "7d5c8c29d6"
+  },
+  {
+    "id": "49",
+    "name": "Bamboo receiver",
+    "family": "Botanical silence",
+    "description": "Slender green antenna reeds frame one small hanging receiver on a pale, lightly flecked field.",
+    "bg": "#e4e5d7",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Tall sparse near-orthographic grove extends beyond top and bottom; a single horizontal receiver breaks the rhythm high-right; rotated title in left margin.",
+    "silhouette": "Seven very thin bowed vertical reeds with one short horizontal suspended bar.",
+    "typography": "Tall rotated Georgia wordmark on far-left margin; tiny separate two-line label lower-left.",
+    "material": "Ink-like green stalk strokes, delicate leaf gestures and faint paper specks.",
+    "nearest": "110 Branch logic: sparse upright parallel reeds versus dense lateral recursive branching; suspended physical receiver, vertical marginal serif and full-height rhythm.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "49-bamboo-receiver",
+    "version": "620b25a8a5"
+  },
+  {
+    "id": "50",
+    "name": "The listening bowl",
+    "family": "Missing quadrant",
+    "description": "Concentric stone amphitheater steps spiral around a tiny pale stage, with a rectangular upper-right quarter left open for the title.",
+    "bg": "#292735",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Straight-down crop of a very large stepped bowl extending beyond three edges; absent upper-right quarter becomes a rectangular title room.",
+    "silhouette": "Three-quarter circular terraces with one hard rectangular bite.",
+    "typography": "Large serif within missing quarter; tight upper-right textual block, tiny opposite margin note.",
+    "material": "Layered engraved stone bands, thin highlights and widely separated audience dots.",
+    "nearest": "04 Acquisition: solid cropped amphitheater steps and rectangular missing quarter replace thin radar circles; physical pale stage offset low, large inset serif block, no axes or sweep.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "50-the-listening-bowl",
+    "version": "97ae5217f1"
+  },
+  {
+    "id": "51",
+    "name": "Specimen bench",
+    "family": "Glass still life",
+    "description": "Five unequal glass vessels shelter botanical cuttings across a wide, grounded laboratory bench.",
+    "bg": "#dbe3d6",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Eye-level bench still life stretches edge-to-edge along bottom third; vessel heights vary widely; title high-left and one quiet line high-right.",
+    "silhouette": "A long shared baseline punctuated by jar, flask, tall bell jar, beaker and short specimen pot.",
+    "typography": "Large light sans wordmark above bench, with a much smaller serif sentence across the upper open field.",
+    "material": "Translucent outlined glass, muted water fills, gestural stems and matte green-grey bench.",
+    "nearest": "31 Dome of tomorrow: separate close glass vessels on a horizontal tabletop instead of one architectural dome; light background, high-left thin sans title, botanical still-life scale.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "51-specimen-bench",
+    "version": "14d2664aa7"
+  },
+  {
+    "id": "52",
+    "name": "Caldera",
+    "family": "Geological cutaway",
+    "description": "A dark volcanic block opens into a glowing orange crater and an exposed magma chamber beneath its front face.",
+    "bg": "#211f2e",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png",
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Oblique overhead block occupies low-left, exposed front face cuts down to canvas edge; large warm right-hand title stands high above small copy.",
+    "silhouette": "Faceted low volcanic basin with a bright branching molten interior.",
+    "typography": "Large Georgia title at high-right, small spaced label and one short editorial line.",
+    "material": "Layered dark rock hatching, solid molten orange channels and pale crater highlights.",
+    "nearest": "59 Asteroid works: grounded open lava chamber and warm molten inner wedge versus suspended pale stepped quarry; right serif column, front cross-section, irregular basin and smoke.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "52-caldera",
+    "version": "89ef366a74"
+  },
+  {
+    "id": "53",
+    "name": "Paper flight",
+    "family": "Contrail pastoral",
+    "description": "A tiny folded glider loops a pale contrail over an edge-to-edge patchwork agricultural plain.",
+    "bg": "#72876c",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Straight-down view with no horizon; patchwork extends to every edge; contrail loops around a low-center typographic clearing and exits high-right.",
+    "silhouette": "One pale looping flight path over irregular agricultural polygons.",
+    "typography": "Large lightweight title placed inside contrail loop and turned slightly; small corner phrase.",
+    "material": "Muted map-like filled fields, faint planted stripes and sharp folded paper glider.",
+    "nearest": "47 Moon allotments: full-bleed irregular green patchwork and dynamic single white path replace pale orderly diamond plots with right rail; large loose center type and miniature folded flyer.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "53-paper-flight",
+    "version": "e4b0eb2111"
+  },
+  {
+    "id": "54",
+    "name": "One-room universe",
+    "family": "Intimate isometric",
+    "description": "A small open-corner studio contains a desk, lit screen, two bookshelves and a high window onto the night sky.",
+    "bg": "#e4dbcd",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "High oblique cutaway cube shifted to right; two near walls removed; title and quiet caption live in wide left margin.",
+    "silhouette": "Two-wall cuboid room with diagonal floor, shelves and a desk protruding toward viewer.",
+    "typography": "Medium serif title mid-left and separate low-left two-line caption.",
+    "material": "Warm clay architectural planes, wood polygons and tiny muted glass light.",
+    "nearest": "06 Night garden: near interior isometric room on warm paper replaces distant outdoor workstation; no moon, no landscape, large empty left margin and intimate furniture scale.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "54-one-room-universe",
+    "version": "5494ca07a3"
+  },
+  {
+    "id": "55",
+    "name": "A night outside",
+    "family": "Foreground shelter",
+    "description": "A large amber triangular tent fills the near-left foreground beneath an arcing Orbit title and a distant serrated mountain line.",
+    "bg": "#191e33",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Very low ground camera; near tent dominates left-lower diagonal, sky and gently arcing title fill opposite upper-right half.",
+    "silhouette": "Strong asymmetric triangular tent with a dark triangular open flap.",
+    "typography": "Large Georgia word follows an open shallow arc high-right, small two-line text mid-right.",
+    "material": "Canvas planes with bright stitched edges, solid distant peak silhouettes and pixel stars.",
+    "nearest": "60 The sailing room: grounded opaque warm triangular shelter versus translucent upright sails on water; close crop, curved large title, two unequal ground diagonals and no mast.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "55-a-night-outside",
+    "version": "cdbf93860e"
+  },
+  {
+    "id": "56",
+    "name": "Soft shelter",
+    "family": "Woven canopy",
+    "description": "A flowing lilac textile canopy sweeps diagonally over a low upholstered platform on warm sand-colored ground.",
+    "bg": "#e0d3c1",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Close side view; fabric enters entire top edge and bends to right, low platform spans lower-right, type occupies open mid-left pocket.",
+    "silhouette": "One sweeping asymmetric drape above a low oblique rectangular dais.",
+    "typography": "Large light sans at middle-left with a small tracked label; low quiet serif sentence.",
+    "material": "Fine curved warp threads over matte fabric planes and softly rounded cushions.",
+    "nearest": "77 Open fan: free sagging fabric canopy with nonradial curved threads replaces rigid radial fan wedges; inhabited platform, side camera, mid-left large thin type and warm interior floor.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "56-soft-shelter",
+    "version": "271c14a0b1"
+  },
+  {
+    "id": "57",
+    "name": "Rain passage",
+    "family": "Wet street descent",
+    "description": "Rain falls through a narrow violet alley whose reflective stone paving recedes between two immense cropped building faces.",
+    "bg": "#333346",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Oblique downward camera, near wall fills left third and far walls converge high-center; narrow reflective paving is focal plane; title painted down near-left facade.",
+    "silhouette": "Long tapered wedge of wet street between massive clipped walls.",
+    "typography": "Heavy vertical uppercase title on foreground wall, thin companion line follows it; small low-right phrase.",
+    "material": "Rectangular masonry, translucent slanted rain, scattered pale reflections and perspective paving.",
+    "nearest": "19 Event horizon: solid asymmetric street walls, actual wet ground and near facade title replace empty wireframe rectangles; downwards camera and thin puddle glints make a material urban passage.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "57-rain-passage",
+    "version": "ce8e16bbe1"
+  },
+  {
+    "id": "58",
+    "name": "Messages aloft",
+    "family": "Paper lantern stream",
+    "description": "Five unequal warm paper lanterns carry tiny star maps up a broad diagonal into the dark plum sky.",
+    "bg": "#282235",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Five widely separated suspended objects move from center-left toward cropped upper-right; large low-left text anchors the still region.",
+    "silhouette": "Diagonal stream of softly folded tapering rectangles with warm open bases.",
+    "typography": "Large elegant low-left serif above a small spaced label and short separate sentence.",
+    "material": "Paper fold seams, warm translucent skins, small constellation marks and quiet grain.",
+    "nearest": "107 Particle weather: a few large folded lantern bodies with open flame bases versus thousands of tiny funnel particles; low-left serif block, soft physical paper and open diagonal spacing.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "58-messages-aloft",
+    "version": "90e01112e1"
+  },
+  {
+    "id": "59",
+    "name": "Asteroid works",
+    "family": "Suspended quarry",
+    "description": "A large floating asteroid has been carved into an angular stepped quarry, with a tiny excavator near its upper rim.",
+    "bg": "#1c2034",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Oblique aerial cutaway, one broad thick rock floats across lower two-thirds; high-left title sits separate above the sloping quarry.",
+    "silhouette": "Irregular thick asteroid slab containing nested broken rectangular excavation terraces.",
+    "typography": "Large thin tracked wordmark high-left with small subordinate label; tiny low-right phrase.",
+    "material": "Chiseled flat strata, alternating stone cut bands, few mineral cracks and miniature machinery.",
+    "nearest": "52 Caldera: suspended industrial angular terraces and pale stone instead of ground-bound molten crater; high-left sans, whole floating outline, no exposed lava core, tiny excavation machinery.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "59-asteroid-works",
+    "version": "d3a7c7b15d"
+  },
+  {
+    "id": "60",
+    "name": "The sailing room",
+    "family": "Nocturnal vessel",
+    "description": "Two translucent triangular sails rise from a small observatory sailboat over rippling midnight water.",
+    "bg": "#1a2035",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Side-on long boat sits low-right, mast reaches near top; left half remains quiet with a small mid-low horizontal title.",
+    "silhouette": "Unequal pair of tall translucent triangles and a slim low hull with round cabin window.",
+    "typography": "Small light sans wordmark at lower-left horizon, tiny label and one low serif line.",
+    "material": "Glass-like layered sail planes, fine rigging, muted metallic hull and broken water hatch.",
+    "nearest": "55 A night outside: distant translucent vertical sails on a slender vessel versus giant opaque near tent; side camera, small low horizontal title, mast, water and very different scale.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "60-the-sailing-room",
+    "version": "e475611aa3"
+  },
+  {
+    "id": "61",
+    "name": "Cable to the clouds",
+    "family": "Suspended journey",
+    "description": "A single lilac cable car hangs over pale cloud layers between two cropped mountain faces, with Orbit following its cable.",
+    "bg": "#cbd4d5",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_13 PM-1.png"
+    ],
+    "composition": "Wide distant view with near mountains cropped into both sides; high cable sags across open middle and supports one small low capsule and curved title.",
+    "silhouette": "One soft hanging cable with a boxy car above pale scalloped cloud bands.",
+    "typography": "Medium thin wordmark follows sagging upper cable left of capsule; a single low caption.",
+    "material": "Pale blue-grey mountain facets, soft flat mist bands and crisp small cabin windows.",
+    "nearest": "33 Coastlight: balanced mountain sides and suspended capsule beneath a sagging cable versus tower on single cliff and horizontal beam; pale palette, curved top type, no water horizon.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "61-cable-to-the-clouds",
+    "version": "17dcd865a0"
+  },
+  {
+    "id": "62",
+    "name": "Pocket cosmos",
+    "family": "Impossible device",
+    "description": "An open silver laptop contains a miniature mountain valley whose river spills across the keyboard and out of the screen.",
+    "bg": "#27263b",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 08_37_12 PM-1.png"
+    ],
+    "composition": "Extreme close oblique object, laptop runs off lower-right edge; oversized cropped vertical word behind left side, small distant caption high.",
+    "silhouette": "Open clamshell rectangle with mountain silhouettes protruding across hinge and cascading river.",
+    "typography": "Massive dark vertical background wordmark cropped by edge; tiny high caption and low-right serif line.",
+    "material": "Brushed planar laptop metal, repeated keyboard keys and saturated miniature terrain.",
+    "nearest": "13 Memory card: open horizontal clamshell with inhabited mountain/river landscape versus closed upright cartridge; near oblique scale, edge crop, oversized background type and spillover narrative.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "62-pocket-cosmos",
+    "version": "980b19d4a8"
+  },
+  {
+    "id": "63",
+    "name": "Starlight bakery",
+    "family": "Cosmic shopfront",
+    "description": "A small peach storefront shelters an arched glowing bread oven and a window of pale loaves under an Orbit awning.",
+    "bg": "#e2ccb6",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "Flat orthographic storefront shifted slightly right, modest empty warm margin left; full facade grounds at low pavement, no landscape horizon.",
+    "silhouette": "Wide rectangular awning over a left arched oven and right gridded bakery window.",
+    "typography": "Large thin wordmark centered on physical awning; small serif shop name top-left and low sentence.",
+    "material": "Warm plaster blocks, alternating scalloped fabric, matte tile and amber oven glow.",
+    "nearest": "85 Afterglow sign: full inhabited bakery facade with physical awning and oven replaces freeform neon sign on brick; daylight print material, frontal architecture, no cable or luminous script.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "63-starlight-bakery",
+    "version": "49792fd656"
+  },
+  {
+    "id": "64",
+    "name": "Terraces of water",
+    "family": "Ascending aqueduct",
+    "description": "Five long shallow water gardens rise diagonally through the frame, joined by one pale staircase and a tiny walking figure.",
+    "bg": "#213d45",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
+    ],
+    "composition": "High oblique view of long full-width stepped pools ascending lower-left to upper-right; vertical type occupies separate far-right margin, sparse top-left caption.",
+    "silhouette": "Long rising zigzag of broad water ledges crossed by a thinner continuous diagonal stair.",
+    "typography": "Thin rotated large wordmark on right edge; small high-left serif sentence.",
+    "material": "Cool mineral polygon walls, mint reflective water marks, pale solid steps and threadlike cascades.",
+    "nearest": "42 Falling upward: broad horizontal pools arranged along a continuous diagonal stair versus narrow central vertical waterfall; dark full-bleed field, right vertical title, oblique depth and one walker.",
+    "batch": "new",
+    "domain": "environments",
+    "slug": "64-terraces-of-water",
+    "version": "278a22115c"
+  },
+  {
+    "id": "65",
+    "name": "Chromatic crossing",
+    "family": "Ink collision",
+    "description": "Scarlet, teal, ochre and violet ink planes collide across an interrupted black Orbit heading.",
+    "bg": "#f5f1e4",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Flat full-bleed print with four crossing diagonals; word cuts from top-left to center-right through a white seam.",
+    "silhouette": "Long intersecting trapezoids, no bounded object.",
+    "typography": "Huge black sans letters are separated across the diagonal; two small printer notes at lower-left.",
+    "material": "Translucent spot-color shapes, tiny ink pinholes and offset edge registrations.",
+    "nearest": "103 Misalignment: solid irregular overprinted planes rather than two square line grids; oblique word fragmentation, warm ink and a flat poster replace moire.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "65-chromatic-crossing",
+    "version": "0f3f9079dc"
+  },
+  {
+    "id": "66",
+    "name": "Pressure of words",
+    "family": "Blind impression",
+    "description": "A giant blind-embossed Orbit sits almost below the edge of warm ivory paper under a diagonal rake of light.",
+    "bg": "#e5dfcf",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Extreme close-up of a matte sheet, five sixths quiet space; giant recessed lettering touches the lower edge.",
+    "silhouette": "A low horizontal debossed word with a long upper-right light wedge.",
+    "typography": "One low, weighty uppercase word; a tiny vertical printer mark at the far right.",
+    "material": "Layered paper-colored letter edges simulate pressed stock; fine fiber grain and broad raking light.",
+    "nearest": "29 One small beginning: monumental tactile low relief, extreme edge crop, oblique light and warm paper replace a tiny centered flat word on dark space.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "66-pressure-of-words",
+    "version": "85dc757109"
+  },
+  {
+    "id": "67",
+    "name": "Unfold",
+    "family": "Paper choreography",
+    "description": "An accordion ribbon bends across the whole screen, with one oversized violet letter printed on each raised paper panel.",
+    "bg": "#927b8b",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Side-on close view of an accordion ribbon entering and leaving both edges, rising from left to right.",
+    "silhouette": "Six alternating open zigzag paper planes.",
+    "typography": "Individual ORBIT letters occupy separate faces and skew with the folds; no detached heading.",
+    "material": "Cream cut paper, shaded alternating facets, long soft-edged polygon shadow and sharp illuminated creases.",
+    "nearest": "81 Ticker thought: a single unperforated accordion with large isolated letters and open ends, versus many thin interwoven zigzags of repeated small text viewed from above.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "67-unfold",
+    "version": "8151e3227c"
+  },
+  {
+    "id": "68",
+    "name": "Hard line",
+    "family": "Cut steel type",
+    "description": "Three unequal black, violet and chalk columns carry gigantic cropped stencil letters divided by deliberate cutout bridges.",
+    "bg": "#d9d5c7",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Flat frontal composition with three unequal full-height columns, a heavy horizontal band interrupts all three near the bottom.",
+    "silhouette": "Tall compressed stencil blocks ending at hard screen edges.",
+    "typography": "OR stacked in the wide black column, BI across a narrow violet column, one enormous T in chalk; type is the architecture.",
+    "material": "Industrial stencil cutouts, abrasive edge marks and chalky overprint.",
+    "nearest": "02 Type in space: segmented multi-axis columns, punched stencil gaps, edge-to-edge material and stacked reading replace one horizontal word with orbital decoration.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "68-hard-line",
+    "version": "eff0124653"
+  },
+  {
+    "id": "69",
+    "name": "Ribbon memory",
+    "family": "Mechanical close-up",
+    "description": "A cropped typewriter fills the very bottom; its violet ink ribbon passes across a nearly empty ivory sheet carrying the Orbit name.",
+    "bg": "#ede5d2",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Frontal macro of carriage at the bottom edge; white paper fills the upper two thirds, ribbon is a taut horizontal foreground line.",
+    "silhouette": "Low layered bank of round keys, two dark ribbon hubs, dense converging typebars.",
+    "typography": "A tiny monospaced Orbit is typed onto the actual ink ribbon; a ghost ink impression rests on the page.",
+    "material": "Mechanical steel strokes, rubber platen, worn circular key caps and dyed fabric ribbon.",
+    "nearest": "71 Departure board: irregular round mechanics cropped low with vast blank paper, versus a high stepped field of rectangular hinged character tiles on charcoal.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "69-ribbon-memory",
+    "version": "f27fb08721"
+  },
+  {
+    "id": "70",
+    "name": "Balanced thought",
+    "family": "Suspended geometry",
+    "description": "A delicate black mobile holds an ochre triangle, scarlet bar and violet disc beside a tall narrow Orbit heading.",
+    "bg": "#e9e4d8",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Looking slightly upward at a suspended asymmetric mobile in the top-right; typography climbs the far-left margin.",
+    "silhouette": "Sparse hanging angled rods with an off-balance triangle, thin rectangle and displaced disc.",
+    "typography": "Tall stacked O R B I T down the left with a single small horizontal caption beneath.",
+    "material": "Matte painted metal shapes, taut black string and fine offset paper shadows.",
+    "nearest": "101 Pendulum choir: branching rods and three different flat geometric weights, left vertical lettering and warm poster stock replace parallel hanging spheres and arc traces.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "70-balanced-thought",
+    "version": "54d5811dc8"
+  },
+  {
+    "id": "71",
+    "name": "Departure board",
+    "family": "Split flap",
+    "description": "Five split-flap letter tiles descend in an uneven physical staircase across a charcoal wall.",
+    "bg": "#171b20",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Frontal close-up of five broad flaps stepping down from upper-left to lower-right, leaving an empty low-left wedge.",
+    "silhouette": "Stair-step row of chunky hinged rectangular tiles.",
+    "typography": "One cream letter per split flap, no secondary headline; a small static caption lives far below at right.",
+    "material": "Painted steel, thick hinge barrels, inset tile shadows and horizontal split seams.",
+    "nearest": "68 Hard line: individual raised tile bodies on a diagonal stair with actual hinges, moderate letters and dark open corners replace flat floor-to-ceiling stencil columns.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "71-departure-board",
+    "version": "f23d9e9541"
+  },
+  {
+    "id": "72",
+    "name": "Between the stripes",
+    "family": "Optical cutout",
+    "description": "Dense black vertical lines stop at an ivory citadel silhouette whose slender spires become the only bright opening.",
+    "bg": "#f2e9d4",
+    "tone": "light",
+    "source": [
+      "Untitled.png"
+    ],
+    "composition": "Flat optical screen across the right three quarters; a quiet unprinted vertical gutter at left holds a small heading.",
+    "silhouette": "Negative jagged skyline punched out of a vertical striped field.",
+    "typography": "Small stacked left gutter text with a compact serif Orbit near eye level; illustration bears the visual weight.",
+    "material": "Lenticular black ink stripes and ivory knockouts, with tiny violet misregistration slivers.",
+    "nearest": "44 Roofline commons: abstract negative cutout, vertical optical line material, flat frontal framing and small gutter typography replace spatial terraced roofs and giant obscured letters.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "72-between-the-stripes",
+    "version": "94e9571b00"
+  },
+  {
+    "id": "73",
+    "name": "Frames in motion",
+    "family": "Celluloid",
+    "description": "A black perforated film ribbon curls diagonally through warm paper, carrying three unequal violet cosmic exposures.",
+    "bg": "#d7c6b7",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png",
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Oblique tabletop macro; film enters cropped lower-left, bows across the middle and exits top-right; title splits between open corners.",
+    "silhouette": "Long curling perforated S-band at steep diagonal.",
+    "typography": "Large Orbit serif at top-left and tiny spaced caption in lower-right; frame numbers remain purely photographic.",
+    "material": "Translucent brown celluloid edges, violet grain, dark contact-print frames and punched sprocket holes.",
+    "nearest": "15 Three bodies: one continuous bent photographic object with oblique exposures and punched edges, asymmetric corner type and warm table replace equal upright triptych panels.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "73-frames-in-motion",
+    "version": "2df7304d64"
+  },
+  {
+    "id": "74",
+    "name": "Made of metal",
+    "family": "Brushed alloy",
+    "description": "A flush engraved Orbit plate sits inside a vast brushed alloy surface crossed by one dramatic diagonal reflection.",
+    "bg": "#868895",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Extreme frontal material crop with the beveled nameplate low-right; a wide skew reflection traverses almost the entire surface.",
+    "silhouette": "Unbroken metal plane with one subtle recessed rectangular seam.",
+    "typography": "Tiny widely tracked engraved uppercase word on the plate, no poster headline.",
+    "material": "Hundreds of directional brush strokes, bevel highlights, four countersunk screws and sharp silver reflected bands.",
+    "nearest": "66 Pressure of words: cold full-bleed directional alloy, inset hardware low-right and minute engraving replace warm matte stock and huge low blind letters.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "74-made-of-metal",
+    "version": "fced61a9ca"
+  },
+  {
+    "id": "75",
+    "name": "Through the tear",
+    "family": "Paper rupture",
+    "description": "An enormous ragged diagonal tear opens warm paper to a deep violet star field, splitting the black Orbit lettering into two distant pieces.",
+    "bg": "#e6d8bd",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Macro overhead sheet split by a wide descending diagonal fissure from upper-left to lower-right; two unequal paper banks hold separate type.",
+    "silhouette": "Ragged lightning-shaped opening with thick torn fibers.",
+    "typography": "OR sits high-right and BIT low-left, both heavy cropped fragments; the missing line is the subject.",
+    "material": "Layered torn-stock edges, violet ink depth, sparse pinprick light and warm rough fibers.",
+    "nearest": "34 Between worlds: flat ragged paper material, interrupted oversize type, overhead macro and violet stars replace a deep canyon with a bridge and spatial rock walls.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "75-through-the-tear",
+    "version": "6c2461b190"
+  },
+  {
+    "id": "76",
+    "name": "Flat to form",
+    "family": "Unmade object",
+    "description": "An unfolded ivory carton net lies on an olive table, with one violet flap lifting out of the flat drawing.",
+    "bg": "#777963",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Overhead tabletop view of a large asymmetrical cross slightly right of center, lifted top flap is the only depth cue.",
+    "silhouette": "Wide carton cross with notched tabs and one diagonal raised corner.",
+    "typography": "Restrained black Orbit printed in the broad center panel, tiny crop notes at the left without a separate headline.",
+    "material": "Cut card, dashed score lines, knife notches, flat olive ink and one violet folded plane.",
+    "nearest": "127 Paper computation: a single solid packaging net with broad blank panels, orthographic view, printed center and one lifted tab rather than a repeating cut lattice in perspective.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "76-flat-to-form",
+    "version": "5c97c88652"
+  },
+  {
+    "id": "77",
+    "name": "Open fan",
+    "family": "Pleated light",
+    "description": "A vast ochre paper fan spreads from a low-right hinge, its violet brush marks stretching across pleats above a small serif Orbit.",
+    "bg": "#534351",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Low oblique close view: fan dominates the upper-right and is cropped along the entire top edge; quiet dark triangle lower-left holds title.",
+    "silhouette": "Broad asymmetric serrated paper fan opening from the far-right bottom hinge.",
+    "typography": "Small ivory serif low-left, one understated spaced line below; no concentric labels.",
+    "material": "Alternating warm paper facets, fine bamboo ribs and discontinuous violet brush strokes.",
+    "nearest": "10 Totality: edge-cropped angular fan facets, open wedge geometry, warm physical paper and low-left type replace a closed centered glowing disc.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "77-open-fan",
+    "version": "5b53a32a3e"
+  },
+  {
+    "id": "78",
+    "name": "Flight in pieces",
+    "family": "Tangram print",
+    "description": "A seven-piece violet and vermilion tangram bird stretches upward across an ivory page, with two spare geometric pieces on the bottom rule.",
+    "bg": "#eee8d5",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Bird occupies high-right in a rising diagonal; massive heavy word sits low-left; two spare shapes rest far below the bird.",
+    "silhouette": "Seven-piece angular crane with a long extended beak and a wide split wing.",
+    "typography": "Low-left black slab word, tight two-line caption, no type centered under the bird.",
+    "material": "Solid silkscreen tangram polygons with dark offset paper shadows and tiny registration scars.",
+    "nearest": "122 Shared sky: one large seven-piece abstract bird, flat isolated polygon assembly and grounded spare pieces replace repeated interlocking silhouettes dissolving into a free bird.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "78-flight-in-pieces",
+    "version": "55561e3dab"
+  },
+  {
+    "id": "79",
+    "name": "A place held",
+    "family": "Book margin",
+    "description": "A deep plum bookmark bends around the upper-left corner of an enormous blank ivory book page.",
+    "bg": "#b8a79c",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Extreme overhead crop of an open book page entering from top-left and filling the screen; long bookmark descends near left edge.",
+    "silhouette": "A vertical notched textile ribbon with a folded upper hook and diagonal book corner.",
+    "typography": "Small vertical Orbit printed along the ribbon; a widely spaced marginal sentence rests at far-right bottom.",
+    "material": "Deckled layered page edges, cream rag paper, woven plum ribbon and a shallow cloth shadow.",
+    "nearest": "83 The spines: one near-blank open page with a long single ribbon, overhead macro and marginal text replace dense frontal multicolored book spines and a bright vertical gap.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "79-a-place-held",
+    "version": "5c2ccfe873"
+  },
+  {
+    "id": "80",
+    "name": "Letters to get lost in",
+    "family": "Typographic labyrinth",
+    "description": "Orthogonal maze strokes assemble five block letters in a compact offset cluster, while a wide italic Orbit stretches through the clear right-hand field.",
+    "bg": "#e1dfc9",
+    "tone": "light",
+    "source": [
+      "Untitled.png"
+    ],
+    "composition": "Frontal flat print: block maze letters form a left-heavy 2-over-3 cluster; oversized serif begins in the open top-right and trails off the edge.",
+    "silhouette": "Unequal stepped mass of square letter labyrinths.",
+    "typography": "Small modular ORBIT reads through construction; an opposing long italic serif word supplies a different rhythm.",
+    "material": "Dense olive ink walls with ivory hairline passages, rough print tooth and controlled square breaks.",
+    "nearest": "111 One continuous line: five visibly letter-shaped disconnected maze masses, modular wall blocks, olive paper and opposing wide serif replace one dense Hilbert square and escape route.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "80-letters-to-get-lost-in",
+    "version": "6f96a586f0"
+  },
+  {
+    "id": "81",
+    "name": "Ticker thought",
+    "family": "Paper weave",
+    "description": "Three long cream ticker strips zigzag in and out of one another across the lower screen, their plum type changing direction with each crease.",
+    "bg": "#9b6c72",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Overhead view of three interwoven narrow zigzags across the lower two thirds, with a wide empty blush upper margin.",
+    "silhouette": "Repeated thin zigzag ribbons crossing at unequal points.",
+    "typography": "Small repeated monospaced Orbit appears on the strips; a light uppercase heading is aligned high at right.",
+    "material": "Perforated paper strip edges, alternating cream facets, ink type and cross-over shadows.",
+    "nearest": "67 Unfold: many narrow patterned strips viewed from above, dense weaving low on the page and a quiet high caption replace one broad side-on accordion with one huge letter per panel.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "81-ticker-thought",
+    "version": "1b626d67d1"
+  },
+  {
+    "id": "82",
+    "name": "Friendly machine",
+    "family": "Mosaic companion",
+    "description": "A giant cropped violet mosaic face smiles from the right edge while its spare antenna and cheek pixels float separately in the quiet left field.",
+    "bg": "#d4d2b8",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Very close frontal face hard-cropped at the right edge and low enough to feel oversized; spare components float in left negative space.",
+    "silhouette": "Asymmetrical stepped pixel face with square eyes and a warm angular smile.",
+    "typography": "Small stacked serif Or / bit at far-left, physically tiny against the huge face.",
+    "material": "Uneven tile-like pixels, small grout gaps, two warm-color accents and matte ceramic colors.",
+    "nearest": "109 Small building blocks: a readable two-dimensional face with irregular stepped outline, ceramic tile color and tiny left serif rather than a dense three-dimensional cube losing blocks.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "82-friendly-machine",
+    "version": "7c76738b23"
+  },
+  {
+    "id": "83",
+    "name": "The spines",
+    "family": "Shelf close-up",
+    "description": "Unequal worn book spines fill the screen vertically; a single narrow gap between them exposes violet stars.",
+    "bg": "#3c313d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Extreme straight-on shelf crop, books taller than screen and of wildly different widths; almost no neutral background.",
+    "silhouette": "Dense vertical material bars interrupted by one thin dark luminous slit.",
+    "typography": "Rotated stamped Orbit words use several scales along different spines, with no detached heading.",
+    "material": "Scuffed cloth, foil rules, discolored cream boards and cosmic pinpricks in the gap.",
+    "nearest": "72 Between the stripes: unequal solid textured book bodies and rotated spine lettering at macro scale replace regular optical hairlines, ivory skyline knockout and an empty left gutter.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "83-the-spines",
+    "version": "827a6a2c00"
+  },
+  {
+    "id": "84",
+    "name": "Woven alphabet",
+    "family": "Jacquard type",
+    "description": "Warped plum and peach letter tiles interlace into a corner-to-corner textile field, interrupted by one smooth oval caption island.",
+    "bg": "#bc8f86",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Overhead macro textile crosses diagonally between top-left and bottom-right; one pale smooth island cuts into the weave low-right.",
+    "silhouette": "Warped checker mass of interlaced letter squares with scalloped diagonal edges.",
+    "typography": "Repeated single letters become the weave; one unwarped italic Orbit in a plain light island.",
+    "material": "Jacquard-like alternating over-under fields, hairline warp threads and peach-plum woven ink.",
+    "nearest": "120 The weight of an idea: a letter-bearing diagonal fabric mass with an unwarped caption island and alternating block fills, versus a gravitationally sunken line grid and tiny upper title.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "84-woven-alphabet",
+    "version": "982666a182"
+  },
+  {
+    "id": "85",
+    "name": "Afterglow sign",
+    "family": "Hand-bent light",
+    "description": "A freehand lavender neon Orbit glows against dark brick, with an exposed black cable winding far into the right-hand emptiness.",
+    "bg": "#201c27",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Slightly low frontal view of a neon word left of center on a full-bleed brick wall; cable snakes across the broad quiet right side.",
+    "silhouette": "Continuous loose handwritten light stroke and a long black wandering cable.",
+    "typography": "Original hand-drawn script is the main artwork; small lower-left sans label remains secondary.",
+    "material": "Layered translucent luminous tubes, white-hot core, brick mortar and visible mounting clips.",
+    "nearest": "85 is nearest to 97 Liquid language: handmade thin luminous script suspended mid-wall, rigid brick texture and a trailing cable replace heavy pooled chrome letter masses along the floor.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "85-afterglow-sign",
+    "version": "9e0c8df656"
+  },
+  {
+    "id": "86",
+    "name": "Notes from orbit",
+    "family": "Pocket sketchbook",
+    "description": "A tilted spiral notebook carries a loose pencil celestial sketch and a lifted corner, resting on a dusty green field.",
+    "bg": "#6a786f",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Overhead notebook turned twenty degrees and cropped at the bottom; a small unbound caption sits high-right in open green table space.",
+    "silhouette": "Oblique rectangle with protruding spiral loops and a triangular lifted corner.",
+    "typography": "Orbit masthead is printed directly on the page; casual monospaced handwritten notes stay within the drawing.",
+    "material": "Cream ruled paper, steel spiral, rough graphite-like ink and a hard angular page shadow.",
+    "nearest": "18 Uncharted: an intimate single ruled notebook with spiral binding, casual mark-making, oblique crop and curled corner replaces a wide unfolded map with measured grids and coordinates.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "86-notes-from-orbit",
+    "version": "d1aa3c3678"
+  },
+  {
+    "id": "87",
+    "name": "Word gravity",
+    "family": "Concrete poetry",
+    "description": "Tiny words gather into a large open crescent on the left, facing an enormous narrow vertical Orbit at the opposite edge.",
+    "bg": "#26232d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Flat typographic field: open crescent occupies the left two thirds, a thin vertical masthead hangs at the far-right edge.",
+    "silhouette": "A porous bowed crescent made solely of uneven text rows, no disc or planet.",
+    "typography": "Hundreds of tiny horizontal words oppose one very tall narrow rotated uppercase heading.",
+    "material": "Typeset concrete poetry, varied ink density and light paper-like speckle on plum charcoal.",
+    "nearest": "25 Around the idea: an open irregular cloud of horizontal micro-words, no circular baseline or planet, off-center split-scale typography and dry print texture replace a closed radial word orbit.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "87-word-gravity",
+    "version": "a03c428d25"
+  },
+  {
+    "id": "88",
+    "name": "Blueprint botany",
+    "family": "Sun print",
+    "description": "Three unequal skeleton leaves overlap across deep blue cyanotype paper, their pale vein networks leaving the plant structures almost transparent.",
+    "bg": "#173b68",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Overhead sun-print specimen sheet; the largest leaf is clipped at the upper-right, a smaller leaf turns diagonally low-left and the title sits tightly in their lower gap.",
+    "silhouette": "Fine elongated leaf skeletons with branching veins, not enclosed plates.",
+    "typography": "Compact white Orbit and two tiny botanical-print notes form one low central block.",
+    "material": "Cyanotype blue mottling, ghost leaf silhouettes and dense pale vein-line impressions.",
+    "nearest": "51 Specimen bench: flat overlapping leaf imprints, no glassware or grounded workbench, close macro framing and tight low title replace a horizontal laboratory scene.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "88-blueprint-botany",
+    "version": "5bbd9b8520"
+  },
+  {
+    "id": "89",
+    "name": "Paper currents",
+    "family": "Quilled macro",
+    "description": "Broad cream paper strips curl into an open current, their deep shadows forming channels above a low debossed Orbit strip.",
+    "bg": "#d9d3c1",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Very close overhead macro; continuous quilling curves enter and leave all four edges, with one nearly horizontal caption strip across the bottom.",
+    "silhouette": "Several thick open S-curls and spiraling loops at unequal scales.",
+    "typography": "Large widely spaced debossed title runs on a separate low cream band, no labels among the curls.",
+    "material": "Raised cut paper edges, hard inner shadows, ivory top-edge highlights and a tactile quiet ground.",
+    "nearest": "26 Unknown terrain: a few wide raised physical paper curls with strong shadows and a low title band replace many thin flat nested topographic contours around one mass.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "89-paper-currents",
+    "version": "509ae783a4"
+  },
+  {
+    "id": "90",
+    "name": "Built with letters",
+    "family": "Typographic architecture",
+    "description": "Huge extruded block letters rise from a pale ground in an overhead oblique view, their deep violet shadows crossing the cropped foreground.",
+    "bg": "#cec5b3",
+    "tone": "light",
+    "source": [
+      "Untitled.png"
+    ],
+    "composition": "High oblique camera looking down at a massive diagonal line of extruded letter buildings; nearest feet are cropped along the bottom edge.",
+    "silhouette": "Thick orthogonal word as a single staggered architectural mass.",
+    "typography": "The physical letters themselves say Orbit; a very small upper note supplies scale.",
+    "material": "Cream concrete top planes, layered gray extrusion sides, chiseled edges and long violet cast shadows.",
+    "nearest": "44 Roofline commons: the architecture is literally extruded letterforms, with no rooftop rooms, orthographic city detail or separate giant lettering behind the scene; material and framing are architectural macro.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "90-built-with-letters",
+    "version": "19627b79c7"
+  },
+  {
+    "id": "91",
+    "name": "The next move",
+    "family": "Quiet strategy",
+    "description": "One tall violet knight in the lower-left faces a small ivory pawn near the opposite corner of an otherwise empty checkerboard.",
+    "bg": "#bdb7a9",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Low oblique floor view with two opposed chess pieces in near-left and far-right corners; blank horizontal title sits between them near the horizon.",
+    "silhouette": "Angular horse profile balanced against a distant round-headed pawn.",
+    "typography": "Small dark serif Orbit sits low and off-center at the board horizon, no notation or game state.",
+    "material": "Matte carved pieces, pale checker floor and long soft polygon shadows.",
+    "nearest": "70 Balanced thought: grounded volumetric figurines in opposing depth corners with a low serif horizon, versus a suspended flat geometric mobile and tall left vertical type.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "91-the-next-move",
+    "version": "7c062e47a9"
+  },
+  {
+    "id": "92",
+    "name": "Time in grains",
+    "family": "Faceted glass",
+    "description": "Two polygonal glass cones meet at a narrow waist, with pixel sand falling toward an uneven violet pile between opposing vertical Orbit labels.",
+    "bg": "#191c28",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Close frontal hourglass offset to the right; very narrow vertical words anchor opposite page sides at unequal heights.",
+    "silhouette": "Two clear triangular cones meeting tip-to-tip, resting between broad thin plates.",
+    "typography": "Orbit rises vertically on the left in large thin sans; a smaller vertical phrase descends at right.",
+    "material": "Faceted transparent glass, silver lip highlights and individual square sand grains.",
+    "nearest": "92 differs from 130 The long now: upright transparent double-cone object and falling grains, frontal camera and vertical opposing type replace a grounded wedge casting a diagonal sundial shadow.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "92-time-in-grains",
+    "version": "6bae73adec"
+  },
+  {
+    "id": "93",
+    "name": "Beautiful repair",
+    "family": "Golden join",
+    "description": "An incomplete pale ceramic vessel is shown at extreme close range, its large irregular fragments joined by bright gold seams.",
+    "bg": "#4f5e55",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Extreme close oblique view into an incomplete bowl, its bottom and right side cropped away; spare fragment lies high-left and small title high-center.",
+    "silhouette": "Wide irregular open vessel rim with a missing bite and sharp shard outlines.",
+    "typography": "Small letterspaced white Orbit above the bowl; gold seams carry the visual focus.",
+    "material": "Matte speckled ceramic, dark interior glaze, uneven gold joins and three-dimensional shard shadows.",
+    "nearest": "98 Crystal fault: a recognizable opaque hollow ceramic vessel with gold repair joins, low oblique camera and incomplete rim replace translucent polygonal crystal wedges on an airy field.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "93-beautiful-repair",
+    "version": "6ee9cd81e2"
+  },
+  {
+    "id": "94",
+    "name": "Impossible step",
+    "family": "Spatial paradox",
+    "description": "An ivory Penrose staircase climbs around a triangular void on pale peach, with a single violet step and ultrathin Orbit behind it.",
+    "bg": "#e8c6b8",
+    "tone": "light",
+    "source": [
+      "Untitled.png"
+    ],
+    "composition": "High oblique overhead framing of a closed triangular stair illusion slightly right of center; huge faint title extends behind it across the page.",
+    "silhouette": "Thick three-sided stair loop with a sharply triangular empty center.",
+    "typography": "Huge ultrathin uppercase word is partially occluded by the staircase; a tiny low-left phrase supplies quiet balance.",
+    "material": "Cut stone-colored stair treads, warm side facets, one violet riser and angular cast shadows.",
+    "nearest": "64 Terraces of water: a closed impossible triangular loop with a central void, dry physical treads, overhead angle and giant pale type replace an open diagonal garden staircase with vertical lettering.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "94-impossible-step",
+    "version": "b4b97c8a4d"
+  },
+  {
+    "id": "95",
+    "name": "Crease study",
+    "family": "Fold sequence",
+    "description": "Four unequal origami stages rise from a flat diamond to an elongated crane, ending beside a tall vertical Orbit at the right.",
+    "bg": "#867f6c",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Orthographic overhead sequence ascends from bottom-left to top-right in four unequal sizes, finishing at a vertical title at the outer edge.",
+    "silhouette": "Four disconnected silhouettes: flat diamond, peaked triangle, folded kite and long-necked crane.",
+    "typography": "Tall narrow Orbit runs down the right edge; tiny crease labels sit directly beside each paper stage.",
+    "material": "Matte folded paper, alternating face tones, dashed crease marks and short offset shadows.",
+    "nearest": "78 Flight in pieces: a physical four-stage transformation and rising sequence of unequal folded volumes, narrow edge title and muted table replace one flat seven-piece tangram bird and low heavy word.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "95-crease-study",
+    "version": "316de5b4e3"
+  },
+  {
+    "id": "96",
+    "name": "Crossing words",
+    "family": "Letter crossword",
+    "description": "Two giant Orbit words share their opening O to form a strongly asymmetrical L across warm gridded paper.",
+    "bg": "#d7c9ae",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Flat desk-paper view: five large letter cells stretch across the high-left, while another five descend down the left edge; the open lower-right is almost empty.",
+    "silhouette": "Giant thick L made from nine square letter blocks.",
+    "typography": "Bold shared-letter crossword and a tiny low-right dot-matrix caption; no separate masthead.",
+    "material": "Soft black block printing on warm graph paper, outlined cells and subtle rubbed ink.",
+    "nearest": "80 Letters to get lost in: nine clean typographic square cells form one large open L with a shared O; no maze passages, no stepped modular cluster and no opposing serif title.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "96-crossing-words",
+    "version": "3e0a66dbd3"
+  },
+  {
+    "id": "97",
+    "name": "Liquid language",
+    "family": "Chrome pool",
+    "description": "A heavy chrome Orbit pools against the bottom edge while impossibly long silver letter reflections rise into a deep quiet field.",
+    "bg": "#10151d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Low macro view across a dark reflecting plane: liquid word touches the bottom edge; long attenuated mirror forms rise far into the empty upper field.",
+    "silhouette": "Heavy soft-edged horizontal typographic puddle with long narrow upward reflections.",
+    "typography": "One large molten mixed-case Orbit, no secondary slogan; elongated reflected letterforms dissolve above.",
+    "material": "Alternating silver-black chrome bands, white specular contours, pooled meniscus and dark bluish reflections.",
+    "nearest": "85 Afterglow sign: heavy volumetric pooled chrome at the bottom with vertical reflections and large empty upper field replace thin hand-bent mid-wall neon script, bricks and a trailing cable.",
+    "batch": "new",
+    "domain": "graphic-objects",
+    "slug": "97-liquid-language",
+    "version": "b8128df024"
+  },
+  {
+    "id": "98",
+    "name": "Crystal fault",
+    "family": "Mineral / macro",
+    "description": "A field of translucent lilac crystal fractures is cropped hard against the left edge; a quiet serif wordmark rests in the light.",
+    "bg": "#eee9df",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Broken crystalline wall occupies left 55 percent; right third remains bare with mid-height title.",
+    "silhouette": "A serrated broken wedge with large unequal sharp facets.",
+    "typography": "One 120px serif Orbit and a short two-line micro-caption on the airy right.",
+    "material": "Hard translucent polygon faces, hairline specular seams and scattered chips.",
+    "nearest": "108 / A mountain of facets: this is a close translucent fracture with a vertical torn silhouette, pale negative space and no mesh terrain.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "98-crystal-fault",
+    "version": "bd716634da"
+  },
+  {
+    "id": "99",
+    "name": "Negative-space engine",
+    "family": "Constructed absence",
+    "description": "Unequal coral, ochre and deep teal blocks leave a broad irregular open loop in the upper-right.",
+    "bg": "#0e1d24",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Full-bleed rectangular mosaic; the asymmetric dark loop is offset above and right of center.",
+    "silhouette": "An irregular squared loop cut from solid weighted cells.",
+    "typography": "OR appears in a broad top-left cell; BIT in a lower-left cell, embedded at mismatched scales.",
+    "material": "Flat screen-printed blocks with a few inset fine rules.",
+    "nearest": "80 / Letters to get lost in: these are filled treemap masses around one open void, not letter-shaped maze paths; full bleed rather than an isolated lettering object.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "99-negative-space-engine",
+    "version": "3ff4b7762d"
+  },
+  {
+    "id": "100",
+    "name": "Simple rules",
+    "family": "Cellular cascade",
+    "description": "A tiny seed develops into a giant downward Sierpinski cascade of lilac pixels beside tall sparse lettering.",
+    "bg": "#11101d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Seed high-center-right expands to a cropped jagged base; very narrow left typographic rail.",
+    "silhouette": "A downward branching pixel triangle full of repeated triangular holes.",
+    "typography": "Tall vertical 94px ORBIT reads up the left edge; two minimal words at the seed.",
+    "material": "Crisp monochrome cellular blocks on midnight aubergine.",
+    "nearest": "107 / Particle weather: an ordered solid triangular cascade grows downward, rather than a loose horizontal tapered stream; typography is vertical and material entirely discrete.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "100-simple-rules",
+    "version": "3025dd28b2"
+  },
+  {
+    "id": "101",
+    "name": "Pendulum choir",
+    "family": "Suspended mechanics",
+    "description": "Nine brushed metal weights hang at unequal lengths from a sloping rail; chalk-like swing traces cross the still dark.",
+    "bg": "#202029",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Upper-right rail slants down; hanging weights make an uneven diagonal curtain above giant low-left lettering.",
+    "silhouette": "Thin suspended strings ending in a descending rhythm of dense weights.",
+    "typography": "Huge lowercase serif orbit is cropped slightly by the bottom edge.",
+    "material": "Fine chalk swing arcs and cold metallic weights with side-lit gradients.",
+    "nearest": "70 / Balanced thought: these are long strings and weighted spheres on one continuous sloped rail, not a Bauhaus mobile of flat triangles; darker, photographic and baseline-cropped.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "101-pendulum-choir",
+    "version": "1e21a8b499"
+  },
+  {
+    "id": "102",
+    "name": "White light",
+    "family": "Optical cinema",
+    "description": "A single white beam passes through a low glass prism and fans into seven broad bands of color across the right edge.",
+    "bg": "#0c1321",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Prism low-left of center; a thin incoming beam becomes a full-height rightward angular spectrum.",
+    "silhouette": "A small triangular wedge within a giant flared spectrum.",
+    "typography": "Small widely spaced Orbit sits high above the optics, deliberately distant from the prism.",
+    "material": "Layered translucent glass facets and overlapping flat luminous color bands.",
+    "nearest": "65 / Chromatic crossing: this has one physical triangular refractor, a single incoming beam and a seven-color directional fan on dark ground; not intersecting risograph planes.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "102-white-light",
+    "version": "6c7cdcb35e"
+  },
+  {
+    "id": "103",
+    "name": "Misalignment",
+    "family": "Optical print",
+    "description": "Two tightly ruled square grids cross at an almost matching angle, making a full-bleed diagonal moiré field on acid parchment.",
+    "bg": "#b8ba83",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Full-bleed diagonal line field; wide heavy type runs low and a solid margin interrupt sits high-left.",
+    "silhouette": "Dense angular moiré bands sliding diagonally beyond every edge.",
+    "typography": "Low 178px outlined ORBIT spans rightward; small white-on-black high-left imprint.",
+    "material": "Fine black overprint grids on muted acidic stock.",
+    "nearest": "72 / Between the stripes: a full-field two-angle moire creates no concealed city image, and the large outline type overlays its lower field instead of using a clean gutter.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "103-misalignment",
+    "version": "eb26f78ec7"
+  },
+  {
+    "id": "104",
+    "name": "Sorting thoughts",
+    "family": "Network score",
+    "description": "A stepped score of violet horizontal routes and amber comparators unfolds across a deep blue field.",
+    "bg": "#0c1730",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "A stepped wide network fills the middle and lower right; a narrow vertical heading anchors left.",
+    "silhouette": "A wide rectangular shoulder shape with stepped endpoints and rhythmic crossbars.",
+    "typography": "Vertical narrow ORBIT at left is counterbalanced by small two-line text above the last stage.",
+    "material": "Fine luminous ink traces, tiny square joints, and clean opaque navy.",
+    "nearest": "115 / Printed circuit: the sorting score is an open stepped wire composition with staged crossbars and no processor or component board; narrow vertical title replaces routed horizontal type.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "104-sorting-thoughts",
+    "version": "0aa2ee3441"
+  },
+  {
+    "id": "105",
+    "name": "Chain reaction",
+    "family": "Sequential object",
+    "description": "A serpentine line of plum dominoes turns around a wide empty corner; the foreground tiles have already fallen.",
+    "bg": "#e9dfd6",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Domino chain makes a low horizontal run then turns upward at right and bends back overhead; title inhabits the open inside corner.",
+    "silhouette": "An incomplete squared spiral of standing and fallen thin blocks.",
+    "typography": "Large black serif Orbit sits left in the open interior, with tiny sentence under it.",
+    "material": "Faceted tactile dominoes, indented pips and warm long shadows.",
+    "nearest": "91 / The next move: this is a single bent sequential domino chain with fallen state and no checkerboard, rather than two isolated chess pieces in opposing corners.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "105-chain-reaction",
+    "version": "ee81faf56e"
+  },
+  {
+    "id": "106",
+    "name": "Invisible pull",
+    "family": "Material field",
+    "description": "Thousands of small silver filings bend between two offset magnetic blocks, leaving a soft high channel for the title.",
+    "bg": "#26232d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Close full-bleed material field with two modest offset poles across lower center; high-right isolated type.",
+    "silhouette": "A dense asymmetric bow of aligned dashes surrounding two separated blocks.",
+    "typography": "Small bright serif Orbit floats high-right above the material, without diagram labels.",
+    "material": "Dense short metallic dashes with variable opacity on graphite.",
+    "nearest": "26 / Unknown terrain: filings are discrete oriented material marks around two offset poles, not concentric closed contour paths; full-bleed close view and tiny high-right title.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "106-invisible-pull",
+    "version": "8a7946fbb4"
+  },
+  {
+    "id": "107",
+    "name": "Particle weather",
+    "family": "Particulate motion",
+    "description": "A broad cloud of violet pixels enters from the entire left edge and narrows toward a small light high on the right.",
+    "bg": "#10101c",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Full-height left entry narrows diagonally toward high-right; the large title occupies the empty lower-right wedge.",
+    "silhouette": "A torn broad funnel with a dense pointed end.",
+    "typography": "Wide 118px lowercase sans orbit appears in the hollow lower wedge; a tiny two-word caption sits above.",
+    "material": "Thousands of unequal crisp violet particles with no orbit lines or star glyph.",
+    "nearest": "17 / Departure: this is a full-height converging particle weather system pointed high-right, with no comet trail curve and no star payload; type is placed in its hollow lower wedge.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "107-particle-weather",
+    "version": "d6f966b12f"
+  },
+  {
+    "id": "108",
+    "name": "A mountain of facets",
+    "family": "Unfolded terrain",
+    "description": "An orange faceted mountain rises on the right and unfolds into a sparse triangular mesh trailing left across pale stone.",
+    "bg": "#e8e2d5",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Right-hand mountain peak and folded mass taper down-left into flat outlined triangles; serif title is high-left.",
+    "silhouette": "One steep sawtooth mountain followed by a flattened triangular tail.",
+    "typography": "112px serif Orbit sits in the spacious upper-left, with one modest line beneath.",
+    "material": "Opaque orange face shading, dark fine edges and small vertex letters.",
+    "nearest": "98 / Crystal fault: an opaque warm mountain stands in oblique terrain and unfolds into a flat net; crystal fault is a cropped translucent vertical shard wall.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "108-a-mountain-of-facets",
+    "version": "3fb4817e6e"
+  },
+  {
+    "id": "109",
+    "name": "Small building blocks",
+    "family": "Voxel mass",
+    "description": "A giant tightly packed voxel mass enters from the top-right; one missing corner spills a few separate blocks into the lower-left.",
+    "bg": "#171326",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "A clipped dense cube block fills upper-right, dismantling only toward the lower-left and leaving an irregular title gap.",
+    "silhouette": "Heavy stepped cuboid corner with a loose descending fringe of unequal cubes.",
+    "typography": "Pale italic serif Orbit is threaded low between the mass and the last separate voxel.",
+    "material": "Isometric solid shaded faces with fine negative seams.",
+    "nearest": "22 / Layer by layer: a dense volume of opaque small cubes disassembles at one corner, rather than separated translucent floating planes around a star; close crop and type in a cutout gap.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "109-small-building-blocks",
+    "version": "8c7f8d15bb"
+  },
+  {
+    "id": "110",
+    "name": "Branch logic",
+    "family": "Ink recursion",
+    "description": "An intricate dark green branching ink structure grows from the right edge across a spacious pale surface.",
+    "bg": "#f5f1e7",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Root enters at right-center and grows laterally left, filling an irregular middle strip; expansive untouched upper and lower margins.",
+    "silhouette": "An organic fan of tapering dendritic branches with no dots or closed loops.",
+    "typography": "One small bold Orbit appears at the root, aligned directly with the heavy trunk.",
+    "material": "Unequal tapered ink strokes and slightly curling branch junctions.",
+    "nearest": "88 / Blueprint botany: these are generative rooted branches with no leaf membranes or specimen silhouettes, drawn as dark ink on pale stock, with the name rooted at the far edge.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "110-branch-logic",
+    "version": "22ab5477f6"
+  },
+  {
+    "id": "111",
+    "name": "One continuous line",
+    "family": "Path study",
+    "description": "One fine cream line folds into a dense square at lower-left, then escapes around a wide dark field to a quiet wordmark on the right.",
+    "bg": "#1a292c",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Dense square in lower-left is connected by one long right-angled escape path to high-right type.",
+    "silhouette": "A tightly packed square serpentine path with a very long open tail.",
+    "typography": "Small serif Orbit is right-aligned at the end of the line; almost no auxiliary text.",
+    "material": "Single continuous pale etched stroke on deep green-blue.",
+    "nearest": "80 / Letters to get lost in: the maze is a genuine square Hilbert curve without letterforms, with one explicit long escape route and a small detached endpoint wordmark.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "111-one-continuous-line",
+    "version": "55e7b1838d"
+  },
+  {
+    "id": "112",
+    "name": "Cultures of thought",
+    "family": "Microscopic translucence",
+    "description": "Unequal translucent green colonies crowd the frame, leaving an S-shaped dark channel for large soft white lettering.",
+    "bg": "#234944",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Organic cropped colonies surround a broad curved diagonal negative channel from lower-left to upper-right.",
+    "silhouette": "Soft asymmetric membrane islands with dense granular interiors.",
+    "typography": "One large lightweight Orbit follows the open channel on a gentle diagonal.",
+    "material": "Translucent membranes, granular nucleation specks and pale side-lit curves.",
+    "nearest": "126 / Living pattern: separate translucent colonies have granular interiors and a large dark curved channel; Living pattern is one continuous opaque coral maze on pale purple with a hard blank label.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "112-cultures-of-thought",
+    "version": "e5bfccd78a"
+  },
+  {
+    "id": "113",
+    "name": "Two paths",
+    "family": "Wave optics",
+    "description": "A pale vertical barrier splits a cool beam field from two overlapping fans of interference arcs.",
+    "bg": "#101d2d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Hard vertical barrier slightly left of center separates incoming broad curves from rightward two-source wave fans.",
+    "silhouette": "A tall divider with two tiny apertures and overlapping open semicircle fields.",
+    "typography": "Tall rotated serif Orbit is set within the barrier itself.",
+    "material": "Thin cool and violet interference arcs with a single opaque ivory divider.",
+    "nearest": "21 / Resonance: these are two-dimensional propagating arcs divided by a physical slit wall, with vertical embedded type and no horizontal amplitude bars.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "113-two-paths",
+    "version": "970615d48c"
+  },
+  {
+    "id": "114",
+    "name": "Light carried",
+    "family": "Fiber sculpture",
+    "description": "A luminous bundle of hair-thin optical fibers rises from the bottom, sweeps back on itself and opens into scattered lit ends high-left.",
+    "bg": "#0d1421",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Thick lower-center cable bends right then opens to a fine high-left fan; high-right typography balances it.",
+    "silhouette": "A backward bent J-shaped bundle ending in many fine uneven hairs.",
+    "typography": "Large silver sans OR over BIT sits high-right in a compact right-aligned stack.",
+    "material": "Hundreds of fine luminous glass strands with discrete bright end points.",
+    "nearest": "24 / Continuum: an open directional fiber bundle has a thick cropped stem and separating tips, not a closed woven torus; type is high-right and oversized.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "114-light-carried",
+    "version": "0d8688d71b"
+  },
+  {
+    "id": "115",
+    "name": "Printed circuit",
+    "family": "Copper routing",
+    "description": "Copper traces and small surface components route around a large low-left processor and a clear title cavity in a deep green circuit board.",
+    "bg": "#183e35",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Dense flat board fills the viewport; processor low-left and an open mid-right routing cavity carry two different text scales.",
+    "silhouette": "Angular copper routes enclose a dark off-center rectangular processor.",
+    "typography": "Thin 76px Orbit sits in the large right cavity; a smaller chip marking lives in the processor.",
+    "material": "Flat copper etching, pale ceramic contacts and dark solder mask.",
+    "nearest": "104 / Sorting thoughts: filled processor, right-angle routing and surface components form a dense physical board; sorting is a sparse open stepped wire score with comparator columns.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "115-printed-circuit",
+    "version": "dc4c33cd4d"
+  },
+  {
+    "id": "116",
+    "name": "Order from grains",
+    "family": "Granular computation",
+    "description": "An oblique field of warm sand-colored cellular diamonds fills the lower-left and loses a precise corner below a sweeping italic wordmark.",
+    "bg": "#eee6dc",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Tilted granular macro field extends from left to lower middle; missing upper-right corner opens into the title field.",
+    "silhouette": "A ragged oblique tiled slab with an exact missing rectangular corner.",
+    "typography": "Large italic serif Orbit sits low-right across the removed corner; very small aligned descriptor above.",
+    "material": "Thousands of small sand-colored flat cells form nested diagonal grain patterns.",
+    "nearest": "100 / Simple rules: a broad oblique warm cellular field has dense diamond motifs and an absent corner, rather than a downward violet triangular cascade; title is low italic horizontal.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "116-order-from-grains",
+    "version": "6cf4880d0f"
+  },
+  {
+    "id": "117",
+    "name": "Escapement",
+    "family": "Clockwork macro",
+    "description": "Huge unequal brass gears crop into three corners, leaving a dark irregular gap around a small escapement needle and a compact wordmark.",
+    "bg": "#282728",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Gears enter top-left, top-right and bottom-right; the central-left gap holds one tiny lever and nearby type.",
+    "silhouette": "Three toothed circular masses intersect the frame around a small angular needle.",
+    "typography": "Compact condensed Orbit is positioned inside the middle-left gear gap.",
+    "material": "Brass face gradients, fine hatch marks, inset hubs and dark open spokes.",
+    "nearest": "04 / Acquisition: physical unequal cropped toothed gears replace a single fine radar disc; warm metal material and irregular middle gap rather than right schematic circle.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "117-escapement",
+    "version": "453902c138"
+  },
+  {
+    "id": "118",
+    "name": "Surface tension",
+    "family": "Liquid still",
+    "description": "A silver-lilac splash crown rises from an oval pool cropped at the lower-right; the upper half is almost entirely pale air.",
+    "bg": "#f5f1e7",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Extreme low liquid macro at bottom-right, with broad blank upper field and a high delicate wordmark.",
+    "silhouette": "An irregular many-pointed splash crown on a very flat elongated oval.",
+    "typography": "Very thin widely spaced uppercase ORBIT stretches high across the blank air.",
+    "material": "Smooth translucent liquid gradient, precise wet highlights and separate suspended droplets.",
+    "nearest": "92 / Time in grains: this is a low wide open splash with airborne droplets and no paired cones or enclosed hourglass; pale near-empty upper field and widely spaced horizontal type.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "118-surface-tension",
+    "version": "aa64a9839f"
+  },
+  {
+    "id": "119",
+    "name": "Keys to somewhere",
+    "family": "Musical geometry",
+    "description": "A cropped ivory keyboard enters at lower-left as short piano-roll notes climb diagonally into the opposite sky.",
+    "bg": "#302536",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Keyboard corner grounds bottom-left while floating notes rise to far upper-right; heavy type sits in the empty lower-right.",
+    "silhouette": "One low serrated keyboard edge and an ascending staircase of unequal note bars.",
+    "typography": "Heavy squared lowercase orbit forms a low-right slab, countering fine musical guides.",
+    "material": "Warm ivory keys, matte black accidentals and lavender note blocks over subtle staff lines.",
+    "nearest": "21 / Resonance: discrete rising notes emerge from a physical cropped keyboard, with diagonal movement and heavy offset type; no centered continuous audio waveform.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "119-keys-to-somewhere",
+    "version": "4ba068f04f"
+  },
+  {
+    "id": "120",
+    "name": "The weight of an idea",
+    "family": "Soft geometry",
+    "description": "A violet checker fabric sinks into a deep off-center gravitational well while the far edges remain almost straight.",
+    "bg": "#5f516e",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Full-bleed warped fabric; deep sink offset upper-left with text placed on the comparatively straight top edge.",
+    "silhouette": "A deep asymmetric funnel impressed into a continuous checker field.",
+    "typography": "One tiny white ORBIT rides the upper straight boundary, with no secondary labels.",
+    "material": "Flat alternating cloth cells warped continuously into a dark soft central depression.",
+    "nearest": "84 / Woven alphabet: there are no woven letters, interlacing glyphs or caption island; a continuous physical checker sinks into one deep displaced well and uses a tiny upper-edge wordmark.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "120-the-weight-of-an-idea",
+    "version": "08347bf1c2"
+  },
+  {
+    "id": "121",
+    "name": "Aperture",
+    "family": "Mechanical close-up",
+    "description": "Giant dark faceted iris shutters overlap across the frame, leaving a small pentagonal light opening high on the right.",
+    "bg": "#1b202d",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Blade surfaces crop at all four edges; tiny pentagonal light is high-right, small narrow title low-left.",
+    "silhouette": "Five giant folded blade faces converge on a displaced pentagonal aperture.",
+    "typography": "Narrow low-left 72px ORBIT is widely spaced with a single hairline below.",
+    "material": "Opaque graphite blade facets, sharp machined seams and one white-violet light opening.",
+    "nearest": "10 / Totality: no dark disc or luminous circular corona; angular overlapping mechanical faces cover the entire screen around an off-center five-sided light, with small offset type.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "121-aperture",
+    "version": "e5e22e1e62"
+  },
+  {
+    "id": "122",
+    "name": "Shared sky",
+    "family": "Tessellation release",
+    "description": "A dense interlocking bird field at lower-left progressively opens into separated silhouettes, ending in one free bird high-right.",
+    "bg": "#e5e6dc",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Rectangular tessellation block occupies lower-left; interrupted diagonal edge releases three larger birds toward high-right; type inhabits the new lower-right void.",
+    "silhouette": "An interlocked serrated bird carpet dissolving into a single angular winged silhouette.",
+    "typography": "One broad medium-weight Orbit occupies the newly emptied lower-right wedge.",
+    "material": "Two-color flat negative-positive bird tiling on matte pale sage.",
+    "nearest": "78 / Flight in pieces: the birds are repeated interlocking tessellation silhouettes that separate across a field, rather than one seven-piece tangram bird; the mass is lower-left and the title is lower-right.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "122-shared-sky",
+    "version": "651579d0d6"
+  },
+  {
+    "id": "123",
+    "name": "Signal waterfall",
+    "family": "Spectral textile",
+    "description": "A two-dimensional violet and apricot spectral field hangs from the top edge with an uneven lower fringe; a long spectrum strip cuts below it.",
+    "bg": "#111a2c",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Tall off-left heatmap panel is top-cropped with a jagged hem; long horizontal contrast strip below and large type offset bottom-right.",
+    "silhouette": "A hanging broad textile-like rectangular mass with an irregular ragged bottom.",
+    "typography": "Low-right condensed 92px ORBIT extends beyond the heatmap edge; one short high-right caption balances the panel.",
+    "material": "Small contiguous heatmap cells with layered banding and warm spectral highlights.",
+    "nearest": "21 / Resonance: a two-dimensional color-density panel drops from the ceiling with a ragged edge, not mirrored vertical amplitude bars about a baseline; type sits low-right and the material is textile-like.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "123-signal-waterfall",
+    "version": "ecee09d207"
+  },
+  {
+    "id": "124",
+    "name": "Beyond three",
+    "family": "Dimensional projection",
+    "description": "A long oblique transparent hypercube occupies the left and projects its far vertices upward and right across a midnight field.",
+    "bg": "#111421",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Open angular scaffold occupies left two-thirds, with long projection links toward upper-right; low horizontal wordmark balances the base.",
+    "silhouette": "Two offset unequal cube cages connected vertex-to-vertex in a slanted four-dimensional projection.",
+    "typography": "Low wide letter-spaced Orbit runs across the right base; tiny axis letters stay beside a few vertices.",
+    "material": "Fine violet and steel wire lines, dotted projection links and discrete corner points.",
+    "nearest": "09 / Orbital mechanics: this uses only angular cube edges and long projection links, with no ellipse or central star, and low wide type instead of engineering-sheet axes.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "124-beyond-three",
+    "version": "ba15237e09"
+  },
+  {
+    "id": "125",
+    "name": "Flock",
+    "family": "Collective gesture",
+    "description": "Thousands of tiny dark bird marks gather into a dense comma with a long curling tail against warm pale sky.",
+    "bg": "#e8e2d5",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Murmuration curls across the upper middle into a thin leftward tail; title inhabits the open lower-right.",
+    "silhouette": "A large asymmetric comma with a packed head and tapered curling tail.",
+    "typography": "Small black serif Orbit rests low-right with generous sky around it.",
+    "material": "Thousands of fine v-shaped birds varying in scale and density, with no connecting lines.",
+    "nearest": "107 / Particle weather: a curved dense comma is made from bird strokes on a light sky, rather than a straight converging violet pixel funnel on dark; title is small serif and the flow curls back.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "125-flock",
+    "version": "81414f5b25"
+  },
+  {
+    "id": "126",
+    "name": "Living pattern",
+    "family": "Reaction diffusion",
+    "description": "A close coral-like lilac cellular maze fills the screen; a sharply cut soft-yellow rectangle holds the wordmark high-left.",
+    "bg": "#cfc0dd",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Full-bleed continuous organic cellular field with one exact rectangular blank label cut from upper-left.",
+    "silhouette": "Thick looping coral branches with irregular rounded holes, cropped at every edge.",
+    "typography": "One 88px unadorned Orbit occupies the high-left yellow cutout.",
+    "material": "Filled Gray-Scott reaction-diffusion contours form dense matte purple branching channels.",
+    "nearest": "112 / Cultures of thought: one continuous opaque maze has rounded internal holes and a sharp rectangular label; separate membrane colonies use translucence, granular interiors and a curved channel.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "126-living-pattern",
+    "version": "8df30b21a8"
+  },
+  {
+    "id": "127",
+    "name": "Paper computation",
+    "family": "Kirigami relief",
+    "description": "A laser-cut paper lattice rises in unequal white steps from a tilted mauve sheet; light catches the lifted slit edges.",
+    "bg": "#e9ded0",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Oblique trapezoidal lattice runs lower-left to upper-right; lifted lower edge shelters the upper serif of a fully legible low-right wordmark.",
+    "silhouette": "A dense uneven stepped paper plane with regular slits and a lifted diagonal edge.",
+    "typography": "Large muted serif Orbit remains fully legible low-right; one lifted tab overlaps only its upper serif.",
+    "material": "Warm white folded paper faces, lavender cut shadows and sharp open slots.",
+    "nearest": "94 / Impossible step: many laser-cut repeated slots rise from one paper sheet, with no closed Penrose triangle or stair loop; dense oblique plane and partially covered serif title.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "127-paper-computation",
+    "version": "5b1d0f73cb"
+  },
+  {
+    "id": "128",
+    "name": "Measure the spark",
+    "family": "Scale instrument",
+    "description": "An enormous brushed mechanical caliper spans almost the full width, its left jaws measuring one tiny lilac spark.",
+    "bg": "#192936",
+    "tone": "dark",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "composition": "Long horizontal caliper occupies upper-middle, forked jaw at far left; opposite lower-right holds a huge lightweight wordmark.",
+    "silhouette": "A long narrow mechanical T with deep unequal left jaws around a tiny star.",
+    "typography": "Very large thin lowercase orbit sits low-right, with one tiny factual poetic line low-left.",
+    "material": "Cold machined metal gradients, engraved ticks, inset slide and one precise light shape.",
+    "nearest": "27 / Launch structure: a close horizontal measuring tool contains the single tiny star near its left jaw; no vertical launch tower, payload scene or exhaust, and title is low-right thin type.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "128-measure-the-spark",
+    "version": "5edd6f4635"
+  },
+  {
+    "id": "129",
+    "name": "Punched possibilities",
+    "family": "Data paper",
+    "description": "Three offset warm punch cards overlap at unequal angles; a diagonally interrupted slot matrix creates a quiet blank path through the upper card.",
+    "bg": "#e6d9c4",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
+    ],
+    "composition": "Broad physical card stack runs diagonally across the center, leaving wide bare margins; heading is printed on the top card itself.",
+    "silhouette": "Three clipped-corner rectangles with differently angled long shadows and dense narrow punched slots.",
+    "typography": "One bold 54px Orbit is printed into the top card heading, with fine machine-like line text opposite.",
+    "material": "Warm cardstock, punched dark apertures, angled edge shadows and registration rules.",
+    "nearest": "13 / Memory card: these are thin overlapping punched paper cards seen from above with an interrupted slot matrix, not a chunky electronic cartridge object; typography is printed on the card and the composition is diagonal.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "129-punched-possibilities",
+    "version": "7609913229"
+  },
+  {
+    "id": "130",
+    "name": "The long now",
+    "family": "Solar still",
+    "description": "A small faceted bronze sundial low-left casts an extraordinarily long diagonal shadow toward an incomplete angular time scale high-right.",
+    "bg": "#e6d9c4",
+    "tone": "light",
+    "source": [
+      "ChatGPT Image Oct 14, 2026, 05_22_18 PM-4.png"
+    ],
+    "composition": "Low-left wedge anchors a vast bare field; one thin long shadow slices toward upper-right marks, leaving type in the low-left margin.",
+    "silhouette": "A modest triangular gnomon with a very long tapering diagonal shadow.",
+    "typography": "Small restrained serif Orbit sits in the low-left margin below the instrument.",
+    "material": "Warm matte stone, bronze facets, softly transparent hard shadow and sparse engraved Roman marks.",
+    "nearest": "94 / Impossible step: a single small grounded wedge is defined by its very long diagonal shadow and open irregular time scale; no Penrose loop, large stair object or background giant title.",
+    "batch": "new",
+    "domain": "systems",
+    "slug": "130-the-long-now",
+    "version": "a1bf78f9c7"
   }
 ]

@@ -4,6 +4,8 @@ const workspace = document.querySelector('#workspace');
 const artwork = document.querySelector('#artwork');
 const holdButton = document.querySelector('#hold');
 const label = document.querySelector('#loading-label');
+const notes = document.querySelector('#design-notes');
+const notesToggle = document.querySelector('#notes-toggle');
 let held = params.has('still');
 let timer;
 let generation = 0;
@@ -39,6 +41,8 @@ function enterWorkspace() {
 async function launch() {
   clearTimeout(timer);
   const current = ++generation;
+  delete document.body.dataset.artworkAt;
+  delete document.body.dataset.workspaceAt;
   workspace.hidden = true;
   splash.hidden = false;
   workspace.classList.remove('workspace-opened');
@@ -61,8 +65,15 @@ holdButton.addEventListener('click', () => {
   void launch();
 });
 document.querySelector('#replay').addEventListener('click', () => {
+  if (notes) notes.hidden = true;
+  notesToggle?.setAttribute('aria-expanded', 'false');
   held = false;
   void launch();
+});
+notesToggle?.addEventListener('click', () => {
+  notes.hidden = !notes.hidden;
+  notesToggle.setAttribute('aria-expanded', String(!notes.hidden));
+  if (!notes.hidden) { held = true; void launch(); }
 });
 const picker = document.querySelector('#folder-picker');
 document.querySelectorAll('[data-choose]').forEach(button => button.addEventListener('click', () => picker.click()));
@@ -84,4 +95,8 @@ document.addEventListener('keydown', event => {
   if (event.key === 'ArrowLeft') location.href = destination(-1);
   if (event.key.toLowerCase() === 'r') { held = false; void launch(); }
   if (event.code === 'Space') { event.preventDefault(); held = !held; void launch(); }
+  if (event.key === 'Escape') {
+    if (notes) notes.hidden = true;
+    notesToggle?.setAttribute('aria-expanded', 'false');
+  }
 });

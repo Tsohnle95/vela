@@ -1,4 +1,4 @@
-import { copyFile, mkdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -136,6 +136,37 @@ let atlas='';for(let y=0;y<3;y++)for(let x=0;x<5;x++){const cx=220+x*250,cy=265+
 add('The star atlas','Archive','Fifteen little celestial plates form a structured atlas beneath a quiet editorial heading.',
   serif('Orbit',106,113,72)+mono('AN ATLAS OF WHAT COULD BE.',1330,102,12,V,'text-anchor="end"')+line(110,143,1330,143,V,.3)+atlas+mono('A NEW CHAPTER IS ABOUT TO OPEN.',720,853,11,V,'text-anchor="middle"'),'#14111f');
 
+const baseline=JSON.parse(await readFile(path.join(root,'expansion/original-art-baseline.json'),'utf8'));
+for(const c of concepts){
+  const actual=createHash('sha256').update(c.art).digest('hex').slice(0,10);
+  if(actual!==baseline[c.id])throw new Error(`Original artwork ${c.id} changed`);
+  c.batch='original';
+  c.domain='Original 30';
+  c.tone=['05','11','13','16','23'].includes(c.id)?'light':'dark';
+}
+const reservations=JSON.parse(await readFile(path.join(root,'expansion/registry.json'),'utf8'));
+const additions=(await Promise.all(['environments','graphic-objects','systems'].map(async name=>(await import(`./expansion/${name}.mjs`)).default))).flat();
+if(additions.length!==100)throw new Error(`Expected 100 additions; found ${additions.length}`);
+const seen=new Set();
+for(const c of additions){
+  const reservation=reservations.find(row=>row.id===c.id);
+  if(!reservation||seen.has(c.id)||c.name!==reservation.name)throw new Error(`Unexpected or duplicate concept: ${c.id}/${c.name}`);
+  seen.add(c.id);
+  for(const field of ['art','bg','family','description','composition','silhouette','typography','material','nearest']){
+    if(typeof c[field]!=='string'||!c[field].trim())throw new Error(`Concept ${c.id} missing ${field}`);
+  }
+  if(!Array.isArray(c.source)||!c.source.length)throw new Error(`Concept ${c.id} missing source references`);
+  for(const source of c.source){
+    if(path.basename(source)!==source)throw new Error(`Use a source filename in concept ${c.id}`);
+    await stat(path.join(root,'..',source));
+  }
+  c.batch='new';c.domain=reservation.domain;
+  concepts.push(c);
+}
+concepts.sort((a,b)=>Number(a.id)-Number(b.id));
+const count=concepts.length;
+const assetVersions=Object.fromEntries(await Promise.all(['preview.css','preview.js','gallery.css','gallery.js'].map(async file=>[file,createHash('sha256').update(await readFile(path.join(root,file))).digest('hex').slice(0,10)])));
+const asset=file=>`${file}?v=${assetVersions[file]}`;
 const getSlug=c=>`${c.id}-${c.name.toLowerCase().replaceAll(/[^a-z0-9]+/g,'-').replace(/-$/,'')}`;
 for(const [index,c] of concepts.entries()){
   const slug=getSlug(c);
@@ -143,19 +174,23 @@ for(const [index,c] of concepts.entries()){
   c.version=createHash('sha256').update(c.art).digest('hex').slice(0,10);
   await writeFile(path.join(out,`${slug}.svg`),c.art);
   await writeFile(path.join(out,`${slug}.html`),`<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${c.id} — ${esc(c.name)} / Orbit</title><link rel="stylesheet" href="../preview.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${c.id} — ${esc(c.name)} / Orbit</title><link rel="stylesheet" href="../${asset('preview.css')}"></head>
 <body style="--scene-bg:${c.bg}" data-concept="${c.id}">
-<nav class="review-bar" aria-label="Concept review"><a href="../index.html">← All 30</a><span>${c.id} / ${esc(c.name)}</span><div><button id="hold" aria-pressed="false">Hold artwork</button><button id="replay">Replay 3s launch</button><a href="./${getSlug(concepts[(index+29)%30])}.html" id="previous" aria-label="Previous concept">←</a><a href="./${getSlug(concepts[(index+1)%30])}.html" id="next" aria-label="Next concept">→</a></div></nav>
+<nav class="review-bar" aria-label="Concept review"><a href="../index.html">← All ${count}</a><span>${c.id} / ${esc(c.name)}</span><div><button id="notes-toggle" aria-expanded="false" aria-controls="design-notes">Design notes</button><button id="hold" aria-pressed="false">Hold artwork</button><button id="replay">Replay 3s launch</button><a href="./${getSlug(concepts[(index+count-1)%count])}.html" id="previous" aria-label="Previous concept">←</a><a href="./${getSlug(concepts[(index+1)%count])}.html" id="next" aria-label="Next concept">→</a></div></nav>
+<aside id="design-notes" class="design-notes" hidden><h2>${esc(c.id)} / ${esc(c.name)}</h2><p>${esc(c.description)}</p>${['composition','silhouette','typography','material','nearest'].filter(key=>c[key]).map(key=>`<h3>${key==='nearest'?'Nearest design and differences':key}</h3><p>${esc(c[key])}</p>`).join('')}<h3>Inspiration</h3>${(c.source??['ChatGPT Image Oct 13, 2026, 03_23_53 PM.png']).map(source=>`<p class="source-name">${esc(source)}</p>`).join('')}<a href="../expansion/reference-sheet.png" target="_blank" rel="noreferrer">Open source contact sheet ↗</a></aside>
 <main class="app-window"><div class="splash" id="splash"><img id="artwork" src="./${slug}.svg?v=${c.version}" alt="${esc(c.description)}" fetchpriority="high"><div class="loading" aria-live="polite"><span class="loading-dot"></span><span id="loading-label">Opening Orbit</span></div></div><section class="workspace" id="workspace" hidden aria-label="Empty Orbit workspace"></section></main>
-<input id="folder-picker" type="file" webkitdirectory multiple hidden><script src="../preview.js" type="module"></script></body></html>`);
+<input id="folder-picker" type="file" webkitdirectory multiple hidden><script src="../${asset('preview.js')}" type="module"></script></body></html>`);
 }
 const manifest=concepts.map(({art,...c})=>c);
 await copyFile(path.join(root,'../ChatGPT Image Oct 13, 2026, 03_23_53 PM.png'),path.join(root,'inspiration.png'));
 await writeFile(path.join(root,'concepts.json'),JSON.stringify(manifest,null,2)+'\n');
-await writeFile(path.join(root,'index.html'),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orbit / 30 ways to arrive</title><link rel="stylesheet" href="gallery.css"></head><body>
-<header><a class="brand" href="index.html"><span>✦</span> ORBIT <small>EXPERIMENTAL ART / 001—030</small></a><a class="reference" href="inspiration.png" target="_blank" rel="noreferrer">View inspiration ↗</a></header>
-<main><section class="intro"><div class="eyebrow">THE MOMENT BEFORE THE WORK</div><h1>30 ways to arrive.</h1><p>A little space. A first spark. A new beginning.<br>Thirty distinct launch experiences for Orbit.</p><div class="flow"><span><b>01</b> Artwork appears</span><i>→</i><span><b>02</b> Three seconds</span><i>→</i><span><b>03</b> Empty workspace</span></div></section>
-<nav class="filters" aria-label="Concept families"><button data-filter="all" aria-pressed="true">All thirty <span>30</span></button><button data-filter="dark" aria-pressed="false">Dark space</button><button data-filter="light" aria-pressed="false">Light & paper</button><span class="hint">Click any concept to experience its launch.</span></nav>
-<div class="gallery">${concepts.map(c=>`<a class="card" data-tone="${['05','11','13','16','23'].includes(c.id)?'light':'dark'}" href="concepts/${c.slug}.html"><div class="thumbnail"><img src="concepts/${c.slug}.svg?v=${c.version}" alt="${esc(c.description)}" loading="lazy" width="1440" height="900"><span class="play">▶ Preview launch</span></div><div class="card-title"><span class="number">${c.id}</span><h2>${c.name}</h2><span class="family">${c.family}</span><span class="arrow">↗</span></div><p>${c.description}</p></a>`).join('')}</div>
-<footer><span>ORBIT / LANDING EXPLORATIONS</span><span>30 concepts · Local prototypes · No app integration</span><a href="#">Back to top ↑</a></footer></main><script src="gallery.js" type="module"></script></body></html>`);
+await writeFile(path.join(root,'index.html'),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orbit / 30 ways to arrive</title><link rel="stylesheet" href="${asset('gallery.css')}"></head><body>
+<header><a class="brand" href="index.html"><span>✦</span> ORBIT <small>EXPERIMENTAL ART / 001—${count}</small></a><div class="header-links"><a class="reference" href="process.html">Agent briefs & process ↗</a><a class="reference" href="contact-sheet.html">Art sheet ↗</a><a class="reference" href="expansion/reference-sheet.png" target="_blank" rel="noreferrer">Source artwork ↗</a></div></header>
+<main><section class="intro"><div class="eyebrow">THE MOMENT BEFORE THE WORK</div><h1>${count} ways to arrive.</h1><p>The original thirty, plus one hundred new directions.<br>Environments, graphic objects, and systems — one place to explore them all.</p><div class="flow"><span><b>01</b> Artwork appears</span><i>→</i><span><b>02</b> Three seconds</span><i>→</i><span><b>03</b> Empty workspace</span></div></section>
+<nav class="filters" aria-label="Browse concepts"><div class="group-filters"><button data-group="all" aria-pressed="true">All <span>${count}</span></button><button data-group="original" aria-pressed="false">Original 30</button><button data-group="new" aria-pressed="false">New 100</button></div><label class="search"><span class="sr-only">Search concepts by number or name</span><input id="search" type="search" placeholder="Find a number, name, or direction…" autocomplete="off"></label><label class="tone-filter"><span class="sr-only">Color treatment</span><select id="tone"><option value="all">All treatments</option><option value="dark">Dark space</option><option value="light">Light & paper</option></select></label></nav><div class="gallery-meta"><span id="result-count" aria-live="polite">Showing ${count} concepts</span><span>Click a design for its 3-second launch · Design notes explain each direction</span></div>
+<div class="gallery">${concepts.map(c=>`<a class="card" data-tone="${c.tone??'dark'}" data-group="${c.batch}" data-search="${esc(`${c.id} ${c.name} ${c.family} ${c.domain}`.toLowerCase())}" href="concepts/${c.slug}.html"><div class="thumbnail"><img src="concepts/${c.slug}.svg?v=${c.version}" alt="${esc(c.description)}" loading="lazy" width="1440" height="900"><span class="play">▶ Preview launch</span>${c.batch==='new'?'<span class="new-tag">NEW</span>':''}</div><div class="card-title"><span class="number">${c.id}</span><h2>${esc(c.name)}</h2><span class="family">${esc(c.family)}</span><span class="arrow">↗</span></div><p>${esc(c.description)}</p></a>`).join('')}</div><p id="no-results" hidden>No matching concepts. Try another number or name.</p>
+<footer><span>ORBIT / LANDING EXPLORATIONS</span><span>${count} local prototypes · Original 30 + new 100</span><a href="#">Back to top ↑</a></footer></main><script src="${asset('gallery.js')}" type="module"></script></body></html>`.replace('<title>Orbit / 30 ways to arrive</title>',`<title>Orbit / ${count} ways to arrive</title>`));
+const prompt=await readFile(path.join(root,'expansion/AGENT-PROMPT.md'),'utf8');
+await writeFile(path.join(root,'process.html'),`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orbit / Agent design briefs</title><link rel="stylesheet" href="gallery.css"><body><main class="process"><a href="index.html">← All ${count} designs</a><h1>One hundred.<br>Independently composed.</h1><p class="process-intro">Three agents received non-overlapping subject reservations. The shared instructions prohibit template swaps and require differences in composition, silhouette, framing, typography, material, and narrative. The original 30 remain part of the comparison set.</p><h2>The actual shared prompt</h2><pre>${esc(prompt)}</pre><h2>Reserved design directions</h2><div class="brief-list">${reservations.map(row=>`<article><span>${row.id} / ${esc(row.domain)}</span><h3>${esc(row.name)}</h3><p>${esc(row.brief)}</p></article>`).join('')}</div><p><a href="expansion/reference-sheet.png">View the source-art contact sheet ↗</a></p></main></body></html>`);
+await writeFile(path.join(root,'contact-sheet.html'),`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orbit / Art contact sheet</title><link rel="stylesheet" href="gallery.css"><body><main class="contact-page"><header><a class="brand" href="index.html">← ORBIT / ART SHEET</a><a class="reference" href="index.html">Detailed gallery ↗</a></header><nav class="filters"><div class="group-filters"><button data-group="all" aria-pressed="true">All ${count}</button><button data-group="original" aria-pressed="false">Original 30</button><button data-group="new" aria-pressed="false">New 100</button></div><label class="search"><span class="sr-only">Search concepts</span><input id="search" type="search" placeholder="Number or name…"></label><label class="tone-filter"><span class="sr-only">Color treatment</span><select id="tone"><option value="all">All treatments</option><option value="dark">Dark</option><option value="light">Light</option></select></label></nav><p id="result-count" aria-live="polite"></p><div class="gallery">${concepts.map(c=>`<a class="card" data-tone="${c.tone}" data-group="${c.batch}" data-search="${esc(`${c.id} ${c.name} ${c.family} ${c.domain}`.toLowerCase())}" href="concepts/${c.slug}.html?still=1"><div class="thumbnail"><img src="concepts/${c.slug}.svg?v=${c.version}" loading="lazy" alt="${esc(c.description)}" width="1440" height="900"></div><div class="card-title"><span class="number">${c.id}</span><h2>${esc(c.name)}</h2></div></a>`).join('')}</div><p id="no-results" hidden>No matching concepts.</p><footer><a href="index.html">Back to gallery</a><a href="#">Back to top ↑</a></footer></main><script src="gallery.js" type="module"></script></body></html>`);
 console.log(`Built ${concepts.length} unique artworks and working launch previews.`);

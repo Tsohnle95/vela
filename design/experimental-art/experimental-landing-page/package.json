@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "start": "python3 -m http.server 8147 --bind 127.0.0.1"
+    "start": "python3 -m http.server 8147 --bind 127.0.0.1",
+    "verify:files": "python3 verify-files.py"
   }
 }
