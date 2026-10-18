@@ -39,7 +39,7 @@
     display: block;
     position: absolute;
     inset: 0;
-    z-index: -1;
+    z-index: 0;
     border-radius: inherit;
     pointer-events: none;
     background: url("../assets/agent-scenes/observatory.png") 22% center / cover no-repeat;
@@ -49,7 +49,12 @@
   }
   .agent-panel[data-panel-mode="tui"] .observatory-scene { display: none; }
   .agent-empty { display: none; }
+  // Keep scroll compositing above the scene without trapping menus in another
+  // stacking context. Negative scene layers can disappear in vibrant windows.
+  .agent-panel > .agent-scroll,
+  .agent-panel > [data-component="session-prompt-dock"] { position: relative; }
   .agent-panel .agent-scroll { background: transparent; }
+  .agent-panel .opencode-timeline { background: transparent; }
   .agent-header { min-height: 44px; background: linear-gradient(#050611a6, #05061100); border-bottom: 0; }
   .agent-panel:not([data-conversation="true"]) .agent-header::before {
     content: "✦  MIRA Agent";
