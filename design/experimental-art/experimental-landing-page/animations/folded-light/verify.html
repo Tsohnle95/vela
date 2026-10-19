@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Folded Light / Browser checks</title><style>body{background:#17231c;color:#dbecdf;font:12px/1.8 monospace;margin:24px}h1{font:26px system-ui}a{color:#b6d4bf}li[data-pass=true]{color:#a9d8b8}li[data-pass=false]{color:#ffad9b}iframe{width:1100px;max-width:100%;height:850px;border:1px solid #536d59}</style><h1>Folded Light / Browser checks</h1><a href="./">Gallery ↗</a> · <a href="contact-sheet.html">Motion sheet ↗</a><h2 id="summary">Running…</h2><ul id="results"></ul><iframe title="Folded Light gallery under test" src="index.html"></iframe>
+<script type="module">
+const results=[],report=(name,pass,detail='')=>{results.push(pass);const n=document.createElement('li');n.dataset.pass=String(pass);n.textContent=(pass?'PASS':'FAIL')+' — '+name+(detail?' / '+detail:'');document.querySelector('#results').append(n);};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)),until=async(fn,ms=14000)=>{const start=performance.now();while(!fn()){if(performance.now()-start>ms)throw Error('Timed out');await sleep(25);}};
+const frame=document.querySelector('iframe');
+try{
+ await until(()=>frame.contentWindow.velaMotionReview?.cards.length===50);
+ const win=frame.contentWindow,doc=frame.contentDocument,review=win.velaMotionReview;
+ report('Fifty numbered studies with unique names',review.concepts.length===50&&new Set(review.concepts.map(c=>c.name)).size===50&&review.concepts.every((c,i)=>Number(c.id)===i+1));
+ report('Every study explains a mechanism and a visual distinction',review.concepts.every(c=>c.rule.length>45&&c.description.length>50));
+ if(review.playing)doc.querySelector('#play-all').click();await sleep(80);report('Pause freezes gallery playback',!review.playing);
+ const fingerprints=new Set();let finite=true,animated=true,repeatable=true,complete=true,visible=true,stable=true;
+ const original=['M114 178L156 79L192 145L153 194Z','M192 145L228 79L266 178L229 194Z','M156 79L165 161L192 145Z','M228 79L220 161L192 145Z'];
+ for(const {stage}of review.cards){
+  const svg=stage.svg,mark=svg.querySelector('[data-layer="mark"]');let states=[];
+  for(const p of [0,.15,.35,.55,.75,.85,1]){stage.draw(p);const state=[...svg.children].map(n=>n.outerHTML).join('').replace(/f\d+-/g,'f-');states.push(state);for(const n of svg.querySelectorAll('*'))for(const a of n.attributes)if(/NaN|Infinity|undefined/.test(a.value))finite=false;}
+  fingerprints.add(states.slice(1,5).join(''));animated&&=new Set(states.slice(0,6)).size>=4;
+  stage.draw(.33);const before=svg.innerHTML;stage.draw(.79);stage.draw(.08);stage.draw(.33);repeatable&&=before===svg.innerHTML;
+  stage.draw(0);visible&&=Number(mark.getAttribute('opacity'))>=.08;
+  stage.draw(.9);const end=svg.innerHTML;stage.draw(1);stable&&=end===svg.innerHTML;
+  complete&&=mark.getAttribute('transform')===''&&mark.getAttribute('opacity')==='1'&&[...svg.querySelectorAll('[data-panel]')].every((n,i)=>n.getAttribute('transform')===''&&n.getAttribute('opacity')==='1'&&n.firstChild.getAttribute('d')===original[i]);
+ }
+ report('All studies animate real SVG geometry or material',animated,'50 studies sampled at seven phases');
+ report('No duplicate motion trajectories',fingerprints.size===50,'Geometry fingerprints across four intermediate phases');
+ report('All geometry remains finite',finite);
+ report('Rewinding gives the identical frame',repeatable);
+ report('Artwork is visible immediately',visible);
+ report('Every study settles to the exact four source planes',complete);
+ report('The final logo holds still before the handoff',stable,'Last 300 ms of the three-second launch');
+ const ids=[...doc.querySelectorAll('svg [id]')].map(n=>n.id);report('SVG definitions have unique IDs',ids.length===new Set(ids).size);
+ const missing=[...doc.querySelectorAll('svg *')].flatMap(n=>[...n.attributes]).flatMap(a=>[...a.value.matchAll(/url\(#([^\)]+)\)/g)].map(m=>m[1])).filter(id=>!doc.getElementById(id));report('All gradients, filters, and clips resolve',missing.length===0);
+ const source=new DOMParser().parseFromString(await (await fetch('../../concepts/148-folded-light.svg')).text(),'image/svg+xml');const palette=review.cards[0].stage.svg.querySelector('linearGradient[id$="-mint"]');report('Separated wings preserve the source mint palette',JSON.stringify([...palette.querySelectorAll('stop')].map(n=>[n.getAttribute('offset'),n.getAttribute('stop-color')]))===JSON.stringify([...source.querySelectorAll('#mint stop')].map(n=>[n.getAttribute('offset'),n.getAttribute('stop-color')]))&&palette.getAttribute('gradientUnits')==='userSpaceOnUse');
+ report('Wordmark and frame retain source proportions',review.cards.every(c=>c.stage.svg.getAttribute('viewBox')==='0 0 380 320'&&[...c.stage.svg.querySelectorAll('text')].some(n=>n.textContent==='Vela'&&n.getAttribute('y')==='267')));
+ doc.querySelector('[data-filter="Material"]').click();report('Family filters select the correct studies',review.cards.filter(c=>!c.card.hidden).length===review.concepts.filter(c=>c.family==='Material').length);doc.querySelector('[data-filter="all"]').click();
+ let routes=true;for(const c of review.cards){c.card.querySelector('.stage-button').click();routes&&=review.focus.info.id===c.info.id&&win.location.search==='?concept='+c.info.id;doc.querySelector('#close').click();await until(()=>review.focus===null);}report('All 50 inspector routes open the matching study',routes);
+ review.cards[0].card.querySelector('.stage-button').click();report('Inspector uses the actual 380px launch width',Math.abs(doc.querySelector('#focus-stage').getBoundingClientRect().width-380)<1);
+ const speed=doc.querySelector('#focus-speed');speed.value='.25';speed.value='0.25';speed.dispatchEvent(new win.Event('change',{bubbles:true}));report('Slow playback is accessible inside the inspector',doc.querySelector('#speed').value==='0.25');speed.value='1';speed.dispatchEvent(new win.Event('change',{bubbles:true}));
+ const scrub=doc.querySelector('#scrub');scrub.value=1234;scrub.dispatchEvent(new win.Event('input',{bubbles:true}));const frozen=review.focus.stage.svg.innerHTML;await sleep(100);report('Scrubbing pauses on the exact selected frame',review.focus.stage.svg.innerHTML===frozen&&doc.querySelector('#time').textContent.startsWith('1.23'));
+ doc.querySelector('#previous').click();report('Previous wraps from study 01 to 50',review.focus.info.id==='50');doc.querySelector('#next').click();report('Next wraps from study 50 to 01',review.focus.info.id==='01');
+ const save=doc.querySelector('#focus-save'),saved=save.getAttribute('aria-pressed');save.click();report('Favorites toggle correctly',save.getAttribute('aria-pressed')!==saved);save.click();
+ const start=performance.now();doc.querySelector('#launch-preview').click();await sleep(2450);report('Artwork remains visible before three seconds',!review.launchDone&&!doc.querySelector('#focus-stage').hidden);await until(()=>review.launchDone,2500);const elapsed=performance.now()-start;report('Launch completes a three-second handoff',elapsed>=2980&&elapsed<3650,Math.round(elapsed)+' ms');report('Launch destination is the empty workspace preview',doc.querySelector('#focus-stage').hidden&&!doc.querySelector('#empty-workspace').hidden);
+ doc.querySelector('#focus-restart').click();report('Replay restores the animation',!review.launchDone&&!doc.querySelector('#focus-stage').hidden);doc.querySelector('#close').click();await until(()=>review.focus===null);report('Closing removes the inspected stage',doc.querySelector('#focus-stage').children.length===0);
+ frame.style.width='390px';await sleep(100);report('Gallery fits a 390px viewport',doc.documentElement.scrollWidth<=win.innerWidth);doc.querySelector('.stage-button').click();report('Inspector fits a 390px viewport',doc.querySelector('dialog').getBoundingClientRect().width<=win.innerWidth);doc.querySelector('#close').click();await until(()=>review.focus===null);frame.style.width='1100px';
+ doc.querySelector('#restart-all').click();report('Restart synchronizes all fifty studies',review.cards.every(c=>c.stage.svg.dataset.progress==='0'));
+ const contact=document.createElement('iframe');contact.title='Motion sheet route test';document.body.append(contact);let sheets=true;for(const group of ['01','11','21','31','41']){contact.src='contact-sheet.html?group='+group;await new Promise((resolve,reject)=>{contact.onload=resolve;contact.onerror=reject;});await until(()=>contact.contentWindow.foldedSheet);sheets&&=contact.contentWindow.foldedSheet.count===10;}report('Each motion sheet group contains exactly ten studies',sheets);contact.remove();
+}catch(e){report('Browser verification completed',false,e.message);}
+document.querySelector('#summary').textContent=results.filter(Boolean).length+'/'+results.length+' checks passed';
+</script></html>
