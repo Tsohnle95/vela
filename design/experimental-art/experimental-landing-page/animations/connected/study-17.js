@@ -1,0 +1,4 @@
+export default {
+ name:'Revealed lattice',family:'Geometry',description:'A small area of fine isometric linework appears near the passing pearl.',rule:'A circular window follows the pearl, revealing a fixed lattice beneath the surface.',
+ setup({add,path,defs,prefix,faceEffects,set,centers}){const windows=faceEffects.map((g,i)=>{const clip=add(defs,'clipPath',{id:prefix+'-lattice'+i});const window=add(clip,'circle',{r:90});const grid=add(g,'g',{'clip-path':`url(#${prefix}-lattice${i})`});const [x,y]=centers[i];for(let k=-5;k<=5;k++){path(grid,`M${x-230} ${y+k*32+130}L${x+230} ${y+k*32-130}`,'#eadfff',2);path(grid,`M${x-230} ${y+k*32-130}L${x+230} ${y+k*32+130}`,'#eadfff',2);}return {grid,window};});return ({i,x,y,dx,dy,strength})=>{set(windows[i].window,{cx:x+dx*.4,cy:y+dy*.4,r:60+strength*30});set(windows[i].grid,{opacity:strength*.23});};}
+};

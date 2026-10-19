@@ -1,0 +1,4 @@
+export default {
+ name:'Quiet companion',family:'Light',description:'A small reflection, faint edge light, and barely perceptible lean respond together to the pearl.',rule:'Three restrained cues share the same proximity and direction; the cube settles as the pearl leaves.',
+ setup({add,defs,prefix,faceEffects,cubeGroups,edge,set}){const grad=add(defs,'radialGradient',{id:prefix+'-companion'});add(grad,'stop',{offset:0,'stop-color':'#fff','stop-opacity':.6});add(grad,'stop',{offset:1,'stop-color':'#fff','stop-opacity':0});const pools=faceEffects.map(g=>add(g,'ellipse',{rx:120,ry:95,fill:`url(#${prefix}-companion)`}));return ({i,x,y,dx,dy,nx,ny,strength})=>{set(pools[i],{cx:x+dx*.4,cy:y+dy*.35,opacity:strength*.3});set(edge[i],{opacity:strength*.11});set(cubeGroups[i],{transform:`translate(${nx*strength*3} ${ny*strength*3}) rotate(${nx*strength*.55} ${x} ${y})`});};}
+};
