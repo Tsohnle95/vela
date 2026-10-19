@@ -27,3 +27,12 @@
 .btn-danger:hover:not(:disabled) { background: rgba(226, 152, 138, 0.22); border-color: #e2988a; }
 
 .btn-lg { padding: 10px 28px; font-size: 14px; border-radius: var(--radius-lg); }
+
+.btn-workspace {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+
+.btn-workspace:hover:not(:disabled) { background: #191919; border-color: #191919; }
+.btn-workspace:focus-visible { outline-color: var(--text); }

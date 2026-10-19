@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useCtxMenu, useStore } from "../store";
-import { MiraMark } from "./MiraMark";
 import { FileIcon } from "./FileIcons";
 import { droppedFilePaths, isExternalFileDrag } from "../drop";
 import { compactExplorerSelection, movableExplorerPaths } from "../explorer-selection";
@@ -50,11 +49,10 @@ function NoWorkspaceEmpty(): ReactNode {
   const { selectFolder } = useStore();
   return (
     <div className="tree-empty-workspace">
-      <MiraMark size={36} />
       <p className="tree-empty-workspace-text">No workspace open</p>
       <button
         type="button"
-        className="btn btn-primary"
+        className="btn btn-workspace"
         onClick={() => void selectFolder()}
       >
         Open a workspace

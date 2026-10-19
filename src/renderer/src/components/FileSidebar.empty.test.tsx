@@ -58,11 +58,12 @@ describe("FileSidebar empty workspace state", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows a Mira-marked open-workspace CTA when no workspace is open", () => {
+  it("keeps the empty workspace message and working folder button without a logo", () => {
     act(() => root.render(<FileSidebar collapsed={false} onCollapse={() => {}} onDrag={() => {}} />));
 
     const cta = container.querySelector<HTMLButtonElement>(".tree-empty-workspace .btn");
-    expect(container.querySelector(".tree-empty-workspace .mira-mark")).not.toBeNull();
+    expect(container.querySelector(".tree-empty-workspace .mira-mark")).toBeNull();
+    expect(container.querySelector(".tree-empty-workspace-text")?.textContent).toBe("No workspace open");
     expect(cta?.textContent).toBe("Open a workspace");
 
     act(() => {

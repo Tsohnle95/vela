@@ -569,26 +569,3 @@ body > #mira-monaco-overflow {
   font-size: 14px;
   font-weight: 500;
 }
-
-.editor-empty-icon {
-  font-size: 42px;
-  color: var(--text-faint);
-  margin-bottom: 10px;
-  filter: drop-shadow(0 0 18px rgba(232, 135, 95, 0.12));
-}
-
-.editor-empty-sub { color: var(--text-faint); font-size: 12px; }
-
-@container (max-width: 460px) {
-  .editor-empty-sub { display: none; }
-}
-
-@container (max-width: 280px) {
-  .editor-empty p { display: none; }
-
-  .editor-empty-icon {
-    margin: 0;
-    opacity: 0.62;
-    transform: scale(0.8);
-  }
-}

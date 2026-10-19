@@ -8,7 +8,6 @@ import { wireEditorNavigationKeys } from "../editor-navigation";
 import { wireHtmlAttributeQuotes } from "../editor-language-input";
 import { clearW3cMarkers } from "../w3c-validation";
 import { useStore } from "../store";
-import { MiraMark } from "./MiraMark";
 import { useTheme } from "../theme";
 import { registerEditor, unregisterEditor } from "../reveal";
 import { droppedFilePaths, isExternalFileDrag } from "../drop";
@@ -436,7 +435,6 @@ function EmptyEditorGroup({ actions }: { actions: ReactNode }): ReactNode {
         <div className="editor-breadcrumb-actions">{actions}</div>
       </div>
       <div className="editor-group-empty">
-        <MiraMark size={30} />
         <strong>Empty editor group</strong>
         <span>Open a file from the Explorer to show it here.</span>
       </div>
@@ -547,11 +545,9 @@ function EditorGroup({
 function EditorEmptyState({ session }: { session: SessionInfo | null | undefined }): ReactNode {
   return (
     <div className="editor-empty">
-      <div className="editor-empty-icon"><MiraMark size={40} /></div>
-      {session ? <p>Select a file from the explorer to view or edit it.</p> : <>
-        <p>No workspace open.</p>
-        <p className="editor-empty-sub">Open a workspace from the explorer to get started.</p>
-      </>}
+      <p>{session
+        ? "Select a file from the explorer to view or edit it."
+        : "Open a workspace from the explorer to get started."}</p>
     </div>
   );
 }

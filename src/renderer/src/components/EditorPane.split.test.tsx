@@ -141,11 +141,11 @@ describe("EditorPane split groups", () => {
     expect(slot.querySelector('[role="tab"].browser')).not.toBeNull();
     expect(slot.querySelector<HTMLButtonElement>('[aria-label="Close New tab"]')).not.toBeNull();
     expect(container.querySelector(".editor-stack")?.classList).toContain("concealed");
-    expect(container.querySelector(".editor-empty")?.textContent).toContain("No workspace open.");
+    expect(container.querySelector(".editor-empty")?.textContent).toBe("Open a workspace from the explorer to get started.");
     act(() => slot.querySelector<HTMLButtonElement>('[aria-label="Close New tab"]')!.click());
     expect(slot.querySelector('[role="tab"].browser')).toBeNull();
     expect(container.querySelector(".editor-stack")?.classList).not.toContain("concealed");
-    expect(container.querySelector(".editor-empty")?.textContent).toContain("No workspace open.");
+    expect(container.querySelector(".editor-empty")?.textContent).toBe("Open a workspace from the explorer to get started.");
   });
 
   it("opens two side-by-side editor groups and closes the secondary group", () => {
