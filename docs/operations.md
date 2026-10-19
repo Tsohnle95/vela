@@ -451,7 +451,7 @@ shim next to `opencode`; older clients that still spawn
 - Directory entries from `GET /api/fs/list` come with trailing slashes
   (`"src/"`); the backend normalizes them in `listDir` — the renderer
   must never receive raw entries.
-- The renderer paints the compact Folded light splash immediately, holds it
+- The renderer paints the compact app-icon splash immediately, holds it
   for three visible seconds while loading the IDE, then opens an empty workspace
   without selecting a session. Workspace selection stays in the sidebar.
 - `session.tool.called` events carry NO tool name — names come from

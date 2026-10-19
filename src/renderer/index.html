@@ -10,13 +10,20 @@
     <title>Mira</title>
     <style>
       html, body { height: 100%; margin: 0; overflow: hidden; }
-      #launch-screen { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: #edf5ee; color: #254e46; font: 12px Arial, sans-serif; -webkit-app-region: drag; }
-      #launch-artwork { display: block; width: 100%; height: 100%; object-fit: contain; }
+      #launch-screen { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: #090a1b; color: #f0ecff; font: 12px Arial, sans-serif; -webkit-app-region: drag; }
+      #launch-frame { position: relative; width: min(380px, 100vw); height: min(320px, 100vh); text-align: center; }
+      #launch-artwork { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 168px; height: 168px; object-fit: contain; }
+      #launch-frame h1 { position: absolute; top: 233px; left: 0; right: 0; margin: 0; font-size: 39px; line-height: 47px; font-weight: 500; letter-spacing: -2.3px; }
+      #launch-frame p { position: absolute; top: 286px; left: 0; right: 0; margin: 0; color: #a59abb; font-size: 7px; line-height: 10px; letter-spacing: 1.8px; }
     </style>
   </head>
   <body>
     <div id="launch-screen" role="status" aria-label="Starting Mira">
-      <img id="launch-artwork" src="./src/assets/folded-light.svg" width="380" height="320" alt="Mira — integrated development environment" fetchpriority="high" />
+      <div id="launch-frame">
+        <img id="launch-artwork" src="../../resources/icon.png" width="168" height="168" alt="Mira app icon: three violet cubes with an orbital ring" fetchpriority="high" />
+        <h1>Mira</h1>
+        <p>integrated development environment</p>
+      </div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

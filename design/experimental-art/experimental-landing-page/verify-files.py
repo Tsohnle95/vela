@@ -98,7 +98,7 @@ for index, concept in enumerate(manifest):
 
 gallery = Page(ROOT / "index.html")
 assert gallery.cards == 154, "Gallery must expose all 154 designs"
-for filename in ("process.html", "contact-sheet.html", "verify.html"):
+for filename in ("process.html", "contact-sheet.html", "verify.html", "launch-comparison.html"):
     Page(ROOT / filename)
 print("154/154 SVGs valid, distinct, self-contained, correctly linked, with no old Orbit wordmarks.")
 print("12 slick and 12 pixel Mira studies; 130 earlier compositions; branding baseline matches.")

@@ -103,3 +103,17 @@ visibility; the layout test covers the empty cold-start destination.
 The production change passed `npm run check` under Node 22.23.2: 174 test
 files / 1,436 tests, documentation and architecture checks, and the production
 build (2 files / 4 tests skipped).
+
+## App-icon comparison
+
+The icon frame is the current launch presentation. It uses the exact
+`resources/icon.png` master without modification. `launch-comparison.html`
+shows it beside the preserved Folded light artwork at 380 × 320. Both were
+visually inspected in the native Chrome comparison page. The old production
+`folded-light.svg` remains byte-for-byte unchanged.
+
+The installed Mira app was also checked: its initial frame exposed the cube
+icon, Mira and caption, then handed off to the empty IDE without selecting a
+workspace. The existing three-second coordinator is unchanged. The canonical
+check passed under Node 22.23.2 (174 files / 1,436 tests passed, 2 files / 4
+tests skipped), together with docs, architecture and production build checks.

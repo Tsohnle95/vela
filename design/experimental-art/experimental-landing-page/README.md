@@ -77,8 +77,10 @@ Everything is self-contained, with system fonts and no external dependencies,
 fonts, analytics, image-generation service, or CDN. `inspiration.png` is a copy
 of the supplied reference, so the gallery's reference link works locally.
 
-Folded light (148) is the selected production launch design, with the caption
-“integrated development environment.” Its production asset is
-`src/renderer/src/assets/folded-light.svg` at the repository root. The other
-concepts remain review experiments. The gallery's desktop shell is still a
+The current production launch frame uses the exact Mira app icon, with Mira
+and the caption “integrated development environment.” Open
+[the side-by-side comparison](http://127.0.0.1:8147/launch-comparison.html)
+to compare it with Folded light (148). Folded light and its production asset
+`src/renderer/src/assets/folded-light.svg` are preserved intact for restoration.
+The other concepts remain review experiments. The gallery's desktop shell is still a
 browser prototype and does not connect to Electron or OpenCode.
