@@ -5,6 +5,7 @@ import { droppedFilePaths, isExternalFileDrag } from "../drop";
 import { compactExplorerSelection, movableExplorerPaths } from "../explorer-selection";
 import type { SessionInfo, TreeEntry } from "@shared/types";
 import { SessionsPane } from "./SessionsPane";
+import { IconSquarePen } from "./icons";
 import {
   DirNode,
   ExplorerStoreContext,
@@ -43,22 +44,6 @@ function explorerStoreFor(store: ReturnType<typeof useStore>, panel: SessionInfo
     toggleDir: (path) => store.toggleDir(path, panel.workspace),
     prefetchDir: (path) => store.prefetchDir(path, panel.workspace)
   };
-}
-
-function NoWorkspaceEmpty(): ReactNode {
-  const { selectFolder } = useStore();
-  return (
-    <div className="tree-empty-workspace">
-      <p className="tree-empty-workspace-text">No workspace open</p>
-      <button
-        type="button"
-        className="btn btn-workspace"
-        onClick={() => void selectFolder()}
-      >
-        Open a workspace
-      </button>
-    </div>
-  );
 }
 
 export function FileSidebar({
@@ -432,7 +417,7 @@ export function FileSidebar({
             <span className="sidebar-brand">Mira</span>
           </div>
 
-       {!multiRoot && <div
+       {orderedPanels.length > 0 && !multiRoot && <div
          className={`section-trigger with-actions explorer-trigger ${rootOpen ? "open" : ""} ${dropDir === "" ? "drop-target" : ""}`}
          data-explorer-root=""
          title={session?.directory}
@@ -485,7 +470,19 @@ export function FileSidebar({
             }}
           >
             {orderedPanels.length === 0 && (
-              session ? <div className="tree-empty">Loading…</div> : <NoWorkspaceEmpty />
+              session ? <div className="tree-empty">Loading…</div> : (
+                <div className="sessions-actions">
+                  <button
+                    type="button"
+                    className="sessions-new"
+                    onClick={() => void store.selectFolder()}
+                    title="Choose a folder for a new workspace"
+                  >
+                    <IconSquarePen />
+                    New Workspace
+                  </button>
+                </div>
+              )
             )}
             {orderedPanels.map((panel) => {
               const focused = panel.id === session?.id;

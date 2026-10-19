@@ -70,7 +70,7 @@ Exposed state:
 
 | Slice | Shape | Notes |
 |---|---|---|
-| `session` | `SessionInfo \| null` | the focused session (derived from `panels` + `activeSessionID`); null → an empty IDE whose explorer offers an open-workspace CTA after the launch splash |
+| `session` | `SessionInfo \| null` | the focused session (derived from `panels` + `activeSessionID`); null → an empty IDE whose Explorer offers a **New Workspace** action after the launch splash |
 | `panels` | `SessionInfo[]` | all attached/live sessions in panel order; each panel continues streaming even when normal coding mode renders only the focused coding session |
 | `activeSessions` | `SessionInfo[]` | backend-owned open contexts, reconciled every second independently of visible panels; drives the complete **Open now** inventory |
 | `savedWorkspaces` | `ProjectInfo[]` | Mira-owned workspace bookmarks stored in the main process under Electron user data with an atomic backup; startup imports `mira.savedWorkspaces` (falling back to `orbit.savedWorkspaces`) only when app storage is uninitialized, or OpenCode's validated project catalog on first use without that value; initialized app storage is authoritative. User additions/removals during hydration are replayed over that snapshot; a failed read never overwrites it with an empty value |

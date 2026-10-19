@@ -58,13 +58,14 @@ describe("FileSidebar empty workspace state", () => {
     vi.unstubAllGlobals();
   });
 
-  it("keeps the empty workspace message and working folder button without a logo", () => {
+  it("shows only a New Workspace action when no workspace is open", () => {
     act(() => root.render(<FileSidebar collapsed={false} onCollapse={() => {}} onDrag={() => {}} />));
 
-    const cta = container.querySelector<HTMLButtonElement>(".tree-empty-workspace .btn");
-    expect(container.querySelector(".tree-empty-workspace .mira-mark")).toBeNull();
-    expect(container.querySelector(".tree-empty-workspace-text")?.textContent).toBe("No workspace open");
-    expect(cta?.textContent).toBe("Open a workspace");
+    const cta = container.querySelector<HTMLButtonElement>(".sessions-new");
+    expect(container.querySelector(".explorer-trigger")).toBeNull();
+    expect(container.querySelector(".tree-empty-workspace")).toBeNull();
+    expect(cta?.textContent?.trim()).toBe("New Workspace");
+    expect(cta?.title).toBe("Choose a folder for a new workspace");
 
     act(() => {
       cta!.click();
