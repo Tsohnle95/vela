@@ -32,7 +32,7 @@ export function reloadAppStylesheet(update: AppStylesheetUpdate, onError: (messa
 
 export function useAppStyles(): void {
   const { notify } = useStore();
-  useEffect(() => window.openshell.onMessage(message => {
+  useEffect(() => window.vela.onMessage(message => {
     if (message.kind !== "ui-command") return;
     if (message.command === "app-styles-error" && typeof message.data === "string") {
       notify(message.data, "error");

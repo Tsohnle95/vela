@@ -1,5 +1,5 @@
 (() => {
-  const storageKey = "mira-mockup-theme";
+  const storageKey = "vela-mockup-theme";
   const direction = new URLSearchParams(window.location.search).get("direction");
   const defaultTheme = direction === "06" ? "dark" : "light";
 

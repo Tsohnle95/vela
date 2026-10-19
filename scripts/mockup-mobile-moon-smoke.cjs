@@ -15,8 +15,8 @@ const viewports = [
   ["mobile-600x900", 600, 900],
   ["desktop-1440x900", 1440, 900]
 ];
-const screenshotDirectory = process.env.MIRA_MOON_SCREENSHOT_DIR
-  ?? fs.mkdtempSync(path.join(os.tmpdir(), "mira-mobile-moon-"));
+const screenshotDirectory = process.env.VELA_MOON_SCREENSHOT_DIR
+  ?? fs.mkdtempSync(path.join(os.tmpdir(), "vela-mobile-moon-"));
 
 fs.mkdirSync(screenshotDirectory, { recursive: true });
 

@@ -16,7 +16,7 @@
 @use "opencode/file-icon";
 @use "opencode/sticky-accordion-header";
 
-// Mira's agent palette reaches the ported partials through the --v2-* semantic tokens.
+// Vela's agent palette reaches the ported partials through the --v2-* semantic tokens.
 // opencode/theme declares the same tokens on .agent-scroll; as a descendant it would
 // otherwise win with its dark-fallback values, so re-assert the mapping on .agent-scroll
 // too, at equal specificity and later in source order.
@@ -55,8 +55,8 @@
 :root .agent-panel .agent-scroll {
   --background-stronger: var(--agent-bg-layer);
   // The ported foreground/syntax tokens are likewise tuned for the dark palette in every
-  // Mira theme, which leaves code light-on-light once the block background is themed.
-  // Point them at Mira's themed semantic colors (the pre-port transcript palette).
+  // Vela theme, which leaves code light-on-light once the block background is themed.
+  // Point them at Vela's themed semantic colors (the pre-port transcript palette).
   --text-base: var(--v2-text-text-base);
   --syntax-string: var(--green);
   --syntax-keyword: var(--accent);

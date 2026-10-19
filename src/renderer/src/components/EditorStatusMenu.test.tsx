@@ -79,7 +79,7 @@ describe("editor status menu validation", () => {
 
   it("validates the local split-group tab rather than the globally focused file", async () => {
     const validate = vi.fn(async () => []);
-    vi.stubGlobal("openshell", { validateW3c: validate });
+    vi.stubGlobal("vela", { validateW3c: validate });
     store.tabs = [tsTab, htmlTab];
     store.activePath = tsTab.path;
     await renderMenu(<EditorStatusMenu tab={htmlTab} editorStatus={{ path: tsTab.path, lineNumber: 9, column: 7, tabSize: 4, insertSpaces: false }} />);
@@ -110,7 +110,7 @@ describe("editor status menu validation", () => {
       { line: 2, column: 1, endLine: 2, endColumn: 2, message: "warn", severity: "warning", source: "w3c-html" },
       { line: 3, column: 1, endLine: 3, endColumn: 2, message: "also bad", severity: "error", source: "w3c-html" }
     ];
-    window.openshell = { validateW3c: vi.fn(async () => diagnostics) } as unknown as typeof window.openshell;
+    window.vela = { validateW3c: vi.fn(async () => diagnostics) } as unknown as typeof window.vela;
 
     await renderMenu();
     const button = container.querySelector<HTMLButtonElement>('[data-testid="validate-btn"]')!;
@@ -122,7 +122,7 @@ describe("editor status menu validation", () => {
       await Promise.resolve();
     });
 
-    expect(window.openshell.validateW3c).toHaveBeenCalledWith("index.html", "<p>hi");
+    expect(window.vela.validateW3c).toHaveBeenCalledWith("index.html", "<p>hi");
     expect(applyW3cMarkers).toHaveBeenCalledWith("index.html", diagnostics);
     expect(container.querySelector('[data-testid="validate-result"]')?.textContent).toBe("2 errors, 1 warning");
   });
@@ -131,7 +131,7 @@ describe("editor status menu validation", () => {
     const diagnostics = [
       { line: 4, column: 9, endLine: 4, endColumn: 10, message: "Unknown property", severity: "error" as const, source: "w3c-css" as const }
     ];
-    window.openshell = { validateW3c: vi.fn(async () => diagnostics) } as unknown as typeof window.openshell;
+    window.vela = { validateW3c: vi.fn(async () => diagnostics) } as unknown as typeof window.vela;
     store.tabs = [cssTab];
     store.activePath = cssTab.path;
 
@@ -141,7 +141,7 @@ describe("editor status menu validation", () => {
       await Promise.resolve();
     });
 
-    expect(window.openshell.validateW3c).toHaveBeenCalledWith(cssTab.path, cssTab.content);
+    expect(window.vela.validateW3c).toHaveBeenCalledWith(cssTab.path, cssTab.content);
     expect(applyW3cMarkers).toHaveBeenCalledWith(cssTab.path, diagnostics);
     expect(container.querySelector('[data-testid="validate-result"]')?.textContent).toBe("1 error");
   });
@@ -192,7 +192,7 @@ describe("editor status menu validation", () => {
       { line: 2, column: 4, endLine: 2, endColumn: 8, message: "Unexpected end tag", severity: "error" as const, source: "w3c-html" as const }
     ];
     const onValidationComplete = vi.fn();
-    window.openshell = { validateW3c: vi.fn(async () => diagnostics) } as unknown as typeof window.openshell;
+    window.vela = { validateW3c: vi.fn(async () => diagnostics) } as unknown as typeof window.vela;
     await renderMenu(<EditorStatusMenu onValidationComplete={onValidationComplete} />);
 
     const button = container.querySelector<HTMLButtonElement>('[data-testid="validate-btn"]')!;
@@ -213,7 +213,7 @@ describe("editor status menu validation", () => {
   });
 
   it("reports a clean file and resets the result when the content changes", async () => {
-    window.openshell = { validateW3c: vi.fn(async () => []) } as unknown as typeof window.openshell;
+    window.vela = { validateW3c: vi.fn(async () => []) } as unknown as typeof window.vela;
 
     await renderMenu();
     await act(async () => {
@@ -228,7 +228,7 @@ describe("editor status menu validation", () => {
   });
 
   it("shows a failure state when the validator rejects", async () => {
-    window.openshell = { validateW3c: vi.fn(async () => { throw new Error("network down"); }) } as unknown as typeof window.openshell;
+    window.vela = { validateW3c: vi.fn(async () => { throw new Error("network down"); }) } as unknown as typeof window.vela;
 
     await renderMenu();
     await act(async () => {

@@ -3,8 +3,8 @@
 ## Scope
 
 154 numbered experiments: original 01–30, environments 31–64, graphic objects
-65–97, systems 98–130, twelve pixel Mira variations 131–142, and twelve slick vector studies 143–154. The checks below describe the gallery. Folded light (148) was subsequently
-adopted as the production splash with only Mira and the small green caption
+65–97, systems 98–130, twelve pixel Vela variations 131–142, and twelve slick vector studies 143–154. The checks below describe the gallery. Folded light (148) was subsequently
+adopted as the production splash with only Vela and the small green caption
 “integrated development environment”; production launch timing is covered by
 `src/renderer/src/launch.test.ts` and the cold-start layout test.
 
@@ -15,12 +15,12 @@ adopted as the production splash with only Mira and the small green caption
 - `python3 verify-files.py`: all 154 SVGs parse, have distinct hashes and valid
   local definitions; every link resolves; navigation wraps correctly; all 100
   additions have source and differentiation metadata. The first 30 hashes
-  match the baseline refreshed for the Mira branding correction. All SVG
+  match the baseline refreshed for the Vela branding correction. All SVG
   wordmarks pass the old-name scan; twenty-four compact sizes and source references
   also pass.
 - `verify.html` in native Chrome: **23/23 passed**. All 154 images decoded.
   Observed transition: **3001 ms after artwork decode and paint**. Checks cover
-  viewport fit, an actual **380 × 320 px** compact window, Mira branding,
+  viewport fit, an actual **380 × 320 px** compact window, Vela branding,
   empty workspace destination, hold, replay, notes,
   immersive mode, original-to-new navigation, wraparound, all four batch
   filters and search.
@@ -41,9 +41,9 @@ reviewed at its native 380 × 320 px size.
 The twelve compact variations were inspected in native Chrome at gallery scale,
 with concept 131 also inspected at its actual 360 × 360 px splash size. The
 window sits centrally against the desktop background instead of filling the
-page. All twelve keep the supplied reference’s pixel stars, orbital trails,
-violet light and textured MIRA lettering, with varied compositions and
-300–420 px native widths. The earlier concepts were corrected to Mira too;
+page. All twelve keep the supplied reference’s pixel stars, celestial trails,
+violet light and textured VELA lettering, with varied compositions and
+300–420 px native widths. The earlier concepts were corrected to Vela too;
 old route slugs are retained so existing review links keep working.
 
 The earlier gallery review:
@@ -51,7 +51,7 @@ The earlier gallery review:
 All original 30 and all 100 additions were inspected in the actual browser
 gallery/contact sheet. Concepts 126 and 127 were revised and inspected at full
 size: the former now has continuous organic channels, and the latter's full
-Mira wordmark stays legible. Full-size inspection also caught image-grid
+Vela wordmark stays legible. Full-size inspection also caught image-grid
 overflow; artwork now fits inside the available viewport without cropping.
 Versioned stylesheet/script URLs ensure rebuilds use the current preview code.
 
@@ -77,7 +77,7 @@ distinct file hashes alone were not treated as sufficient evidence.
 
 Run `npm start` in this folder, then open:
 
-- <http://127.0.0.1:8147/> — slick Mira variations (default).
+- <http://127.0.0.1:8147/> — slick Vela variations (default).
 - <http://127.0.0.1:8147/concepts/143-liquid-signature.html?still=1> — actual-size smooth splash.
 - <http://127.0.0.1:8147/index.html?group=compact> — earlier pixel variations.
 - <http://127.0.0.1:8147/index.html?group=all> — full gallery.
@@ -89,11 +89,11 @@ an Electron/OpenCode session or alter the installed app's startup behavior.
 
 ## Folded light production selection
 
-Concept 148 now shows only Mira and the small green caption
+Concept 148 now shows only Vela and the small green caption
 “integrated development environment.” The matching production SVG is
 `src/renderer/src/assets/folded-light.svg` at the repository root.
 
-The installed `/Applications/Mira.app` was launched against the compiled
+The installed `/Applications/Vela.app` was launched against the compiled
 checkout. Native inspection showed the 380 × 320 splash with the requested
 caption, followed by an expanded empty IDE with **Open a workspace** in the
 sidebar and no automatic session selection. Launch unit tests cover image
@@ -112,8 +112,8 @@ shows it beside the preserved Folded light artwork at 380 × 320. Both were
 visually inspected in the native Chrome comparison page. The old production
 `folded-light.svg` remains byte-for-byte unchanged.
 
-The installed Mira app was also checked: its initial frame exposed the cube
-icon, Mira and caption, then handed off to the empty IDE without selecting a
+The installed Vela app was also checked: its initial frame exposed the cube
+icon, Vela and caption, then handed off to the empty IDE without selecting a
 workspace. The existing three-second coordinator is unchanged. The canonical
 check passed under Node 22.23.2 (174 files / 1,436 tests passed, 2 files / 4
 tests skipped), together with docs, architecture and production build checks.

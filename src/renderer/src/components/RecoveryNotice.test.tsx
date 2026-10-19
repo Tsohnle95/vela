@@ -46,7 +46,7 @@ describe("RecoveryNotice", () => {
     id: "1786533818724-e85066e0-7d22-4d91-b476-ba097731f371:original",
     artifact: "original",
     originalPath: "save.txt",
-    recoveryPath: ".openshell-recovery/transaction/original",
+    recoveryPath: ".vela-recovery/transaction/original",
     createdAt: 1,
     acknowledged,
     reason: "save-failed"

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AgentFileState, FileUpdate, RecoveryRecord, SessionInfo, TreeEntry, WorkspaceIdentity } from "@shared/types";
+import { HIDDEN_RECOVERY_DIRS, type AgentFileState, type FileUpdate, type RecoveryRecord, type SessionInfo, type TreeEntry, type WorkspaceIdentity } from "@shared/types";
 
 type ObservedFileView = Readonly<Omit<AgentFileState, "baseline">> & {
   readonly baseline: Readonly<AgentFileState["baseline"]>;
@@ -14,7 +14,7 @@ interface WorkspaceFilesHost {
 }
 
 const HIDDEN_DIRS = new Set([
-  ".git", "node_modules", ".next", ".venv", "__pycache__", ".cache", ".turbo", ".svn", ".hg", ".nx", ".openshell-recovery", ".mira-recovery", ".orbit-recovery"
+  ".git", "node_modules", ".next", ".venv", "__pycache__", ".cache", ".turbo", ".svn", ".hg", ".nx", ...HIDDEN_RECOVERY_DIRS
 ]);
 
 function orderedEntries(entries: TreeEntry[]): TreeEntry[] {
@@ -226,7 +226,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
       if (existing) clearTimeout(existing);
       treeRefreshTimersRef.current.set(key, setTimeout(() => {
         treeRefreshTimersRef.current.delete(key);
-        void window.openshell.listDir(expected, parent)
+        void window.vela.listDir(expected, parent)
           .then((entries) => applyDirectoryListing(expected, parent, entries))
           .catch(() => {});
       }, 50));
@@ -235,7 +235,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
 
   const loadRecovery = useCallback(async (workspace: WorkspaceIdentity) => {
     try {
-      const records = await window.openshell.recoveryRecords(workspace);
+      const records = await window.vela.recoveryRecords(workspace);
       if (panelFor(workspace)) receiveRecovery(workspace, records);
     } catch (error) {
       if (panelFor(workspace)) {
@@ -259,7 +259,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
       if (isOpen) return;
       if (!treeByWorkspace[target.id]?.[path]) {
         try {
-          const entries = await window.openshell.listDir(target, path);
+          const entries = await window.vela.listDir(target, path);
           applyDirectoryListing(target, path, entries);
         } catch (err) {
           toast(err instanceof Error ? err.message : String(err), "error");
@@ -275,7 +275,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
     const key = JSON.stringify([target.id, target.generation, path]);
     if (prefetchingRef.current.has(key)) return;
     prefetchingRef.current.add(key);
-    void window.openshell.listDir(target, path).then((entries) => {
+    void window.vela.listDir(target, path).then((entries) => {
       if (!mountedRef.current || !panelFor(target)) return;
       setTreeFor(target.id, (prev) => !mountedRef.current || !panelFor(target) || prev[path]
         ? prev : { ...prev, [path]: orderedEntries(entries) });
@@ -291,7 +291,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
       if (!wasOpen) setExpandedFor(target.id, new Set([...current, ""]));
       if (wasOpen || !treeByWorkspace[target.id]?.[""]) {
         try {
-          const entries = await window.openshell.listDir(target, "");
+          const entries = await window.vela.listDir(target, "");
           applyDirectoryListing(target, "", entries);
         } catch (err) {
           toast(err instanceof Error ? err.message : String(err), "error");
@@ -310,7 +310,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
     await Promise.all(
       unique.map(async (dir) => {
         try {
-          const entries = await window.openshell.listDir(target, dir);
+          const entries = await window.vela.listDir(target, dir);
           applyDirectoryListing(target, dir, entries);
         } catch {
           /* keep previous listing */
@@ -349,7 +349,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
     const target = readFocusedSession()?.workspace;
     if (!target) return;
     try {
-      await window.openshell.openRecovery(target, id);
+      await window.vela.openRecovery(target, id);
     } catch (error) {
       toast(error instanceof Error ? error.message : String(error), "error");
     }
@@ -359,7 +359,7 @@ export function useWorkspaceFiles(host: WorkspaceFilesHost) {
     const target = readFocusedSession()?.workspace;
     if (!target) return;
     try {
-      await window.openshell.acknowledgeRecovery(target, id);
+      await window.vela.acknowledgeRecovery(target, id);
     } catch (error) {
       toast(error instanceof Error ? error.message : String(error), "error");
     }

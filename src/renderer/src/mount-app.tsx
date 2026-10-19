@@ -9,7 +9,7 @@ import "./styles/main.scss";
 function LaunchReady({ children }: { children: ReactNode }): ReactNode {
   useLayoutEffect(() => {
     document.querySelector("#launch-screen")?.remove();
-    performance.mark("mira-launch-workspace");
+    performance.mark("vela-launch-workspace");
   }, []);
   return children;
 }

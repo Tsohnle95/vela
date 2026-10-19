@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#171624" />
-    <title>Agent mode — Mira</title>
+    <title>Agent mode — Vela</title>
     <link rel="stylesheet" href="landing.css" />
   </head>
   <body class="full-page theme-agent">
     <header class="site-nav">
-      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◉</span><span>mira</span></a>
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◉</span><span>vela</span></a>
       <nav class="nav-links" aria-label="Main navigation">
         <a class="nav-optional" href="index.html">Overview</a>
         <a class="nav-optional" href="workbench.html">Workbench</a>
@@ -26,15 +26,15 @@
           <div class="hero-actions"><a class="action action-primary" href="#agent-direction">See how sessions stay connected <span aria-hidden="true">↓</span></a><a class="action action-secondary" href="workbench.html">See the workbench</a></div>
           <div class="hero-meta"><span>Workbench redesign reference</span><span>Agent mode in progress</span><span>Up to eight panels · concept</span></div>
         </div>
-        <figure class="app-capture"><div class="capture-bar"><span class="capture-label">Mira workbench screenshot</span><span>One agent panel · repository: mira</span></div><img src="assets/mira-workbench-reference.png" alt="Mira screenshot showing Monaco and one repo-aware agent panel, alongside the explorer and terminal." width="1375" height="779" /><figcaption><span>The Mira screenshot shows one agent panel.</span><span>The session overview below is a design concept.</span></figcaption></figure>
+        <figure class="app-capture"><div class="capture-bar"><span class="capture-label">Vela workbench screenshot</span><span>One agent panel · repository: vela</span></div><img src="assets/vela-workbench-reference.png" alt="Vela screenshot showing Monaco and one repo-aware agent panel, alongside the explorer and terminal." width="1375" height="779" /><figcaption><span>The Vela screenshot shows one agent panel.</span><span>The session overview below is a design concept.</span></figcaption></figure>
       </section>
       <section class="proof-rail" aria-label="Agent mode design goals"><div class="proof-item"><strong>Up to 8</strong><span>Visible panels in the direction</span></div><div class="proof-item"><strong>One focus</strong><span>Follow a selected session</span></div><div class="proof-item"><strong>Repo aware</strong><span>Each task stays contextual</span></div><div class="proof-item"><strong>Reviewable</strong><span>Return to code and diffs</span></div></section>
 
       <section class="page-section" id="agent-direction">
-        <div class="section-heading"><div><p class="section-kicker">The direction · up to eight</p><h2>Keep parallel sessions connected to the repo.</h2></div><p>Agent mode exists in Mira today. The expanded session overview is still in progress; this page describes the direction without presenting it as a screen the app already renders.</p></div>
+        <div class="section-heading"><div><p class="section-kicker">The direction · up to eight</p><h2>Keep parallel sessions connected to the repo.</h2></div><p>Agent mode exists in Vela today. The expanded session overview is still in progress; this page describes the direction without presenting it as a screen the app already renders.</p></div>
         <div class="agent-mode-flow">
           <p class="agent-capacity">Up to eight panels.<br /><em>One stays in focus.</em></p>
-          <p class="concept-disclaimer">In progress: the multi-session overview is a product direction, not a current Mira screen.</p>
+          <p class="concept-disclaimer">In progress: the multi-session overview is a product direction, not a current Vela screen.</p>
           <ol class="agent-flow">
             <li><span class="flow-step">01 / Scan</span><div><strong>See the work at a glance</strong><p>Keep each session’s task and repository context easy to distinguish.</p></div></li>
             <li><span class="flow-step">02 / Focus</span><div><strong>Open the session that needs you</strong><p>Bring its transcript, active file, and agent controls into the main work area.</p></div></li>
@@ -57,16 +57,16 @@
 
 
       <section class="page-section split-section">
-        <div class="split-copy"><p class="section-kicker">Built from today’s app</p><h2>Agent mode has a real starting point.</h2><p>The current Mira app already has an Agent mode layout and can add model panels. The screenshot shows that existing workbench state: a repository, Monaco editor, and agent panel. The next design step is a clearer overview for work happening across sessions.</p><ul class="check-list"><li>Use the real session stream and transcript as the source of progress.</li><li>Keep the selected agent’s repository and editor context visible.</li><li>Continue to use Changes and diff review for workspace edits.</li><li>Keep current workflows clear while the overview expands to as many as eight panels.</li></ul></div>
-        <aside class="context-card"><span class="context-label">WORKBENCH SCREENSHOT REFERENCE</span><div class="context-path">mira / src/main/opencode.ts</div><div class="context-state"><span>Monaco editor</span><span>Agent panel</span><span>OpenCode V2</span><span>local workspace</span></div><blockquote>The screenshot anchors the workbench direction; the multi-session concept is still in progress.</blockquote></aside>
+        <div class="split-copy"><p class="section-kicker">Built from today’s app</p><h2>Agent mode has a real starting point.</h2><p>The current Vela app already has an Agent mode layout and can add model panels. The screenshot shows that existing workbench state: a repository, Monaco editor, and agent panel. The next design step is a clearer overview for work happening across sessions.</p><ul class="check-list"><li>Use the real session stream and transcript as the source of progress.</li><li>Keep the selected agent’s repository and editor context visible.</li><li>Continue to use Changes and diff review for workspace edits.</li><li>Keep current workflows clear while the overview expands to as many as eight panels.</li></ul></div>
+        <aside class="context-card"><span class="context-label">WORKBENCH SCREENSHOT REFERENCE</span><div class="context-path">vela / src/main/opencode.ts</div><div class="context-state"><span>Monaco editor</span><span>Agent panel</span><span>OpenCode V2</span><span>local workspace</span></div><blockquote>The screenshot anchors the workbench direction; the multi-session concept is still in progress.</blockquote></aside>
       </section>
 
       <section class="page-section">
         <div class="section-heading"><div><p class="section-kicker">Common questions</p><h2>Agent mode, clearly scoped.</h2></div><p>A parallel overview should make the product’s current behavior and its next step easy to tell apart.</p></div>
-        <div class="faq-list"><details><summary>Does Mira already show eight agent panels?</summary><p>No. Up to eight panels is the design direction and is still in progress. The screenshot shows the current workbench with one agent panel.</p></details><details><summary>Will each panel have its own repository?</summary><p>The concept keeps every panel tied to its own session and workspace context. Exact panel and workspace behavior remains part of the design work.</p></details><details><summary>Can I still focus on one agent?</summary><p>That is a core design goal: choose a panel and return to its conversation, code, and changes without losing the wider overview.</p></details><details><summary>Which features are current today?</summary><p>Mira currently supports the Monaco workbench, repository-aware agent panel, session streaming, Changes and diff review, terminal, and Agent mode. The maximum of eight panels is the developing part.</p></details></div>
+        <div class="faq-list"><details><summary>Does Vela already show eight agent panels?</summary><p>No. Up to eight panels is the design direction and is still in progress. The screenshot shows the current workbench with one agent panel.</p></details><details><summary>Will each panel have its own repository?</summary><p>The concept keeps every panel tied to its own session and workspace context. Exact panel and workspace behavior remains part of the design work.</p></details><details><summary>Can I still focus on one agent?</summary><p>That is a core design goal: choose a panel and return to its conversation, code, and changes without losing the wider overview.</p></details><details><summary>Which features are current today?</summary><p>Vela currently supports the Monaco workbench, repository-aware agent panel, session streaming, Changes and diff review, terminal, and Agent mode. The maximum of eight panels is the developing part.</p></details></div>
       </section>
       <section class="bottom-cta"><div><h2>Start with the workbench.</h2><p>See the focused editor and agent experience this direction grows from.</p></div><a class="action action-primary" href="workbench.html">Explore the workbench <span aria-hidden="true">→</span></a></section>
     </main>
-    <footer class="site-footer"><a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◉</span><span>mira</span></a><span>Agent mode concept · app reference + in-progress direction</span><div class="footer-links"><a href="index.html">Overview</a><a href="workbench.html">Workbench</a><a href="focus.html">Quiet focus</a></div></footer>
+    <footer class="site-footer"><a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◉</span><span>vela</span></a><span>Agent mode concept · app reference + in-progress direction</span><div class="footer-links"><a href="index.html">Overview</a><a href="workbench.html">Workbench</a><a href="focus.html">Quiet focus</a></div></footer>
   </body>
 </html>

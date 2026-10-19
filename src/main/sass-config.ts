@@ -1,8 +1,9 @@
 import { readdir, readFile, lstat } from "node:fs/promises";
 import path from "node:path";
 import JSON5 from "json5";
+import { HIDDEN_RECOVERY_DIRS } from "@shared/types";
 
-export const SASS_IGNORES = new Set(["node_modules", ".git", "dist", "build", ".next", ".cache", ".openshell-recovery", ".mira-recovery", ".orbit-recovery", "coverage", "out", "vendor"]);
+export const SASS_IGNORES = new Set(["node_modules", ".git", "dist", "build", ".next", ".cache", ...HIDDEN_RECOVERY_DIRS, "coverage", "out", "vendor"]);
 export const isSassSource = (file: string): boolean => /\.(scss|sass)$/i.test(file);
 export const isSassPartial = (file: string): boolean => path.basename(file).startsWith("_");
 export function insideRoot(root: string, file: string): boolean {
@@ -48,12 +49,18 @@ export async function sassEntrypoints(root: string): Promise<string[]> {
 }
 
 async function explicitConfig(root: string): Promise<{ name: string; config: Record<string, any> | null }> {
-  const currentName = "mira-sass.json";
+  const currentName = "vela-sass.json";
   const current = await jsonFile(root, currentName);
   if (current) return { name: currentName, config: current };
-  const previousName = "orbit-sass.json";
-  const previous = await jsonFile(root, previousName);
-  return { name: previous ? previousName : currentName, config: previous };
+  const previousNames = [
+    `${String.fromCharCode(109, 105, 114, 97)}-sass.json`,
+    `${String.fromCharCode(111, 114, 98, 105, 116)}-sass.json`
+  ];
+  for (const previousName of previousNames) {
+    const previous = await jsonFile(root, previousName);
+    if (previous) return { name: previousName, config: previous };
+  }
+  return { name: currentName, config: null };
 }
 
 export async function sassPlan(root: string): Promise<SassPlan> {

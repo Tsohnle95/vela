@@ -8,7 +8,7 @@
 
 ```
  ┌─────────────────────────────────────────────┐ fixed z:50  height 34  drag
- │ titlebar  — traffic-lights + MiraMark + actions                                  │  _layout.scss:46
+ │ titlebar  — traffic-lights + VelaMark + actions                                  │  _layout.scss:46
  ├──────────────┬────────────────────┬──────────┤
  │              │                    │ agent-col│  absolute z:200 • floating card
  │  sidebar     │   editor-pane      │ floating │  backdrop-blur(18px) • radius-xl
@@ -44,7 +44,7 @@
 
 - Fixed `top: 0; height: 34px; padding: 0 14px; gap: 10px; display: flex; align-items: center; background: var(--bg); border-bottom: none; z-index: 50; -webkit-app-region: drag`.
 - `.darwin .titlebar { padding-left: 78px; }` — reserves macOS traffic lights.
-- Title: `.titlebar-title` `12.5 / 650 / 0.14em uppercase dim` (`_layout.scss:64`) with nested `.mira-mark { flex-shrink: 0 }` (`_layout.scss:75`) — the mark carries its own fixed sage hexes.
+- Title: `.titlebar-title` `12.5 / 650 / 0.14em uppercase dim` (`_layout.scss:64`) with nested `.vela-mark { flex-shrink: 0 }` (`_layout.scss:75`) — the mark carries its own fixed sage hexes.
 - Actions on the right are ` -webkit-app-region: no-drag` (`_layout.scss:81`). Icon-button `.on` uses `background: var(--accent-dim); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent)` (`_layout.scss:91`).
 
 ### 1.3 Main row

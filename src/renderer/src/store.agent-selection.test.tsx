@@ -35,7 +35,7 @@ const MODELS = [
   { id: "m2", providerID: "p1", name: "Two" }
 ];
 
-function api(overrides: Record<string, unknown> = {}): typeof window.openshell {
+function api(overrides: Record<string, unknown> = {}): typeof window.vela {
   return {
     platform: "darwin",
     onMessage: () => () => {},
@@ -55,7 +55,7 @@ function api(overrides: Record<string, unknown> = {}): typeof window.openshell {
     recoveryRecords: async () => [],
     switchAgent: async () => {},
     ...overrides
-  } as unknown as typeof window.openshell;
+  } as unknown as typeof window.vela;
 }
 
 describe("agent and model picker state across sessions", () => {
@@ -81,7 +81,7 @@ describe("agent and model picker state across sessions", () => {
   it("ignores and clears a stored DeepSeek runtime preference", async () => {
     window.localStorage.setItem("runtimeID", "deepseek");
     const openSession = vi.fn(async (directory: string, generation: number) => info(directory, generation));
-    window.openshell = api({ openSession });
+    window.vela = api({ openSession });
 
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
@@ -91,7 +91,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("falls back to build instead of carrying the previous session's plan selection", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     selection = { agent: { id: "plan", name: "plan" } };
     await act(async () => store.openSession("/one"));
@@ -103,7 +103,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("shows the agent a session was created with when the session has no live selection", async () => {
-    window.openshell = api({
+    window.vela = api({
       openSession: async (directory: string, generation: number) => info(directory, generation, "plan")
     });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
@@ -112,7 +112,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("shows the reopened session's selection, not the previous session's agent", async () => {
-    window.openshell = api({
+    window.vela = api({
       openSessionById: async (sessionID: string) => ({
         session: { ...info("/two", 2), id: sessionID },
         transcript: [],
@@ -131,7 +131,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("updates the displayed agent immediately after switchAgent", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     expect(store.currentAgent?.id).toBe("build");
@@ -141,7 +141,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("falls back to the default model instead of carrying the previous session's model", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     selection = { model: { id: "m1", providerID: "p1", name: "One" } };
     await act(async () => store.openSession("/one"));
@@ -153,7 +153,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("uses OpenCode's default model when the session selection is unavailable", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     selection = { model: { id: "m1", providerID: "p1", name: "One" } };
     await act(async () => store.openSession("/one"));
@@ -165,7 +165,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("shows the correct agent in the picker button after switching sessions", async () => {
-    window.openshell = api();
+    window.vela = api();
     function Panel(): ReactNode {
       store = useStore();
       return <Composer />;
@@ -186,7 +186,7 @@ describe("agent and model picker state across sessions", () => {
   });
 
   it("reopens a child session with its parentID so the header can navigate back", async () => {
-    window.openshell = api({
+    window.vela = api({
       openSessionById: async (sessionID: string) => ({
         session: { ...info("/root", 1), id: sessionID, parentID: "session-parent", title: "Run the tests", agent: "build" },
         transcript: [],
@@ -222,7 +222,7 @@ describe("agent and model picker state across sessions", () => {
       todos: [];
       usage: null;
     }>((resolve) => { resolveOpen = resolve; });
-    window.openshell = api({
+    window.vela = api({
       onMessage: (handler: typeof messageHandler) => {
         messageHandler = handler;
         return () => { messageHandler = null; };

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ProjectInfo } from "@shared/types";
 
-const SAVED_WORKSPACES_KEY = "mira.savedWorkspaces";
-const LEGACY_SAVED_WORKSPACES_KEY = "orbit.savedWorkspaces";
+const SAVED_WORKSPACES_KEY = "vela.savedWorkspaces";
 
 function workspaceName(directory: string): string {
   return directory.split(/[\\/]/).filter(Boolean).pop() ?? directory;
@@ -10,7 +9,7 @@ function workspaceName(directory: string): string {
 
 function readSavedWorkspaceData(): { workspaces: ProjectInfo[]; present: boolean } {
   try {
-    const raw = window.localStorage.getItem(SAVED_WORKSPACES_KEY) ?? window.localStorage.getItem(LEGACY_SAVED_WORKSPACES_KEY);
+    const raw = window.localStorage.getItem(SAVED_WORKSPACES_KEY);
     if (raw === null) return { workspaces: [], present: false };
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return { workspaces: [], present: false };
@@ -86,15 +85,15 @@ export function useSavedWorkspaces(connected: boolean, notify: (text: string, to
     let cancelled = false;
     const legacy = readSavedWorkspaceData();
     const revision = workspaceRevisionRef.current;
-    const storedWorkspaces = window.openshell.savedWorkspaces?.();
+    const storedWorkspaces = window.vela.savedWorkspaces?.();
     if (!storedWorkspaces) {
-      notify("Restart Mira to load saved workspaces from app storage.", "error");
+      notify("Restart Vela to load saved workspaces from app storage.", "error");
       return () => { cancelled = true; };
     }
     void storedWorkspaces
       .then(async (stored) => {
         const projects = !stored.initialized && !legacy.present
-          ? await window.openshell.projects().catch(() => [])
+          ? await window.vela.projects().catch(() => [])
           : [];
         if (cancelled) return;
         if (savedWorkspacesHydratedRef.current && revision !== workspaceRevisionRef.current) return;
@@ -111,7 +110,7 @@ export function useSavedWorkspaces(connected: boolean, notify: (text: string, to
         if (cancelled) return;
         const detail = error instanceof Error ? error.message : String(error);
         if (/No handler registered for ['"]?shell:saved-workspaces['"]?/i.test(detail)) {
-          notify("Mira's app process is older than this window. Quit and reopen Mira completely; Cmd+R only refreshes the window. Saved workspaces are still stored.", "error");
+          notify("Vela's app process is older than this window. Quit and reopen Vela completely; Cmd+R only refreshes the window. Saved workspaces are still stored.", "error");
           return;
         }
         notify(`Saved workspaces could not be loaded; their stored data was left untouched. ${detail}`, "error");
@@ -124,7 +123,7 @@ export function useSavedWorkspaces(connected: boolean, notify: (text: string, to
     try {
       window.localStorage.setItem(SAVED_WORKSPACES_KEY, JSON.stringify(savedWorkspaces));
     } catch {}
-    const save = window.openshell.saveSavedWorkspaces?.(savedWorkspaces);
+    const save = window.vela.saveSavedWorkspaces?.(savedWorkspaces);
     if (!save) return;
     void save.catch((error) => {
       const detail = error instanceof Error ? error.message : String(error);
@@ -134,7 +133,7 @@ export function useSavedWorkspaces(connected: boolean, notify: (text: string, to
 
   const saveWorkspace = useCallback(async (): Promise<void> => {
     try {
-      const directory = await window.openshell.selectDirectory();
+      const directory = await window.vela.selectDirectory();
       if (!directory) return;
       const saved = { directory, name: workspaceName(directory) };
       updateSavedWorkspaces((current) => {

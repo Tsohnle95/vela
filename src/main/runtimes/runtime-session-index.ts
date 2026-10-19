@@ -8,15 +8,15 @@ export interface RuntimeSessionRecord extends SessionSummary {
 }
 
 function defaultPath(): string {
-  if (process.platform === "darwin") return path.join(homedir(), "Library", "Application Support", "Mira", "runtime-sessions.json");
-  if (process.platform === "win32" && process.env.APPDATA) return path.join(process.env.APPDATA, "Mira", "runtime-sessions.json");
-  return path.join(process.env.XDG_STATE_HOME ?? path.join(homedir(), ".local", "state"), "mira", "runtime-sessions.json");
+  if (process.platform === "darwin") return path.join(homedir(), "Library", "Application Support", "Vela", "runtime-sessions.json");
+  if (process.platform === "win32" && process.env.APPDATA) return path.join(process.env.APPDATA, "Vela", "runtime-sessions.json");
+  return path.join(process.env.XDG_STATE_HOME ?? path.join(homedir(), ".local", "state"), "vela", "runtime-sessions.json");
 }
 
 export function previousRuntimeSessionPath(): string {
-  if (process.platform === "darwin") return path.join(homedir(), "Library", "Application Support", "Orbit", "runtime-sessions.json");
-  if (process.platform === "win32" && process.env.APPDATA) return path.join(process.env.APPDATA, "Orbit", "runtime-sessions.json");
-  return path.join(process.env.XDG_STATE_HOME ?? path.join(homedir(), ".local", "state"), "orbit", "runtime-sessions.json");
+  if (process.platform === "darwin") return path.join(homedir(), "Library", "Application Support", "Vela", "runtime-sessions.json");
+  if (process.platform === "win32" && process.env.APPDATA) return path.join(process.env.APPDATA, "Vela", "runtime-sessions.json");
+  return path.join(process.env.XDG_STATE_HOME ?? path.join(homedir(), ".local", "state"), "vela", "runtime-sessions.json");
 }
 
 function valid(value: unknown): value is RuntimeSessionRecord {

@@ -1,11 +1,13 @@
-appId: app.mira.desktop
-productName: Mira
+appId: app.vela.desktop
+productName: Vela
 directories:
   output: release
 files:
   - out/**/*
+  - "!out/mobile-server/**"
   - package.json
   - resources/icon.png
+afterPack: scripts/after-pack.cjs
 asar: false
 electronDist: node_modules/electron/dist
 npmRebuild: false

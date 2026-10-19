@@ -30,7 +30,7 @@ afterEach(async () => {
 });
 
 async function tempRoot(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), "openshell-security-"));
+  const root = await mkdtemp(path.join(tmpdir(), "vela-security-"));
   roots.push(root);
   return root;
 }

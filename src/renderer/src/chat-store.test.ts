@@ -409,7 +409,7 @@ describe("applyChatEvent", () => {
     }));
 
     expect(draft.session_status.s).toEqual({ type: "error" });
-    expect(projectAssistantItems(draft, "s")[0]).toMatchObject({ completed: true, error: "[MIRA_STEP_FAILED] Provider failed" });
+    expect(projectAssistantItems(draft, "s")[0]).toMatchObject({ completed: true, error: "[VELA_STEP_FAILED] Provider failed" });
   });
 
   it("returns to retrying when a failed step schedules another attempt", () => {
@@ -430,7 +430,7 @@ describe("applyChatEvent", () => {
     expect(draft.session_status.s).toEqual({
       type: "retry",
       attempt: 2,
-      message: "[MIRA_RETRY_SCHEDULED] Retrying",
+      message: "[VELA_RETRY_SCHEDULED] Retrying",
       next: 200
     });
   });
@@ -509,7 +509,7 @@ describe("applyChatEvent", () => {
 
     const items = projectAssistantItems(draft, "s");
 
-    expect(items[0]).toMatchObject({ messageID: "msg_1", completed: true, error: "[MIRA_SESSION_ERROR] boom" });
+    expect(items[0]).toMatchObject({ messageID: "msg_1", completed: true, error: "[VELA_SESSION_ERROR] boom" });
     expect(draft.session_status.s).toEqual({ type: "error" });
   });
 
@@ -552,8 +552,8 @@ describe("applyChatEvent", () => {
     expect(projectAssistantItems(draft, "s")[0]).toMatchObject({
       kind: "assistant",
       completed: false,
-      retry: { attempt: 2, message: "[MIRA_RETRY_SCHEDULED] boom", next: 30_000 },
-      error: "[MIRA_RUNTIME_FAILURE] Step failed"
+      retry: { attempt: 2, message: "[VELA_RETRY_SCHEDULED] boom", next: 30_000 },
+      error: "[VELA_RUNTIME_FAILURE] Step failed"
     });
   });
 

@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../../preload";
+import type { VelaApi } from "../../../preload";
 import type { BackendMessage, FileUpdate, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "../store";
 import { ChangesView } from "./ChangesView";
@@ -28,7 +28,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -58,7 +58,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     readFile: async () => "content",
     listDir: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 function update(session: SessionInfo, path: string, content: string | null): FileUpdate {
@@ -101,7 +101,7 @@ describe("ChangesView workspace scoping", () => {
   });
 
   async function render(): Promise<void> {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(
       <StoreProvider><Probe /><ChangesView onClose={() => {}} /></StoreProvider>
     ));

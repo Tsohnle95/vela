@@ -7,7 +7,7 @@ import { configureNodePty } from "./configure-node-pty.mjs";
 
 describe("node-pty installation", () => {
   it("makes the macOS spawn helper executable", () => {
-    const root = mkdtempSync(path.join(tmpdir(), "openshell-node-pty-"));
+    const root = mkdtempSync(path.join(tmpdir(), "vela-node-pty-"));
     const directory = path.join(root, "node_modules", "node-pty", "prebuilds", "darwin-x64");
     const helper = path.join(directory, "spawn-helper");
     mkdirSync(directory, { recursive: true });
@@ -18,7 +18,7 @@ describe("node-pty installation", () => {
   });
 
   it("supports a helper built from source", () => {
-    const root = mkdtempSync(path.join(tmpdir(), "openshell-node-pty-build-"));
+    const root = mkdtempSync(path.join(tmpdir(), "vela-node-pty-build-"));
     const directory = path.join(root, "node_modules", "node-pty", "build", "Release");
     const helper = path.join(directory, "spawn-helper");
     mkdirSync(directory, { recursive: true });

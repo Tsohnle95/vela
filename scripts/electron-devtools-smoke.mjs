@@ -10,7 +10,7 @@ if (process.platform !== "darwin") {
   process.exit(0);
 }
 const root = process.cwd();
-const temporary = await realpath(await mkdtemp(path.join(os.tmpdir(), "mira-devtools-smoke-")));
+const temporary = await realpath(await mkdtemp(path.join(os.tmpdir(), "vela-devtools-smoke-")));
 const entry = path.join(temporary, "main.cjs");
 const fixture = path.join(temporary, "checkout");
 await symlink(path.join(root, "node_modules"), path.join(temporary, "node_modules"), "dir");
@@ -92,7 +92,7 @@ const watchdog = setTimeout(() => app.exit(2), 90000);
   await win.loadFile(path.join(sourceRoot, "out/renderer/index.html"));
   await wait(() => healthChecked, "renderer subscription");
   wc.send("shell:message", { kind: "session", session });
-  await wait(() => wc.executeJavaScript('Boolean(document.querySelector(".sidebar-brand"))'), "Mira sidebar").catch(async error => {
+  await wait(() => wc.executeJavaScript('Boolean(document.querySelector(".sidebar-brand"))'), "Vela sidebar").catch(async error => {
     console.error(await wc.executeJavaScript('document.body.innerText'));
     throw error;
   });

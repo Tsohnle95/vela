@@ -4,11 +4,11 @@ Open `index.html` in a browser to review 50 landing directions. The gallery is s
 
 The set is distilled from the shortlisted **001 "Atelier Split"** of the earlier 20-direction round. Every concept keeps one fixed hierarchy and differs only in composition:
 
-- bare Mira mark (no container chip);
+- bare Vela mark (no container chip);
 - serif title → one line → one action → calm recents;
 - no feature lists, no drop hints, no runtime picker.
 
-Every concept shares the Mira paper system:
+Every concept shares the Vela paper system:
 
 - System UI stack (`-apple-system`) + `Cormorant Garamond` serif for the hero title only (`_welcome.scss:11`);
 - Cream `#fbf7ec` / `#f4eee1` / `#eee5d4` and sage `#617a68` tokens (`_foundation.scss:75`, `_foundation.scss:109`);
@@ -44,7 +44,7 @@ Iteration galleries are searchable, theme-aware, and share the four-slot shortli
 | 001 | Monolith | `type` | Centered monolith; recents as a bottom ticker |
 | 002 | Side Rail | `split` | Sage side rail with rotated wordmark |
 | 003 | Shared Baseline | `split` | Mark and title locked into one horizontal unit |
-| 004 | Watermark | `atmos` | Giant ghost mira mark backs a centered lockup |
+| 004 | Watermark | `atmos` | Giant ghost vela mark backs a centered lockup |
 | 005 | Quiet Cross | `frame` | Hairline cross divides canvas into quadrants |
 | 006 | Margin Notes | `list` | Serif italic session names as margin notes |
 | 007 | Aperture | `mark` | Mark sits in a thin circular aperture |
@@ -64,7 +64,7 @@ Iteration galleries are searchable, theme-aware, and share the four-slot shortli
 | 021 | Cards Row | `cards` | Compact hero over three hairline session cards |
 | 022 | Marquee | `type` | 110px title left; action and recents in side column |
 | 023 | Footnotes | `list` | Sessions demote to numbered footnotes at the base |
-| 024 | Orbits | `mark` | Tilted mira ellipses sweep behind the lockup |
+| 024 | Velas | `mark` | Tilted vela ellipses sweep behind the lockup |
 | 025 | Inset Panel | `split` | Recents recess into a raised inset panel |
 | 026 | Ticker | `atmos` | Slim live-session ticker pins the top edge |
 | 027 | Small Caps | `type` | Sage small-caps kicker leads a modest serif title |

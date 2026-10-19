@@ -2,7 +2,7 @@
 
 > **Document role:** canonical owner for cross-process architecture and durable architectural invariants. Module docs may summarize or route here but should not redefine these invariants.
 
-Mira is an Electron app built with **electron-vite** (three build
+Vela is an Electron app built with **electron-vite** (three build
 targets: `main`, `preload`, `renderer`). It is a GUI for the OpenCode
 agent: you open a repository, send a prompt, and watch the agent stream
 its work while live diffs of changed files appear in the editor.
@@ -13,7 +13,7 @@ its work while live diffs of changed files appear in the editor.
 ┌─────────────────────────────────────────────────────────────┐
 │ Electron MAIN (src/main/index.ts)                           │
 │  • creates the BrowserWindow                                │
-│  • owns OpenShellBackend (src/main/opencode.ts)             │
+│  • owns VelaBackend (src/main/opencode.ts)             │
 │  • registers shell:* IPC handlers                           │
 │  • is the ONLY process that talks to OpenCode               │
 └──────────────┬───────────────────────────┬──────────────────┘
@@ -23,7 +23,7 @@ its work while live diffs of changed files appear in the editor.
 ┌──────────────────────────┐   ┌─────────────────────────────┐
 │ PRELOAD (src/preload)    │   │ RENDERER (React 19 + Monaco)│
 │ contextBridge:           │   │  • store.tsx = all UI state │
-│ window.openshell API     │   │  • components render it     │
+│ window.vela API     │   │  • components render it     │
 └──────────────────────────┘   └─────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -35,7 +35,7 @@ its work while live diffs of changed files appear in the editor.
 
 ## Backend connection
 
-`OpenShellBackend.connect()` in `src/main/opencode.ts`:
+`VelaBackend.connect()` in `src/main/opencode.ts`:
 
 1. Probes `opencode --version` and derives a V2 compatibility predicate
    (`MIN_SUPPORTED_SERVER_MAJOR = 2`): a registered service must report the
@@ -57,7 +57,7 @@ its work while live diffs of changed files appear in the editor.
 ## Runtime adapter boundary
 
 The normalized adapter contract starts in
-`src/main/runtimes/runtime-adapter.ts`. `RuntimeManifest` uses Mira
+`src/main/runtimes/runtime-adapter.ts`. `RuntimeManifest` uses Vela
 protocol version 1, a stable runtime id, runtime version, availability, and an
 explicit capability bitmap. OpenCode V2 is the only runtime registered or
 selectable by the app. The Settings page reports its capability manifest but
@@ -97,7 +97,7 @@ Renderer→main is synchronous invoke over `shell:*` channels; the full
 table is in `docs/main.md`.
 
 Prompt failures are normalized through `src/shared/errors.ts`. Submission
-rejections preserve native codes when available or receive a stable `MIRA_*`
+rejections preserve native codes when available or receive a stable `VELA_*`
 code; runtime, stream, malformed-event, and event-handler failures are forwarded
 as structured session/global events so the renderer can retain both the message
 and code.
@@ -154,7 +154,7 @@ custom schemes, malformed targets, and insecure HTTP targets are rejected.
    `activeSessions()` through the existing session-by-id path and focuses the
    last valid context only if the user has not acted. A full process restart
    has no live backend contexts: after the launch splash, the IDE waits for an
-   explicit workspace or file open. Stale `mira.sessionLayout` restart hints are
+   explicit workspace or file open. Stale `vela.sessionLayout` restart hints are
    removed rather than replayed. Missing, moved or runtime-unavailable live
    entries are skipped independently; transient editor, terminal, permission,
    queue, prompt and capability state is not recreated.
@@ -178,7 +178,7 @@ metadata changes, then refreshes the effective Git baseline:
   content, represents an existing file.
 - **unknown fallback**: first-observed non-git changes have an explicit unknown
   baseline because the watcher only has post-change bytes.
-- **Mira mutations**: saves and creates establish a known baseline only
+- **Vela mutations**: saves and creates establish a known baseline only
   when none exists. Delete and rename preserve the established baseline.
 - **Live watching**: one recursive `fs.watch(directory, { recursive: true })`
   per open context captures the activation root/session/identity and
@@ -212,7 +212,7 @@ prevent observation or recovery of pre-change content.
 
 The server now owns undo checkpoints: `session.revert.stage` stages a rollback
 at a message (optionally including file changes), `commit` applies it, and
-`clear` discards the stage; Mira surfaces this as a hover "Revert from here"
+`clear` discards the stage; Vela surfaces this as a hover "Revert from here"
 action on completed assistant turns plus a staged-undo dock card. The v2
 contract also exposes `vcs.get`, `vcs.status`, and `vcs.diff` per location.
 These are candidates to replace the local `git show HEAD:` baseline heuristic
@@ -232,10 +232,10 @@ updates preserve local edits and pause saving until explicit reload, overwrite,
 or keep-editing then save-merged resolution. Lifecycle changes invalidate
 timers and stale completions; external updates advance a conflict generation so
 an already-started completion cannot clear a newer conflict. Writes create a
-transaction under `.git/mira-recovery` for ordinary Git repositories, or a
+transaction under `.git/vela-recovery` for ordinary Git repositories, or a
 workspace-specific hidden sibling directory on the same filesystem. A non-Git
-workspace at a filesystem mount point uses workspace-local `.mira-recovery`
-to preserve same-filesystem atomic operations. Mira then copies proposed bytes
+workspace at a filesystem mount point uses workspace-local `.vela-recovery`
+to preserve same-filesystem atomic operations. Vela then copies proposed bytes
 into a second durable artifact, move the current target inode into the
 transaction, validate the held bytes, and install the temporary inode with a
 no-replace hard link. The original pathname is briefly unavailable between the
@@ -259,7 +259,7 @@ endpoint — the server sees the change via its own file watching. The
 explorer also supports create/rename/delete through `shell:fs-create-*`,
 `shell:fs-rename`, `shell:fs-delete` (delete moves to Trash). File rename uses
 same-filesystem no-replace hard-link/unlink semantics. Directory rename follows
-the directory-move policy: Mira rejects an already occupied destination and
+the directory-move policy: Vela rejects an already occupied destination and
 then performs one atomic `fs.rename`, avoiding recursive copy/delete while
 accepting the portable API's destination race limitation. File rename moves the
 source into a durable hold before linking the no-replace destination. Rollback
@@ -280,8 +280,8 @@ copy. The backend emits a tracked deletion at the source and, for files,
 an addition carrying the captured baseline at the target; files inside a
 moved directory surface through the fs watcher, and the renderer
 re-lists both the old parent and the destination. The source/target
-confinement rules are identical to the other mutations, and
-legacy `.openshell-recovery` and `.mira-recovery` are rejected as both source and destination.
+confinement rules are identical to the other mutations, and prior product
+recovery directories are rejected as both source and destination.
 
 Every workspace filesystem call carries the expected workspace UUID and main
 rejects stale generations. Paths are bounded strict relative paths and no
@@ -293,7 +293,7 @@ resolves only app-root-confined sources in main, then uses the same explicit
 external-file capability as a user-opened standalone file.
 
 New recovery storage is normally outside the project file tree. Existing
-`.openshell-recovery` transactions remain readable, move to the new storage on
+`.vela-recovery` transactions remain readable, move to the new storage on
 workspace activation when safe, and are excluded from
 watching, Explorer, and application file references. The recovery root, transaction directories, artifacts, and
 canonical recovery parents must contain no symlink component. Transaction ids
@@ -311,7 +311,7 @@ from `client.model.default()` per panel and updated live by
 Switching calls `client.session.switchModel({ sessionID, model })`, including
 `model.variant` when a model exposes response-strength variants.
 Provider settings are adapter-backed rather than OpenCode-specific UI. The
-current adapter filters `integration.list` down to Mira's supported provider
+current adapter filters `integration.list` down to Vela's supported provider
 set (`opencode-go`, `command-code`/`commandcode`, `openai`) and maps the
 survivors into secret-free shared types; write-only keys go through
 `integration.connect.key`, and credential changes refresh the workspace model
@@ -320,7 +320,7 @@ Agents come from `client.agent.list()`; the selection is updated live by
 `session.agent.selected` and switched via
 `client.session.switchAgent({ sessionID, agent })`. Both choices are
 session-scoped only: a new session starts on opencode's configured defaults
-(`default_agent` / default model), and Mira never writes preferences of
+(`default_agent` / default model), and Vela never writes preferences of
 its own. The composer
 also opens a native multi-file picker; the main process converts selected
 files to `file://` URIs for the prompt API. Its approval toggle is local UI
@@ -370,7 +370,7 @@ shows a card with the action and resources and three buttons; the reply
 ## Key constraints
 
 - The renderer never touches Node APIs (contextIsolation + no
-  nodeIntegration); everything goes through `window.openshell`.
+  nodeIntegration); everything goes through `window.vela`.
 - `SKIP_DIRS` (main) and `HIDDEN_DIRS` (renderer) filter tree noise
   (`node_modules`, `.git`, build dirs). `listDir` reads directories
   directly with `fs.readdir` (no opencode round trip), so explorer
@@ -396,6 +396,7 @@ of application state.
 | Embedded browser isolation | `src/main/browser-guards.ts`, policy in `src/main/browser-policy.ts` | Main attaches guest guards before renderer load; external content has no application preload, Node or IPC authority. Dedicated nonpersistent session denies permission checks, requests and devices. |
 | Appearance and interface selection | `src/renderer/src/theme.tsx`, palettes in `src/renderer/src/appearances.ts`, private settings presenter `src/renderer/src/components/AppearanceSettings.tsx`, shell skin `src/renderer/src/styles/_codex.scss`, decorative appearance skin `src/renderer/src/styles/_observatory.scss` | Palette selects colors, syntax and optional decorative artwork; independent shell preference selects chrome. Settings never owns session or runtime state. |
 | Electron lifecycle, windows, trusted IPC | `src/main/index.ts`; domain registrations in `src/main/ipc/` | Main composition retains sender validation and raw `ipcMain` authority. Domain registrars receive only the trusted registration interface, and own no runtime/session state. |
+| Application data folder migration | `src/main/user-data-migration.ts`, called by `src/main/index.ts` | Moves the first available prior product data directory to Vela's data location before stores initialize; a failed move keeps the prior directory active, and explicit custom paths are untouched. |
 | Runtime/session orchestration and service traffic | `src/main/opencode.ts`; adapter contracts and retained implementations in `src/main/runtimes/` | Main remains the only OpenCode SDK owner. Dormant DeepSeek implementation is private to its retained runtime directory. |
 | History projection | `src/main/session-replay.ts` | Pure normalized replay depends on shared contracts/presentation, not SDK or privileged effects. |
 | Recovery artifacts and transactions | `src/main/recovery-storage.ts` | Captured workspace root/current predicate come from backend orchestration; storage uses Node filesystem operations and workspace security, without owning sessions or events. |
@@ -407,6 +408,7 @@ of application state.
 | Workspace bookmarks | `src/renderer/src/use-saved-workspaces.ts`, private to Store | Owns bookmark records, hydration revisions and persistence. Store supplies readiness and notification; session activation remains in Store. |
 | Panel state projection | `src/renderer/src/panel-projection.ts`, private to Store | Derives presentation from existing records; owns no mutable state, effects or runtime calls. |
 | Workspace file observations and tree | `src/renderer/src/use-workspace-files.ts`, private to Store | Owns file, tree, expansion, visibility and recovery records with directory loading, generation-aware hover prefetch and existing debounce timers. Editor samples a readonly single-record query before its file read. Store retains attributed file classification/application ordering, session generations; Explorer disk workflows belong to `use-explorer-mutations.ts`. |
+| Renderer storage migration | `src/renderer/src/storage-migration.ts`, called by `src/renderer/src/main.tsx` | Moves legacy product-prefixed local-storage keys to the Vela prefix before renderer owners initialize, preserving existing values when both versions exist. |
 | Explorer disk workflows | `src/renderer/src/use-explorer-mutations.ts`, private to Store | Owns create/rename intents and disk mutation actions through the controlled preload bridge. Named file/editor capabilities retain their distinct remap and capture policies; Store retains session identity and generations. |
 | Workspace editor | `src/renderer/src/use-workspace-editor.ts`, private to Store | Owns editor records, persistence and actions; receives six existing typed host capabilities plus an optional foreground-file activation notification. WorkspaceFiles supplies borrowed file observations; Store keeps session generations; Explorer disk workflows use named editor commands and a render-captured active-path query. |
 | Live app stylesheet saves | `src/main/app-styles.ts`, renderer swap/hook in `src/renderer/src/app-styles.ts`, markers and update shape in `src/shared/app-styles.ts` | The application source root owns a serialized Sass worker and watcher independently of user workspaces. Compiled vendor CSS is retained; failed compilation or loading preserves the last valid sheet. The renderer swaps only app-owned links without reloading state. |

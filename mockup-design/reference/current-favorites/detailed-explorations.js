@@ -1,4 +1,4 @@
-const miraDetailedGroups = [
+const velaDetailedGroups = [
   {
     seed: "04-nocturne", group: "nocturne", terrain: "alpine", base: { sky: "#121e32", horizon: "#37536a", foreground: "#112635", glow: "#b6d1cf", ink: "#f4f4ed", accent: "#b7ddd0", light: false },
     variants: [
@@ -23,7 +23,7 @@ const miraDetailedGroups = [
     seed: "04-mist", group: "mist", terrain: "mist", base: { sky: "#ecf2ef", horizon: "#bbd0ca", foreground: "#557e78", glow: "#fffdf0", ink: "#294841", accent: "#477b70", light: true },
     variants: [
       ["moonveil", "Moonveil", "pale moon / forest fog", "Pine silhouettes dissolve into luminous, moonlit fog.", "Clarity starts in the project.", "See the next file, question, and change emerge in context.", "moon", "#f8faeb"],
-      ["halo-cloud", "Halo Cloud", "orbital halo / silver cloud", "A fine orbital ring glows through a soft silver cloud bank.", "A clear view through the haze.", "Keep code and agent close enough to follow the whole thread.", "saturn", "#e3f3e9"],
+      ["halo-cloud", "Halo Cloud", "celestial halo / silver cloud", "A fine celestial ring glows through a soft silver cloud bank.", "A clear view through the haze.", "Keep code and agent close enough to follow the whole thread.", "saturn", "#e3f3e9"],
       ["quiet-signal", "Quiet Signal", "star chart / misted hills", "Subtle star-chart lines float above rolling pale hills.", "Follow the quiet signals.", "The repository gives each tool and each change a place to belong.", "beacon", "#dcefe7"],
       ["cloudbreak", "Cloudbreak", "sun break / cold ridgeline", "Light breaks through a layered horizon of frosted stone.", "Let the next step appear.", "Move through the work without letting go of the code.", "crescent", "#fff3d4"],
       ["murmur", "Murmur", "faint aurora / conifers", "A barely visible aurora brushes a line of detailed conifers.", "A calmer way to find your place.", "Follow files and edits through a quieter workspace.", "aurora", "#c0e8d0"]
@@ -34,9 +34,9 @@ const miraDetailedGroups = [
     variants: [
       ["arrival", "Arrival", "distant world / blue valley", "A textured world rises over a deep blue valley of mist.", "Land where the work begins.", "Start with the repository and find the next step from there.", "planet", "#eaf0e2"],
       ["small-world", "Small World", "small ringed world / cloud sea", "A distant ringed world floats above overlapping cloud layers.", "Everything still starts here.", "Let the repo keep the bigger picture while the agent explores.", "saturn", "#e0e7e8"],
-      ["first-light", "First Light", "orbital dawn / pale mountains", "A narrow planet edge catches the first light of day.", "See the project in a new light.", "Stay oriented from the first question to the final diff.", "horizon", "#f7e9ce"],
+      ["first-light", "First Light", "celestial dawn / pale mountains", "A narrow planet edge catches the first light of day.", "See the project in a new light.", "Stay oriented from the first question to the final diff.", "horizon", "#f7e9ce"],
       ["far-shore", "Far Shore", "planet and coast / silver haze", "A distant coast and planet sit inside silver atmospheric haze.", "Keep the source within reach.", "Work outward without leaving the project behind.", "planet", "#cbdde0"],
-      ["skybridge", "Skybridge", "arc of light / mist", "An orbital arc bridges a wide, pale mountain pass.", "Bring the work back together.", "The agent, editor, and changes meet in the same repository.", "beacon", "#e5f3ee"]
+      ["skybridge", "Skybridge", "arc of light / mist", "A celestial arc bridges a wide, pale mountain pass.", "Bring the work back together.", "The agent, editor, and changes meet in the same repository.", "beacon", "#e5f3ee"]
     ]
   },
   {
@@ -45,7 +45,7 @@ const miraDetailedGroups = [
       ["rooftop", "Rooftop Moon", "crescent / roof garden", "Lit windows and rooftop foliage sit beneath a slender moon.", "A desk worth coming back to.", "Your editor, agent, and terminal have room to share the night.", "crescent", "#e9d1ba"],
       ["violet-hour", "Violet Hour", "violet twilight / city lights", "Violet haze and a moonrise soften the working city.", "Stay with the whole loop.", "Make the next change without leaving your place in the project.", "moon", "#e1b9d1"],
       ["lunar-street", "Lunar Street", "moon path / evening street", "A reflective street runs between quiet rooftops and the sky.", "Keep the work close after dark.", "The project and its tools stay in one working space.", "crescent", "#d7d8d0"],
-      ["celestial-block", "Celestial Block", "mira lines / city block", "Fine mira lines arc above blocks of softly glowing windows.", "Everything has a place to land.", "Move between tools without leaving the project behind.", "saturn", "#e7c2b4"],
+      ["celestial-block", "Celestial Block", "vela lines / city block", "Fine vela lines arc above blocks of softly glowing windows.", "Everything has a place to land.", "Move between tools without leaving the project behind.", "saturn", "#e7c2b4"],
       ["night-window", "Night Window", "moon through window / skyline", "A moonlit skyline is framed like a late-night studio view.", "Make room for focused work.", "Stay with your editor and agent through the session.", "moon", "#e7dfce"]
     ]
   },
@@ -56,23 +56,23 @@ const miraDetailedGroups = [
       ["copper-sky", "Copper Sky", "copper planet / distant city", "Warm atmospheric dust and a small planet cross the skyline.", "A little more room to think.", "Keep code, conversation, and changes in one workspace.", "planet", "#f4b99b"],
       ["urban-aurora", "Urban Aurora", "aurora / city lights", "A restrained aurora drifts over streets and lit windows.", "Let the work move naturally.", "The workbench keeps your tools connected to the project.", "aurora", "#b7dcc9"],
       ["starline", "Starline", "star trail / quiet skyline", "A long star trail rises beyond layered, detailed rooftops.", "One desk for every next step.", "Move from asking to editing to reviewing without changing context.", "meteor", "#d8c4d9"],
-      ["low-mira", "Low Mira", "small moon / city edge", "A low moon meets a layered city edge at the end of day.", "Stay with the work in front of you.", "All the everyday tools remain within reach.", "horizon", "#ecd6bf"]
+      ["low-vela", "Low Vela", "small moon / city edge", "A low moon meets a layered city edge at the end of day.", "Stay with the work in front of you.", "All the everyday tools remain within reach.", "horizon", "#ecd6bf"]
     ]
   },
   {
-    seed: "10-dusk-mira", group: "mira", terrain: "city", base: { sky: "#172036", horizon: "#53617e", foreground: "#152238", glow: "#edb5a1", ink: "#f8f1ed", accent: "#eac3b3", light: false },
+    seed: "10-dusk-vela", group: "vela", terrain: "city", base: { sky: "#172036", horizon: "#53617e", foreground: "#152238", glow: "#edb5a1", ink: "#f8f1ed", accent: "#eac3b3", light: false },
     variants: [
-      ["satellite", "Satellite Mira", "small ringed world / satellite", "A tiny satellite visibly travels through a smaller planet's rings.", "Keep the whole desk in mira.", "Your tools have a shared center: the project you're working on.", "saturn", "#efc2b1"],
+      ["satellite", "Satellite Vela", "small ringed world / satellite", "A tiny satellite visibly travels through a smaller planet's rings.", "Keep the whole desk in vela.", "Your tools have a shared center: the project you're working on.", "saturn", "#efc2b1"],
       ["ice-rings", "Ice Rings", "icy rings / night city", "A cool blue ring system casts a subtle glow across the city.", "Find your working center.", "Keep code and agent together through every step.", "saturn", "#b6d3e2"],
       ["ember-rings", "Ember Rings", "copper rings / dark skyline", "Copper-colored rings and a warm orb hover beyond rooftops.", "Stay close to the work.", "The editor, session, and changes belong to one desk.", "saturn", "#f0b491"],
-      ["twin-orbits", "Twin Orbits", "two satellites / orbital path", "Two small lights trace a fine path around a distant planet.", "Make space for collaboration.", "Follow the session without losing sight of the files.", "saturn", "#d1c8e4"],
+      ["twin-rings", "Twin Rings", "two satellites / celestial path", "Two small lights trace a fine path around a distant planet.", "Make space for collaboration.", "Follow the session without losing sight of the files.", "saturn", "#d1c8e4"],
       ["outer-ring", "Outer Ring", "distant rings / midnight skyline", "A small planet and wide outer ring sit quietly behind the city.", "Keep the work in motion.", "From the first file to the final review, stay in the same space.", "saturn", "#dfcabd"]
     ]
   }
 ];
 
-const miraDetailedExplorations = miraDetailedGroups.flatMap(({ seed, group, terrain, base, variants }) => {
-  const parent = miraExplorations.find((item) => item.id === seed);
+const velaDetailedExplorations = velaDetailedGroups.flatMap(({ seed, group, terrain, base, variants }) => {
+  const parent = velaExplorations.find((item) => item.id === seed);
   const colorShift = (hex, amount) => `#${[1, 3, 5].map((offset) => Math.max(0, Math.min(255, parseInt(hex.slice(offset, offset + 2), 16) + amount)).toString(16).padStart(2, "0")).join("")}`;
   const shifts = [-10, 5, -16, 12, -4];
   return variants.map(([slug, name, motif, note, title, lede, celestial, tint], index) => ({
@@ -86,31 +86,31 @@ const miraDetailedExplorations = miraDetailedGroups.flatMap(({ seed, group, terr
 });
 
 const selectedCelestials = ["crescent", "moon", "moon", "planet", "crescent", "moon", "saturn"];
-miraDetailedGroups.forEach(({ seed, terrain }, index) => {
-  Object.assign(miraExplorations.find((item) => item.id === seed), {
+velaDetailedGroups.forEach(({ seed, terrain }, index) => {
+  Object.assign(velaExplorations.find((item) => item.id === seed), {
     terrain, celestial: selectedCelestials[index], atmosphere: true, detailIndex: index
   });
 });
 
-miraExplorations.push(...miraDetailedExplorations);
+velaExplorations.push(...velaDetailedExplorations);
 
 const violetHourPalette = {
   sky: "#2e2c47", horizon: "#7c6c8b", foreground: "#20243d", glow: "#e9c8b3",
   ink: "#f8f2ec", accent: "#eccdbf", tint: "#e1b9d1", light: false
 };
-const violetHourSeed = miraDetailedExplorations.find((item) => item.id === "10-dusk-crescent-detail-violet-hour");
+const violetHourSeed = velaDetailedExplorations.find((item) => item.id === "10-dusk-crescent-detail-violet-hour");
 Object.assign(violetHourSeed, { layout: "centered", terrain: "city" });
 
-const nocturneTidalSeed = miraExplorations.find((item) => item.id === "04-nocturne-tidal");
+const nocturneTidalSeed = velaExplorations.find((item) => item.id === "04-nocturne-tidal");
 Object.assign(nocturneTidalSeed, violetHourPalette, { terrain: "city", celestial: "moon", atmosphere: true });
 
-const miraFocusedGroups = [
+const velaFocusedGroups = [
   {
     seed: violetHourSeed.id, group: "violet-center", title: "Violet Hour · centered over the city.", terrain: "city", layout: "centered",
     variants: [
       ["lilac-afterglow", "Lilac Afterglow", "lilac moon / distant towers", "A lilac moon settles over a deep, many-layered skyline.", "Stay for the whole loop.", "Make the next change without leaving your place in the project.", "moon", { sky: "#292741", horizon: "#716983", foreground: "#20233d", glow: "#e6d3ea", tint: "#d6c4e8", accent: "#ddc9e8" }],
-      ["plum-mira", "Plum Mira", "ringed plum world / city lights", "A small ringed world floats above a plum-lit city.", "Let every tool find its place.", "Code, agent, and review move together around the project.", "saturn", { sky: "#30243d", horizon: "#765774", foreground: "#251e38", glow: "#edb9c9", tint: "#dab2df", accent: "#ecc5d6" }],
-      ["amethyst-window", "Amethyst Window", "crescent / violet windows", "A crescent glow catches on windows across the dark skyline.", "Keep your focus in mira.", "Move between the editor and the agent without losing context.", "crescent", { sky: "#29263f", horizon: "#6c648a", foreground: "#20243d", glow: "#ded0ed", tint: "#cbbbe8", accent: "#d8c9eb" }],
+      ["plum-vela", "Plum Vela", "ringed plum world / city lights", "A small ringed world floats above a plum-lit city.", "Let every tool find its place.", "Code, agent, and review move together around the project.", "saturn", { sky: "#30243d", horizon: "#765774", foreground: "#251e38", glow: "#edb9c9", tint: "#dab2df", accent: "#ecc5d6" }],
+      ["amethyst-window", "Amethyst Window", "crescent / violet windows", "A crescent glow catches on windows across the dark skyline.", "Keep your focus in vela.", "Move between the editor and the agent without losing context.", "crescent", { sky: "#29263f", horizon: "#6c648a", foreground: "#20243d", glow: "#ded0ed", tint: "#cbbbe8", accent: "#d8c9eb" }],
       ["rose-nebula", "Rose Nebula", "eclipsed rose / city haze", "A rose-colored corona diffuses across distant buildings.", "A little more room to think.", "The whole coding loop stays calm and connected in one workspace.", "eclipse", { sky: "#34243e", horizon: "#805a76", foreground: "#281f39", glow: "#f0b8c8", tint: "#e6a9cf", accent: "#edc2d3" }],
       ["lavender-rise", "Lavender Rise", "pale planet / lavender skyline", "A pale lavender world rises behind the city's outer towers.", "See the work from one place.", "Follow the session from the first file to the final review.", "planet", { sky: "#28243e", horizon: "#6a6182", foreground: "#20233d", glow: "#e3c7df", tint: "#d4bce4", accent: "#ddc9e5" }]
     ]
@@ -127,8 +127,8 @@ const miraFocusedGroups = [
   }
 ];
 
-const miraFocusedExplorations = miraFocusedGroups.flatMap(({ seed, group, terrain, layout, variants }) => {
-  const parent = miraExplorations.find((item) => item.id === seed);
+const velaFocusedExplorations = velaFocusedGroups.flatMap(({ seed, group, terrain, layout, variants }) => {
+  const parent = velaExplorations.find((item) => item.id === seed);
   return variants.map(([slug, name, motif, note, title, lede, celestial, colors], index) => ({
     ...parent, ...colors, id: `${seed}-city-${slug}`, parent: seed, group, terrain, layout,
     name, motif, note, title, lede, celestial, atmosphere: true, detailIndex: index,
@@ -137,4 +137,4 @@ const miraFocusedExplorations = miraFocusedGroups.flatMap(({ seed, group, terrai
   }));
 });
 
-miraExplorations.push(...miraFocusedExplorations);
+velaExplorations.push(...velaFocusedExplorations);

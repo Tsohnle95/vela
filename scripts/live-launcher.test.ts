@@ -9,7 +9,7 @@ import { MARKER_FILE, REPO_CONFIG_FILE, decideLaunch, resolveRepository, runBuil
 const repoRoot = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..");
 
 function makeFixture() {
-  const root = mkdtempSync(path.join(os.tmpdir(), "mira-live-"));
+  const root = mkdtempSync(path.join(os.tmpdir(), "vela-live-"));
   mkdirSync(path.join(root, "src", "main"), { recursive: true });
   writeFileSync(path.join(root, "src", "main", "index.ts"), "export {};\n");
   return root;
@@ -118,7 +118,7 @@ describe("live launcher staged build", () => {
 describe("live launcher payload", () => {
   it("replaces the packaged payload with the repository-backed launcher", () => {
     const fixture = makeFixture();
-    const bundle = mkdtempSync(path.join(os.tmpdir(), "mira-bundle-"));
+    const bundle = mkdtempSync(path.join(os.tmpdir(), "vela-bundle-"));
     try {
       const appDir = path.join(bundle, "Contents", "Resources", "app");
       mkdirSync(path.join(appDir, "out", "main"), { recursive: true });

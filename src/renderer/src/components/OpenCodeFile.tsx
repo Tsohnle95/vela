@@ -91,7 +91,7 @@ export function OpenCodeFile(props: OpenCodeFileProps): ReactNode {
     const apply = (): void => {
       const viewer = host.querySelector<HTMLElement>("diffs-container");
       if (!viewer) return;
-      // Mira's ThemeProvider owns colorScheme; upstream stores the same value in a data attribute.
+      // Vela's ThemeProvider owns colorScheme; upstream stores the same value in a data attribute.
       const scheme = document.documentElement.style.colorScheme || getComputedStyle(outer).colorScheme;
       if (scheme === "dark" || scheme === "light") viewer.dataset.colorScheme = scheme;
       else delete viewer.dataset.colorScheme;

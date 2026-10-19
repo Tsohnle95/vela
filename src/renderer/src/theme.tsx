@@ -19,11 +19,11 @@ interface ThemeContextValue {
   setExperimentalArt: (enabled: boolean) => void;
 }
 
-const THEME_KEY = "mira.theme";
-const SHELL_KEY = "mira.ui";
-const EXPERIMENTAL_ART_KEY = "mira.experimentalArt";
-const LEGACY_THEME_KEY = "orbit.theme";
-const LEGACY_SHELL_KEY = "orbit.ui";
+const THEME_KEY = "vela.theme";
+const SHELL_KEY = "vela.ui";
+const EXPERIMENTAL_ART_KEY = "vela.experimentalArt";
+const LEGACY_THEME_KEY = "vela.theme";
+const LEGACY_SHELL_KEY = "vela.ui";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 // File-tree glyph colours for dark schemes; the light set is the foundation
@@ -215,7 +215,7 @@ export function ThemeProvider({ children }: { children: ReactNode }): ReactNode 
     // the theme's side of light/dark; a light system appearance would
     // otherwise wash the transparent glass profiles out with a near-white
     // material. The main process applies this to `nativeTheme.themeSource`.
-    void window.openshell?.setAppearance?.(appearance.scheme)?.catch(() => {});
+    void window.vela?.setAppearance?.(appearance.scheme)?.catch(() => {});
   }, [theme, uiShell]);
 
   useLayoutEffect(() => {

@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { reloadAppStylesheet } from "./app-styles";
 
-const originalURL = "file:///mira/out/renderer/assets/index-built.css";
-const url = "file:///mira/out/renderer/assets/mira-live.css";
+const originalURL = "file:///vela/out/renderer/assets/index-built.css";
+const url = "file:///vela/out/renderer/assets/vela-live.css";
 afterEach(() => document.head.querySelectorAll("link").forEach(link => link.remove()));
 function original() {
   const link = document.createElement("link");

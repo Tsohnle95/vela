@@ -2,7 +2,7 @@
 
 Preview: <http://127.0.0.1:8147/animations/connected/>
 
-Twenty-five subtle responses to the same pearl and closed rear orbit. Each
+Twenty-five subtle responses to the same pearl and closed rear vela. Each
 study owns its effect setup in `study-NN.js`; `motions.js` owns the shared
 cube geometry, rear trail, pearl position, and proximity calculation. Effects
 receive the pearl position relative to each cube, its direction, and a smooth

@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, ExternalOpenResult, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -23,7 +23,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -50,7 +50,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     readFile: async () => "content",
     listDir: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("store external files", () => {
@@ -77,7 +77,7 @@ describe("store external files", () => {
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "relative", rel: "src/a.txt", content: "hello"
     }));
-    window.openshell = api({ openExternal });
+    window.vela = api({ openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/one/src/a.txt"));
@@ -91,7 +91,7 @@ describe("store external files", () => {
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "standalone", path: "/outside/notes.txt", content: "notes"
     }));
-    window.openshell = api({ openExternal });
+    window.vela = api({ openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/outside/notes.txt"));
@@ -105,7 +105,7 @@ describe("store external files", () => {
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "standalone", path: "/outside/notes.txt", content: "notes"
     }));
-    window.openshell = api({ openExternal });
+    window.vela = api({ openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/outside/notes.txt"));
@@ -119,7 +119,7 @@ describe("store external files", () => {
       kind: "standalone", path: "/outside/notes.txt", content: "v1"
     }));
     const writeStandalone = vi.fn(async () => {});
-    window.openshell = api({ openExternal, writeStandalone });
+    window.vela = api({ openExternal, writeStandalone });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/outside/notes.txt"));
@@ -142,7 +142,7 @@ describe("store external files", () => {
       kind: "standalone", path: "/outside/notes.txt", content: "v1"
     }));
     const writeStandalone = vi.fn(async () => {});
-    window.openshell = api({ openExternal, writeStandalone });
+    window.vela = api({ openExternal, writeStandalone });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/outside/notes.txt"));
@@ -160,7 +160,7 @@ describe("store external files", () => {
 
   it("saves dirty files in all workspaces without navigating to their tabs", async () => {
     const writeStandalone = vi.fn(async () => {});
-    window.openshell = api({
+    window.vela = api({
       openExternal: async (_workspace, path) => ({ kind: "standalone", path, content: "v1" }),
       writeStandalone
     });
@@ -182,7 +182,7 @@ describe("store external files", () => {
   });
 
   it("does not approve quitting when a save fails", async () => {
-    window.openshell = api({
+    window.vela = api({
       openExternal: async (_workspace, path) => ({ kind: "standalone", path, content: "v1" }),
       writeStandalone: async () => { throw new Error("disk write failed"); }
     });
@@ -198,7 +198,7 @@ describe("store external files", () => {
 
   it("keeps the app open if the buffer changes while Save All is writing", async () => {
     let finishWrite: (() => void) | undefined;
-    window.openshell = api({
+    window.vela = api({
       openExternal: async (_workspace, path) => ({ kind: "standalone", path, content: "v1" }),
       writeStandalone: () => new Promise<void>((resolve) => { finishWrite = resolve; })
     });
@@ -225,7 +225,7 @@ describe("store external files", () => {
     let finishWrite: (() => void) | null = null;
     const writeStandalone = vi.fn(() => new Promise<void>((resolve) => { finishWrite = resolve; }));
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({ openExternal, writeStandalone, closeSession });
+    window.vela = api({ openExternal, writeStandalone, closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/outside/notes.txt"));
@@ -251,7 +251,7 @@ describe("store external files", () => {
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "standalone", path: "/outside/notes.txt", content: "v1"
     }));
-    window.openshell = api({ openExternal });
+    window.vela = api({ openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/outside/notes.txt"));
@@ -269,7 +269,7 @@ describe("store external files", () => {
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "standalone", path: "/outside/notes.txt", content: "v1"
     }));
-    window.openshell = api({ openExternal });
+    window.vela = api({ openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openExternalPath("/outside/notes.txt"));
@@ -285,7 +285,7 @@ describe("store external files", () => {
   it("opens a single file as a single-file workspace and marks the sidebar", async () => {
     const init = info("/parent", 7);
     const openFileWorkspace = vi.fn(async () => ({ session: init, path: "index.html" }));
-    window.openshell = api({ openFileWorkspace: openFileWorkspace as OpenShellApi["openFileWorkspace"] });
+    window.vela = api({ openFileWorkspace: openFileWorkspace as VelaApi["openFileWorkspace"] });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openFileWorkspace("/parent/index.html"));
 
@@ -300,7 +300,7 @@ describe("store external files", () => {
       { name: "a.txt", rel: "vendor/a.txt", imported: true }
     ]);
     const listDir = vi.fn(async () => []);
-    window.openshell = api({ importExternal, listDir });
+    window.vela = api({ importExternal, listDir });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.importPaths("vendor", ["/outside/a.txt"]));
@@ -315,7 +315,7 @@ describe("store external files", () => {
       { name: "a.txt", rel: "a.txt", imported: true }
     ]);
     const listDir = vi.fn(async () => []);
-    window.openshell = api({ importExternal, listDir });
+    window.vela = api({ importExternal, listDir });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.dropIntoExplorer(["/outside/folder", "/outside/a.txt"]));

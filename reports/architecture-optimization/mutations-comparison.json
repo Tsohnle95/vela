@@ -76,7 +76,7 @@
     {
       "repeat": 1,
       "variant": "baseline",
-      "implementation": "OpenShellBackend",
+      "implementation": "VelaBackend",
       "workload": {
         "roundsPerSample": 3,
         "operationsPerRound": [
@@ -200,7 +200,7 @@
     {
       "repeat": 2,
       "variant": "baseline",
-      "implementation": "OpenShellBackend",
+      "implementation": "VelaBackend",
       "workload": {
         "roundsPerSample": 3,
         "operationsPerRound": [

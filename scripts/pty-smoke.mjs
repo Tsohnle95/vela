@@ -1,7 +1,7 @@
 import { spawn } from "node-pty";
 
 const shell = process.platform === "win32" ? process.env.COMSPEC ?? "powershell.exe" : process.env.SHELL ?? (process.platform === "darwin" ? "/bin/zsh" : "/bin/bash");
-const marker = `openshell-pty-${process.pid}`;
+const marker = `vela-pty-${process.pid}`;
 const pty = spawn(shell, [], {
   name: "xterm-256color",
   cols: 80,

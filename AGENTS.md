@@ -1,6 +1,6 @@
-# Mira — Agent Guide
+# Vela — Agent Guide
 
-Mira is a VS Code-style desktop GUI for coding agents: an Electron + React +
+Vela is a VS Code-style desktop GUI for coding agents: an Electron + React +
 Monaco app that opens a repository, routes prompts through capability-aware
 runtime adapters, streams agent progress, and shows live per-file diffs of
 workspace changes observed during the active session. OpenCode V2 is the only
@@ -19,7 +19,7 @@ npm run typecheck      # tsc --noEmit for node + web configs
 npm test               # Vitest unit/component tests in jsdom
 npm run build          # compile then launch the production app
 npm run build:compile  # compile only -> out/
-npm run pack           # build + package installable Mira.app (macOS)
+npm run pack           # build + package installable Vela.app (macOS)
 npm run check          # canonical verification gate
 npm start              # run the existing production build
 ```
@@ -53,7 +53,7 @@ re-open information already established in the current task context.
 | Provider usage | `src/main/provider-usage.ts` | Provider plan/rate-limit data |
 | Sass compilation | `src/main/sass-watch.ts` | Local per-workspace compiler workers, preferences, and CSS disk output |
 | Terminal | `src/main/terminal.ts` | `node-pty` manager for terminal tray and embedded agent TUI |
-| Preload bridge | `src/preload/index.ts` | `window.openshell` API exposed to renderer |
+| Preload bridge | `src/preload/index.ts` | `window.vela` API exposed to renderer |
 | Renderer store | `src/renderer/src/store.tsx` | UI state, concurrent sessions, backend event subscription |
 | Chat store | `src/renderer/src/chat-store.ts` | Authoritative per-session message/part state and transcript projection |
 | Streaming stack | `src/renderer/src/streaming.ts`, `session-activity.ts`, `assistant-status.ts` | Stream/session lifecycle and working status |

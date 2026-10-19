@@ -28,7 +28,7 @@ export function Titlebar({
   return (
     <div className="titlebar">
       <span className="titlebar-leading-actions" ref={leadingRef}>
-        <img className="observatory-wordmark" src={observatoryWordmark} alt="Mira" draggable={false} />
+        <img className="observatory-wordmark" src={observatoryWordmark} alt="Vela" draggable={false} />
         <button
           className="icon-btn"
           data-panel-action="toggle-sidebar"

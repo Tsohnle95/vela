@@ -7,19 +7,19 @@ import { performance } from "node:perf_hooks";
 import { expect, it, vi } from "vitest";
 import { LatestGeneration } from "@shared/generation";
 import type { BackendMessage } from "@shared/types";
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 import type { RecoveryStorage } from "./recovery-storage";
 
 vi.mock("electron", () => ({ app: { getPath: () => tmpdir() }, shell: { trashItem: async (target: string) => fsp.rm(target) } }));
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-it.skipIf(process.env.MIRA_MUTATION_BENCHMARK !== "1")("measures identical durable native mutation workflows", async () => {
-  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "mira-mutation-benchmark-")));
+it.skipIf(process.env.VELA_MUTATION_BENCHMARK !== "1")("measures identical durable native mutation workflows", async () => {
+  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "vela-mutation-benchmark-")));
   const rootKey = createHash("sha256").update(root).digest("hex").slice(0, 16);
-  const recoveryRoot = path.join(path.dirname(root), `.mira-recovery-${rootKey}`);
+  const recoveryRoot = path.join(path.dirname(root), `.vela-recovery-${rootKey}`);
   const phases: Record<string, number> = {};
-  const backend = new OpenShellBackend((phase) => { phases[phase] = (phases[phase] ?? 0) + 1; });
+  const backend = new VelaBackend((phase) => { phases[phase] = (phases[phase] ?? 0) + 1; });
   const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
   const context: SessionContext["watchContext"] = {
     root, workspace, sessionID: "benchmark", snapshots: new Map(), lastKnown: new Map(), hasGit: false, timers: new Map()
@@ -74,9 +74,9 @@ it.skipIf(process.env.MIRA_MUTATION_BENCHMARK !== "1")("measures identical durab
     expect(phases["save:temporary-ready"]).toBe(27);
     expect(manifests).toEqual({ "save:complete:saved": 27, "rename:complete:renamed": 27 });
     expect(await fsp.readdir(root)).toEqual([]);
-    console.log(`MIRA_MUTATION_RESULT ${JSON.stringify({
-      variant: process.env.MIRA_BENCHMARK_VARIANT ?? "current",
-      implementation: state.workspaceMutations ? "WorkspaceMutations" : "OpenShellBackend",
+    console.log(`VELA_MUTATION_RESULT ${JSON.stringify({
+      variant: process.env.VELA_BENCHMARK_VARIANT ?? "current",
+      implementation: state.workspaceMutations ? "WorkspaceMutations" : "VelaBackend",
       workload: { roundsPerSample: 3, operationsPerRound: ["save", "rename", "create", "delete-renamed", "delete-created"], warmups: 1, samples: 8 },
       fixture: { beforeBytes: Buffer.byteLength(before), beforeSha256: digest(before), afterBytes: Buffer.byteLength(after), afterSha256: digest(after) },
       retained: { snapshots: context.snapshots.size, lastKnown: context.lastKnown.size, identities: context.identities?.size ?? 0, timers: context.timers.size, baselineSha256: digest(JSON.stringify(baselineHashes)) },

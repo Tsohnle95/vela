@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 96" width="340" height="96">
-  <!-- Mira lockup — mark + wordmark, fixed palette -->
+  <!-- Vela lockup — mark + wordmark, fixed palette -->
   <path d="M48 10 C53 34 58 39 86 48 C58 57 53 62 48 86 C43 62 38 57 10 48 C38 39 43 34 48 10Z" fill="#617a68"/>
   <path d="M70 12 C72 22 74 24 84 27 C74 30 72 32 70 42 C68 32 66 30 56 27 C66 24 68 22 70 12Z" fill="#9eb4a1"/>
-  <text x="100" y="62" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="40" font-weight="650" letter-spacing="-1" fill="#2b2119">Mira</text>
+  <text x="100" y="62" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="40" font-weight="650" letter-spacing="-1" fill="#2b2119">Vela</text>
 </svg>

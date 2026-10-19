@@ -35,7 +35,7 @@ function fixture() {
       const click = new MouseEvent("click", { bubbles: true, composed: true, cancelable: true });
       link.dispatchEvent(click);
       expect(click.defaultPrevented).toBe(true);
-      expect(JSON.parse((frontend as unknown as { __openshellOpenSource: string }).__openshellOpenSource)).toEqual({
+      expect(JSON.parse((frontend as unknown as { __velaOpenSource: string }).__velaOpenSource)).toEqual({
         file: "file:///app/src/renderer/src/styles/_sidebar.scss", line: 771, title: link.title
       });
     } finally {

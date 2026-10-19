@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FileUpdate, SessionInfo, TreeEntry } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { useWorkspaceFiles } from "./use-workspace-files";
 
 const first: SessionInfo = { id: "first", directory: "/parent", workspace: { id: "first-workspace", generation: 1 } };
@@ -53,10 +53,10 @@ describe("workspace file authority", () => {
     session = first;
     panels = [first, second];
     notify.mockReset();
-    window.openshell = {
+    window.vela = {
       listDir: async () => [], recoveryRecords: async () => [],
       openRecovery: async () => {}, acknowledgeRecovery: async () => {}
-    } as unknown as OpenShellApi;
+    } as unknown as VelaApi;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -73,7 +73,7 @@ describe("workspace file authority", () => {
   it("prefetches once without expansion and applies the shared filter and ordering", async () => {
     const pending = deferred<TreeEntry[]>();
     const list = vi.fn(() => pending.promise);
-    window.openshell.listDir = list;
+    window.vela.listDir = list;
     act(() => { files.prefetchDir("src"); files.prefetchDir("src"); });
     expect(list).toHaveBeenCalledOnce();
     expect(files.expanded.size).toBe(0);
@@ -88,13 +88,13 @@ describe("workspace file authority", () => {
 
   it("does not replace a concurrent listing and retries silent failures", async () => {
     const pending = deferred<TreeEntry[]>();
-    window.openshell.listDir = vi.fn(() => pending.promise);
+    window.vela.listDir = vi.fn(() => pending.promise);
     act(() => files.prefetchDir("src"));
     act(() => files.recordCreatedEntry(first.workspace, "src", "src/current", "file"));
     await act(async () => pending.resolve([{ path: "src/old", type: "file" }]));
     expect(files.tree.src.map((entry) => entry.path)).toEqual(["src/current"]);
     const list = vi.fn(async () => { throw new Error("offline"); });
-    window.openshell.listDir = list;
+    window.vela.listDir = list;
     await act(async () => files.prefetchDir("other"));
     await act(async () => files.prefetchDir("other"));
     expect(list).toHaveBeenCalledTimes(2);
@@ -105,7 +105,7 @@ describe("workspace file authority", () => {
     const old = deferred<TreeEntry[]>();
     const fresh = deferred<TreeEntry[]>();
     const list = vi.fn().mockReturnValueOnce(old.promise).mockReturnValueOnce(fresh.promise);
-    window.openshell.listDir = list;
+    window.vela.listDir = list;
     act(() => files.prefetchDir("src"));
     const replacement = { ...first, workspace: { ...first.workspace, generation: 99 } };
     panels = [replacement, second];
@@ -123,7 +123,7 @@ describe("workspace file authority", () => {
   it("ignores responses and captured prefetch actions after unmount", async () => {
     const pending = deferred<TreeEntry[]>();
     const list = vi.fn(() => pending.promise);
-    window.openshell.listDir = list;
+    window.vela.listDir = list;
     const prefetch = files.prefetchDir;
     act(() => prefetch("src"));
     await act(async () => root.unmount());
@@ -206,11 +206,11 @@ describe("workspace file authority", () => {
 
   it("refreshes unique dirs concurrently including open root and silently preserves failed listings", async () => {
     const rootListing: TreeEntry[] = [{ path: "saved", type: "file" }];
-    window.openshell.listDir = async () => rootListing;
+    window.vela.listDir = async () => rootListing;
     await act(async () => files.ensureRootOpen());
     const pending = deferred<TreeEntry[]>();
     const listDir = vi.fn((_workspace, path: string) => path === "" ? Promise.reject(new Error("silent")) : pending.promise);
-    window.openshell.listDir = listDir;
+    window.vela.listDir = listDir;
     let refresh!: Promise<void>;
     act(() => { refresh = files.refreshTree(["a", "a", "b"]); });
     expect(listDir.mock.calls.map(([, path]) => path)).toEqual(["a", "b", ""]);
@@ -226,7 +226,7 @@ describe("workspace file authority", () => {
     act(() => files.expandParent(second.workspace, "a"));
     const firstRead = deferred<TreeEntry[]>();
     const listDir = vi.fn((workspace: SessionInfo["workspace"]) => workspace.id === first.workspace.id ? firstRead.promise : Promise.resolve([]));
-    window.openshell.listDir = listDir;
+    window.vela.listDir = listDir;
     act(() => {
       files.scheduleFileRefresh({ ...update("b/file"), movedFrom: "a/file" });
       files.scheduleFileRefresh(update("b/file"));
@@ -245,7 +245,7 @@ describe("workspace file authority", () => {
     vi.useFakeTimers();
     act(() => files.expandParent(first.workspace, ""));
     const listDir = vi.fn(async () => { throw new Error("silent refresh"); });
-    window.openshell.listDir = listDir;
+    window.vela.listDir = listDir;
     act(() => files.scheduleFileRefresh(update("file")));
     await act(async () => root.unmount());
     await act(async () => vi.advanceTimersByTimeAsync(50));
@@ -273,13 +273,13 @@ describe("workspace file authority", () => {
     listing[4] = { path: "nested/.DS_Store", type: "file" };
     listing[5] = secondTie;
     listing[6] = { path: "folder", type: "directory" };
-    window.openshell.listDir = async () => listing;
+    window.vela.listDir = async () => listing;
     await act(async () => files.toggleDir("sparse"));
     expect(files.tree.sparse).toEqual([listing[6], listing[3], firstTie, secondTie]);
     expect(files.tree.sparse[2]).toBe(firstTie);
     expect(files.tree.sparse[3]).toBe(secondTie);
     expect(0 in listing).toBe(false);
-    window.openshell.listDir = async () => [];
+    window.vela.listDir = async () => [];
     await act(async () => files.toggleDir("empty"));
     expect(files.tree.empty).toEqual([]);
     // Filter validation retains the old local e/path access and error text.
@@ -287,7 +287,7 @@ describe("workspace file authority", () => {
     let expected = "";
     try { malformed.filter((e) => e.path.split("/").pop() !== ".DS_Store"); }
     catch (error) { expected = (error as Error).message; }
-    window.openshell.listDir = async () => malformed;
+    window.vela.listDir = async () => malformed;
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect((async () => { await act(async () => files.toggleDir("malformed")); })()).rejects.toThrow(expected);
     consoleError.mockRestore();

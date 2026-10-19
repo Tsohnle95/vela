@@ -112,16 +112,16 @@ for (const channel of unique(ipcChannels)) check(mainTable.includes(channel), `d
 for (const channel of unique(mainTable)) check(ipcChannels.includes(channel), `docs/main.md lists unregistered IPC channel ${channel}`);
 
 const opencode = await parseSource("src/main/opencode.ts");
-const backendClass = opencode.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "OpenShellBackend");
+const backendClass = opencode.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "VelaBackend");
 const publicMethods = backendClass?.members
   .filter(ts.isMethodDeclaration)
   .filter((method) => !method.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.PrivateKeyword))
   .map((method) => method.name.getText(opencode)) ?? [];
 const methodDoc = tableColumn(mainDoc, "Public methods", /^\| `(\w+)\([^)]*\)` \|/gm);
-checkInventory("src/main/opencode.ts", "OpenShellBackend public methods", publicMethods);
-checkInventory("docs/main.md", "OpenShellBackend method table", methodDoc);
+checkInventory("src/main/opencode.ts", "VelaBackend public methods", publicMethods);
+checkInventory("docs/main.md", "VelaBackend method table", methodDoc);
 for (const method of publicMethods) check(methodDoc.includes(method), `docs/main.md method table is missing ${method}()`);
-for (const method of methodDoc) check(publicMethods.includes(method), `docs/main.md lists non-public OpenShellBackend method ${method}()`);
+for (const method of methodDoc) check(publicMethods.includes(method), `docs/main.md lists non-public VelaBackend method ${method}()`);
 
 const preload = await parseSource("src/preload/index.ts");
 const apiDeclaration = preload.statements
@@ -133,10 +133,10 @@ const apiMembers = apiDeclaration && ts.isObjectLiteralExpression(apiDeclaration
   : [];
 const preloadDoc = documentation.get("docs/preload.md");
 const preloadTable = tableColumn(preloadDoc, "## Contract", /^\| `(\w+)(?:\([^)]*\))?` \|/gm);
-checkInventory("src/preload/index.ts", "window.openshell members", apiMembers);
-checkInventory("docs/preload.md", "window.openshell contract", preloadTable);
+checkInventory("src/preload/index.ts", "window.vela members", apiMembers);
+checkInventory("docs/preload.md", "window.vela contract", preloadTable);
 for (const member of apiMembers) check(preloadTable.includes(member), `docs/preload.md contract is missing ${member}`);
-for (const member of preloadTable) check(apiMembers.includes(member), `docs/preload.md lists unexposed window.openshell member ${member}`);
+for (const member of preloadTable) check(apiMembers.includes(member), `docs/preload.md lists unexposed window.vela member ${member}`);
 
 const eventCases = [];
 for (const file of ["src/renderer/src/store.tsx", "src/renderer/src/chat-stream.ts"]) {

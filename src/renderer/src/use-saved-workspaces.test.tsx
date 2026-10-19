@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProjectInfo, SavedWorkspaceSnapshot } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { useSavedWorkspaces } from "./use-saved-workspaces";
 
 let bookmarks: ReturnType<typeof useSavedWorkspaces>;
@@ -29,12 +29,12 @@ describe("saved workspace lifecycle", () => {
     document.body.append(container);
     root = createRoot(container);
     save = vi.fn(async (workspaces: ProjectInfo[]) => workspaces);
-    window.openshell = {
+    window.vela = {
       savedWorkspaces: async () => ({ workspaces: [], initialized: true }),
       saveSavedWorkspaces: save,
       projects: vi.fn(async () => []),
       selectDirectory: async () => "/selected"
-    } as unknown as OpenShellApi;
+    } as unknown as VelaApi;
   });
   afterEach(async () => {
     await act(async () => root.unmount());
@@ -43,20 +43,20 @@ describe("saved workspace lifecycle", () => {
   });
 
   it("keeps failed reads untouched even when local bookmarks change", async () => {
-    window.localStorage.setItem("mira.savedWorkspaces", JSON.stringify([{ directory: "/legacy", name: "Legacy" }]));
-    window.openshell.savedWorkspaces = vi.fn(async () => { throw new Error("unavailable"); });
+    window.localStorage.setItem("vela.savedWorkspaces", JSON.stringify([{ directory: "/legacy", name: "Legacy" }]));
+    window.vela.savedWorkspaces = vi.fn(async () => { throw new Error("unavailable"); });
     await act(async () => root.render(<Probe connected={false} />));
     await act(async () => bookmarks.saveWorkspace());
     expect(bookmarks.savedWorkspaces.map((item) => item.directory)).toEqual(["/legacy", "/selected"]);
     expect(save).not.toHaveBeenCalled();
-    expect(JSON.parse(window.localStorage.getItem("mira.savedWorkspaces")!)).toEqual([{ directory: "/legacy", name: "Legacy" }]);
+    expect(JSON.parse(window.localStorage.getItem("vela.savedWorkspaces")!)).toEqual([{ directory: "/legacy", name: "Legacy" }]);
     expect(notify).toHaveBeenCalledWith(expect.stringContaining("stored data was left untouched"), "error");
   });
 
   it("cancels an older hydration on reconnect and replays pending mutations once", async () => {
     const old = deferred<SavedWorkspaceSnapshot>();
     const latest = deferred<SavedWorkspaceSnapshot>();
-    window.openshell.savedWorkspaces = vi.fn().mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise);
+    window.vela.savedWorkspaces = vi.fn().mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise);
     await act(async () => root.render(<Probe connected={false} />));
     act(() => bookmarks.rememberWorkspace("/new"));
     act(() => bookmarks.replaceSavedWorkspace("/old", "/replacement"));
@@ -70,7 +70,7 @@ describe("saved workspace lifecycle", () => {
 
   it("protects hydrated local mutations from a reconnect snapshot", async () => {
     const reconnect = deferred<SavedWorkspaceSnapshot>();
-    window.openshell.savedWorkspaces = vi.fn()
+    window.vela.savedWorkspaces = vi.fn()
       .mockResolvedValueOnce({ initialized: true, workspaces: [{ directory: "/old", name: "Old" }] })
       .mockReturnValueOnce(reconnect.promise);
     await act(async () => root.render(<Probe connected={false} />));
@@ -82,11 +82,11 @@ describe("saved workspace lifecycle", () => {
   });
 
   it("reports missing bridge and write failures without changing bookmark authority", async () => {
-    window.openshell.savedWorkspaces = undefined as unknown as OpenShellApi["savedWorkspaces"];
+    window.vela.savedWorkspaces = undefined as unknown as VelaApi["savedWorkspaces"];
     await act(async () => root.render(<Probe connected={false} />));
-    expect(notify).toHaveBeenCalledWith("Restart Mira to load saved workspaces from app storage.", "error");
+    expect(notify).toHaveBeenCalledWith("Restart Vela to load saved workspaces from app storage.", "error");
     expect(save).not.toHaveBeenCalled();
-    window.openshell.savedWorkspaces = async () => ({ initialized: true, workspaces: [{ directory: "/durable", name: "Durable" }] });
+    window.vela.savedWorkspaces = async () => ({ initialized: true, workspaces: [{ directory: "/durable", name: "Durable" }] });
     save.mockRejectedValue(new Error("write failed"));
     await act(async () => root.render(<Probe connected />));
     expect(bookmarks.savedWorkspaces).toEqual([{ directory: "/durable", name: "Durable" }]);
@@ -94,8 +94,8 @@ describe("saved workspace lifecycle", () => {
   });
 
   it("keeps legacy data when the app process lacks the saved-workspace handler", async () => {
-    window.localStorage.setItem("mira.savedWorkspaces", JSON.stringify([{ directory: "/legacy", name: "Legacy" }]));
-    window.openshell.savedWorkspaces = async () => { throw new Error("No handler registered for 'shell:saved-workspaces'"); };
+    window.localStorage.setItem("vela.savedWorkspaces", JSON.stringify([{ directory: "/legacy", name: "Legacy" }]));
+    window.vela.savedWorkspaces = async () => { throw new Error("No handler registered for 'shell:saved-workspaces'"); };
     await act(async () => root.render(<Probe connected={false} />));
     expect(bookmarks.savedWorkspaces).toEqual([{ directory: "/legacy", name: "Legacy" }]);
     expect(save).not.toHaveBeenCalled();

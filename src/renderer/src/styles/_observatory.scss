@@ -57,7 +57,7 @@
   .agent-panel .opencode-timeline { background: transparent; }
   .agent-header { min-height: 44px; background: linear-gradient(#050611a6, #05061100); border-bottom: 0; }
   .agent-panel:not([data-conversation="true"]) .agent-header::before {
-    content: "✦  MIRA Agent";
+    content: "✦  VELA Agent";
     color: #b695ff;
     font: 600 12px/1.5 var(--font-family-mono);
     letter-spacing: .6px;

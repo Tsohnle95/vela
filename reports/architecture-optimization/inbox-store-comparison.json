@@ -3,7 +3,7 @@
   "baselineRef": "76bd9d7",
   "runner": "scripts/benchmark-renderer-store.mjs",
   "runnerSha256": "677fd1c439b017dc03b6acfa91d197cce50b723d86dba204a2201153c557e191",
-  "command": "PATH=/Users/tdawg/.local/share/mira-toolchains/node-v22.23.2/bin:$PATH node scripts/benchmark-renderer-store.mjs --operation session-inbox [--ref 76bd9d7]",
+  "command": "PATH=/Users/tdawg/.local/share/vela-toolchains/node-v22.23.2/bin:$PATH node scripts/benchmark-renderer-store.mjs --operation session-inbox [--ref 76bd9d7]",
   "afterSourceSha256": {
     "src/renderer/src/store.tsx": "d77bff685617d431bd3e28e24b6fa71ba15b557858d51e0847fd619903006c58",
     "src/renderer/src/use-session-inbox.ts": "49c18a51b25032a1a85fd6b95dc6df4503ea00eca551eba4c2d181ce98fe6333",

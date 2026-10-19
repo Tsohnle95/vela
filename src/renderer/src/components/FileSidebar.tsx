@@ -20,7 +20,7 @@ import {
 export type SidebarTab = "sessions" | "files";
 
 const EMPTY_HIDDEN_PATHS = new Set<string>();
-const EXPLORER_PATHS_MIME = "application/x-mira-explorer-paths";
+const EXPLORER_PATHS_MIME = "application/x-vela-explorer-paths";
 
 function explorerPathsFromDrag(e: React.DragEvent): string[] {
   try {
@@ -325,7 +325,7 @@ export function FileSidebar({
         return;
       }
       void Promise.all(external.map(async (path) => {
-        const kind = await window.openshell.externalKind(path).catch(() => ({ kind: "missing" as const }));
+        const kind = await window.vela.externalKind(path).catch(() => ({ kind: "missing" as const }));
         if (kind.kind === "directory") {
           await openWorkspacePanel(path);
         } else if (kind.kind === "file") {
@@ -414,7 +414,7 @@ export function FileSidebar({
       ) : (
         <>
           <div className="section-trigger files-brand-header">
-            <span className="sidebar-brand">Mira</span>
+            <span className="sidebar-brand">Vela</span>
           </div>
 
        {orderedPanels.length > 0 && !multiRoot && <div

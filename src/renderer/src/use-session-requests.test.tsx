@@ -54,7 +54,7 @@ it("initializes without invoking lazy host readers", () => {
 });
 it("resolves a successful permission reply for its captured panel after detachment", async () => {
   const reply = deferred<void>(); const permissionReply = vi.fn(() => reply.promise);
-  window.openshell = { permissionReply } as unknown as typeof window.openshell;
+  window.vela = { permissionReply } as unknown as typeof window.vela;
   const { detach, resolvePermission } = mount();
   let sending!: Promise<void>; act(() => { sending = requests.replyPermission("request", "always"); }); detach();
   await act(async () => { reply.resolve(); await sending; });
@@ -65,7 +65,7 @@ it("fetches unique workspaces in parallel and reconciles captured panels in orig
   const sameWorkspace = { ...first, id: "third" };
   const firstRead = deferred<PendingPermissionRequest[]>(); const secondRead = deferred<PendingPermissionRequest[]>();
   const listPermissions = vi.fn((workspace: SessionInfo["workspace"]) => workspace.id === first.workspace.id ? firstRead.promise : secondRead.promise);
-  window.openshell = { listPermissions } as unknown as typeof window.openshell;
+  window.vela = { listPermissions } as unknown as typeof window.vela;
   const { detach, reconcilePermissionRows } = mount([first, second, sameWorkspace]);
   let refresh!: Promise<void>; act(() => { refresh = requests.reconcilePermissions(); });
   expect(listPermissions).toHaveBeenCalledTimes(2); detach();
@@ -73,7 +73,7 @@ it("fetches unique workspaces in parallel and reconciles captured panels in orig
   expect(reconcilePermissionRows.mock.calls).toEqual([[first.id, [{ id: "live", sessionID: first.id, action: "read", resources: [] }]], [sameWorkspace.id, []]]);
 });
 it("retains terminal no-op identity while optimistic missing dismissal clones", () => {
-  window.openshell = { formCancel: async () => {} } as unknown as typeof window.openshell;
+  window.vela = { formCancel: async () => {} } as unknown as typeof window.vela;
   mount(); const before = requests.formsBySession;
   act(() => requests.removeTerminalForms([first.id], "missing")); expect(requests.formsBySession).toBe(before);
   act(() => requests.dismissForm(first.workspace, "missing")); expect(requests.formsBySession).not.toBe(before);

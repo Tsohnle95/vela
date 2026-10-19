@@ -11,7 +11,7 @@ if (process.platform !== "darwin") {
 }
 
 const src = path.join(root, "node_modules", "electron", "dist", "Electron.app");
-const dst = path.join(root, "dev", "Mira.app");
+const dst = path.join(root, "dev", "Vela.app");
 const plist = path.join(dst, "Contents", "Info.plist");
 const icns = path.join(root, "resources", "icon.icns");
 
@@ -21,21 +21,21 @@ if (!existsSync(src)) {
 }
 
 if (existsSync(dst) && statSync(plist).mtimeMs > statSync(path.join(src, "Contents", "Info.plist")).mtimeMs && existsSync(icns) && statSync(plist).mtimeMs > statSync(icns).mtimeMs && statSync(plist).mtimeMs > statSync(fileURLToPath(import.meta.url)).mtimeMs) {
-  console.log("Mira.app is up to date");
+  console.log("Vela.app is up to date");
   process.exit(0);
 }
 
 rmSync(dst, { recursive: true, force: true });
 mkdirSync(path.dirname(dst), { recursive: true });
-console.log("copying Electron.app -> dev/Mira.app …");
+console.log("copying Electron.app -> dev/Vela.app …");
 execFileSync("cp", ["-R", src, dst]);
 
 rmSync(path.join(dst, "Contents", "_CodeSignature"), { recursive: true, force: true });
 
 for (const [key, value] of [
-  ["CFBundleName", "Mira"],
-  ["CFBundleDisplayName", "Mira"],
-  ["CFBundleIdentifier", "dev.mira.desktop"],
+  ["CFBundleName", "Vela"],
+  ["CFBundleDisplayName", "Vela"],
+  ["CFBundleIdentifier", "dev.vela.desktop"],
   ["CFBundleIconFile", "icon.icns"]
 ]) {
   execFileSync("plutil", ["-replace", key, "-string", value, plist]);
@@ -52,4 +52,4 @@ execFileSync("plutil", ["-replace", "CFBundleDocumentTypes", "-xml",
 
 execFileSync("cp", [icns, path.join(dst, "Contents", "Resources", "icon.icns")]);
 execFileSync("codesign", ["--force", "--deep", "--sign", "-", dst]);
-console.log("Mira.app ready");
+console.log("Vela.app ready");

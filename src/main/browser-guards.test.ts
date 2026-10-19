@@ -78,7 +78,7 @@ describe("browser guest guards", () => {
     attachBrowserGuards(host as unknown as WebContents);
     host.emit("did-attach-webview", {}, guest);
     const popup = guest.setWindowOpenHandler.mock.calls[0]![0] as Parameters<WebContents["setWindowOpenHandler"]>[0];
-    for (const url of ["https://example.com/", "http://localhost:5173", "file:///tmp/secret", "https://user:pass@example.com", "mira://x"]) {
+    for (const url of ["https://example.com/", "http://localhost:5173", "file:///tmp/secret", "https://user:pass@example.com", "vela://x"]) {
       expect(popup({ url } as Electron.HandlerDetails)).toEqual({ action: "deny" });
     }
     expect(mocks.openExternal).toHaveBeenCalledExactlyOnceWith("https://example.com/");

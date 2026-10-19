@@ -19,11 +19,11 @@ type PanelMode = "gui" | "tui";
 
 
 function panelModeStorageKey(sessionID: string): string {
-  return `mira.agent-panel-mode.${sessionID}`;
+  return `vela.agent-panel-mode.${sessionID}`;
 }
 
 function legacyPanelModeStorageKey(sessionID: string): string {
-  return `orbit.agent-panel-mode.${sessionID}`;
+  return `vela.agent-panel-mode.${sessionID}`;
 }
 
 function readPanelMode(sessionID: string | undefined): PanelMode {
@@ -341,7 +341,7 @@ function AgentPanelOptionsMenu({
             onClick={() => onChoosePanelMode("gui")}
           >
             <span>GUI</span>
-            <small>Mira agent panel</small>
+            <small>Vela agent panel</small>
           </button>
           <button
             role="menuitemradio"

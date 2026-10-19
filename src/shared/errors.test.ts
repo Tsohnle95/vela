@@ -11,12 +11,12 @@ describe("failure reporting", () => {
   });
 
   it("adds a stable code when an error has only a message", () => {
-    expect(formatFailure(new Error("provider unavailable"), "MIRA_PROMPT_FAILED", "Prompt failed"))
-      .toBe("[MIRA_PROMPT_FAILED] provider unavailable");
+    expect(formatFailure(new Error("provider unavailable"), "VELA_PROMPT_FAILED", "Prompt failed"))
+      .toBe("[VELA_PROMPT_FAILED] provider unavailable");
   });
 
   it("recovers a code after IPC serializes an error into its message", () => {
-    expect(normalizeFailure("[DEEPSEEK_TURN_FAILED] Provider failed", "MIRA_PROMPT_FAILED")).toEqual({
+    expect(normalizeFailure("[DEEPSEEK_TURN_FAILED] Provider failed", "VELA_PROMPT_FAILED")).toEqual({
       code: "DEEPSEEK_TURN_FAILED",
       message: "Provider failed"
     });

@@ -6,7 +6,7 @@ import { browserTabLabel, type BrowserTab } from "../use-browser-tabs";
 import type { Tab } from "@shared/types";
 import { isEditorGroupID, type EditorGroupID } from "./editor-groups";
 
-export const EDITOR_TAB_MIME = "application/x-mira-editor-tab";
+export const EDITOR_TAB_MIME = "application/x-vela-editor-tab";
 
 export interface EditorTabTransfer {
   path: string;

@@ -2,9 +2,9 @@ const allDirections = [
   {
     id: "01",
     title: "Code, with your agent already there.",
-    description: "Mira brings a Monaco-powered workbench and an agent panel into the repository you opened. Read, ask, run, and review without leaving the project.",
+    description: "Vela brings a Monaco-powered workbench and an agent panel into the repository you opened. Read, ask, run, and review without leaving the project.",
     featuresTitle: "Keep the whole coding loop close.",
-    featuresIntro: "Mira keeps the repository, editor, agent conversation, terminal, and observed file changes together in one desktop workspace.",
+    featuresIntro: "Vela keeps the repository, editor, agent conversation, terminal, and observed file changes together in one desktop workspace.",
     workflowTitle: "From an open repo to a reviewed change.",
     agentTitle: "From the first question to the final diff.",
     agentIntro: "Keep the conversation beside the repository, then follow changed files into review.",
@@ -28,7 +28,7 @@ const allDirections = [
     title: "Start in your code. Stay for the whole loop.",
     description: "Open your repository, work with its agent, and review the resulting file changes in the same desktop environment.",
     featuresTitle: "Three steps, one workspace.",
-    featuresIntro: "Mira brings project context, agent progress, and file review together so the handoff from one step to the next stays short.",
+    featuresIntro: "Vela brings project context, agent progress, and file review together so the handoff from one step to the next stays short.",
     workflowTitle: "Start. Work. Review.",
     agentTitle: "Move between sessions, then return to one.",
     agentIntro: "The in-progress Agent mode concept keeps up to eight panels available for a quick scan, then gives the selected session the room to work.",
@@ -37,7 +37,7 @@ const allDirections = [
   {
     id: "04",
     title: "The repo is the starting point.",
-    description: "Mira opens around the project you selected. Browse its files, edit in Monaco, and ask the agent about the code in front of you.",
+    description: "Vela opens around the project you selected. Browse its files, edit in Monaco, and ask the agent about the code in front of you.",
     featuresTitle: "Everything points back to the project.",
     featuresIntro: "The active folder anchors the editor, terminal, agent session, and change review. Keep the work attached to its source.",
     workflowTitle: "One path from folder to finished change.",
@@ -49,7 +49,7 @@ const allDirections = [
     id: "05", name: "Editor in the foreground", reference: "Workbench-led layout", route: "editor",
     kicker: "MONACO / FILES / OPEN SESSION",
     title: "The code stays in front.",
-    description: "Mira pairs a familiar VS Code-style workspace with an agent panel that starts in the open repo. Bring the conversation to the code, not the other way around.",
+    description: "Vela pairs a familiar VS Code-style workspace with an agent panel that starts in the open repo. Bring the conversation to the code, not the other way around.",
     featuresTitle: "A capable editor with the agent in reach.",
     featuresIntro: "Open files, follow streamed work, run the project, and inspect edits without losing your place in the codebase.",
     workflowTitle: "Read the file. Ask the question. Review the answer in code.",
@@ -72,7 +72,7 @@ const allDirections = [
     id: "07", name: "The editorial workspace", reference: "Editorial layout", route: "editorial",
     kicker: "A DESKTOP SPACE FOR CODE",
     title: "Room to think. Close to the work.",
-    description: "Mira gives the code room to breathe and keeps its agent nearby. Open a repository, read and edit in Monaco, then follow the change through review.",
+    description: "Vela gives the code room to breathe and keeps its agent nearby. Open a repository, read and edit in Monaco, then follow the change through review.",
     featuresTitle: "A measured rhythm for focused work.",
     featuresIntro: "The workspace brings familiar tools together with enough room to follow a difficult question from source file to finished diff.",
     workflowTitle: "A steady rhythm: open, ask, inspect.",
@@ -84,7 +84,7 @@ const allDirections = [
     id: "08", name: "Prompt to diff", reference: "Terminal-adjacent layout", route: "terminal",
     kicker: "LOCAL REPOSITORY / ACTIVE SESSION",
     title: "From prompt to diff.",
-    description: "Open the project. Ask its agent. Watch the files change. Mira puts the editor, terminal, and review beside the session doing the work.",
+    description: "Open the project. Ask its agent. Watch the files change. Vela puts the editor, terminal, and review beside the session doing the work.",
     featuresTitle: "Everything that happens between the prompt and the diff.",
     featuresIntro: "Keep file navigation, commands, session controls, and changed-file review close to the agent’s work in your local project.",
     workflowTitle: "A short route from request to review.",
@@ -94,10 +94,10 @@ const allDirections = [
   },
   {
     id: "09", name: "The product field guide", reference: "Feature guide layout", route: "guide",
-    kicker: "MIRA / PRODUCT GUIDE",
+    kicker: "VELA / PRODUCT GUIDE",
     title: "A familiar editor. An agent in context.",
-    description: "A clear look at Mira: the desktop workbench, the current repository, its OpenCode session, and the changes produced along the way.",
-    featuresTitle: "What Mira puts in the workspace.",
+    description: "A clear look at Vela: the desktop workbench, the current repository, its OpenCode session, and the changes produced along the way.",
+    featuresTitle: "What Vela puts in the workspace.",
     featuresIntro: "A concise guide to the parts of the app and how they connect during an agent-assisted coding session.",
     workflowTitle: "The working session at a glance.",
     agentTitle: "Agent mode is the next chapter.",
@@ -107,7 +107,7 @@ const allDirections = [
   {
     id: "10",
     title: "A home for the coding loop.",
-    description: "Mira is a desktop development environment where your editor, project, terminal, and coding agent share one working space.",
+    description: "Vela is a desktop development environment where your editor, project, terminal, and coding agent share one working space.",
     featuresTitle: "Tools for the everyday development loop.",
     featuresIntro: "Bring the repo into view, keep the agent close to its files, and make reviewing changes part of the same session.",
     workflowTitle: "Open a project and keep moving.",
@@ -120,15 +120,15 @@ const directions = ["01", "04", "10", "06"].map((id) => allDirections.find((dire
 
 const features = [
   ["01", "Navigate the repository", "Browse the project tree and move among open files while keeping the active workspace in view."],
-  ["02", "Edit with Monaco", "Read and edit source in Mira’s VS Code-style workbench, backed by the Monaco editor."],
+  ["02", "Edit with Monaco", "Read and edit source in Vela’s VS Code-style workbench, backed by the Monaco editor."],
   ["03", "Ask the agent in context", "The default agent panel is attached to the repository you opened, so project questions start beside the code."],
-  ["04", "Follow workspace changes", "Mira observes file changes during an active session and makes changed files available for diff review."],
+  ["04", "Follow workspace changes", "Vela observes file changes during an active session and makes changed files available for diff review."],
   ["05", "Run commands nearby", "Use the integrated terminal with the active workspace as its working directory."],
   ["06", "Keep sessions distinct", "Move between sessions with their own transcripts and working state, then return to the thread that needs attention."]
 ];
 
 const workflow = [
-  ["01 / OPEN", "Choose a repository", "Open the project folder. Mira brings up its files and makes the workspace available to the agent."],
+  ["01 / OPEN", "Choose a repository", "Open the project folder. Vela brings up its files and makes the workspace available to the agent."],
   ["02 / WORK", "Ask and iterate", "Send a request, follow the streamed response, and add a follow-up or attachment as the task evolves."],
   ["03 / REVIEW", "Inspect the files", "Open Changes, inspect per-file diffs, then continue in the editor or terminal."]
 ];
@@ -144,14 +144,14 @@ const details = [
   ["Tool permissions", "See permission requests and respond within the active session."],
   ["Attachments and prompts", "Attach relevant files, use slash commands, and respond to structured questions."],
   ["Usage visibility", "Review available provider and session usage details from the app."],
-  ["Extensions", "Manage the plugins and skills available in your Mira setup."],
+  ["Extensions", "Manage the plugins and skills available in your Vela setup."],
   ["Appearance", "Choose among the app’s available appearance profiles in Settings."]
 ];
 
 const questions = [
-  ["Can I work in an existing repository?", "Yes. Open a local project and Mira keeps its files, editor, terminal, and agent session together."],
-  ["How do I review an agent's work?", "Mira tracks workspace changes during a session and lets you inspect the changed files and diffs."],
-  ["Which runtime does Mira use?", "OpenCode V2 is the runtime enabled in Mira."],
+  ["Can I work in an existing repository?", "Yes. Open a local project and Vela keeps its files, editor, terminal, and agent session together."],
+  ["How do I review an agent's work?", "Vela tracks workspace changes during a session and lets you inspect the changed files and diffs."],
+  ["Which runtime does Vela use?", "OpenCode V2 is the runtime enabled in Vela."],
   ["What stays in the workspace?", "Your repository, Monaco editor, agent conversation, terminal, and file changes stay close at hand."]
 ];
 
@@ -175,7 +175,7 @@ const params = new URLSearchParams(window.location.search);
 const requested = params.get("direction") || "01";
 const current = directions.find((direction) => direction.id === requested) || directions[0];
 document.body.dataset.direction = current.id;
-document.title = `Mira — ${current.title}`;
+document.title = `Vela — ${current.title}`;
 
 document.querySelector("#hero-title").textContent = current.title;
 document.querySelector("#hero-description").textContent = current.description;

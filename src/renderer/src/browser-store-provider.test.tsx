@@ -6,7 +6,7 @@ import { BrowserStoreProvider } from "./browser-store-provider";
 import { BrowserTabsProvider, useBrowserTabActions, useBrowserTabState } from "./browser-tabs-context";
 import { useStore } from "./store";
 
-type OpenShellApi = Window["openshell"];
+type VelaApi = Window["vela"];
 
 let store: ReturnType<typeof useStore>;
 let actions: ReturnType<typeof useBrowserTabActions>;
@@ -25,9 +25,9 @@ function BrowserProbe(): ReactNode {
   return null;
 }
 
-function bridge(): OpenShellApi {
+function bridge(): VelaApi {
   const sessions = new Map<string, SessionInfo>();
-  const fixture: Partial<OpenShellApi> = {
+  const fixture: Partial<VelaApi> = {
     platform: "darwin",
     onMessage: () => () => {},
     health: async () => true,
@@ -54,7 +54,7 @@ function bridge(): OpenShellApi {
     readFile: async (_workspace, path) => path === "missing.ts" ? null : "content",
     listDir: async () => []
   };
-  return fixture as OpenShellApi;
+  return fixture as VelaApi;
 }
 
 describe("browser and Store integration", () => {
@@ -65,7 +65,7 @@ describe("browser and Store integration", () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     vi.useFakeTimers();
     window.localStorage.clear();
-    window.openshell = bridge();
+    window.vela = bridge();
     storeRenders = 0;
     container = document.createElement("div");
     document.body.append(container);

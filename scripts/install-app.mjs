@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { REPO_CONFIG_FILE } from "./live-launcher.cjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const APP_NAME = "Orbit.app";
+const APP_NAME = "Vela.app";
 
 function findBuiltApp(projectRoot, exists, readdir) {
   const release = path.join(projectRoot, "release");
@@ -20,7 +20,7 @@ function findBuiltApp(projectRoot, exists, readdir) {
 function projectVersion(projectRoot) {
   const packageJson = JSON.parse(readFileSync(path.join(projectRoot, "package.json"), "utf8"));
   if (typeof packageJson.version !== "string" || !packageJson.version) {
-    throw new Error("Orbit package.json has no app version");
+    throw new Error("Vela package.json has no app version");
   }
   return packageJson.version;
 }
@@ -28,8 +28,8 @@ function projectVersion(projectRoot) {
 export function liveLauncherPayload(projectRoot, version = projectVersion(projectRoot)) {
   return {
     packageJson: JSON.stringify({
-      name: "orbit",
-      productName: "Orbit",
+      name: "vela",
+      productName: "Vela",
       version,
       private: true,
       main: "live-launcher.cjs"
@@ -88,11 +88,12 @@ export function installApp(options = {}) {
   };
 
   run(process.execPath, [path.join(projectRoot, "node_modules", "electron-vite", "bin", "electron-vite.js"), "build"], runOptions);
+  run(process.execPath, [path.join(projectRoot, "scripts", "package-mobile-server.mjs")], runOptions);
   run(process.execPath, [builderCli, "--mac", "dir", "--config", "electron-builder.yml", "--projectDir", projectRoot], runOptions);
 
   const built = findBuiltApp(projectRoot, exists, readdir);
   if (!built) {
-    return { ok: false, message: "Packaging did not produce an Orbit.app bundle under release/" };
+    return { ok: false, message: "Packaging did not produce a Vela.app bundle under release/" };
   }
 
   applyLiveLauncher(built, projectRoot, options.liveLauncherIo, version);
@@ -106,7 +107,7 @@ export function installApp(options = {}) {
   if (exists(destination)) rm(destination, { recursive: true, force: true });
   run("cp", ["-R", built, destination]);
 
-  return { ok: true, message: `Installed Orbit to ${destination}` };
+  return { ok: true, message: `Installed Vela to ${destination}` };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

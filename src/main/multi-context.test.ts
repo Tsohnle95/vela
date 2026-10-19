@@ -11,7 +11,7 @@ vi.mock("electron", () => ({
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-import { OpenShellBackend, SessionWorkspaceNotFoundError } from "./opencode";
+import { VelaBackend, SessionWorkspaceNotFoundError } from "./opencode";
 import { SavedWorkspaceStore } from "./saved-workspaces";
 import type { BackendMessage, WorkspaceIdentity } from "@shared/types";
 
@@ -21,8 +21,8 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-async function fixture(): Promise<{ backend: OpenShellBackend; messages: BackendMessage[] }> {
-  const backend = new OpenShellBackend();
+async function fixture(): Promise<{ backend: VelaBackend; messages: BackendMessage[] }> {
+  const backend = new VelaBackend();
   const messages: BackendMessage[] = [];
   backend.onMessage((message) => messages.push(message as BackendMessage));
   return { backend, messages };
@@ -50,8 +50,8 @@ function clientWith(sessions: Record<string, string>): unknown {
 
 describe("concurrent session contexts", () => {
   it("opens two sessions on different directories and routes events to the matching context", async () => {
-    const one = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-one-")));
-    const two = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-two-")));
+    const one = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-one-")));
+    const two = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-two-")));
     roots.push(one, two);
     await writeFile(path.join(one, "one.txt"), "one before");
     await writeFile(path.join(two, "two.txt"), "two before");
@@ -91,7 +91,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("reuses the context for an already-open session and keeps its workspace identity", async () => {
-    const one = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-idem-")));
+    const one = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-idem-")));
     roots.push(one);
     const { backend, messages } = await fixture();
     const client = clientWith({ "session-one": one });
@@ -109,7 +109,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("keeps independent snapshot state for two sessions sharing one directory", async () => {
-    const shared = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-shared-")));
+    const shared = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-shared-")));
     roots.push(shared);
     await writeFile(path.join(shared, "shared.txt"), "before");
     const { backend, messages } = await fixture();
@@ -139,7 +139,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("replaces the context when the same session re-activates on a different directory", async () => {
-    const one = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-move-")));
+    const one = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-move-")));
     roots.push(one);
     await mkdir(path.join(one, "a"));
     await mkdir(path.join(one, "b"));
@@ -164,9 +164,9 @@ describe("concurrent session contexts", () => {
   });
 
   it("repairs a session directory after its project folder is renamed", async () => {
-    const parent = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-renamed-")));
-    const current = path.join(parent, "mira");
-    const previous = path.join(parent, "openshell");
+    const parent = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-renamed-")));
+    const current = path.join(parent, "project-current");
+    const previous = path.join(parent, "project-previous");
     await mkdir(current);
     roots.push(parent);
     const { backend } = await fixture();
@@ -188,7 +188,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("relinks a closed session to a user-selected replacement workspace", async () => {
-    const parent = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-relink-")));
+    const parent = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-relink-")));
     const selected = path.join(parent, "replacement");
     const missing = path.join(parent, "deleted");
     await mkdir(selected);
@@ -215,7 +215,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("repairs history, bookmarks and sibling sessions after a moved project and restart", async () => {
-    const root = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-history-moved-")));
+    const root = await realpath(await mkdtemp(path.join(tmpdir(), "vela-history-moved-")));
     roots.push(root);
     const previous = path.join(root, "portfolio", "neptune");
     const current = path.join(root, "neptune");
@@ -236,7 +236,7 @@ describe("concurrent session contexts", () => {
       },
       message: { list: vi.fn(async () => []) }
     };
-    const backend = new OpenShellBackend(undefined, undefined, undefined, bookmarks);
+    const backend = new VelaBackend(undefined, undefined, undefined, bookmarks);
     (backend as unknown as { client: unknown }).client = client;
     expect((await backend.listSessions()).map((session) => session.directory)).toEqual([current, path.join(current, "docs")]);
     expect(move).not.toHaveBeenCalled();
@@ -244,7 +244,7 @@ describe("concurrent session contexts", () => {
     expect((await backend.openSessionById("one", 1)).session.id).toBe("one");
     await backend.stop();
 
-    const restarted = new OpenShellBackend(undefined, undefined, undefined, new SavedWorkspaceStore(file));
+    const restarted = new VelaBackend(undefined, undefined, undefined, new SavedWorkspaceStore(file));
     (restarted as unknown as { client: unknown }).client = client;
     client.project.list.mockResolvedValue([]);
     const reopened = await restarted.openSessionById("two", 1);
@@ -255,7 +255,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("identifies a session whose old workspace cannot be resolved", async () => {
-    const parent = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-missing-")));
+    const parent = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-missing-")));
     roots.push(parent);
     const { backend } = await fixture();
     (backend as unknown as { client: unknown }).client = {
@@ -266,7 +266,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("omits missing projects and deduplicates canonical directories", async () => {
-    const current = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-project-current-")));
+    const current = await realpath(await mkdtemp(path.join(tmpdir(), "vela-project-current-")));
     roots.push(current);
     const { backend } = await fixture();
     (backend as unknown as { client: unknown }).client = {
@@ -281,8 +281,8 @@ describe("concurrent session contexts", () => {
   });
 
   it("routes tool snapshots to the session that called the tool", async () => {
-    const one = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-tool-one-")));
-    const two = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-tool-two-")));
+    const one = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-tool-one-")));
+    const two = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-tool-two-")));
     roots.push(one, two);
     await writeFile(path.join(one, "one.txt"), "one");
     await writeFile(path.join(two, "two.txt"), "two");
@@ -314,8 +314,8 @@ describe("concurrent session contexts", () => {
   });
 
   it("routes filesystem events reported through a symlinked root to the canonical context", async () => {
-    const real = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-real-")));
-    const links = await mkdtemp(path.join(tmpdir(), "openshell-multi-links-"));
+    const real = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-real-")));
+    const links = await mkdtemp(path.join(tmpdir(), "vela-multi-links-"));
     roots.push(real, links);
     await writeFile(path.join(real, "note.txt"), "before");
     const link = path.join(links, "root");
@@ -347,7 +347,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("closes a session context, stopping its watcher, and recreates a fresh context on reopen", async () => {
-    const one = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-close-")));
+    const one = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-close-")));
     roots.push(one);
     const { backend } = await fixture();
     const client = clientWith({ "session-one": one });
@@ -377,7 +377,7 @@ describe("concurrent session contexts", () => {
   });
 
   it("deletes an opencode session server-side and closes its context", async () => {
-    const one = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-multi-delete-")));
+    const one = await realpath(await mkdtemp(path.join(tmpdir(), "vela-multi-delete-")));
     roots.push(one);
     const { backend } = await fixture();
     const remove = vi.fn(async () => {});
@@ -401,11 +401,11 @@ describe("concurrent session contexts", () => {
   });
 
   it("refuses to delete DeepSeek sessions without a delete RPC", async () => {
-    const dir = await realpath(await mkdtemp(path.join(tmpdir(), "mira-runtime-sessions-")));
+    const dir = await realpath(await mkdtemp(path.join(tmpdir(), "vela-runtime-sessions-")));
     roots.push(dir);
     const { RuntimeSessionIndex } = await import("./runtimes/runtime-session-index");
     const { backend } = await fixture();
-    const backendWithIndex = new OpenShellBackend(
+    const backendWithIndex = new VelaBackend(
       () => {},
       () => { throw new Error("no runtime"); },
       new RuntimeSessionIndex(path.join(dir, "runtime-sessions.json"))

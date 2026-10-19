@@ -55,7 +55,7 @@ function replayToolCard(part: Record<string, unknown>): ToolCallView {
     output:
       toolContentText(state.content as unknown[] | undefined) ||
       (state.error !== undefined
-        ? formatFailure(state.error, "MIRA_TOOL_FAILED", "Tool failed")
+        ? formatFailure(state.error, "VELA_TOOL_FAILED", "Tool failed")
         : String(state.output ?? "")),
     startedAt: time.created ?? Date.now(),
     duration: completed ? Math.max(0, completed - ran) : undefined,
@@ -242,14 +242,14 @@ export function replayTranscript(messages: unknown[]): TranscriptItem[] {
                   attempt: Number((info.retry as Record<string, unknown>).attempt ?? 1),
                   message: formatFailure(
                     (info.retry as Record<string, unknown>).error,
-                    "MIRA_RETRY_SCHEDULED",
+                    "VELA_RETRY_SCHEDULED",
                     "Retrying"
                   ),
                   next: Number((info.retry as Record<string, unknown>).at ?? 0) || undefined
                 }
               }
             : {}),
-          ...(info.error ? { error: formatFailure(info.error, "MIRA_ASSISTANT_FAILED", "Assistant failed") } : {})
+          ...(info.error ? { error: formatFailure(info.error, "VELA_ASSISTANT_FAILED", "Assistant failed") } : {})
         });
       }
       continue;
@@ -265,7 +265,7 @@ export function replayTranscript(messages: unknown[]): TranscriptItem[] {
         reason: info.reason === "manual" ? "manual" : "auto",
         summary: String(info.summary ?? ""),
         ...(typeof info.recent === "string" ? { recent: info.recent } : {}),
-        ...(info.error ? { error: formatFailure(info.error, "MIRA_COMPACTION_FAILED", "Compaction failed") } : {})
+        ...(info.error ? { error: formatFailure(info.error, "VELA_COMPACTION_FAILED", "Compaction failed") } : {})
       });
     }
   }

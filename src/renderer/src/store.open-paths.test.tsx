@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, ExternalOpenResult, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -23,7 +23,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -51,7 +51,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     listDir: async () => [],
     externalKind: async () => ({ kind: "missing" }),
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("store open paths", () => {
@@ -76,7 +76,7 @@ describe("store open paths", () => {
 
   it("opens a dropped folder as the first session when nothing is open", async () => {
     const externalKind = vi.fn(async () => ({ kind: "directory" as const }));
-    window.openshell = api({ externalKind });
+    window.vela = api({ externalKind });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openPaths(["/dropped"]));
 
@@ -86,7 +86,7 @@ describe("store open paths", () => {
 
   it("adds a dropped folder as a new panel when a session is open", async () => {
     const externalKind = vi.fn(async () => ({ kind: "directory" as const }));
-    window.openshell = api({ externalKind });
+    window.vela = api({ externalKind });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openPaths(["/two"]));
@@ -98,9 +98,9 @@ describe("store open paths", () => {
     const externalKind = vi.fn(async () => ({ kind: "file" as const }));
     const session = info("/parent", 7);
     const openFileWorkspace = vi.fn(async () => ({ session, path: "index.html" }));
-    window.openshell = api({
+    window.vela = api({
       externalKind,
-      openFileWorkspace: openFileWorkspace as OpenShellApi["openFileWorkspace"]
+      openFileWorkspace: openFileWorkspace as VelaApi["openFileWorkspace"]
     });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openPaths(["/parent/index.html"]));
@@ -113,7 +113,7 @@ describe("store open paths", () => {
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "relative", rel: "index.html", content: "<p>hi"
     }));
-    window.openshell = api({ externalKind, openExternal });
+    window.vela = api({ externalKind, openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openPaths(["/one/index.html"]));
@@ -126,7 +126,7 @@ describe("store open paths", () => {
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "relative", rel: "index.html", content: "<p>hi"
     }));
-    window.openshell = api({ externalKind, openExternal });
+    window.vela = api({ externalKind, openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => messageHandler!({ kind: "session", session: info("/one", 1) }));
     await act(async () => messageHandler!({
@@ -142,7 +142,7 @@ describe("store open paths", () => {
   });
 
   it("toasts when a dropped path no longer exists", async () => {
-    window.openshell = api({ externalKind: async () => ({ kind: "missing" as const }) });
+    window.vela = api({ externalKind: async () => ({ kind: "missing" as const }) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openPaths(["/gone"]));
 
@@ -152,7 +152,7 @@ describe("store open paths", () => {
 
   it("opens paths delivered as a backend message", async () => {
     const externalKind = vi.fn(async () => ({ kind: "directory" as const }));
-    window.openshell = api({ externalKind });
+    window.vela = api({ externalKind });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => {
       messageHandler!({ kind: "ui-command", command: "open-paths", data: ["/dropped", 42, "."] });
@@ -164,7 +164,7 @@ describe("store open paths", () => {
   it("opens paths queued before the renderer was ready", async () => {
     const externalKind = vi.fn(async () => ({ kind: "directory" as const }));
     const takePendingPaths = vi.fn(async () => ["/dropped"]);
-    window.openshell = api({ externalKind, takePendingPaths });
+    window.vela = api({ externalKind, takePendingPaths });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => {});
 

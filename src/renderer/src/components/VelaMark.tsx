@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-export function MiraMark({ size = 46 }: { size?: number }): ReactNode {
+export function VelaMark({ size = 46 }: { size?: number }): ReactNode {
   return (
     <svg
-      className="mira-mark"
+      className="vela-mark"
       viewBox="0 0 96 96"
       width={size}
       height={size}

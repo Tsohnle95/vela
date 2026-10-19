@@ -446,7 +446,7 @@ describe("createStreamPipeline", () => {
     pipeline.cleanup();
     await run;
 
-    expect(onStreamError).toHaveBeenCalledWith("[MIRA_STREAM_INVALID_EVENT] Live event stream returned an invalid event");
+    expect(onStreamError).toHaveBeenCalledWith("[VELA_STREAM_INVALID_EVENT] Live event stream returned an invalid event");
   });
 
   it("reports an asynchronous event delivery failure", async () => {
@@ -463,7 +463,7 @@ describe("createStreamPipeline", () => {
     pipeline.cleanup();
     await run;
 
-    expect(onStreamError).toHaveBeenCalledWith("[MIRA_EVENT_DELIVERY_FAILED] renderer bridge failed");
+    expect(onStreamError).toHaveBeenCalledWith("[VELA_EVENT_DELIVERY_FAILED] renderer bridge failed");
   });
 
   it("flushes queued events on cleanup", async () => {

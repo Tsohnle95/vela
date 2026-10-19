@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 import { editableCssSourceMaps } from "./scripts/editable-css-source-maps";
 
-const isReleaseBuild = (process.env.MIRA_RELEASE_BUILD ?? process.env.ORBIT_RELEASE_BUILD) === "1";
+const isReleaseBuild = (process.env.VELA_RELEASE_BUILD ?? process.env.VELA_RELEASE_BUILD) === "1";
 
 export default defineConfig({
   main: {
@@ -11,7 +11,7 @@ export default defineConfig({
       rollupOptions: { input: { index: resolve(__dirname, "src/main/index.ts"), "sass-worker": resolve(__dirname, "src/main/sass-worker.ts") } }
     },
     define: {
-      __MIRA_RELEASE_BUILD__: JSON.stringify(isReleaseBuild)
+      __VELA_RELEASE_BUILD__: JSON.stringify(isReleaseBuild)
     },
     resolve: {
       alias: {

@@ -183,7 +183,7 @@ export class WorkspaceMutations<Session extends MutationSession> {
       const proposed = path.join(recovery.directory, "proposed");
       let sourceHeld = false;
       let targetInstalled = false;
-      // Mira's own write must not be observed as an external change: block
+      // Vela's own write must not be observed as an external change: block
       // filesystem events for this path until the save (or its failure) settles.
       this.observation.beginWrite(watchContext, abs);
       try {
@@ -307,7 +307,7 @@ export class WorkspaceMutations<Session extends MutationSession> {
       const watchContext = context.watchContext;
       if (!this.currentWatch(watchContext)) throw new Error("stale workspace");
       const abs = await confinedPath(root, relativePath(rel));
-      const detachedRoot = path.join(homedir(), ".mira-detached");
+      const detachedRoot = path.join(homedir(), ".vela-detached");
       await fsp.mkdir(detachedRoot, { recursive: true });
       const target = path.join(detachedRoot, `${randomUUID()}-${path.basename(abs)}`);
       await fsp.rename(abs, target);

@@ -12,7 +12,7 @@ vi.mock("electron", () => ({
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 import type { WorkspaceIdentity } from "@shared/types";
 import { LatestGeneration } from "@shared/generation";
 
@@ -23,7 +23,7 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
 }
 
 function install(
-  backend: OpenShellBackend,
+  backend: VelaBackend,
   workspace: WorkspaceIdentity,
   directory: string,
   client?: unknown
@@ -63,7 +63,7 @@ describe("workspace-scoped backend queries", () => {
       command: { list: vi.fn(() => commands.promise) },
       skill: { list: vi.fn(() => skills.promise) }
     };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const first = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, first, "/workspace-one", client);
     const pending = backend.listCommands(first);
@@ -79,7 +79,7 @@ describe("workspace-scoped backend queries", () => {
   it("builds file references from the captured root and rejects them after activation", async () => {
     const files = deferred<unknown[]>();
     const client = { file: { find: vi.fn(() => files.promise) } };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const first = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, first, "/workspace-one", client);
     const pending = backend.searchFiles(first, "old");
@@ -97,9 +97,9 @@ describe("workspace-scoped backend queries", () => {
   it("excludes recovery artifacts from file references", async () => {
     const client = { file: { find: vi.fn(async () => [
       { path: "src/visible.ts" },
-      { path: ".openshell-recovery/transaction/original" }
+      { path: ".vela-recovery/transaction/original" }
     ]) } };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     install(backend, { id: "11111111-1111-4111-8111-111111111111", generation: 1 }, "/workspace", client);
 
     expect(await backend.searchFiles({ id: "11111111-1111-4111-8111-111111111111", generation: 1 }, "visible")).toEqual([{
@@ -140,7 +140,7 @@ describe("workspace-scoped backend queries", () => {
         connections: []
       }
     ] })) } };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", client);
 
@@ -172,7 +172,7 @@ describe("workspace-scoped backend queries", () => {
       integration: { connect: { key: connect } },
       credential: { remove }
     };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", client);
 
@@ -195,7 +195,7 @@ describe("workspace-scoped backend queries", () => {
     const client = {
       integration: { connect: { key: connect }, oauth: { connect: oauthConnect } }
     };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", client);
 
@@ -207,7 +207,7 @@ describe("workspace-scoped backend queries", () => {
 
   it("steers queued inbox items with V2 delivery updates", async () => {
     const update = vi.fn(async () => undefined);
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", { session: { inbox: { update } } });
 
@@ -218,7 +218,7 @@ describe("workspace-scoped backend queries", () => {
 
   it("replies to V2 permission requests with a decision", async () => {
     const reply = vi.fn(async () => undefined);
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", { permission: { reply } });
 
@@ -234,7 +234,7 @@ describe("built-in commands and prompt files", () => {
       command: { list: vi.fn(async () => [{ name: "project-cmd", description: "Runs a thing" }]) },
       skill: { list: vi.fn(async () => [{ name: "project-skill" }]) }
     };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     install(backend, { id: "11111111-1111-4111-8111-111111111111", generation: 1 }, "/workspace", client);
 
     expect(await backend.listCommands({ id: "11111111-1111-4111-8111-111111111111", generation: 1 })).toEqual([
@@ -254,7 +254,7 @@ describe("built-in commands and prompt files", () => {
       },
       skill: { list: vi.fn(async () => []) }
     };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", client);
 
@@ -267,7 +267,7 @@ describe("built-in commands and prompt files", () => {
 
   it("routes project commands with the V2 name field", async () => {
     const command = vi.fn(async () => undefined);
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", {
       session: { command },
@@ -281,7 +281,7 @@ describe("built-in commands and prompt files", () => {
 
   it("routes selected skills by V2 skill id, not display name", async () => {
     const skill = vi.fn(async () => undefined);
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, "/workspace", {
       session: { skill },
@@ -296,7 +296,7 @@ describe("built-in commands and prompt files", () => {
   it("rejects a built-in compaction after workspace activation", async () => {
     const compact = deferred<unknown>();
     const client = { session: { compact: vi.fn(() => compact.promise) } };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const first = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, first, "/workspace-one", client);
     const pending = backend.runCommand(first, "compact");
@@ -308,7 +308,7 @@ describe("built-in commands and prompt files", () => {
   });
 
   it("forwards prompt files with uri and mention span to the session prompt call", async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), "openshell-prompt-"));
+    const directory = await mkdtemp(path.join(tmpdir(), "vela-prompt-"));
     const file = path.join(directory, "src", "foo.ts");
     await mkdir(path.join(directory, "src"), { recursive: true });
     await writeFile(file, "export const foo = 1;\n");
@@ -316,7 +316,7 @@ describe("built-in commands and prompt files", () => {
       session: { prompt: vi.fn(async () => ({ data: {} })) },
       message: { list: vi.fn(async () => []) }
     };
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
     install(backend, workspace, directory, client);
 

@@ -3,13 +3,13 @@ import { InspectPickerState } from "./inspect-picker";
 
 const DEVTOOLS_WATCHER = `
 (() => {
-  if (window.__openshellWatchInstalled) return;
-  window.__openshellWatchInstalled = true;
-  window.__openshellKey = null;
-  window.__openshellOpenSource = null;
+  if (window.__velaWatchInstalled) return;
+  window.__velaWatchInstalled = true;
+  window.__velaKey = null;
+  window.__velaOpenSource = null;
   window.addEventListener("keydown", (event) => {
     if (event.key === "F12" || event.key === "Escape") {
-      window.__openshellKey = event.key;
+      window.__velaKey = event.key;
     }
   }, true);
   const STRICT = /^(.*\\.(?:css|scss|sass|less|styl|stylus|pcss)):(\\d+)\\s*$/i;
@@ -40,7 +40,7 @@ const DEVTOOLS_WATCHER = `
     if (!found) return;
     event.preventDefault();
     event.stopPropagation();
-    window.__openshellOpenSource = JSON.stringify({ file: found.file, line: found.line, title: found.title });
+    window.__velaOpenSource = JSON.stringify({ file: found.file, line: found.line, title: found.title });
   }, true);
 })();
 `;
@@ -144,10 +144,10 @@ export class DevToolsController {
       void dtc.executeJavaScript(DEVTOOLS_WATCHER).catch(() => {});
       const payload = await dtc
         .executeJavaScript(`(() => {
-          const k = window.__openshellKey;
-          window.__openshellKey = null;
-          const s = window.__openshellOpenSource;
-          window.__openshellOpenSource = null;
+          const k = window.__velaKey;
+          window.__velaKey = null;
+          const s = window.__velaOpenSource;
+          window.__velaOpenSource = null;
           return JSON.stringify({ key: k, source: s });
         })()`)
         .catch(() => null);

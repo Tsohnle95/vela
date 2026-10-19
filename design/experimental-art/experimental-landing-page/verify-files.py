@@ -61,7 +61,7 @@ for index, concept in enumerate(manifest):
     tree = ET.fromstring(content)
     assert tree.tag == svg_ns + "svg"
     assert tree.attrib["viewBox"] == f"0 0 {concept.get('width', 1440)} {concept.get('height', 900)}"
-    assert not re.search(r"\borbit\b", " ".join(tree.itertext()), re.I), f"Old brand in artwork: {concept['id']}"
+    assert not re.search(r"\bvela\b", " ".join(tree.itertext()), re.I), f"Old brand in artwork: {concept['id']}"
     ids = [node.attrib["id"] for node in tree.iter() if "id" in node.attrib]
     assert len(ids) == len(set(ids)), f"Duplicate SVG IDs: {concept['id']}"
     references = re.findall(r"url\(#([^\)]+)\)", content.decode())
@@ -100,6 +100,6 @@ gallery = Page(ROOT / "index.html")
 assert gallery.cards == 154, "Gallery must expose all 154 designs"
 for filename in ("process.html", "contact-sheet.html", "verify.html", "launch-comparison.html", "animations/index.html", "animations/verify.html"):
     Page(ROOT / filename)
-print("154/154 SVGs valid, distinct, self-contained, correctly linked, with no old Orbit wordmarks.")
-print("12 slick and 12 pixel Mira studies; 130 earlier compositions; branding baseline matches.")
+print("154/154 SVGs valid, distinct, self-contained, correctly linked, with no old Vela wordmarks.")
+print("12 slick and 12 pixel Vela studies; 130 earlier compositions; branding baseline matches.")
 print("Browser decode, visual review and timing are separate checks: open verify.html.")

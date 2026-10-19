@@ -184,7 +184,7 @@ describe("findHtmlEntry", () => {
   });
 
   async function tree(files: Record<string, string>): Promise<string> {
-    const root = await mkdtemp(path.join(tmpdir(), "mira-vite-"));
+    const root = await mkdtemp(path.join(tmpdir(), "vela-vite-"));
     roots.push(root);
     for (const [relative, content] of Object.entries(files)) {
       const absolute = path.join(root, relative);
@@ -252,7 +252,7 @@ describe("defaultViteDeps", () => {
 describe("resolveViteCommand", () => {
   it("finds Vite beside the repository build used by the installed live launcher", () => {
     const repositoryBin = "/repo/node_modules/vite/bin/vite.js";
-    expect(resolveViteCommand("/Applications/Mira.app/Contents/Resources/app", "/repo/out/main", "/electron", "darwin", (file) => file === repositoryBin))
+    expect(resolveViteCommand("/Applications/Vela.app/Contents/Resources/app", "/repo/out/main", "/electron", "darwin", (file) => file === repositoryBin))
       .toEqual({ command: "/electron", prefix: [repositoryBin] });
   });
 

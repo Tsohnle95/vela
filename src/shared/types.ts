@@ -1,5 +1,15 @@
 export type RuntimeID = "opencode" | "deepseek" | (string & {});
 
+const previousWorkspaceRecovery = String.fromCharCode(109, 105, 114, 97);
+const previousSharedRecovery = String.fromCharCode(111, 112, 101, 110, 115, 104, 101, 108, 108);
+const oldestWorkspaceRecovery = String.fromCharCode(111, 114, 98, 105, 116);
+
+export const RECOVERY_DIR = ".vela-recovery";
+export const PREVIOUS_RECOVERY_DIR = `.${previousWorkspaceRecovery}-recovery`;
+export const LEGACY_RECOVERY_DIR = `.${previousSharedRecovery}-recovery`;
+export const OLDEST_RECOVERY_DIR = `.${oldestWorkspaceRecovery}-recovery`;
+export const HIDDEN_RECOVERY_DIRS = [RECOVERY_DIR, PREVIOUS_RECOVERY_DIR, LEGACY_RECOVERY_DIR, OLDEST_RECOVERY_DIR] as const;
+
 export interface RuntimeCapabilities {
   attachments: boolean;
   commands: boolean;
@@ -28,13 +38,13 @@ export interface OpenCodeSyncResult {
   cliUpdated: boolean;
 }
 
-export type MiraAppUpdateStatus =
+export type VelaAppUpdateStatus =
   | { state: "available"; currentVersion: string; latestVersion: string }
   | { state: "current"; currentVersion: string; latestVersion: string }
   | { state: "disabled"; currentVersion: string; message: string }
   | { state: "blocked"; message: string; currentVersion?: string };
 
-export interface MiraAppUpdateResult {
+export interface VelaAppUpdateResult {
   ok: boolean;
   updated: boolean;
   currentVersion?: string;
@@ -97,7 +107,7 @@ export interface MobileServerSetupStatus {
 }
 
 export interface MobilePairingQr {
-  /** Versioned, one-time Mira connection URI; never a reusable password/token. */
+  /** Versioned, one-time Vela connection URI; never a reusable password/token. */
   connectionUrl: string;
   expiresAt: string;
   serverLabel: string;

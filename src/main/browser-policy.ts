@@ -1,6 +1,6 @@
 import type { WebPreferences } from "electron";
 
-export const BROWSER_PARTITION = "mira-browser";
+export const BROWSER_PARTITION = "vela-browser";
 
 export function isAllowedBrowserUrl(value: string): boolean {
   try {

@@ -63,11 +63,11 @@ const EDITOR_OPTIONS = {
 };
 
 function overflowWidgetsHost(): HTMLElement {
-  let host = document.getElementById("mira-monaco-overflow");
+  let host = document.getElementById("vela-monaco-overflow");
   if (!host) {
     host = document.createElement("div");
-    host.id = "mira-monaco-overflow";
-    host.className = "monaco-editor mira-monaco-overflow-host";
+    host.id = "vela-monaco-overflow";
+    host.className = "monaco-editor vela-monaco-overflow-host";
     document.body.append(host);
   }
   return host;
@@ -312,8 +312,8 @@ function EditorWithSave({
         <div className="conflict-banner">
           <span>
             {tab.conflict.deleted
-              ? "This file was deleted outside Mira. Your edits are safe and saving is paused."
-              : "This file changed outside Mira. Your edits are safe and saving is paused."}
+              ? "This file was deleted outside Vela. Your edits are safe and saving is paused."
+              : "This file changed outside Vela. Your edits are safe and saving is paused."}
           </span>
           <div className="conflict-actions">
             <button onClick={() => reloadTab(tab.path)}>Reload disk version</button>
@@ -328,7 +328,7 @@ function EditorWithSave({
       )}
 
       <Editor
-        theme={`mira-${theme}`}
+        theme={`vela-${theme}`}
         language={language}
         path={tab.path}
         defaultValue={tab.content}
@@ -413,7 +413,7 @@ function EditorGroupActions({
         type="button"
         className="editor-group-action"
         aria-label={splitLabel}
-        title={groupCount >= EDITOR_GROUP_IDS.length ? "Mira supports up to four editor groups" : splitLabel}
+        title={groupCount >= EDITOR_GROUP_IDS.length ? "Vela supports up to four editor groups" : splitLabel}
         disabled={groupCount >= EDITOR_GROUP_IDS.length}
         onClick={() => onSplit(id)}
       ><SplitRightIcon /></button>

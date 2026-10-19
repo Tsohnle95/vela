@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage } from "@shared/types";
 import { StoreProvider, useCtxMenu, useStore, type CtxMenuApi } from "./store";
 
@@ -25,7 +25,7 @@ function MenuProbe(): ReactNode {
   return null;
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -47,7 +47,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     readFile: async () => "",
     listDir: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("store context menu isolation", () => {
@@ -63,7 +63,7 @@ describe("store context menu isolation", () => {
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    window.openshell = api();
+    window.vela = api();
     await act(async () =>
       root.render(
         <StoreProvider>

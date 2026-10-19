@@ -65,7 +65,7 @@ describe("TerminalTray integration", () => {
     mockRequestReveal.mockClear();
     activePath = null;
     onClose.mockClear();
-    window.openshell = {
+    window.vela = {
       onMessage: (callback: (message: BackendMessage) => void) => { listener = callback; return () => {}; },
       terminalStart: vi.fn(async (_workspace, id) => {
         terminalId = id;
@@ -78,7 +78,7 @@ describe("TerminalTray integration", () => {
       viteServers: vi.fn(async () => [] as ViteServerInfo[]),
       viteStop: vi.fn(async () => {}),
       viteStopAll: vi.fn(async () => {})
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -121,7 +121,7 @@ describe("TerminalTray integration", () => {
     focusTerminal.mockClear();
     await act(async () => container.querySelector<HTMLElement>(".terminal-tab")!.click());
     expect(focusTerminal).toHaveBeenLastCalledWith(firstShell);
-    expect(window.openshell.terminalStart).toHaveBeenCalledTimes(2);
+    expect(window.vela.terminalStart).toHaveBeenCalledTimes(2);
   });
 
   it("numbers the remaining shell from one after earlier tabs close", async () => {
@@ -147,7 +147,7 @@ describe("TerminalTray integration", () => {
     await act(async () => container.querySelector<HTMLElement>(".terminal-tab")!.click());
     await act(async () => root.render(render("terminal")));
     expect(focusTerminal).toHaveBeenLastCalledWith(firstShell);
-    expect(window.openshell.terminalStart).toHaveBeenCalledOnce();
+    expect(window.vela.terminalStart).toHaveBeenCalledOnce();
   });
 
   it("returns to the terminal view when adding a shell from Problems", async () => {
@@ -155,7 +155,7 @@ describe("TerminalTray integration", () => {
     await act(async () => root.render(<TerminalTray height={240} snapped={false} activePanel="problems" onPanelChange={onPanelChange} onClose={onClose} onExpand={() => {}} />));
     await act(async () => container.querySelector<HTMLButtonElement>('[title="New terminal"]')!.click());
     expect(onPanelChange).toHaveBeenLastCalledWith("terminal");
-    expect(window.openshell.terminalStart).toHaveBeenCalledTimes(2);
+    expect(window.vela.terminalStart).toHaveBeenCalledTimes(2);
   });
 
   it("shows detailed W3C diagnostics in the terminal area's Problems panel", async () => {
@@ -203,7 +203,7 @@ describe("TerminalTray integration", () => {
 
     expect(container.textContent).toContain("No terminal open");
     expect(onClose).toHaveBeenCalledOnce();
-    expect(window.openshell.terminalStop).toHaveBeenCalledWith(session.workspace, terminalId);
+    expect(window.vela.terminalStop).toHaveBeenCalledWith(session.workspace, terminalId);
   });
 
   it("opens a requested terminal in the selected workspace folder", async () => {
@@ -217,14 +217,14 @@ describe("TerminalTray integration", () => {
       />
     ));
 
-    expect(window.openshell.terminalStart).toHaveBeenCalledWith(
+    expect(window.vela.terminalStart).toHaveBeenCalledWith(
       session.workspace,
       "term-aaaaaaaa-aaaa-4aaa-8aaa-000000000002",
       "packages/web",
       100,
       24
     );
-    expect(window.openshell.terminalInput).toHaveBeenCalledWith(
+    expect(window.vela.terminalInput).toHaveBeenCalledWith(
       session.workspace,
       "term-aaaaaaaa-aaaa-4aaa-8aaa-000000000002",
       "cd -- '/workspace/packages/web'\r"
@@ -246,7 +246,7 @@ describe("TerminalTray integration", () => {
 
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
 
-    expect(window.openshell.terminalStart).toHaveBeenCalledWith(
+    expect(window.vela.terminalStart).toHaveBeenCalledWith(
       session.workspace,
       "term-aaaaaaaa-aaaa-4aaa-8aaa-000000000001",
       "",
@@ -264,17 +264,17 @@ describe("TerminalTray integration", () => {
   });
 
   it("starts a server for the panel workspace when the server button is clicked", async () => {
-    window.openshell = {
-      ...window.openshell,
+    window.vela = {
+      ...window.vela,
       viteServers: vi.fn(async () => [viteServer("")])
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-testid="vite-btn"]')!.click();
       await flush();
     });
 
-    expect(window.openshell.viteToggle).toHaveBeenCalledWith(session.workspace);
+    expect(window.vela.viteToggle).toHaveBeenCalledWith(session.workspace);
     const button = container.querySelector<HTMLButtonElement>('[data-testid="vite-btn"]')!;
     expect(button.title).toBe("http://127.0.0.1:5199/ — click to stop, right-click to manage");
     expect(button.classList.contains("running")).toBe(true);
@@ -288,19 +288,19 @@ describe("TerminalTray integration", () => {
       await flush();
     });
 
-    expect(window.openshell.viteToggle).toHaveBeenCalledWith(session.workspace, "pages/demo.html");
+    expect(window.vela.viteToggle).toHaveBeenCalledWith(session.workspace, "pages/demo.html");
   });
 
   it("stops the current page server when the running button is clicked again", async () => {
     const running = [viteServer("")];
-    window.openshell = {
-      ...window.openshell,
+    window.vela = {
+      ...window.vela,
       viteServers: vi.fn(async () => [...running]),
       viteToggle: vi.fn(async () => {
         running.length = 0;
         return { running: false };
       })
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
     await act(async () => { await flush(); });
@@ -312,18 +312,18 @@ describe("TerminalTray integration", () => {
       await flush();
     });
 
-    expect(window.openshell.viteToggle).toHaveBeenCalledWith(session.workspace);
+    expect(window.vela.viteToggle).toHaveBeenCalledWith(session.workspace);
     expect(button.classList.contains("running")).toBe(false);
     expect(container.querySelector(".terminal-notice")?.textContent).toBe("Vite server stopped");
   });
 
   it("shows the actionable Vite startup error", async () => {
-    window.openshell = {
-      ...window.openshell,
+    window.vela = {
+      ...window.vela,
       viteToggle: vi.fn(async () => {
         throw new Error("Vite is running, but no page was found at /");
       })
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-testid="vite-btn"]')!.click();
@@ -337,10 +337,10 @@ describe("TerminalTray integration", () => {
   it("disables the server button while the server starts", async () => {
     let resolveToggle!: (result: ViteToggleResult) => void;
     const pending = new Promise<ViteToggleResult>((resolve) => { resolveToggle = resolve; });
-    window.openshell = {
-      ...window.openshell,
+    window.vela = {
+      ...window.vela,
       viteToggle: vi.fn(() => pending)
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
     const button = container.querySelector<HTMLButtonElement>('[data-testid="vite-btn"]')!;
@@ -357,11 +357,11 @@ describe("TerminalTray integration", () => {
 
   it("opens a stop menu on right-click without stopping yet", async () => {
     const viteStop = vi.fn(async () => {});
-    window.openshell = {
-      ...window.openshell,
+    window.vela = {
+      ...window.vela,
       viteServers: vi.fn(async () => [viteServer("", "/workspace/docs")]),
       viteStop
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
     await act(async () => { await flush(); });
@@ -381,11 +381,11 @@ describe("TerminalTray integration", () => {
     const viteStop = vi.fn(async (serverID: string) => {
       running.splice(running.findIndex((item) => item.id === serverID), 1);
     });
-    window.openshell = {
-      ...window.openshell,
+    window.vela = {
+      ...window.vela,
       viteServers: vi.fn(async () => [...running]),
       viteStop
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
     await act(async () => { await flush(); });
@@ -410,11 +410,11 @@ describe("TerminalTray integration", () => {
   it("stops every server from the menu when more than one is running", async () => {
     const servers = [viteServer("a.html"), viteServer("", "/workspace/docs")];
     const viteStopAll = vi.fn(async () => { servers.length = 0; });
-    window.openshell = {
-      ...window.openshell,
+    window.vela = {
+      ...window.vela,
       viteServers: vi.fn(async () => [...servers]),
       viteStopAll
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<TerminalTray height={240} snapped={false} onClose={onClose} onExpand={() => {}} />));
     await act(async () => { await flush(); });

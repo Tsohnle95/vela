@@ -118,7 +118,7 @@ describe("composer agent menu", () => {
     expect(openPicker).toHaveBeenCalledOnce();
     expect(container.querySelector(".composer-chip-break")).toBeNull();
 
-    vi.stubGlobal("openshell", { getPathForFile: vi.fn(() => "/workspace/notes.txt") });
+    vi.stubGlobal("vela", { getPathForFile: vi.fn(() => "/workspace/notes.txt") });
     Object.defineProperty(input, "files", { configurable: true, value: [new File(["notes"], "notes.txt")] });
     await act(async () => input.dispatchEvent(new Event("change", { bubbles: true })));
     expect(container.querySelector(".composer-attachment")?.textContent).toContain("notes.txt");

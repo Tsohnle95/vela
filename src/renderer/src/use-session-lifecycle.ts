@@ -5,7 +5,7 @@ import type { SaveSnapshot } from "./editor-persistence";
 
 import type { SessionReadView } from "./store-contract";
 
-type ReopenedSnapshot = Awaited<ReturnType<typeof window.openshell.openSessionById>>;
+type ReopenedSnapshot = Awaited<ReturnType<typeof window.vela.openSessionById>>;
 const lifecycleAuthority: unique symbol = Symbol("session lifecycle authority");
 
 interface LifecycleInternals {
@@ -180,7 +180,7 @@ export function useSessionLifecycle(
     if (!closing && active) {
       removeActiveSession(sessionID);
       dropClosedActivity(sessionID);
-      void window.openshell.closeSession(active.workspace).catch(() => {});
+      void window.vela.closeSession(active.workspace).catch(() => {});
       return;
     }
     const ejected = ejectPanelFromView(sessionID);
@@ -191,7 +191,7 @@ export function useSessionLifecycle(
       forgetClosedSessionRecords(sessionID);
     }
     if (!keepActive) {
-      void window.openshell.closeSession(ejected.workspace).catch(() => {});
+      void window.vela.closeSession(ejected.workspace).catch(() => {});
     }
   }, [removeActiveSession, ejectPanelFromView, activeSessionFor, forgetClosedSessionRecords, dropClosedActivity, busyFor]);
 
@@ -237,7 +237,7 @@ export function useSessionLifecycle(
     if (!window.confirm(`Delete session "${title}"? This permanently removes it from opencode and cannot be undone.`)) return;
     try {
       if (panel) closePanel(sessionID);
-      await window.openshell.deleteSession(sessionID);
+      await window.vela.deleteSession(sessionID);
       toast(`Deleted session ${title}`);
       void loadSessions();
     } catch (err) {
@@ -283,7 +283,7 @@ export function useSessionLifecycle(
 
   const swapPanelTo = useCallback((workspace: WorkspaceIdentity, info: SessionInfo): void => {
     if (!replacePanel(workspace, info)) {
-      void window.openshell.closeSession(info.workspace).catch(() => {});
+      void window.vela.closeSession(info.workspace).catch(() => {});
       return;
     }
     launchSessionContent(info);
@@ -295,9 +295,9 @@ export function useSessionLifecycle(
       const request = ++requestSeqRef.current;
       const activation = ++activationSeqRef.current;
       try {
-        const info = await window.openshell.openSession(dir, request);
+        const info = await window.vela.openSession(dir, request);
         if (activation !== activationSeqRef.current) {
-          await window.openshell.closeSession(info.workspace).catch(() => {});
+          await window.vela.closeSession(info.workspace).catch(() => {});
           return null;
         }
         if (dir !== info.directory) replaceSavedWorkspace(dir, info.directory);
@@ -322,9 +322,9 @@ export function useSessionLifecycle(
       const request = ++requestSeqRef.current;
       const activation = activationSeqRef.current;
       try {
-        const info = await window.openshell.openSession(dir, request);
+        const info = await window.vela.openSession(dir, request);
         if (activation !== activationSeqRef.current) {
-          await window.openshell.closeSession(info.workspace).catch(() => {});
+          await window.vela.closeSession(info.workspace).catch(() => {});
           return;
         }
         hideNestedWorkspace(dir);
@@ -356,10 +356,10 @@ export function useSessionLifecycle(
     const request = ++requestSeqRef.current;
     const activation = activationSeqRef.current;
     try {
-      const info = await window.openshell.selectFolder(request);
+      const info = await window.vela.selectFolder(request);
       if (!info) return null;
       if (activation !== activationSeqRef.current) {
-        await window.openshell.closeSession(info.workspace).catch(() => {});
+        await window.vela.closeSession(info.workspace).catch(() => {});
         return null;
       }
       attachPanel(info);
@@ -384,7 +384,7 @@ export function useSessionLifecycle(
         const info = await pick(request);
         if (!info) return;
         if (activation !== activationSeqRef.current) {
-          await window.openshell.closeSession(info.workspace).catch(() => {});
+          await window.vela.closeSession(info.workspace).catch(() => {});
           return;
         }
         swapPanelTo(workspace, info);
@@ -399,13 +399,13 @@ export function useSessionLifecycle(
 
   const selectPanelDirectory = useCallback(
     (workspace: WorkspaceIdentity) =>
-      swapPanelWorkspace(workspace, (request) => window.openshell.selectFolder(request)),
+      swapPanelWorkspace(workspace, (request) => window.vela.selectFolder(request)),
     [swapPanelWorkspace]
   );
 
   const changePanelDirectory = useCallback(
     (workspace: WorkspaceIdentity, dir: string) =>
-      swapPanelWorkspace(workspace, (request) => window.openshell.openSession(dir, request)),
+      swapPanelWorkspace(workspace, (request) => window.vela.openSession(dir, request)),
     [swapPanelWorkspace]
   );
 
@@ -413,10 +413,10 @@ export function useSessionLifecycle(
     const request = ++requestSeqRef.current;
     const activation = ++activationSeqRef.current;
     try {
-      const info = await window.openshell.selectFolder(request);
+      const info = await window.vela.selectFolder(request);
       if (info) {
         if (activation !== activationSeqRef.current) {
-          await window.openshell.closeSession(info.workspace).catch(() => {});
+          await window.vela.closeSession(info.workspace).catch(() => {});
           return;
         }
         userActivatedRef.current = true;
@@ -452,17 +452,17 @@ export function useSessionLifecycle(
       }
       try {
         const reopened = silent
-          ? await window.openshell.openSessionById(sessionID, request)
-          : await window.openshell.openSessionById(sessionID, request, undefined, true);
+          ? await window.vela.openSessionById(sessionID, request)
+          : await window.vela.openSessionById(sessionID, request, undefined, true);
         if (!silent && activation !== activationSeqRef.current) {
-          await window.openshell.closeSession(reopened.session.workspace).catch(() => {});
+          await window.vela.closeSession(reopened.session.workspace).catch(() => {});
           return null;
         }
         if (silent) {
           attachPanel(reopened.session, false);
         } else if (targetWorkspace) {
           if (!replacePanel(targetWorkspace, reopened.session)) {
-            await window.openshell.closeSession(reopened.session.workspace).catch(() => {});
+            await window.vela.closeSession(reopened.session.workspace).catch(() => {});
             return null;
           }
         } else {
@@ -513,7 +513,7 @@ export function useSessionLifecycle(
   const attachFileWorkspace = useCallback(
     async (result: OpenFileWorkspaceResult, activation: number): Promise<SessionInfo | null> => {
       if (activation !== activationSeqRef.current) {
-        await window.openshell.closeSession(result.session.workspace).catch(() => {});
+        await window.vela.closeSession(result.session.workspace).catch(() => {});
         return null;
       }
       userActivatedRef.current = true;
@@ -536,7 +536,7 @@ export function useSessionLifecycle(
       const request = ++requestSeqRef.current;
       const activation = ++activationSeqRef.current;
       try {
-        const result = await window.openshell.selectFile(request);
+        const result = await window.vela.selectFile(request);
         if (!result) return;
         const info = await attachFileWorkspace(result, activation);
         if (info) toast(`Opened ${result.path}`);
@@ -551,7 +551,7 @@ export function useSessionLifecycle(
       const request = ++requestSeqRef.current;
       const activation = ++activationSeqRef.current;
       try {
-        const result = await window.openshell.openFileWorkspace(file, request);
+        const result = await window.vela.openFileWorkspace(file, request);
         const info = await attachFileWorkspace(result, activation);
         if (info) toast(`Opened ${result.path}`);
         return info;

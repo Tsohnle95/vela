@@ -7,12 +7,12 @@ vi.mock("electron", () => ({ shell: { trashItem: vi.fn(), openPath: vi.fn() } })
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 
 const workspace: WorkspaceIdentity = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
 
-function fixture(interrupt: () => Promise<unknown>): OpenShellBackend {
-  const backend = new OpenShellBackend();
+function fixture(interrupt: () => Promise<unknown>): VelaBackend {
+  const backend = new VelaBackend();
   const context: SessionContext = {
     workspace,
     sessionID: "session",
@@ -36,7 +36,7 @@ function fixture(interrupt: () => Promise<unknown>): OpenShellBackend {
   return backend;
 }
 
-describe("OpenShellBackend interrupt", () => {
+describe("VelaBackend interrupt", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });

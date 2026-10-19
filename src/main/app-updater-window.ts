@@ -24,7 +24,7 @@ export function appUpdaterWindowDocument(): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
-  <title>Updating Mira</title>
+  <title>Updating Vela</title>
   <style>
     :root { color-scheme: dark; font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #111214; color: #f1f1f2; }
     * { box-sizing: border-box; }
@@ -49,22 +49,22 @@ export function appUpdaterWindowDocument(): string {
 </head>
 <body>
   <main role="status" aria-live="polite">
-    <div class="brand"><div class="mark" aria-hidden="true">O</div><div><p class="eyebrow">MIRA UPDATE</p><h1 id="title">Preparing update…</h1></div></div>
+    <div class="brand"><div class="mark" aria-hidden="true">O</div><div><p class="eyebrow">VELA UPDATE</p><h1 id="title">Preparing update…</h1></div></div>
     <p id="message">Checking the latest published GitHub release.</p>
     <div class="track" id="track" aria-hidden="true"><span></span></div>
-    <p class="foot" id="foot">Mira will close while the downloaded release is installed.</p>
-    <button class="return" id="return" type="button" hidden onclick="location.hash = 'return-to-mira'">Return to Mira</button>
+    <p class="foot" id="foot">Vela will close while the downloaded release is installed.</p>
+    <button class="return" id="return" type="button" hidden onclick="location.hash = 'return-to-vela'">Return to Vela</button>
   </main>
   <script>
-    window.setMiraUpdaterStatus = (status) => {
+    window.setVelaUpdaterStatus = (status) => {
       document.getElementById("title").textContent = status.title;
       document.getElementById("message").textContent = status.message;
       const track = document.getElementById("track");
       track.className = status.tone === "success" ? "track success" : status.tone === "error" ? "track error" : "track";
       document.getElementById("return").hidden = status.tone !== "error";
       document.getElementById("foot").textContent = status.tone === "error"
-        ? "Return to Mira to close this window and retry from Settings."
-        : status.tone === "success" ? "Mira is restarting with the installed release." : "Mira will close while the downloaded release is installed.";
+        ? "Return to Vela to close this window and retry from Settings."
+        : status.tone === "success" ? "Vela is restarting with the installed release." : "Vela will close while the downloaded release is installed.";
     };
   </script>
 </body>
@@ -78,7 +78,7 @@ export function appUpdaterWindowUrl(): string {
 export function setAppUpdaterWindowStatus(window: BrowserWindow, status: AppUpdaterWindowStatus): void {
   if (window.isDestroyed() || window.webContents.isDestroyed()) return;
   const argument = JSON.stringify(status);
-  void window.webContents.executeJavaScript(`window.setMiraUpdaterStatus?.(${argument})`).catch(() => {});
+  void window.webContents.executeJavaScript(`window.setVelaUpdaterStatus?.(${argument})`).catch(() => {});
 }
 
 export function briefFilePath(value: string): string {

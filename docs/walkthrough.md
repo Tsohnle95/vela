@@ -5,7 +5,7 @@
 > invariants. If this walkthrough conflicts with a canonical owner, fix the
 > walkthrough rather than creating a second truth.
 
-This is the moving-picture map of Mira. It intentionally stays concise: its
+This is the moving-picture map of Vela. It intentionally stays concise: its
 job is to route an unfamiliar agent to the correct connection points and source,
 not to restate every invariant already owned by `architecture.md`, `main.md`,
 `renderer.md`, `preload.md`, and `events.md`.
@@ -15,7 +15,7 @@ not to restate every invariant already owned by `architecture.md`, `main.md`,
 ```text
 RENDERER (React / Monaco)
   store + components
-       │ window.openshell.* / onMessage
+       │ window.vela.* / onMessage
        ▼
 PRELOAD
   src/preload/index.ts
@@ -34,7 +34,7 @@ Five connection points cover most debugging:
 
 | # | Connection | Follow |
 |---|---|---|
-| 1 | renderer → main calls | component/store action → `window.openshell.*` → preload wrapper → centralized trusted registrar → domain IPC handler / backend method |
+| 1 | renderer → main calls | component/store action → `window.vela.*` → preload wrapper → centralized trusted registrar → domain IPC handler / backend method |
 | 2 | main → renderer messages | backend/terminal emitter → `webContents.send("shell:message")` → preload `onMessage` → renderer store |
 | 3 | main → runtime request | backend/runtime manager → selected adapter / OpenCode client |
 | 4 | runtime → main stream | OpenCode SSE or runtime-native downlink → normalization → shared event vocabulary |
@@ -75,7 +75,7 @@ Folder flow:
 Welcome / Sessions action
 → selectFolder() or openSession(dir)
 → preload shell:* wrapper
-→ OpenShellBackend.openSession()
+→ VelaBackend.openSession()
 → runtime session create
 → activateSession()
 → { kind: "session" }
@@ -98,7 +98,7 @@ Request path:
 
 ```text
 Composer / store sendPrompt()
-→ window.openshell.prompt(...)
+→ window.vela.prompt(...)
 → backend.prompt()
 → active runtime adapter
 ```
@@ -122,7 +122,7 @@ Read next: `events.md` for event semantics; `renderer.md` for chat/stream state.
 
 ## File changes and Diff
 
-Observed workspace changes enter through tool pre-snapshots, Git fallback, Mira
+Observed workspace changes enter through tool pre-snapshots, Git fallback, Vela
 mutations, and filesystem watching. Main owns the baseline and emits an
 identity-bound `file-update`; renderer merges that into the Changes list and any
 open tab.
@@ -176,7 +176,7 @@ Read next: `events.md`, `renderer.md`, `main.md`.
 Runtime selection enters at workspace/session opening and becomes part of the
 session's runtime identity. Runtime-owned operations (prompt/history/model/etc.)
 route through the retained adapter; core workspace editing/watching remains in
-Mira.
+Vela.
 
 Model/agent catalogs and selections are session-scoped. UI controls depend on
 the active runtime capability manifest; unsupported capabilities should be
@@ -224,7 +224,7 @@ while main remains alive, active backend contexts can be restored into the new
 renderer.
 
 Main also owns the DevTools integration and CSS-source navigation. Source links
-are resolved only against Mira's canonical application root and then opened
+are resolved only against Vela's canonical application root and then opened
 through the normal external-file workflow; they never search whichever user
 workspace happens to be active.
 
@@ -233,7 +233,7 @@ Canonical owner: `main.md` (window/trust/DevTools details).
 ## One rule behind it all
 
 The renderer has no direct Node capability. Privileged work crosses
-`window.openshell` into trusted main-process handlers; runtime-native details are
+`window.vela` into trusted main-process handlers; runtime-native details are
 normalized before they cross into renderer state.
 
 When adding a cross-process feature, trace the complete path rather than editing

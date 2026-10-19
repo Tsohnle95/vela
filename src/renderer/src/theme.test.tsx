@@ -40,7 +40,7 @@ describe("theme and UI shell", () => {
     expect(ctx.uiShell).toBe("codex");
     expect(document.documentElement.dataset.shell).toBe("codex");
     expect(document.documentElement.dataset.theme).toBe("codex");
-    expect(window.localStorage.getItem("mira.ui")).toBe("codex");
+    expect(window.localStorage.getItem("vela.ui")).toBe("codex");
   });
 
   it("switches shells without touching the palette, and restores both", async () => {
@@ -65,7 +65,7 @@ describe("theme and UI shell", () => {
 
     await act(async () => { ctx.setExperimentalArt(false); });
     expect(document.documentElement.dataset.experimentalArt).toBe("false");
-    expect(window.localStorage.getItem("mira.experimentalArt")).toBe("false");
+    expect(window.localStorage.getItem("vela.experimentalArt")).toBe("false");
 
     await act(async () => root.unmount());
     root = createRoot(container);

@@ -4,14 +4,14 @@ Status: ACTIVE
 
 ## Goal
 
-Make Mira Desktop's Mobile Setup a clear walkthrough that can generate a real pairing QR for Mira Mobile.
+Make Vela Desktop's Mobile Setup a clear walkthrough that can generate a real pairing QR for Vela Mobile.
 
 ## Acceptance criteria
 
 - [ ] Mobile Setup shows the exact phone steps and a QR generated from the companion server's one-time pairing session.
 - [ ] The desktop renderer never receives the mobile UI password or a reusable device token.
 - [ ] Missing companion-server setup and startup failures have actionable explanations.
-- [ ] Existing Mira main/preload trust boundaries and app behavior remain unchanged.
+- [ ] Existing Vela main/preload trust boundaries and app behavior remain unchanged.
 
 ## Relevant context
 
@@ -37,13 +37,13 @@ Make Mira Desktop's Mobile Setup a clear walkthrough that can generate a real pa
 ## Validation plan
 
 - Targeted checks: focused Vitest suites, `npm run typecheck`, `npm run build:compile`.
-- Integration/platform/manual: scan generated desktop QR with Android Mira Mobile when the device route is available.
+- Integration/platform/manual: scan generated desktop QR with Android Vela Mobile when the device route is available.
 - Final gate: `npm run check`.
 
 ## Decisions
 
-- 2026-09-28 — Use the pairing URI returned by `mira-mobile` rather than duplicate its versioned payload encoding in the Electron renderer.
-- 2026-09-28 — In development, find a sibling `mira-mobile` checkout before asking users to configure a path manually.
+- 2026-09-28 — Use the pairing URI returned by `vela-mobile` rather than duplicate its versioned payload encoding in the Electron renderer.
+- 2026-09-28 — In development, find a sibling `vela-mobile` checkout before asking users to configure a path manually.
 
 ## Open risks / blockers
 

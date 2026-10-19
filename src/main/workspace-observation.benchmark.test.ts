@@ -6,15 +6,15 @@ import { createHash } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { expect, it, vi } from "vitest";
 import { LatestGeneration } from "@shared/generation";
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 
 vi.mock("electron", () => ({ app: { getPath: () => tmpdir() }, shell: {} }));
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-it.skipIf(process.env.MIRA_OBSERVATION_BENCHMARK !== "1")("measures identical native observation workloads", async () => {
-  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "mira-observation-bench-")));
-  const backend = new OpenShellBackend();
+it.skipIf(process.env.VELA_OBSERVATION_BENCHMARK !== "1")("measures identical native observation workloads", async () => {
+  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "vela-observation-bench-")));
+  const backend = new VelaBackend();
   const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
   const context: SessionContext["watchContext"] = {
     root, workspace, sessionID: "benchmark", snapshots: new Map(), lastKnown: new Map(), hasGit: false, timers: new Map()
@@ -49,9 +49,9 @@ it.skipIf(process.env.MIRA_OBSERVATION_BENCHMARK !== "1")("measures identical na
     }
     expect(emissions).toBe(20);
     expect(context.snapshots.size).toBe(20);
-    console.log(`MIRA_OBSERVATION_RESULT ${JSON.stringify({
-      variant: process.env.MIRA_BENCHMARK_VARIANT ?? "current",
-      implementation: state.observation ? "WorkspaceObservation" : "OpenShellBackend",
+    console.log(`VELA_OBSERVATION_RESULT ${JSON.stringify({
+      variant: process.env.VELA_BENCHMARK_VARIANT ?? "current",
+      implementation: state.observation ? "WorkspaceObservation" : "VelaBackend",
       workload: { files: files.length, eventsPerSample: 200, warmups: 1, samples: 8 },
       fixture: { bytesPerFile: Buffer.byteLength(content), sha256: createHash("sha256").update(content).digest("hex") },
       retained: { snapshots: context.snapshots.size, lastKnown: context.lastKnown.size, identities: context.identities?.size ?? 0, timers: context.timers.size },

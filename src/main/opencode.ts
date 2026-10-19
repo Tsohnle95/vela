@@ -186,7 +186,7 @@ function exactServerVersion(version: string | null | undefined): string | null {
 
 export const MIN_SUPPORTED_SERVER_MAJOR = 2;
 
-/** Providers Mira surfaces in Settings, in display order. Every other
+/** Providers Vela surfaces in Settings, in display order. Every other
  *  integration the runtime catalog reports stays hidden. Command Code ships as
  *  a community plugin and plugin releases have registered both `commandcode`
  *  and `command-code` as the auth provider id, so both are accepted. */
@@ -209,7 +209,7 @@ export class SessionWorkspaceNotFoundError extends Error {
   }
 }
 
-export class OpenShellBackend {
+export class VelaBackend {
   private client: Client | null = null;
   private endpoint: Endpoint | null = null;
   private serviceFile: string | undefined = undefined;
@@ -325,7 +325,7 @@ export class OpenShellBackend {
   }
 
   private async discoverEndpoint(version: (value: string) => boolean): Promise<{ endpoint: Endpoint; file?: string } | null> {
-    const files = [undefined, ...OpenShellBackend.discoverFiles()];
+    const files = [undefined, ...VelaBackend.discoverFiles()];
     for (const file of files) {
       const endpoint = await Service.discover({ ...(file ? { file } : {}), version }).catch(() => null);
       if (endpoint) return { endpoint, ...(file ? { file } : {}) };
@@ -357,7 +357,7 @@ export class OpenShellBackend {
 
   private async installedOpenCodeVersion(): Promise<string> {
     const version = exactServerVersion(await this.installedServerVersion());
-    if (!version) throw new Error("OpenCode was not found on Mira's PATH. Install it or correct Mira's PATH, then try again.");
+    if (!version) throw new Error("OpenCode was not found on Vela's PATH. Install it or correct Vela's PATH, then try again.");
     return version;
   }
 
@@ -422,7 +422,7 @@ export class OpenShellBackend {
         throw new Error("OpenCode could not identify its install method. Update it through its package manager, then use Sync installed version.");
       }
       if (serverMajor(version) !== MIN_SUPPORTED_SERVER_MAJOR) {
-        throw new Error(`OpenCode ${version} is installed, but Mira currently requires OpenCode V2.`);
+        throw new Error(`OpenCode ${version} is installed, but Vela currently requires OpenCode V2.`);
       }
 
       const serviceFile = this.serviceFile;
@@ -480,7 +480,7 @@ export class OpenShellBackend {
       (error) => this.emit({
         kind: "event",
         type: "global.error",
-        data: { error: normalizeFailure(error, "MIRA_EVENT_LOOP_FAILED", "Background event loop failed") }
+        data: { error: normalizeFailure(error, "VELA_EVENT_LOOP_FAILED", "Background event loop failed") }
       })
     );
   }
@@ -507,7 +507,7 @@ export class OpenShellBackend {
               type: "session.error",
               data: {
                 sessionID: targetSessionID,
-                error: { code: event.code ?? "MIRA_RUNTIME_EXECUTION_FAILED", message: event.message }
+                error: { code: event.code ?? "VELA_RUNTIME_EXECUTION_FAILED", message: event.message }
               }
             });
           } else if (event.type === "stream.event") {
@@ -528,7 +528,7 @@ export class OpenShellBackend {
         }
       } catch (error) {
         if (!controller.signal.aborted) {
-          const failure = normalizeFailure(error, "MIRA_RUNTIME_STREAM_FAILED", "Runtime event stream failed");
+          const failure = normalizeFailure(error, "VELA_RUNTIME_STREAM_FAILED", "Runtime event stream failed");
           this.emit({ kind: "event", type: "session.error", data: { sessionID, error: failure } });
         }
       } finally {
@@ -576,7 +576,7 @@ export class OpenShellBackend {
    *  endpoint until an app restart. A stream that delivers an event resets the
    *  streak (see stream-pipeline), so transient reconnects never drop it. */
   private handleStreamFailure(failures: number): void {
-    if (failures >= OpenShellBackend.streamFailureLimit && this.client) {
+    if (failures >= VelaBackend.streamFailureLimit && this.client) {
       this.client = null;
     }
   }
@@ -587,7 +587,7 @@ export class OpenShellBackend {
     this.emit({
       kind: "event",
       type: "global.error",
-      data: { error: normalizeFailure(reason, "MIRA_STREAM_FAILED", "Live event stream failed") }
+      data: { error: normalizeFailure(reason, "VELA_STREAM_FAILED", "Live event stream failed") }
     });
   }
 
@@ -625,14 +625,14 @@ export class OpenShellBackend {
       const eventData = typed.data ?? typed.properties;
       let forwardedEvent: RawStreamEvent = evt;
       // The global daemon is shared with external `opencode` terminal
-      // sessions. Interactive prompts for sessions Mira never opened must
+      // sessions. Interactive prompts for sessions Vela never opened must
       // not reach the renderer, where they would otherwise be misattributed
       // to the focused panel. (Child/subagent transcript streams still flow;
       // the renderer keeps them in separate stored state.)
       if (type === "form.created" || type === "form.replied" || type === "form.cancelled") {
         const ownerID = eventSessionID(eventData, evt, typed.location);
         if (!ownerID || !this.contextBySessionID(ownerID)) {
-          // A form can be raised by a session Mira never opened: a delegated
+          // A form can be raised by a session Vela never opened: a delegated
           // child session, a location-scoped "global" form, or an external
           // `opencode` TUI sharing the directory. Route it to the panels for
           // that location so the prompt is answerable in the GUI rather than
@@ -640,7 +640,7 @@ export class OpenShellBackend {
           // workspace still have no matching location and are dropped.
           const ownerSessionIDs = await this.sessionIDsAtLocation(typed.location);
           if (ownerSessionIDs.length === 0) continue;
-          forwardedEvent = { ...evt, miraSessionIDs: ownerSessionIDs } as RawStreamEvent;
+          forwardedEvent = { ...evt, velaSessionIDs: ownerSessionIDs } as RawStreamEvent;
         }
       } else if (
         type === "permission.asked" || type === "permission.replied" ||
@@ -655,7 +655,7 @@ export class OpenShellBackend {
       try {
         await this.handleServerEvent(type, eventData, typed.location);
       } catch (error) {
-        const failure = normalizeFailure(error, "MIRA_EVENT_HANDLER_FAILED", `Failed handling ${type}`);
+        const failure = normalizeFailure(error, "VELA_EVENT_HANDLER_FAILED", `Failed handling ${type}`);
         const sessionID = eventSessionID(eventData, evt, typed.location);
         const data = { error: { ...failure, message: `${type}: ${failure.message}` }, eventType: type };
         this.emit(sessionID
@@ -1996,7 +1996,7 @@ export class OpenShellBackend {
     const expected = fileContent(expectedContent);
     const dir = path.dirname(abs);
     await fsp.mkdir(dir, { recursive: true });
-    const temporary = path.join(dir, `.mira-${randomUUID()}.tmp`);
+    const temporary = path.join(dir, `.vela-${randomUUID()}.tmp`);
     try {
       const handle = await fsp.open(temporary, "wx", 0o600);
       try {

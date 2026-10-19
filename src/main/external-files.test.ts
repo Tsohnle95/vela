@@ -13,7 +13,7 @@ vi.mock("electron", () => ({
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 import type { BackendMessage, FileBaseline, WorkspaceIdentity } from "@shared/types";
 import { LatestGeneration } from "@shared/generation";
 
@@ -24,10 +24,10 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-async function fixture(registerRoot = true): Promise<{ backend: OpenShellBackend; root: string; messages: BackendMessage[] }> {
-  const root = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-external-")));
+async function fixture(registerRoot = true): Promise<{ backend: VelaBackend; root: string; messages: BackendMessage[] }> {
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "vela-external-")));
   roots.push(root);
-  const backend = new OpenShellBackend();
+  const backend = new VelaBackend();
   const context = {
     root,
     sessionID: "session",
@@ -72,7 +72,7 @@ describe("resolveExternalOpen", () => {
 
   it("classifies an out-of-workspace file as standalone", async () => {
     const { backend, root } = await fixture();
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-outside-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-outside-")));
     roots.push(outside);
     await writeFile(path.join(outside, "notes.txt"), "notes");
     const result = await backend.resolveExternalOpen(workspace, path.join(outside, "notes.txt"));
@@ -87,7 +87,7 @@ describe("resolveExternalOpen", () => {
 
   it("rejects files larger than the workspace cap", async () => {
     const { backend, root } = await fixture();
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-huge-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-huge-")));
     roots.push(outside);
     const big = path.join(outside, "big.txt");
     await writeFile(big, "x".repeat(9 * 1024 * 1024));
@@ -123,7 +123,7 @@ describe("revealInFileManager", () => {
 describe("writeStandaloneFile", () => {
   it("atomically writes content to the real path", async () => {
     const { backend, root } = await fixture();
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-write-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-write-")));
     roots.push(outside);
     const file = path.join(outside, "tracked.txt");
     await writeFile(file, "old");
@@ -133,7 +133,7 @@ describe("writeStandaloneFile", () => {
 
   it("rejects a mismatched expected content unless overwriting", async () => {
     const { backend, root } = await fixture();
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-write-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-write-")));
     roots.push(outside);
     const file = path.join(outside, "tracked.txt");
     await writeFile(file, "actual");
@@ -145,7 +145,7 @@ describe("writeStandaloneFile", () => {
 
   it("recreates a file that was deleted on disk", async () => {
     const { backend, root } = await fixture();
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-write-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-write-")));
     roots.push(outside);
     const file = path.join(outside, "tracked.txt");
     await writeFile(file, "old");
@@ -158,7 +158,7 @@ describe("writeStandaloneFile", () => {
 describe("importExternal", () => {
   it("copies an external file into the workspace and seeds clean baselines", async () => {
     const { backend, root, messages } = await fixture();
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-import-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-import-")));
     roots.push(outside);
     const source = path.join(outside, "source.txt");
     await writeFile(source, "content");
@@ -174,7 +174,7 @@ describe("importExternal", () => {
 
   it("recursively copies a folder into a destination directory", async () => {
     const { backend, root } = await fixture();
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-import-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-import-")));
     roots.push(outside);
     await mkdir(path.join(outside, "pkg"));
     await writeFile(path.join(outside, "pkg", "a.ts"), "aa");
@@ -193,7 +193,7 @@ describe("importExternal", () => {
   it("refuses destinations that already exist and in-workspace sources", async () => {
     const { backend, root } = await fixture();
     await writeFile(path.join(root, "taken.txt"), "x");
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-import-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-import-")));
     roots.push(outside);
     await writeFile(path.join(outside, "taken.txt"), "y");
     await writeFile(path.join(root, "in-root.txt"), "z");
@@ -208,7 +208,7 @@ describe("importExternal", () => {
   it("imports into a deeper destination folder", async () => {
     const { backend, root } = await fixture();
     await mkdir(path.join(root, "sub"));
-    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-import-")));
+    const outside = await realpath(await mkdtemp(path.join(tmpdir(), "vela-import-")));
     roots.push(outside);
     await writeFile(path.join(outside, "deep.txt"), "deep");
     const results = await backend.importExternal(workspace, "sub/nested", [path.join(outside, "deep.txt")]);

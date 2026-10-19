@@ -78,7 +78,7 @@ function retryRecord(value: unknown): ChatMessageRecord["retry"] | undefined {
   if (!value || typeof value !== "object") return undefined;
   const raw = value as Record<string, unknown>;
   const attempt = Number(raw.attempt ?? 1);
-  const message = errorText((raw as { error?: unknown }).error, "MIRA_RETRY_SCHEDULED", "Retrying");
+  const message = errorText((raw as { error?: unknown }).error, "VELA_RETRY_SCHEDULED", "Retrying");
   const next = Number(raw.at ?? 0) || undefined;
   return { attempt, message, ...(next !== undefined ? { next } : {}) };
 }
@@ -122,7 +122,7 @@ export function applyChatEvent(draft: ChatDirectoryState, routedSessionID: strin
         : raw?.type === "idle"
           ? { type: "idle" }
           : raw?.type === "retry"
-            ? { type: "retry", attempt: Number(raw.attempt ?? 1), message: formatFailure(raw.message, "MIRA_RETRY_SCHEDULED", "Retrying"), next: Number(raw.next ?? 0) }
+            ? { type: "retry", attempt: Number(raw.attempt ?? 1), message: formatFailure(raw.message, "VELA_RETRY_SCHEDULED", "Retrying"), next: Number(raw.next ?? 0) }
             : raw?.type === "error"
               ? { type: "error" }
               : null;
@@ -139,7 +139,7 @@ export function applyChatEvent(draft: ChatDirectoryState, routedSessionID: strin
       return true;
     }
     case "session.error": {
-      const failed = failLatestIncomplete(draft, sessionID, data.error, "MIRA_SESSION_ERROR", "Session failed");
+      const failed = failLatestIncomplete(draft, sessionID, data.error, "VELA_SESSION_ERROR", "Session failed");
       return setChatSessionStatus(draft, sessionID, { type: "error" }) || failed;
     }
     case "message.updated": {
@@ -329,7 +329,7 @@ export function applyChatEvent(draft: ChatDirectoryState, routedSessionID: strin
         time: { created: previous?.time.created ?? event.created, completed: event.created },
         ...messagePresentation({ error: data.error }),
         finish: "error",
-        error: normalizeFailure(data.error, "MIRA_STEP_FAILED", "Step failed"),
+        error: normalizeFailure(data.error, "VELA_STEP_FAILED", "Step failed"),
         retry: undefined
       });
       setChatSessionStatus(draft, sessionID, { type: "error" });
@@ -571,7 +571,7 @@ export function applyChatEvent(draft: ChatDirectoryState, routedSessionID: strin
       if (!messageID) return false;
       const retry = {
         attempt: Number(data.attempt ?? 1),
-        message: errorText(data.error, "MIRA_RETRY_SCHEDULED", "Retrying"),
+        message: errorText(data.error, "VELA_RETRY_SCHEDULED", "Retrying"),
         next: Number(data.at ?? data.next ?? 0) || undefined
       };
       setChatSessionStatus(draft, sessionID, {
@@ -600,7 +600,7 @@ export function applyChatEvent(draft: ChatDirectoryState, routedSessionID: strin
     case "session.execution.failed":
     case "session.execution.interrupted": {
       const failed = event.type === "session.execution.failed"
-        ? failLatestIncomplete(draft, sessionID, data.error, "MIRA_EXECUTION_FAILED", "Execution failed")
+        ? failLatestIncomplete(draft, sessionID, data.error, "VELA_EXECUTION_FAILED", "Execution failed")
         : completeLatestIncomplete(draft, sessionID);
       return setChatSessionStatus(draft, sessionID, { type: "error" }) || failed;
     }

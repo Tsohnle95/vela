@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProviderIntegration } from "@shared/types";
-import type { OpenShellApi } from "../../../preload";
+import type { VelaApi } from "../../../preload";
 import { ProviderSettings } from "./ProviderSettings";
 
 const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
@@ -35,11 +35,11 @@ function type(input: HTMLInputElement, value: string): void {
 describe("ProviderSettings", () => {
   let container: HTMLDivElement;
   let root: Root;
-  let previousApi: OpenShellApi;
+  let previousApi: VelaApi;
 
   beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-    previousApi = window.openshell;
+    previousApi = window.vela;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -47,7 +47,7 @@ describe("ProviderSettings", () => {
 
   afterEach(() => {
     act(() => root.unmount());
-    window.openshell = previousApi;
+    window.vela = previousApi;
     container.remove();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -60,7 +60,7 @@ describe("ProviderSettings", () => {
       .mockResolvedValueOnce([openai, connected]);
     const connectProviderKey = vi.fn().mockResolvedValue(undefined);
     const refreshModels = vi.fn().mockResolvedValue(undefined);
-    window.openshell = { ...previousApi, providerIntegrations, connectProviderKey };
+    window.vela = { ...previousApi, providerIntegrations, connectProviderKey };
 
     await act(async () => root.render(<ProviderSettings workspace={workspace} usage={[]} refreshModels={refreshModels} />));
     await act(async () => {});
@@ -84,7 +84,7 @@ describe("ProviderSettings", () => {
     const connected = { ...openai, credentials: [{ id: "credential-1", label: "default" }] };
     const providerIntegrations = vi.fn().mockResolvedValue([connected, opencodeGo]);
     const removeProviderCredential = vi.fn().mockResolvedValue(undefined);
-    window.openshell = { ...previousApi, providerIntegrations, removeProviderCredential };
+    window.vela = { ...previousApi, providerIntegrations, removeProviderCredential };
     vi.spyOn(window, "confirm").mockReturnValue(true);
 
     await act(async () => root.render(<ProviderSettings workspace={workspace} usage={[]} refreshModels={async () => {}} />));
@@ -99,7 +99,7 @@ describe("ProviderSettings", () => {
   });
 
   it("clears an unsaved secret when the connection form is cancelled", async () => {
-    window.openshell = { ...previousApi, providerIntegrations: vi.fn().mockResolvedValue([openai]) };
+    window.vela = { ...previousApi, providerIntegrations: vi.fn().mockResolvedValue([openai]) };
 
     await act(async () => root.render(<ProviderSettings workspace={workspace} usage={[]} refreshModels={async () => {}} />));
     await act(async () => {});

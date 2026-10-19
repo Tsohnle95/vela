@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { ThemeProvider } from "../theme";
 import { SettingsPage } from "./SettingsPage";
 import { SettingsSidebar } from "./SettingsSidebar";
-import type { MiraAppUpdateStatus } from "@shared/types";
+import type { VelaAppUpdateStatus } from "@shared/types";
 
 vi.mock("qrcode", () => ({
   default: { toDataURL: vi.fn(async () => "data:image/png;base64,test-pairing-code") },
@@ -40,13 +40,13 @@ vi.mock("../store", () => ({ useStore: () => store }));
 const setAppearance = vi.fn().mockResolvedValue(undefined);
 const mobileSetupStatus = vi.fn().mockResolvedValue({
   state: "ready",
-  workspacePath: "/work/mira-mobile",
+  workspacePath: "/work/vela-mobile",
   port: 3011,
 });
 const mobilePairingQr = vi.fn().mockResolvedValue({
-  connectionUrl: "orbit://connect?v=2&p=one-time",
+  connectionUrl: "vela://connect?v=2&p=one-time",
   expiresAt: "2099-01-01T00:00:00.000Z",
-  serverLabel: "Mira Desktop",
+  serverLabel: "Vela Desktop",
 });
 const checkAppUpdate = vi.fn();
 const updateApp = vi.fn();
@@ -68,7 +68,7 @@ describe("SettingsPage", () => {
     isReleaseBuild = true;
     appVersion = "0.1.0";
     delete document.documentElement.dataset.theme;
-    window.openshell = { setAppearance, mobileSetupStatus, mobilePairingQr, checkAppUpdate, updateApp, isReleaseBuild, appVersion } as unknown as typeof window.openshell;
+    window.vela = { setAppearance, mobileSetupStatus, mobilePairingQr, checkAppUpdate, updateApp, isReleaseBuild, appVersion } as unknown as typeof window.vela;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -97,7 +97,7 @@ describe("SettingsPage", () => {
     act(() => choices[1]!.click());
 
     expect(document.documentElement.dataset.shell).toBe("classic");
-    expect(window.localStorage.getItem("mira.ui")).toBe("classic");
+    expect(window.localStorage.getItem("vela.ui")).toBe("classic");
     const after = [...container.querySelectorAll<HTMLButtonElement>(".ui-choice-card")];
     expect(after.map((card) => card.getAttribute("aria-checked"))).toEqual(["false", "true"]);
     // The palette is untouched by an interface switch.
@@ -126,7 +126,7 @@ describe("SettingsPage", () => {
       expect.stringContaining("Observatory")
     ]);
     expect(document.documentElement.dataset.theme).toBe("codex");
-    expect(window.localStorage.getItem("mira.theme")).toBe("codex");
+    expect(window.localStorage.getItem("vela.theme")).toBe("codex");
     expect(setAppearance).toHaveBeenLastCalledWith("light");
 
     act(() => cards[4].click());
@@ -145,17 +145,17 @@ describe("SettingsPage", () => {
     const restored = [...container.querySelectorAll<HTMLButtonElement>(".theme-card")];
     act(() => restored[7].click());
     expect(document.documentElement.dataset.theme).toBe("prism");
-    expect(window.localStorage.getItem("mira.theme")).toBe("prism");
+    expect(window.localStorage.getItem("vela.theme")).toBe("prism");
     expect(setAppearance).toHaveBeenLastCalledWith("dark");
 
     act(() => restored[2].click());
     expect(document.documentElement.dataset.theme).toBe("quiet-habitat");
-    expect(window.localStorage.getItem("mira.theme")).toBe("quiet-habitat");
+    expect(window.localStorage.getItem("vela.theme")).toBe("quiet-habitat");
     expect(setAppearance).toHaveBeenLastCalledWith("light");
   });
 
   it.each(["kitty", "original"] as const)("restores the saved %s appearance without remapping it", (saved) => {
-    window.localStorage.setItem("mira.theme", saved);
+    window.localStorage.setItem("vela.theme", saved);
     act(() => root.render(<ThemeProvider><SettingsPage section="appearance" onClose={() => {}} /></ThemeProvider>));
 
     expect(document.documentElement.dataset.theme).toBe(saved);
@@ -180,7 +180,7 @@ describe("SettingsPage", () => {
     act(() => cards[12].click());
 
     expect(document.documentElement.dataset.theme).toBe("kitty");
-    expect(window.localStorage.getItem("mira.theme")).toBe("kitty");
+    expect(window.localStorage.getItem("vela.theme")).toBe("kitty");
     expect(document.documentElement.style.getPropertyValue("--bg")).toBe("transparent");
     expect(document.documentElement.style.getPropertyValue("--panel-surface-image")).toContain("radial-gradient");
 
@@ -208,7 +208,7 @@ describe("SettingsPage", () => {
     expect(onSectionChange).toHaveBeenCalledWith("model");
   });
 
-  it("checks GitHub Releases on About and starts the popup updater from Update Mira", async () => {
+  it("checks GitHub Releases on About and starts the popup updater from Update Vela", async () => {
     const confirm = vi.fn(() => true);
     vi.stubGlobal("confirm", confirm);
     checkAppUpdate.mockResolvedValue({
@@ -221,14 +221,14 @@ describe("SettingsPage", () => {
       updated: true,
       currentVersion: "0.1.0",
       latestVersion: "0.2.0",
-      message: "Mira 0.2.0 is downloaded and ready to install."
+      message: "Vela 0.2.0 is downloaded and ready to install."
     });
     await act(async () => root.render(<ThemeProvider><SettingsPage section="about" onClose={() => {}} /></ThemeProvider>));
     expect(checkAppUpdate).toHaveBeenCalledOnce();
-    expect(container.textContent).toContain("Mira 0.1.0 is installed · release 0.2.0 is available");
+    expect(container.textContent).toContain("Vela 0.1.0 is installed · release 0.2.0 is available");
     expect(container.textContent).toContain("GitHub commits become app updates after a release is published.");
     const updateButton = [...container.querySelectorAll<HTMLButtonElement>(".settings-action-button")]
-      .find((button) => button.textContent === "Update Mira")!;
+      .find((button) => button.textContent === "Update Vela")!;
     expect(updateButton).toBeTruthy();
     expect([...container.querySelectorAll<HTMLButtonElement>(".settings-action-button")]
       .some((button) => button.textContent === "Check for updates")).toBe(true);
@@ -240,26 +240,26 @@ describe("SettingsPage", () => {
 
     expect(confirm).not.toHaveBeenCalled();
     expect(updateApp).toHaveBeenCalledOnce();
-    expect(container.textContent).toContain("Mira 0.2.0 is downloaded and ready to install.");
+    expect(container.textContent).toContain("Vela 0.2.0 is downloaded and ready to install.");
     expect([...container.querySelectorAll<HTMLButtonElement>(".settings-action-button")]
       .some((button) => button.textContent === "Check for updates")).toBe(true);
   });
 
   it("starts an update while the initial status check is pending and ignores its stale result", async () => {
-    let resolveCheck!: (status: MiraAppUpdateStatus) => void;
-    const pendingCheck = new Promise<MiraAppUpdateStatus>((resolve) => { resolveCheck = resolve; });
+    let resolveCheck!: (status: VelaAppUpdateStatus) => void;
+    const pendingCheck = new Promise<VelaAppUpdateStatus>((resolve) => { resolveCheck = resolve; });
     checkAppUpdate.mockReturnValueOnce(pendingCheck);
     updateApp.mockResolvedValue({
       ok: true,
       updated: true,
       currentVersion: "0.1.0",
       latestVersion: "0.2.0",
-      message: "Mira 0.2.0 is downloaded and ready to install."
+      message: "Vela 0.2.0 is downloaded and ready to install."
     });
 
     await act(async () => root.render(<ThemeProvider><SettingsPage section="about" onClose={() => {}} /></ThemeProvider>));
     const updateButton = [...container.querySelectorAll<HTMLButtonElement>(".settings-action-button")]
-      .find((button) => button.textContent === "Update Mira")!;
+      .find((button) => button.textContent === "Update Vela")!;
     expect(updateButton.disabled).toBe(false);
 
     await act(async () => {
@@ -267,7 +267,7 @@ describe("SettingsPage", () => {
       await Promise.resolve();
     });
     expect(updateApp).toHaveBeenCalledOnce();
-    expect(container.textContent).toContain("Mira 0.2.0 is downloaded and ready to install.");
+    expect(container.textContent).toContain("Vela 0.2.0 is downloaded and ready to install.");
 
     await act(async () => resolveCheck({
       state: "available",
@@ -275,12 +275,12 @@ describe("SettingsPage", () => {
       latestVersion: "0.3.0"
     }));
     expect(container.textContent).not.toContain("0.3.0 is available");
-    expect(container.textContent).toContain("Mira 0.2.0 is downloaded and ready to install.");
+    expect(container.textContent).toContain("Vela 0.2.0 is downloaded and ready to install.");
   });
 
   it("keeps local development builds away from the GitHub release updater", async () => {
     isReleaseBuild = false;
-    window.openshell = { ...window.openshell, isReleaseBuild } as typeof window.openshell;
+    window.vela = { ...window.vela, isReleaseBuild } as typeof window.vela;
 
     await act(async () => root.render(<ThemeProvider><SettingsPage section="about" onClose={() => {}} /></ThemeProvider>));
 
@@ -290,10 +290,10 @@ describe("SettingsPage", () => {
     expect(container.textContent).toContain("GitHub app updates are disabled here.");
     expect(container.textContent).toContain("Updater disabled");
     expect(container.textContent).not.toContain("Check for updates");
-    expect(container.textContent).not.toContain("Update Mira");
+    expect(container.textContent).not.toContain("Update Vela");
   });
 
-  it("requires unsaved editor files to be saved before an update can relaunch Mira", async () => {
+  it("requires unsaved editor files to be saved before an update can relaunch Vela", async () => {
     store.unsavedEditorFileCount = 2;
     store.unsavedEditorFiles = [
       { workspaceID: "workspace-1", sessionID: "session-1", workspace: { id: "workspace-1", generation: 1 }, path: "src/first.ts", displayPath: "/repo/src/first.ts", standalone: false },
@@ -306,12 +306,12 @@ describe("SettingsPage", () => {
     });
     await act(async () => root.render(<ThemeProvider><SettingsPage section="about" onClose={() => {}} /></ThemeProvider>));
     const updateButton = [...container.querySelectorAll<HTMLButtonElement>(".settings-action-button")]
-      .find((button) => button.textContent === "Update Mira")!;
+      .find((button) => button.textContent === "Update Vela")!;
 
     await act(async () => updateButton.click());
 
     expect(updateApp).not.toHaveBeenCalled();
-    expect(container.textContent).toContain("Save 2 unsaved files before Mira installs the release and relaunches.");
+    expect(container.textContent).toContain("Save 2 unsaved files before Vela installs the release and relaunches.");
     expect(container.textContent).toContain("/repo/src/first.ts");
     expect(container.textContent).toContain("/repo/src/second.ts");
   });
@@ -338,14 +338,14 @@ describe("SettingsPage", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("explains that Mira must be reopened when the running main process has no updater handler", async () => {
+  it("explains that Vela must be reopened when the running main process has no updater handler", async () => {
     checkAppUpdate.mockRejectedValueOnce(new Error(
       "Error invoking remote method 'shell:app-update-check': Error: No handler registered for shell:app-update-check"
     ));
 
     await act(async () => root.render(<ThemeProvider><SettingsPage section="about" onClose={() => {}} /></ThemeProvider>));
 
-    expect(container.textContent).toContain("Quit Mira completely and reopen it, then check again.");
+    expect(container.textContent).toContain("Quit Vela completely and reopen it, then check again.");
     expect(container.textContent).not.toContain("No handler registered");
   });
 
@@ -395,7 +395,7 @@ describe("SettingsPage", () => {
 
     const qr = container.querySelector<HTMLImageElement>(".mobile-setup-qr-result img");
     expect(mobilePairingQr).toHaveBeenCalledTimes(1);
-    expect(QRCode.toDataURL).toHaveBeenCalledWith("orbit://connect?v=2&p=one-time", {
+    expect(QRCode.toDataURL).toHaveBeenCalledWith("vela://connect?v=2&p=one-time", {
       width: 480,
       margin: 2,
       errorCorrectionLevel: "L",

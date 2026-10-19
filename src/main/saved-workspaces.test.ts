@@ -8,7 +8,7 @@ import { SavedWorkspaceStore } from "./saved-workspaces";
 const roots: string[] = [];
 
 async function fixture(): Promise<{ root: string; store: SavedWorkspaceStore }> {
-  const root = await realpath(await mkdtemp(path.join(tmpdir(), "mira-saved-workspaces-")));
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "vela-saved-workspaces-")));
   roots.push(root);
   return { root, store: new SavedWorkspaceStore(path.join(root, "settings", "workspaces.json")) };
 }
@@ -27,13 +27,13 @@ describe("SavedWorkspaceStore", () => {
   it("atomically saves normalized workspaces and reads them after a new store is created", async () => {
     const { root, store } = await fixture();
     const values = [
-      { directory: "/projects/mira", name: "Mira" },
-      { directory: "/projects/mira", name: "Duplicate" },
+      { directory: "/projects/vela", name: "Vela" },
+      { directory: "/projects/vela", name: "Duplicate" },
       { directory: "/projects/neptune", name: "" },
       { directory: "", name: "Invalid" }
     ];
     const expected = [
-      { directory: "/projects/mira", name: "Mira" },
+      { directory: "/projects/vela", name: "Vela" },
       { directory: "/projects/neptune", name: "neptune" }
     ];
 
@@ -46,7 +46,7 @@ describe("SavedWorkspaceStore", () => {
   it("recovers from a corrupt primary using the last known good backup", async () => {
     const { root, store } = await fixture();
     const file = path.join(root, "settings", "workspaces.json");
-    const expected = [{ directory: "/projects/mira", name: "Mira" }];
+    const expected = [{ directory: "/projects/vela", name: "Vela" }];
     await store.save(expected);
     await store.save([...expected, { directory: "/projects/neptune", name: "Neptune" }]);
     await writeFile(file, "not json");

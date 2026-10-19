@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AgentFileState, FileUpdate, FileWriteIdentity, SessionInfo } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { useWorkspaceEditor } from "./use-workspace-editor";
 
 function rejectLifecycleQueries(host: Parameters<typeof useWorkspaceEditor>[0]) {
@@ -53,12 +53,12 @@ describe("workspace editor authority", () => {
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    window.openshell = {
+    window.vela = {
       readFile: async () => "saved",
       writeFile: async () => {},
       writeStandalone: async () => {},
       openExternal: async () => ({ kind: "standalone", path: "/outside/file", content: "outside" })
-    } as unknown as OpenShellApi;
+    } as unknown as VelaApi;
     await render();
   });
   afterEach(async () => {
@@ -111,14 +111,14 @@ describe("workspace editor authority", () => {
   });
 
   it("does not activate failed, binary, background or stale file reads", async () => {
-    window.openshell.readFile = async () => null;
+    window.vela.readFile = async () => null;
     await act(async () => editor.openFile("missing"));
-    window.openshell.readFile = async () => "binary\u0000";
+    window.vela.readFile = async () => "binary\u0000";
     await act(async () => editor.openFile("binary"));
-    window.openshell.readFile = async () => "background";
+    window.vela.readFile = async () => "background";
     await act(async () => editor.openFile("background", second.workspace));
     const read = deferred<string>();
-    window.openshell.readFile = async () => read.promise;
+    window.vela.readFile = async () => read.promise;
     const opening = editor.openFile("late");
     sessionRef.current = second;
     await render();
@@ -127,16 +127,16 @@ describe("workspace editor authority", () => {
   });
 
   it("activates relative and standalone external files, and rejects closed external responses", async () => {
-    window.openshell.openExternal = async () => ({ kind: "relative", rel: "relative", content: "saved" });
+    window.vela.openExternal = async () => ({ kind: "relative", rel: "relative", content: "saved" });
     await act(async () => editor.openExternalPath("/first/relative"));
     expect(onFileActivate).toHaveBeenCalledOnce();
-    window.openshell.openExternal = async () => ({ kind: "standalone", path: "/outside/file", content: "outside" });
+    window.vela.openExternal = async () => ({ kind: "standalone", path: "/outside/file", content: "outside" });
     await act(async () => editor.openExternalPath("/outside/file"));
     await act(async () => editor.openExternalPath("/outside/file"));
     expect(onFileActivate).toHaveBeenCalledTimes(3);
     onFileActivate.mockClear();
-    const pending = deferred<Awaited<ReturnType<OpenShellApi["openExternal"]>>>();
-    window.openshell.openExternal = async () => pending.promise;
+    const pending = deferred<Awaited<ReturnType<VelaApi["openExternal"]>>>();
+    window.vela.openExternal = async () => pending.promise;
     const opening = editor.openExternalPath("/outside/late");
     panelsRef.current = [second];
     sessionRef.current = second;
@@ -151,7 +151,7 @@ describe("workspace editor authority", () => {
 
   it("rejects a captured read after its workspace generation is replaced", async () => {
     const read = deferred<string>();
-    window.openshell.readFile = async () => read.promise;
+    window.vela.readFile = async () => read.promise;
     const opening = editor.openFile("file");
     panelsRef.current = [second];
     sessionRef.current = second;
@@ -174,7 +174,7 @@ describe("workspace editor authority", () => {
 
   it("retains dirty buffers when subscription cleanup cancels an in-flight save", async () => {
     const write = deferred<void>();
-    window.openshell.writeFile = async () => write.promise;
+    window.vela.writeFile = async () => write.promise;
     await act(async () => editor.openFile("file"));
     act(() => editor.editContent("file", "changed"));
     const saving = editor.saveTab("file");
@@ -187,7 +187,7 @@ describe("workspace editor authority", () => {
   it("classifies echoes before applying tabs and keeps newer external conflicts", async () => {
     const write = deferred<void>();
     let identity!: FileWriteIdentity;
-    window.openshell.writeFile = async (_workspace, _path, _content, id) => { identity = id; return write.promise; };
+    window.vela.writeFile = async (_workspace, _path, _content, id) => { identity = id; return write.promise; };
     await act(async () => editor.openFile("file"));
     act(() => editor.editContent("file", "changed"));
     const saving = editor.saveTab("file");

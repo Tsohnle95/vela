@@ -12,7 +12,7 @@ export interface ChatStreamEvent {
   ownerSessionIDs?: string[];
 }
 
-function errorText(error: unknown, fallbackCode = "MIRA_RUNTIME_FAILURE", fallbackMessage = "Operation failed"): string {
+function errorText(error: unknown, fallbackCode = "VELA_RUNTIME_FAILURE", fallbackMessage = "Operation failed"): string {
   return formatFailure(error, fallbackCode, fallbackMessage);
 }
 
@@ -78,7 +78,7 @@ export function partFromProjection(part: Record<string, any>, created: number): 
     : status === "success"
       ? stringify(state.output)
       : status === "failed"
-        ? errorText(state.error, "MIRA_TOOL_FAILED", "Tool failed")
+        ? errorText(state.error, "VELA_TOOL_FAILED", "Tool failed")
         : stringify(state.output);
   const callID = String(part.callID ?? part.id);
   return {
@@ -306,7 +306,7 @@ export function reduceChatStream(items: TranscriptItem[], event: ChatStreamEvent
         ...item,
         status: "failed",
         reason: data.reason === "manual" ? "manual" : "auto",
-        error: errorText(data.error, "MIRA_COMPACTION_FAILED", "Compaction failed")
+        error: errorText(data.error, "VELA_COMPACTION_FAILED", "Compaction failed")
       }));
       return updated === items
         ? [...items, {
@@ -315,7 +315,7 @@ export function reduceChatStream(items: TranscriptItem[], event: ChatStreamEvent
             status: "failed",
             reason: data.reason === "manual" ? "manual" : "auto",
             summary: "",
-            error: errorText(data.error, "MIRA_COMPACTION_FAILED", "Compaction failed")
+            error: errorText(data.error, "VELA_COMPACTION_FAILED", "Compaction failed")
           }]
         : updated;
     }

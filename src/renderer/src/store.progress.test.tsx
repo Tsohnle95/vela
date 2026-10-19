@@ -2,21 +2,21 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BackendMessage, ProviderUsageResult, SessionInfo, SessionUsage, TranscriptItem, TodoItem } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { StoreProvider, useStore } from "./store";
 let store: ReturnType<typeof useStore>; let receive: (message: BackendMessage) => void;
 const panel: SessionInfo = { id: "session-1", directory: "/one", workspace: { id: "11111111-1111-4111-8111-111111111111", generation: 1 } };
 const usage = (input: number): SessionUsage => ({ cost: 1, tokens: { input, output: 1, reasoning: 0, cache: { read: 0, write: 0 } } });
 function Probe() { store = useStore(); return null; }
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (error: Error) => void; const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; }); return { promise, resolve, reject }; }
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return { platform: "darwin", onMessage: (handler) => { receive = handler; return () => {}; },
     health: async () => true, takePendingPaths: async () => [], state: async () => null,
     activeSessions: async () => [], sessions: async () => [], models: async () => [], modelDefault: async () => null,
     sessionSelection: async () => null, agents: async () => [], savedWorkspaces: async () => ({ workspaces: [], initialized: true }),
     openSession: async () => panel, openSessionById: async () => ({ session: panel, transcript: [], todos: [], usage: usage(20000) }),
     closeSession: async () => {}, recoveryRecords: async () => [], listPermissions: async () => [], formsList: async () => [],
-    inboxList: async () => [], sessionUsage: async () => null, ...overrides } as OpenShellApi;
+    inboxList: async () => [], sessionUsage: async () => null, ...overrides } as VelaApi;
 }
 function event(type: string, data: Record<string, unknown>) { receive({ kind: "event", type, data: { id: `event-${type}`, type, created: 1, data } }); }
 const provider = [{ provider: "openai", displayName: "OpenAI", status: "ok", snapshot: null }] satisfies ProviderUsageResult[];
@@ -24,7 +24,7 @@ describe("Store progress persistence and concurrency", () => {
   let root: Root; let container: HTMLDivElement;
   beforeEach(() => { vi.useFakeTimers(); vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true); window.localStorage.clear(); container = document.createElement("div"); document.body.append(container); root = createRoot(container); });
   afterEach(async () => { await act(async () => root.unmount()); if (vi.isFakeTimers()) { vi.clearAllTimers(); vi.useRealTimers(); } container.remove(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
-  async function mount(overrides: Partial<OpenShellApi> = {}, open = false) { window.openshell = api(overrides); await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>)); if (open) await act(async () => store.addModelPanel(panel.directory)); }
+  async function mount(overrides: Partial<VelaApi> = {}, open = false) { window.vela = api(overrides); await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>)); if (open) await act(async () => store.addModelPanel(panel.directory)); }
   it("suppresses a stale provider failure and finally while the newest refresh is pending", async () => {
     const older = deferred<ProviderUsageResult[]>(); const newer = deferred<ProviderUsageResult[]>();
     const providerUsage = vi.fn().mockImplementationOnce(() => older.promise).mockImplementationOnce(() => newer.promise);
@@ -74,7 +74,7 @@ describe("Store progress persistence and concurrency", () => {
     act(() => event("session.compaction.failed", { sessionID: panel.id }));
     await act(async () => store.closePanel(panel.id));
     await act(async () => { pending.resolve(usage(99000)); await pending.promise; });
-    window.openshell.openSessionById = async () => ({ session: panel, transcript: [], todos: [], usage: null });
+    window.vela.openSessionById = async () => ({ session: panel, transcript: [], todos: [], usage: null });
     await act(async () => store.reopenSession(panel.id));
     expect(store.sessionUsage?.tokens.input).toBe(20000);
   });

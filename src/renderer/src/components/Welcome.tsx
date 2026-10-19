@@ -112,7 +112,7 @@ export function Welcome(): ReactNode {
         <div className="twin">
           <div className="hero-col">
             <MarkSvg />
-            <h1 className="title">Mira</h1>
+            <h1 className="title">Vela</h1>
             <p className="sub">One calm surface for coding agents.</p>
             <div className="cta-row">
               <button className="btn btn-primary" type="button" onClick={() => void selectFolder()}>

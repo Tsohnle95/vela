@@ -1,7 +1,7 @@
-// Hand-refined Mira logo finalists, distilled from the iteration-4
-// shortlist (atomic-orbits family plus infinity ribbon and drift pair).
+// Hand-refined Vela logo finalists, distilled from the iteration-4
+// shortlist (atomic-velas family plus infinity ribbon and drift pair).
 // Each mark is authored on a 96-grid with fixed optical weights:
-// primary mira 5, secondary mira 4-4.5, core radius 8-10, electrons 5.5-6.
+// primary vela 5, secondary vela 4-4.5, core radius 8-10, electrons 5.5-6.
 // Two renderings per mark: `svg` for page backgrounds (theme-aware classes)
 // and `svgOnColor` for app-icon tiles (all-paper strokes and fills).
 
@@ -26,7 +26,7 @@ const onEll = (cx, cy, rx, ry, deg, a) => {
   return [cx + x * Math.cos(rr) - y * Math.sin(rr), cy + x * Math.sin(rr) + y * Math.cos(rr)];
 };
 
-function orbitstandard() {
+function velastandard() {
   const e1 = onEll(48, 48, 36, 15, -24, -0.95);
   return (
     ELL(48, 48, 36, 15, 24, "c-sage", 4.5) +
@@ -83,7 +83,7 @@ function polarEquatorial() {
   );
 }
 
-function infinityOrbit() {
+function infinityVela() {
   return (
     S(
       "M48 48 C38 32 20 34 20 48 C20 62 38 64 48 48 C58 32 76 34 76 48 C76 62 58 64 48 48 Z",
@@ -128,12 +128,12 @@ function lagrangePoints() {
 const node = (x, y, r, cls) => C(x, y, r, cls);
 
 export const MARKS = [
-  { id: "01", name: "Mira Standard", basedOn: "Tilted System Live · Tilted System Fan", svg: orbitstandard(), note: "The flagship: one bold mira carrying an electron, one quiet counter-mira, solid core." },
+  { id: "01", name: "Vela Standard", basedOn: "Tilted System Live · Tilted System Fan", svg: velastandard(), note: "The flagship: one bold vela carrying an electron, one quiet counter-vela, solid core." },
   { id: "02", name: "Electron Trio", basedOn: "Electron Trio Angled", svg: electronTrio(), note: "Three planes, three electrons, one nucleus — maximum system energy." },
   { id: "03", name: "Two Moons", basedOn: "Planet With Two Moons", svg: twoMoons(), note: "A world with company: ring, near moon, far moon, distant star." },
-  { id: "04", name: "Spark Nucleus", basedOn: "Spark Nucleus Atom", svg: sparkNucleus(), note: "Purest mark: two orbits, no electrons, intelligence at the center." },
+  { id: "04", name: "Spark Nucleus", basedOn: "Spark Nucleus Atom", svg: sparkNucleus(), note: "Purest mark: two velas, no electrons, intelligence at the center." },
   { id: "05", name: "Polar & Equatorial", basedOn: "Polar And Equatorial", svg: polarEquatorial(), note: "Vertical meets horizontal — full coverage around the core." },
-  { id: "06", name: "Infinity Mira", basedOn: "Infinity Ribbon Tied", svg: infinityOrbit(), note: "Endless capacity tied at the waist; electrons riding both lobes." },
+  { id: "06", name: "Infinity Vela", basedOn: "Infinity Ribbon Tied", svg: infinityVela(), note: "Endless capacity tied at the waist; electrons riding both lobes." },
   { id: "07", name: "Drift Pair", basedOn: "Directional Drift Cell", svg: driftPair(), note: "Coordinator and agent drifting together, trails showing the way they came." },
   { id: "08", name: "Lagrange Points", basedOn: "Lagrange Triangle", svg: lagrangePoints(), note: "Two bodies and the stable points between them — orchestration as physics." },
 ];

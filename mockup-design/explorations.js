@@ -1,7 +1,7 @@
-const miraExplorations = [
+const velaExplorations = [
   {
     id: "04-canopy", family: "04", name: "Canopy", motif: "botanical canopy", note: "A sunlit clearing with foliage framing the project.",
-    title: "Let the project lead the way.", lede: "Start in the repository you know. Mira gives the files, the agent, and every change a place to meet.",
+    title: "Let the project lead the way.", lede: "Start in the repository you know. Vela gives the files, the agent, and every change a place to meet.",
     scene: "canopy", form: "grounded", type: "serif", section: "The source stays in sight.",
     sky: "#e6e6c6", horizon: "#a6bd91", foreground: "#233e32", glow: "#f7dc8b", ink: "#20382c", accent: "#436f51", light: true
   },
@@ -49,14 +49,14 @@ const miraExplorations = [
   },
   {
     id: "04-bloom", family: "04", name: "Bloom", motif: "abstract wildflowers", note: "A graphic meadow of oversized forms and soft grain.",
-    title: "Build from what is already here.", lede: "Bring your own repository. Mira keeps its files and the agent's work close enough to understand together.",
+    title: "Build from what is already here.", lede: "Bring your own repository. Vela keeps its files and the agent's work close enough to understand together.",
     scene: "bloom", form: "framed", type: "serif", section: "The project is the starting point.",
     sky: "#f3e6df", horizon: "#d9b6b3", foreground: "#6d6852", glow: "#fff1bd", ink: "#493d42", accent: "#8d5f62", light: true
   },
   {
-    id: "04-miraline", family: "04", name: "Miraline", motif: "celestial navigation", note: "An orbital map with code as the fixed center.",
-    title: "Keep the source in your mira.", lede: "Files, agent sessions, commands, and changes stay connected to the same repository, from start to review.",
-    scene: "miraline", form: "diagram", type: "mono", section: "Everything returns to the repo.",
+    id: "04-velaline", family: "04", name: "Velaline", motif: "celestial navigation", note: "A celestial map with code as the fixed center.",
+    title: "Keep the source in your vela.", lede: "Files, agent sessions, commands, and changes stay connected to the same repository, from start to review.",
+    scene: "velaline", form: "diagram", type: "mono", section: "Everything returns to the repo.",
     sky: "#171d33", horizon: "#424977", foreground: "#16182c", glow: "#edbd9b", ink: "#f4eee8", accent: "#dab6a7", light: false
   },
   {
@@ -109,7 +109,7 @@ const miraExplorations = [
   },
   {
     id: "10-midnight", family: "10", name: "Midnight", motif: "constellation grid", note: "Quiet technical stars, crisp lines, and an illuminated app.",
-    title: "Keep your tools in mira.", lede: "When the work gets complex, keep the project, editor, terminal, and agent in the same field of view.",
+    title: "Keep your tools in vela.", lede: "When the work gets complex, keep the project, editor, terminal, and agent in the same field of view.",
     scene: "midnight", form: "diagram", type: "mono", section: "Stay oriented in the work.",
     sky: "#111a2b", horizon: "#303e57", foreground: "#0b1522", glow: "#77c5c4", ink: "#eaf6f4", accent: "#95d4c8", light: false
   },

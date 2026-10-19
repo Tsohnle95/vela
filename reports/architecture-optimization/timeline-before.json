@@ -1,6 +1,6 @@
 {
   "node": "v22.23.2",
-  "sourcePath": "/private/tmp/mira-timeline-before.tsx",
+  "sourcePath": "/private/tmp/vela-timeline-before.tsx",
   "sourceHash": "45b3e6e4c864a3539376f241085c237838aae32e971af2dea1b5bb5d2984733c",
   "scope": "Pure delegation consolidation only; no Store, React, IPC, browser layout or paint",
   "warmups": 3,

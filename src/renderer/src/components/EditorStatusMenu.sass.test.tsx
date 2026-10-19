@@ -24,11 +24,11 @@ describe("footer Sass control", () => {
   beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     selected = first; listeners.clear();
-    window.openshell = {
+    window.vela = {
       onMessage: (handler: (message: BackendMessage) => void) => { listeners.add(handler); return () => { listeners.delete(handler); }; },
       sassWatchState: vi.fn(async () => snapshot(selected)),
       setSassWatch: vi.fn(async (workspace: WorkspaceIdentity, enabled: boolean) => ({ ...snapshot(selected, enabled ? "starting" : "off", 2), workspace }))
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     container = document.createElement("div"); document.body.append(container); root = createRoot(container);
   });
 
@@ -46,7 +46,7 @@ describe("footer Sass control", () => {
     expect(button().textContent).toBe("Watch Sass");
     expect(button().getAttribute("aria-pressed")).toBe("false");
     await act(async () => button().click());
-    expect(window.openshell.setSassWatch).toHaveBeenCalledWith(first.workspace, true);
+    expect(window.vela.setSassWatch).toHaveBeenCalledWith(first.workspace, true);
     expect(button().textContent).toBe("Starting Sass…");
     act(() => emit(snapshot(first, "on", 3)));
     expect(button().textContent).toBe("Sass: On");
@@ -55,7 +55,7 @@ describe("footer Sass control", () => {
     expect(button().title).toContain("Undefined variable");
     expect(button().getAttribute("aria-label")).toContain("/one: error");
     await act(async () => button().click());
-    expect(window.openshell.setSassWatch).toHaveBeenLastCalledWith(first.workspace, false);
+    expect(window.vela.setSassWatch).toHaveBeenLastCalledWith(first.workspace, false);
   });
 
   it("shows each selected workspace's state and ignores a previous workspace's late events", async () => {
@@ -67,7 +67,7 @@ describe("footer Sass control", () => {
     expect(button().textContent).toBe("Watch Sass");
     expect(button().title).not.toContain("old workspace");
     await act(async () => button().click());
-    expect(window.openshell.setSassWatch).toHaveBeenLastCalledWith(second.workspace, true);
+    expect(window.vela.setSassWatch).toHaveBeenLastCalledWith(second.workspace, true);
     act(() => emit(snapshot(second, "on", 3)));
     expect(button().textContent).toBe("Sass: On");
     act(() => emit(snapshot(second, "starting", 2)));

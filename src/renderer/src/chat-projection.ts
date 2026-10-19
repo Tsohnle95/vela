@@ -145,7 +145,7 @@ function projectAssistantMessage(message: ChatMessageRecord, storedParts: ChatPa
       ? {
           retry: {
             attempt: Number((retry as Record<string, unknown>).attempt ?? 1),
-            message: formatFailure((retry as Record<string, unknown>).message, "MIRA_RETRY_SCHEDULED", "Retrying"),
+            message: formatFailure((retry as Record<string, unknown>).message, "VELA_RETRY_SCHEDULED", "Retrying"),
             next: Number((retry as Record<string, unknown>).next ?? 0) || undefined
           }
         }

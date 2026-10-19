@@ -24,7 +24,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(): typeof window.openshell {
+function api(): typeof window.vela {
   return {
     platform: "darwin",
     onMessage: (handler: (msg: unknown) => void) => {
@@ -48,7 +48,7 @@ function api(): typeof window.openshell {
     listDir: async () => [],
     recoveryRecords: async () => [],
     switchAgent: async () => {}
-  } as unknown as typeof window.openshell;
+  } as unknown as typeof window.vela;
 }
 
 function updatedEvent(type: string): { kind: "event"; type: string; data: unknown } {
@@ -90,7 +90,7 @@ describe("picker catalogs refresh on server update events", () => {
   });
 
   it("refetches agents when agent.updated arrives", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     expect(store.agents).toHaveLength(0);
@@ -109,7 +109,7 @@ describe("picker catalogs refresh on server update events", () => {
   });
 
   it("refetches models when catalog.updated arrives", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     expect(store.models).toHaveLength(0);
@@ -129,7 +129,7 @@ describe("picker catalogs refresh on server update events", () => {
   });
 
   it("projects live text deltas into the visible transcript immediately", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
 

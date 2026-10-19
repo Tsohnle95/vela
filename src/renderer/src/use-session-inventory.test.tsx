@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SessionInfo, SessionSummary } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { useSessionInventory } from "./use-session-inventory";
 
 const first: SessionInfo = { id: "first", directory: "/first", workspace: { id: "first-workspace", generation: 1 } };
@@ -30,10 +30,10 @@ describe("session inventory authority", () => {
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    window.openshell = {
+    window.vela = {
       activeSessions: vi.fn(async () => []),
       sessions: vi.fn(async () => [])
-    } as unknown as OpenShellApi;
+    } as unknown as VelaApi;
     await act(async () => root.render(<Probe />));
   });
   afterEach(async () => {
@@ -43,11 +43,11 @@ describe("session inventory authority", () => {
   });
 
   it("does not fetch by itself and preserves stale refresh return values without committing them", async () => {
-    expect(window.openshell.activeSessions).not.toHaveBeenCalled();
-    expect(window.openshell.sessions).not.toHaveBeenCalled();
+    expect(window.vela.activeSessions).not.toHaveBeenCalled();
+    expect(window.vela.sessions).not.toHaveBeenCalled();
     const older = deferred<SessionInfo[]>();
     const newer = deferred<SessionInfo[]>();
-    window.openshell.activeSessions = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+    window.vela.activeSessions = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
     const oldTask = inventory.refreshActiveSessions();
     const newTask = inventory.refreshActiveSessions();
     await act(async () => {
@@ -64,7 +64,7 @@ describe("session inventory authority", () => {
 
   it("returns an empty failed refresh without clearing the known inventory", async () => {
     act(() => inventory.addActiveSession(first));
-    window.openshell.activeSessions = async () => { throw new Error("offline"); };
+    window.vela.activeSessions = async () => { throw new Error("offline"); };
     let result: SessionInfo[] = [second];
     await act(async () => { result = await inventory.refreshActiveSessions(); });
     expect(result).toEqual([]);
@@ -76,14 +76,14 @@ describe("session inventory authority", () => {
   it("protects newer history from stale success but still reports an older failed request", async () => {
     const older = deferred<SessionSummary[]>();
     const newer = deferred<SessionSummary[]>();
-    window.openshell.sessions = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+    window.vela.sessions = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
     const oldTask = inventory.loadSessions();
     const newTask = inventory.loadSessions();
     await act(async () => { newer.resolve([history]); await newTask; });
     await act(async () => { older.resolve([{ ...history, title: "Stale" }]); await oldTask; });
     expect(inventory.summaryFor(first.id)?.title).toBe("First");
     const failed = deferred<SessionSummary[]>();
-    window.openshell.sessions = vi.fn().mockReturnValueOnce(failed.promise).mockResolvedValueOnce([{ ...history, title: "Newest" }]);
+    window.vela.sessions = vi.fn().mockReturnValueOnce(failed.promise).mockResolvedValueOnce([{ ...history, title: "Newest" }]);
     const failingTask = inventory.loadSessions();
     await act(async () => inventory.loadSessions());
     await act(async () => { failed.reject(new Error("old failure")); await failingTask; });
@@ -103,14 +103,14 @@ describe("session inventory authority", () => {
     act(() => inventory.removeActiveSession(first.id));
     expect(inventory.activeSessions).toEqual([second]);
     expect(inventory.activeSessionFor(first.id)).toBeUndefined();
-    window.openshell.sessions = async () => [history];
+    window.vela.sessions = async () => [history];
     await act(async () => inventory.loadSessions());
     expect(inventory.summaryFor(first.id)).toBe(history);
   });
 
   it("applies history events in order without changing refresh request authority", async () => {
     const loading = deferred<SessionSummary[]>();
-    window.openshell.sessions = async () => loading.promise;
+    window.vela.sessions = async () => loading.promise;
     const task = inventory.loadSessions();
     const child: SessionSummary = { ...history, id: "child", parentID: first.id, title: "Child" };
     act(() => { inventory.upsertSummary(history); inventory.upsertSummary(child); });
@@ -125,7 +125,7 @@ describe("session inventory authority", () => {
   });
 
   it("keeps history readers on the last committed render until event updates commit", async () => {
-    window.openshell.sessions = async () => [history];
+    window.vela.sessions = async () => [history];
     await act(async () => inventory.loadSessions());
     act(() => {
       inventory.renameSummary(first.id, "Renamed", 2);

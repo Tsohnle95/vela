@@ -4,7 +4,7 @@ import type { SessionSummary } from "@shared/types";
 import { ChevronIcon, PlusIcon } from "./FileIcons";
 import { IconClose, IconSearch, IconSquarePen, IconStarFilled } from "./icons";
 
-const PINNED_KEY = "openshell.pinnedSessions";
+const PINNED_KEY = "vela.pinnedSessions";
 
 interface WorkspaceMenuState {
   directory: string;
@@ -164,7 +164,7 @@ function SessionsHeader({
   return (
     <>
       <div className="sessions-header">
-        <span className="sidebar-brand">Mira</span>
+        <span className="sidebar-brand">Vela</span>
         <button
           className={`sessions-header-action ${searchOpen ? "open" : ""}`}
           aria-label={searchOpen ? "Close session filter" : "Filter sessions"}
@@ -372,8 +372,8 @@ export function SessionsPane(): ReactNode {
           <button
             className="sessions-workspace-add"
             type="button"
-            title="Save a workspace in Mira"
-            aria-label="Save a workspace in Mira"
+            title="Save a workspace in Vela"
+            aria-label="Save a workspace in Vela"
             onClick={(event) => {
               event.stopPropagation();
               void saveWorkspace();
@@ -490,7 +490,7 @@ export function SessionsPane(): ReactNode {
               setWorkspaceMenu(null);
             }}
           >
-            Remove from Mira
+            Remove from Vela
           </button>
         </div>
       )}

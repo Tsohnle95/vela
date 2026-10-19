@@ -1,21 +1,21 @@
 const violetHourId = "10-dusk-crescent-detail-violet-hour";
 const curatedGroups = [
-  ...miraCityWorkflowGroups.map((group) => ({
+  ...velaCityWorkflowGroups.map((group) => ({
     ...group,
-    variants: miraCityWorkflowExplorations.filter((design) => design.parent === group.seed)
+    variants: velaCityWorkflowExplorations.filter((design) => design.parent === group.seed)
   })),
-  ...miraDetailedGroups
+  ...velaDetailedGroups
     .filter((group) => group.group !== "tidal")
     .map((group) => ({
       ...group,
-      title: `${miraExplorations.find((design) => design.id === group.seed).name} · a world of its own.`,
-      variants: miraDetailedExplorations.filter((design) => design.parent === group.seed && (group.group !== "crescent" || design.id !== violetHourId))
+      title: `${velaExplorations.find((design) => design.id === group.seed).name} · a world of its own.`,
+      variants: velaDetailedExplorations.filter((design) => design.parent === group.seed && (group.group !== "crescent" || design.id !== violetHourId))
     }))
 ];
 
 const groupOrderByFamily = new Map();
 for (const group of curatedGroups) {
-  const seed = miraExplorations.find((design) => design.id === group.seed);
+  const seed = velaExplorations.find((design) => design.id === group.seed);
   const groupIndex = (groupOrderByFamily.get(seed.family) ?? 0) + 1;
   groupOrderByFamily.set(seed.family, groupIndex);
   const cluster = document.createElement("div");
@@ -29,7 +29,7 @@ for (const group of curatedGroups) {
     card.className = `iteration-card exploration-card ${isSeed ? "seed-card" : ""} ${design.light ? "scene-light" : "scene-dark"}`;
     card.href = `iterations/explore.html?design=${design.id}`;
     card.style.cssText = `--scene-ink:${design.ink};--scene-accent:${design.accent};--scene-paper:${design.sky};--scene-ground:${design.foreground}`;
-    card.innerHTML = `<div class="iteration-preview exploration-preview">${miraAtmosphere(design, "card")}<span>${isSeed ? "SELECTED STARTING POINT" : design.motif.toUpperCase()}</span></div>
+    card.innerHTML = `<div class="iteration-preview exploration-preview">${velaAtmosphere(design, "card")}<span>${isSeed ? "SELECTED STARTING POINT" : design.motif.toUpperCase()}</span></div>
       <div class="iteration-card-body"><div><small>${design.family} · ${isSeed ? "FAVORITE" : "NEW LANDSCAPE"}</small><h3>${design.name}</h3><p>${isSeed ? "Saved before this round in the reference archive." : design.note}</p></div><span class="iteration-card-arrow" aria-hidden="true">↗</span></div>`;
     grid.append(card);
   }

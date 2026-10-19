@@ -47,7 +47,7 @@ function fixture(suggestionVisible: boolean): {
 describe("Emmet and Monaco suggestions", () => {
   beforeEach(() => {
     mocks.insert.mockClear();
-    document.getElementById("mira-monaco-overflow")?.remove();
+    document.getElementById("vela-monaco-overflow")?.remove();
   });
 
   it.each([2, 3])("leaves key %i to Monaco while suggestions are visible", (keyCode) => {
@@ -61,7 +61,7 @@ describe("Emmet and Monaco suggestions", () => {
   it("leaves Tab to Monaco when the list is in the overflow host", () => {
     const { dispatch } = fixture(false);
     const host = document.createElement("div");
-    host.id = "mira-monaco-overflow";
+    host.id = "vela-monaco-overflow";
     host.innerHTML = '<div class="suggest-widget visible"></div>';
     document.body.append(host);
     const event = dispatch(2);

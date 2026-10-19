@@ -1,12 +1,10 @@
 import { promises as fsp } from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
-import type { RecoveryRecord } from "@shared/types";
+import { LEGACY_RECOVERY_DIR, OLDEST_RECOVERY_DIR, PREVIOUS_RECOVERY_DIR, RECOVERY_DIR, type RecoveryRecord } from "@shared/types";
 import { confinedPath, relativePath } from "./workspace-security";
 
-export const RECOVERY_DIR = ".mira-recovery";
-export const LEGACY_RECOVERY_DIR = ".openshell-recovery";
-export const PREVIOUS_RECOVERY_DIR = ".orbit-recovery";
+export { LEGACY_RECOVERY_DIR, PREVIOUS_RECOVERY_DIR, RECOVERY_DIR } from "@shared/types";
 
 const RECOVERY_SETTLED_RETENTION_MS = 24 * 60 * 60 * 1000;
 const RECOVERY_INTERRUPTED_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -35,15 +33,21 @@ export class RecoveryStorage {
     const parentStat = await fsp.stat(parent).catch(() => null);
     if (rootStat && parentStat && parentStat.dev === rootStat.dev) {
       const key = createHash("sha256").update(root).digest("hex").slice(0, 16);
-      return path.join(parent, `.mira-recovery-${key}`);
+      return path.join(parent, `.vela-recovery-${key}`);
     }
     return path.join(root, RECOVERY_DIR);
   }
 
   private async recoveryLocations(root: string): Promise<string[]> {
     const current = await this.recoveryRoot(root);
-    const previous = current.replace(/mira-recovery/g, "orbit-recovery");
-    return [...new Set([current, previous, path.join(root, PREVIOUS_RECOVERY_DIR), path.join(root, LEGACY_RECOVERY_DIR)])];
+    const currentName = path.basename(current);
+    const previousNames = [PREVIOUS_RECOVERY_DIR, OLDEST_RECOVERY_DIR]
+      .map((directory) => currentName.replace(RECOVERY_DIR.slice(1), directory.slice(1)));
+    return [...new Set([
+      current,
+      ...previousNames.map((name) => path.join(path.dirname(current), name)),
+      ...[PREVIOUS_RECOVERY_DIR, LEGACY_RECOVERY_DIR, OLDEST_RECOVERY_DIR].map((directory) => path.join(root, directory))
+    ])];
   }
 
   private async checkedRecoveryRoot(root: string, create = false, location?: string): Promise<string> {

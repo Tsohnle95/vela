@@ -28,7 +28,7 @@ export function useSessionRequests(host: RequestsHost, chat: RequestsChat) {
     const panel = panelForSession(sessionID);
     if (!panel) return;
     try {
-      const forms = await window.openshell.formsList(panel.workspace);
+      const forms = await window.vela.formsList(panel.workspace);
       setFormsBySession((current) => ({ ...current, [sessionID]: forms }));
     } catch {}
   }, [panelForSession]);
@@ -41,7 +41,7 @@ export function useSessionRequests(host: RequestsHost, chat: RequestsChat) {
     const fetched = new Map<string, PendingPermissionRequest[]>();
     const successfulWorkspaces = new Set<string>();
     await Promise.all([...workspaces.values()].map(async (workspace) => {
-      const requests = await window.openshell.listPermissions(workspace).catch(() => null);
+      const requests = await window.vela.listPermissions(workspace).catch(() => null);
       if (!requests) return;
       successfulWorkspaces.add(workspace.id);
       for (const request of requests) {
@@ -73,7 +73,7 @@ export function useSessionRequests(host: RequestsHost, chat: RequestsChat) {
       [panel.id]: (current[panel.id] ?? []).filter((form) => form.id !== formID)
     }));
     try {
-      await window.openshell.formReply(workspace, formID, answers, formSessionID);
+      await window.vela.formReply(workspace, formID, answers, formSessionID);
     } catch (err) {
       void refreshForms(panel.id);
       if (panelFor(workspace)) toast(err instanceof Error ? err.message : String(err), "error");
@@ -87,7 +87,7 @@ export function useSessionRequests(host: RequestsHost, chat: RequestsChat) {
       ...current,
       [panel.id]: (current[panel.id] ?? []).filter((form) => form.id !== formID)
     }));
-    window.openshell.formCancel(workspace, formID, formSessionID).catch(() => {});
+    window.vela.formCancel(workspace, formID, formSessionID).catch(() => {});
   }, [panelFor]);
 
   const replyPermission = useCallback(
@@ -96,7 +96,7 @@ export function useSessionRequests(host: RequestsHost, chat: RequestsChat) {
       const panel = sid ? panelForSession(sid) : null;
       if (!panel) return;
       try {
-        await window.openshell.permissionReply(panel.workspace, requestID, reply, panel.id);
+        await window.vela.permissionReply(panel.workspace, requestID, reply, panel.id);
       } catch (err) {
         toast(err instanceof Error ? err.message : String(err), "error");
         return;

@@ -1,7 +1,7 @@
 import type { BrowserWindow } from "electron";
 import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { MiraAppUpdater } from "./app-updater";
+import type { VelaAppUpdater } from "./app-updater";
 import { AppUpdateController } from "./app-update-controller";
 
 const state = vi.hoisted(() => ({ windows: [] as Array<{
@@ -43,7 +43,7 @@ function fixture(enabled = true) {
   const unsaved = vi.fn(() => [] as string[]);
   const updater = {
     check: vi.fn(),
-    update: vi.fn<MiraAppUpdater["update"]>(async () => ({ ok: true, updated: false, message: "Current" })),
+    update: vi.fn<VelaAppUpdater["update"]>(async () => ({ ok: true, updated: false, message: "Current" })),
     installAndRestart: vi.fn()
   };
   const controller = new AppUpdateController(updater, enabled, "/icon.png", () => window as unknown as BrowserWindow, unsaved);
@@ -68,7 +68,7 @@ describe("release update window lifecycle", () => {
     const f = fixture();
     f.unsaved.mockReturnValue(["a".repeat(400), ...Array.from({ length: 8 }, (_, i) => `${i}.ts`)]);
     const result = await f.controller.update();
-    expect(result.message).toBe(`Save unsaved files before updating Mira: …${"a".repeat(383)}, 0.ts, 1.ts, 2.ts, 3.ts, 4.ts, 5.ts, 6.ts and 1 more.`);
+    expect(result.message).toBe(`Save unsaved files before updating Vela: …${"a".repeat(383)}, 0.ts, 1.ts, 2.ts, 3.ts, 4.ts, 5.ts, 6.ts and 1 more.`);
     expect(state.windows).toHaveLength(0);
   });
 
@@ -78,7 +78,7 @@ describe("release update window lifecycle", () => {
     f.updater.update.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
     const pending = f.controller.update();
     await vi.advanceTimersByTimeAsync(0);
-    expect(await f.controller.update()).toMatchObject({ ok: false, message: "A Mira update is already running." });
+    expect(await f.controller.update()).toMatchObject({ ok: false, message: "A Vela update is already running." });
     const popup = state.windows[0];
     expect(popup.options.webPreferences).toEqual({ contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: false });
     const event = { preventDefault: vi.fn() };
@@ -97,7 +97,7 @@ describe("release update window lifecycle", () => {
   it("cleans up load failure and permits the next attempt without hiding main", async () => {
     const f = fixture();
     state.loadFailure = true;
-    expect(await f.controller.update()).toEqual({ ok: false, updated: false, message: "Mira could not open its update window. load failed" });
+    expect(await f.controller.update()).toEqual({ ok: false, updated: false, message: "Vela could not open its update window. load failed" });
     expect(state.windows[0].destroy).toHaveBeenCalledOnce();
     expect(f.window.hide).not.toHaveBeenCalled();
     expect(f.updater.update).not.toHaveBeenCalled();
@@ -146,7 +146,7 @@ describe("release update window lifecycle", () => {
     expect(oldWindow.show).not.toHaveBeenCalled();
     expect(state.windows[0].webContents.executeJavaScript.mock.calls.at(-1)?.[0]).toContain("install failed");
     const event = { preventDefault: vi.fn() };
-    state.windows[0].webContents.emit("did-navigate-in-page", {}, "data:text/html#return-to-mira", true, 42, 1);
+    state.windows[0].webContents.emit("did-navigate-in-page", {}, "data:text/html#return-to-vela", true, 42, 1);
     expect(state.windows[0].close).toHaveBeenCalledOnce();
     state.windows[0].emit("close", event);
     expect(event.preventDefault).not.toHaveBeenCalled();

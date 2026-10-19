@@ -1,4 +1,4 @@
-# Shared designer prompt — 100 additional Orbit launches
+# Shared designer prompt — 100 additional Vela launches
 
 You are one of three designers creating a reserved portion of an additional 100
 launch designs. The user explicitly requires every concept to be completely
@@ -9,12 +9,12 @@ concepts.json and build.mjs to know the existing 30. Read ALL reservations in
 registry.json, not only your assignments. Inspect the reference contact sheet
 and at least three relevant source images with view_image. These are coding
 prototypes: use original SVG compositions, optionally incorporating carefully
-cropped supplied artwork with no captured app controls or old Mira text.
+cropped supplied artwork with no captured app controls or old Vela text.
 
 ## Non-overlap contract
 
 Your assigned ID range and reserved dominant subject belong only to you. Never
-take another row's subject, including another designer's. A generic orbital
+take another row's subject, including another designer's. A generic celestial
 logo, centered star above a wordmark, planet with a thin ring, wireframe tunnel,
 waveform, postage stamp, vinyl record, monolith, or other original-30 composition
 is already taken and cannot be reused as the primary design.
@@ -39,7 +39,7 @@ The user's screenshots supply pixel texture, violet light, cosmic depth,
 architecture, astronauts, mathematical paths, glass and space. Borrow their
 visual language; do not blindly put every source screenshot in the same frame.
 Some light, warm, monochrome or print treatments are welcome where coherent.
-Use the requested **Orbit** name. No invented version number, claims, fake
+Use the requested **Vela** name. No invented version number, claims, fake
 runtime checks or fake percentage indicators. No session/file picker on the art.
 
 ## Delivery contract

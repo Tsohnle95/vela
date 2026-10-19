@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, ProviderUsageResult, SessionInfo, SessionUsage } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -35,7 +35,7 @@ function usageFor(id: string): SessionUsage {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -67,7 +67,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     listDir: async () => [],
     listPermissions: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("store panel usage hydration", () => {
@@ -91,7 +91,7 @@ describe("store panel usage hydration", () => {
   });
 
   it("hydrates usage and history for a model panel added via the add control", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.addModelPanel("/one"));
     expect(store.sessionUsage).toEqual(usageFor(store.activeSessionID!));
@@ -100,7 +100,7 @@ describe("store panel usage hydration", () => {
   });
 
   it("rejects primitive event tokens while retaining array token acceptance", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.addModelPanel("/one"));
     const before = store.sessionUsage;
@@ -116,7 +116,7 @@ describe("store panel usage hydration", () => {
   });
 
   it("preserves event token/cache/cost read order and a single cache snapshot", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.addModelPanel("/one"));
     const reads: string[] = [];
@@ -139,7 +139,7 @@ describe("store panel usage hydration", () => {
   });
 
   it("hydrates usage for the replacement session when a panel swaps workspaces", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.addModelPanel("/one"));
     const first = store.session!;
@@ -151,7 +151,7 @@ describe("store panel usage hydration", () => {
   });
 
   it("hydrates usage for the folder-picker add path", async () => {
-    window.openshell = api({ selectFolder: async () => info("/picked", 7) });
+    window.vela = api({ selectFolder: async () => info("/picked", 7) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.selectAddPanel());
     expect(store.activeSessionID).toBe("session-7");
@@ -166,7 +166,7 @@ describe("store panel usage hydration", () => {
         tokens: { input: 12_000, output: 100, reasoning: 0, cache: { read: 0, write: 0 } }
       };
       const sessionUsage = vi.fn(async () => postCompaction);
-      window.openshell = api({ sessionUsage });
+      window.vela = api({ sessionUsage });
       await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
       await act(async () => store.addModelPanel("/one"));
       const sessionID = store.activeSessionID!;
@@ -216,7 +216,7 @@ describe("store panel usage hydration", () => {
     vi.useFakeTimers();
     try {
       const sessionUsage = vi.fn(async () => usageFor("session-1"));
-      window.openshell = api({ sessionUsage, runCommand: async () => {} });
+      window.vela = api({ sessionUsage, runCommand: async () => {} });
       await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
       await act(async () => store.addModelPanel("/one"));
 
@@ -237,7 +237,7 @@ describe("store panel usage hydration", () => {
     const providerUsage = vi.fn()
       .mockImplementationOnce(() => new Promise<ProviderUsageResult[]>((resolve) => { resolveFirst = resolve; }))
       .mockImplementationOnce(() => new Promise<ProviderUsageResult[]>((resolve) => { resolveSecond = resolve; }));
-    window.openshell = api({ providerUsage });
+    window.vela = api({ providerUsage });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
 
     let first!: Promise<void>;

@@ -18,7 +18,7 @@ export function launch(mode, options = {}) {
     });
     if (prepare.error) throw prepare.error;
     if (prepare.status !== 0) return prepare.status ?? 1;
-    env.ELECTRON_EXEC_PATH = path.join(projectRoot, "dev", "Mira.app", "Contents", "MacOS", "Electron");
+    env.ELECTRON_EXEC_PATH = path.join(projectRoot, "dev", "Vela.app", "Contents", "MacOS", "Electron");
   }
 
   const result = run(process.execPath, [path.join(projectRoot, "node_modules", "electron-vite", "bin", "electron-vite.js"), mode], {

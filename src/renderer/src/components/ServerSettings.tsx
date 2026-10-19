@@ -15,7 +15,7 @@ export function ServerSettings(): ReactNode {
 
   const refresh = useCallback(async (): Promise<void> => {
     try {
-      setServers(await window.openshell.viteServers());
+      setServers(await window.vela.viteServers());
     } catch {
       setServers([]);
     }
@@ -30,7 +30,7 @@ export function ServerSettings(): ReactNode {
   const stop = (serverID?: string): void => {
     if (busy) return;
     setBusy(true);
-    const request = serverID ? window.openshell.viteStop(serverID) : window.openshell.viteStopAll();
+    const request = serverID ? window.vela.viteStop(serverID) : window.vela.viteStopAll();
     void request.then(() => refresh()).catch(() => {}).finally(() => setBusy(false));
   };
 
@@ -38,7 +38,7 @@ export function ServerSettings(): ReactNode {
     <section className="settings-section" aria-label="Active servers">
       <div className="settings-callout">
         <strong>{servers.length === 0 ? "No servers running" : `${servers.length} server${servers.length === 1 ? "" : "s"} running`}</strong>
-        <p>Vite previews run on loopback ports while Mira is open and stop when you quit. Stop one here to release its port immediately.</p>
+        <p>Vite previews run on loopback ports while Vela is open and stop when you quit. Stop one here to release its port immediately.</p>
       </div>
       <div className="settings-list">
         {servers.length === 0

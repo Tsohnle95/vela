@@ -22,8 +22,8 @@ not new IPC payloads.
 |---|---|---|
 | `RuntimeCapabilities` | `{ attachments, commands, models, agents, permissions, providerCredentials, sessionFork, sessionResume, steering, tui }` | Runtime-declared feature availability; `tui` controls whether the agent panel offers its embedded terminal interface |
 | `OpenCodeSyncResult` | `{ version, previousVersion, cliUpdated }` | Result of a Settings sync/update action; reports the final CLI version and whether the CLI itself changed |
-| `MiraAppUpdateStatus` | `{ state, currentVersion?, latestVersion?, message? }` | Published GitHub release status for a release build, or disabled status in local development/test builds |
-| `MiraAppUpdateResult` | `{ ok, updated, currentVersion?, latestVersion?, message }` | Result of downloading a published Mira release for installation |
+| `VelaAppUpdateStatus` | `{ state, currentVersion?, latestVersion?, message? }` | Published GitHub release status for a release build, or disabled status in local development/test builds |
+| `VelaAppUpdateResult` | `{ ok, updated, currentVersion?, latestVersion?, message }` | Result of downloading a published Vela release for installation |
 | `W3cDiagnostic` | `{ line, column, endLine, endColumn, message, severity, source }`; source is W3C HTML/CSS or local Monaco SCSS | Validation results passed to Monaco markers and the Problems view |
 | `SassWatchState` | `{ workspace, directory, enabled, status, revision, error?, logs }` | app-owned Sass state for a captured workspace; status is off/starting/on/error; revision prevents stale UI replies |
 | `SassWatchLog` | `{ time, level, message }` | bounded Sass Output entries; info/warning/error |

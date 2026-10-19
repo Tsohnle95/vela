@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, ExternalOpenResult, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -23,7 +23,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -50,7 +50,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     readFile: async () => "content",
     listDir: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("store open-source ui-command", () => {
@@ -76,7 +76,7 @@ describe("store open-source ui-command", () => {
   it("opens the containing directory as a session when none is active", async () => {
     const openSession = vi.fn(async (directory: string, generation: number) => info(directory, generation));
     const readFile = vi.fn(async () => "content");
-    window.openshell = api({ openSession, readFile });
+    window.vela = api({ openSession, readFile });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     expect(store.session).toBeNull();
 
@@ -96,7 +96,7 @@ describe("store open-source ui-command", () => {
 
   it("ignores a relative open-source path when no session is active", async () => {
     const openSession = vi.fn(async (directory: string, generation: number) => info(directory, generation));
-    window.openshell = api({ openSession });
+    window.vela = api({ openSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
 
     await act(async () => messageHandler!({
@@ -115,10 +115,10 @@ describe("store open-source ui-command", () => {
     const openSession = vi.fn(async (directory: string, generation: number) => info(directory, generation));
     const openExternal = vi.fn(async (): Promise<ExternalOpenResult> => ({
       kind: "standalone",
-      path: "/openshell/src/renderer/styles/main.scss",
+      path: "/vela/src/renderer/styles/main.scss",
       content: ".main {}"
     }));
-    window.openshell = api({ openSession, openExternal });
+    window.vela = api({ openSession, openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/luno"));
     const workspace = store.session!.workspace;
@@ -128,17 +128,17 @@ describe("store open-source ui-command", () => {
     await act(async () => messageHandler!({
       kind: "ui-command",
       command: "open-source",
-      path: "/openshell/src/renderer/styles/main.scss",
+      path: "/vela/src/renderer/styles/main.scss",
       line: 3
     }));
 
     expect(openSession).not.toHaveBeenCalled();
     expect(store.session?.id).toBe(sessionID);
     expect(store.session?.workspace).toBe(workspace);
-    expect(openExternal).toHaveBeenCalledWith(workspace, "/openshell/src/renderer/styles/main.scss");
-    expect(store.tabs.map((tab) => tab.path)).toEqual(["/openshell/src/renderer/styles/main.scss"]);
+    expect(openExternal).toHaveBeenCalledWith(workspace, "/vela/src/renderer/styles/main.scss");
+    expect(store.tabs.map((tab) => tab.path)).toEqual(["/vela/src/renderer/styles/main.scss"]);
     expect(store.tabs[0].standalone).toBe(true);
-    expect(store.activePath).toBe("/openshell/src/renderer/styles/main.scss");
+    expect(store.activePath).toBe("/vela/src/renderer/styles/main.scss");
   });
 
   it("opens an app source as a normal tab when the active workspace contains it", async () => {
@@ -148,18 +148,18 @@ describe("store open-source ui-command", () => {
       content: ".main {}"
     }));
     const readFile = vi.fn(async () => ".main {}");
-    window.openshell = api({ openExternal, readFile });
+    window.vela = api({ openExternal, readFile });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
-    await act(async () => store.openSession("/openshell"));
+    await act(async () => store.openSession("/vela"));
 
     await act(async () => messageHandler!({
       kind: "ui-command",
       command: "open-source",
-      path: "/openshell/src/renderer/styles/main.scss",
+      path: "/vela/src/renderer/styles/main.scss",
       line: 8
     }));
 
-    expect(openExternal).toHaveBeenCalledWith(store.session!.workspace, "/openshell/src/renderer/styles/main.scss");
+    expect(openExternal).toHaveBeenCalledWith(store.session!.workspace, "/vela/src/renderer/styles/main.scss");
     expect(readFile).toHaveBeenCalledWith(store.session!.workspace, "src/renderer/styles/main.scss");
     expect(store.tabs.map((tab) => tab.path)).toEqual(["src/renderer/styles/main.scss"]);
     expect(store.tabs[0].standalone).toBeUndefined();
@@ -167,7 +167,7 @@ describe("store open-source ui-command", () => {
 
   it("ignores a relative source command when a session is active", async () => {
     const openExternal = vi.fn();
-    window.openshell = api({ openExternal });
+    window.vela = api({ openExternal });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/work"));
 

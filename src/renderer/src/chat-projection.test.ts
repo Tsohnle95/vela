@@ -147,7 +147,7 @@ describe("assistant projection characterization", () => {
     send(draft, "session.step.failed", { assistantMessageID: "a", error: { message: "Provider failed" } }, 200);
     const failed = assistant(draft);
     expect(failed).not.toBe(before);
-    expect(failed).toMatchObject({ completed: true, error: "[MIRA_STEP_FAILED] Provider failed" });
+    expect(failed).toMatchObject({ completed: true, error: "[VELA_STEP_FAILED] Provider failed" });
     expect(before).toMatchObject({ completed: false, parts: [{ text: "Partial" }] });
     expect(before.error).toBeUndefined();
   });

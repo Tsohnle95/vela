@@ -10,10 +10,10 @@ if (process.platform !== "darwin") {
 }
 
 const electron = path.join(process.cwd(), "node_modules", ".bin", "electron");
-const userData = await mkdtemp(path.join(os.tmpdir(), "openshell-trust-"));
+const userData = await mkdtemp(path.join(os.tmpdir(), "vela-trust-"));
 const child = spawn(electron, [".", `--user-data-dir=${userData}`], {
   cwd: process.cwd(),
-  env: { ...process.env, OPENSHELL_TRUST_SMOKE: "1" },
+  env: { ...process.env, VELA_TRUST_SMOKE: "1" },
   stdio: ["ignore", "pipe", "pipe"]
 });
 let output = "";
@@ -23,6 +23,6 @@ const timeout = setTimeout(() => child.kill(), 30_000);
 const code = await new Promise((resolve) => child.once("exit", resolve));
 clearTimeout(timeout);
 await rm(userData, { recursive: true, force: true });
-if (code !== 0 || !output.includes("[openshell-trust-smoke]") || !output.includes('"untrustedIpcRejected":true')) {
+if (code !== 0 || !output.includes("[vela-trust-smoke]") || !output.includes('"untrustedIpcRejected":true')) {
   throw new Error(`Electron trust smoke failed with exit ${code}`);
 }

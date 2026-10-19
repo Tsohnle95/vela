@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, PendingFormRequest, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -30,7 +30,7 @@ const globalForm = (): PendingFormRequest => ({
   fields: [{ key: "choice", type: "string", required: true }]
 });
 
-function api(formsList: OpenShellApi["formsList"], formReply = vi.fn(async () => {})): OpenShellApi {
+function api(formsList: VelaApi["formsList"], formReply = vi.fn(async () => {})): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler: (message: BackendMessage) => void) => {
@@ -54,7 +54,7 @@ function api(formsList: OpenShellApi["formsList"], formReply = vi.fn(async () =>
     formsList,
     formReply,
     formCancel: async () => {}
-  } as unknown as OpenShellApi;
+  } as unknown as VelaApi;
 }
 
 function globalFormEvent(ownerSessionID: string): BackendMessage {
@@ -65,7 +65,7 @@ function globalFormEvent(ownerSessionID: string): BackendMessage {
       id: "evt_form",
       type: "form.created",
       created: Date.now(),
-      miraSessionIDs: [ownerSessionID],
+      velaSessionIDs: [ownerSessionID],
       data: { form: globalForm() }
     }
   };
@@ -92,7 +92,7 @@ describe("renderer form prompts", () => {
   });
 
   it("loads location-global questions into the GUI panel inventory", async () => {
-    window.openshell = api(async () => [globalForm()]);
+    window.vela = api(async () => [globalForm()]);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => {
       await store.openSession("/one");
@@ -105,7 +105,7 @@ describe("renderer form prompts", () => {
 
   it("routes a live global form event to its location owner and replies as global", async () => {
     const formReply = vi.fn(async () => {});
-    window.openshell = api(async () => [], formReply);
+    window.vela = api(async () => [], formReply);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const panel = store.panels[0];
@@ -119,7 +119,7 @@ describe("renderer form prompts", () => {
 
   it("surfaces an external session form routed by location and replies to that session", async () => {
     const formReply = vi.fn(async () => {});
-    window.openshell = api(async () => [], formReply);
+    window.vela = api(async () => [], formReply);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const panel = store.panels[0];
@@ -137,7 +137,7 @@ describe("renderer form prompts", () => {
         id: "evt_external",
         type: "form.created",
         created: Date.now(),
-        miraSessionIDs: [panel.id],
+        velaSessionIDs: [panel.id],
         data: { form: external }
       }
     }));
@@ -148,8 +148,8 @@ describe("renderer form prompts", () => {
   });
 
   it("keeps an event-backed question visible when reconciliation temporarily fails", async () => {
-    const formsList = vi.fn<OpenShellApi["formsList"]>(async () => []);
-    window.openshell = api(formsList);
+    const formsList = vi.fn<VelaApi["formsList"]>(async () => []);
+    window.vela = api(formsList);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const panel = store.panels[0];

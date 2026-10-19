@@ -6,7 +6,7 @@ const result = spawnSync(process.execPath, [
   "run", "src/main/workspace-observation.test.ts"
 ], {
   stdio: "inherit",
-  env: { ...process.env, MIRA_NATIVE_WATCH_TESTS: "1" }
+  env: { ...process.env, VELA_NATIVE_WATCH_TESTS: "1" }
 });
 if (result.error) throw result.error;
 process.exit(result.status ?? 1);

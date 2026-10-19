@@ -6,14 +6,14 @@ import path from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
 import { LatestGeneration } from "@shared/generation";
 import type { BackendMessage, FileWriteIdentity, WorkspaceIdentity } from "@shared/types";
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 
 vi.mock("electron", () => ({ app: { getPath: () => tmpdir() }, shell: { trashItem: async (target: string) => fsp.rm(target, { recursive: true }) } }));
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
 const roots: string[] = [];
-const backends: OpenShellBackend[] = [];
+const backends: VelaBackend[] = [];
 const workspace: WorkspaceIdentity = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
 
 afterEach(async () => {
@@ -31,11 +31,11 @@ function entry(root: string, identity: WorkspaceIdentity): SessionContext {
   };
 }
 
-async function fixture(phase?: ConstructorParameters<typeof OpenShellBackend>[0]) {
-  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "mira-mutation-owner-")));
+async function fixture(phase?: ConstructorParameters<typeof VelaBackend>[0]) {
+  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "vela-mutation-owner-")));
   const key = createHash("sha256").update(root).digest("hex").slice(0, 16);
-  roots.push(root, path.join(path.dirname(root), `.mira-recovery-${key}`));
-  const backend = new OpenShellBackend(phase);
+  roots.push(root, path.join(path.dirname(root), `.vela-recovery-${key}`));
+  const backend = new VelaBackend(phase);
   backends.push(backend);
   const state = backend as unknown as { contexts: Map<string, SessionContext>; mutations: { run: (workspace: WorkspaceIdentity, operation: () => Promise<unknown>) => Promise<unknown> } };
   state.contexts.set(workspace.id, entry(root, workspace));
@@ -96,7 +96,7 @@ it("rechecks queued old generations while a replacement generation proceeds inde
 });
 
 it("preserves the backend phase receiver and save failure file-update, recovery, rejection order", async () => {
-  let backend!: OpenShellBackend;
+  let backend!: VelaBackend;
   const events: string[] = [];
   const result = await fixture(function (this: unknown, phase) {
     expect(this).toBe(backend);
@@ -115,7 +115,7 @@ it("preserves the backend phase receiver and save failure file-update, recovery,
 });
 
 it("preserves rename failure recovery-only emission and phase receiver without overwriting occupied files", async () => {
-  let backend!: OpenShellBackend;
+  let backend!: VelaBackend;
   const phases: string[] = [];
   const result = await fixture(function (this: unknown, phase) { expect(this).toBe(backend); phases.push(phase); });
   backend = result.backend;

@@ -2,7 +2,7 @@
 
 ## Delivered
 
-25 separately authored motion mechanisms, all using the current Mira cube icon:
+25 separately authored motion mechanisms, all using the current Vela cube icon:
 continuous courier, station relay, counterweights, luminous thread, slingshot,
 prism, magnetic capture, clockwork, ripple wake, solar sail, meteor train,
 gyroscope, facet scan, eclipse, firefly gathering, mercury split/rejoin,
@@ -53,9 +53,9 @@ presets. The nearest comparisons need particular attention during visual QA:
 | 01 / 05 / 11 | Single steady courier; accelerating probe with a long wake; seven staggered meteors |
 | 02 / 08 / 19 | Three long station dwells; twelve mechanical ticks; hopping packets and angular inter-cube signals |
 | 04 / 17 | A fine thread wraps a settled mark; three separated cubes assemble as a trail is drawn |
-| 06 / 22 / 25 | Split beams; rotating polygonal projections; reversed reflections of the orbiting pearl inside faces |
+| 06 / 22 / 25 | Split beams; rotating polygonal projections; reversed reflections of the rotating pearl inside faces |
 | 09 / 20 | Discrete expanding ripples; one continuously deforming broad ribbon |
 | 12 / 18 / 23 | Whole-cube precession; independently lifting top facets; local attraction toward a moving lens |
-| 01 / 24 | Light travels around the trail throughout; orbital travel transfers onto the cube edges |
+| 01 / 24 | Light travels around the trail throughout; celestial travel transfers onto the cube edges |
 
 Distinct names, rules and numeric checks do not replace that visual review.

@@ -10,12 +10,12 @@ vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
 import { LatestGeneration } from "@shared/generation";
 import type { BackendMessage, FileBaseline, WorkspaceIdentity } from "@shared/types";
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 
 const workspace: WorkspaceIdentity = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
 
 function fixture() {
-  const backend = new OpenShellBackend();
+  const backend = new VelaBackend();
   const directory = "/workspace";
   const client = {
     session: {
@@ -74,7 +74,7 @@ function fixture() {
   return { backend, client, messages };
 }
 
-function deliver(backend: OpenShellBackend, directory: string, events: unknown[]): Promise<void> {
+function deliver(backend: VelaBackend, directory: string, events: unknown[]): Promise<void> {
   return (backend as unknown as {
     deliverEvents: (directory: string, events: unknown[], generation: number) => Promise<void>;
   }).deliverEvents(directory, events, 1);
@@ -176,7 +176,7 @@ describe("backend forms", () => {
 
     const forms = messages.filter((message) => message.kind === "event" && message.type === "form.created");
     expect(forms).toHaveLength(1);
-    expect((forms[0] as { data: { miraSessionIDs?: string[] } }).data.miraSessionIDs).toEqual(["session"]);
+    expect((forms[0] as { data: { velaSessionIDs?: string[] } }).data.velaSessionIDs).toEqual(["session"]);
   });
 
   it("drops forms from sessions outside every open workspace", async () => {

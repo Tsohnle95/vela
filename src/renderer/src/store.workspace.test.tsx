@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, RecoveryRecord, RuntimeID, SessionInfo, WorkspaceIdentity } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 import { FileSidebar } from "./components/FileSidebar";
@@ -31,7 +31,7 @@ function info(directory: string, generation: number, runtimeID?: RuntimeID): Ses
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -59,7 +59,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     listDir: async () => [],
     detachPath: async () => {},
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("store workspace continuations", () => {
@@ -85,7 +85,7 @@ describe("store workspace continuations", () => {
   it("keeps both workspace trees visible when adding, switching and removing a root", async () => {
     const readFile = vi.fn(async () => "content");
     const movePath = vi.fn();
-    window.openshell = api({
+    window.vela = api({
       readFile, movePath,
       listDir: async (workspace, path) => path === ""
         ? [{ path: `folder-${workspace.generation}`, type: "directory" }, { path: "shared.txt", type: "file" }]
@@ -138,7 +138,7 @@ describe("store workspace continuations", () => {
 
   it("does not carry a multi-selection into another workspace's context menu", async () => {
     const deletePath = vi.fn(async () => {});
-    window.openshell = api({
+    window.vela = api({
       deletePath,
       listDir: async () => [{ path: "shared.txt", type: "file" }, { path: "other.txt", type: "file" }]
     });
@@ -156,7 +156,7 @@ describe("store workspace continuations", () => {
   });
 
   it("explains that Cmd+R cannot update a stale main process's workspace IPC handler", async () => {
-    window.openshell = api({
+    window.vela = api({
       savedWorkspaces: async () => {
         throw new Error("Error invoking remote method 'shell:saved-workspaces': Error: No handler registered for 'shell:saved-workspaces'");
       }
@@ -169,14 +169,14 @@ describe("store workspace continuations", () => {
     await act(async () => Promise.resolve());
 
     expect(store.toasts.at(-1)?.text).toBe(
-      "Mira's app process is older than this window. Quit and reopen Mira completely; Cmd+R only refreshes the window. Saved workspaces are still stored."
+      "Vela's app process is older than this window. Quit and reopen Vela completely; Cmd+R only refreshes the window. Saved workspaces are still stored."
     );
   });
 
   it("loads history when the backend becomes ready and refreshes it on reconnect", async () => {
     const ready = deferred<boolean>();
     const sessions = vi.fn(async () => [{ id: "history", title: "Saved conversation", directory: "/workspace", updatedAt: 1 }]);
-    window.openshell = api({ health: () => ready.promise as Promise<boolean>, sessions });
+    window.vela = api({ health: () => ready.promise as Promise<boolean>, sessions });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     expect(sessions).not.toHaveBeenCalled();
     await act(async () => { ready.resolve(true); await ready.promise; });
@@ -188,7 +188,7 @@ describe("store workspace continuations", () => {
 
   it("keeps removed paths session-only so reloads enumerate the workspace again", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     act(() => store.removeFromWorkspace("folder"));
@@ -200,7 +200,7 @@ describe("store workspace continuations", () => {
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
 
@@ -209,11 +209,11 @@ describe("store workspace continuations", () => {
 
   it("silently unhides an exact existing path when it is dropped back", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     act(() => store.removeFromWorkspace("folder"));
-    window.openshell = api({
+    window.vela = api({
       importExternal: async () => [{ name: "folder", rel: "folder", imported: false, reason: "already in the workspace" }]
     });
 
@@ -224,7 +224,7 @@ describe("store workspace continuations", () => {
 
   it("does not apply a completed delete to tabs opened in a newer workspace", async () => {
     const deletion = deferred();
-    window.openshell = api({ deletePath: vi.fn(() => deletion.promise) });
+    window.vela = api({ deletePath: vi.fn(() => deletion.promise) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openFile("same.txt"));
@@ -241,7 +241,7 @@ describe("store workspace continuations", () => {
 
   it("bulk deletes selected paths once and keeps remaining tabs active", async () => {
     const deletePath = vi.fn(async (_workspace: WorkspaceIdentity, _path: string) => {});
-    window.openshell = api({
+    window.vela = api({
       deletePath,
       readFile: async (_workspace, path) => `content of ${path}`
     });
@@ -259,7 +259,7 @@ describe("store workspace continuations", () => {
 
   it("reveals a path without changing the active editor state and handles stale items", async () => {
     const revealInFileManager = vi.fn(async () => { throw new Error("workspace item is no longer available"); });
-    window.openshell = api({ revealInFileManager });
+    window.vela = api({ revealInFileManager });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openFile("same.txt"));
@@ -276,7 +276,7 @@ describe("store workspace continuations", () => {
 
   it("does not open a file created by a completed old-workspace operation", async () => {
     const creation = deferred();
-    window.openshell = api({ createFile: vi.fn(() => creation.promise) });
+    window.vela = api({ createFile: vi.fn(() => creation.promise) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     act(() => store.startCreate("", "file"));
@@ -292,7 +292,7 @@ describe("store workspace continuations", () => {
 
   it("does not apply a completed rename to tabs opened in a newer workspace", async () => {
     const rename = deferred();
-    window.openshell = api({ renamePath: vi.fn(() => rename.promise) });
+    window.vela = api({ renamePath: vi.fn(() => rename.promise) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openFile("same.txt"));
@@ -311,7 +311,7 @@ describe("store workspace continuations", () => {
   it("remaps tabs, active path, and tracked changes on moveEntry and refreshes both parents", async () => {
     const movePath = vi.fn(async (_workspace: WorkspaceIdentity, _path: string, _destination: string) => {});
     const listDir = vi.fn(async () => []);
-    window.openshell = api({ movePath, listDir });
+    window.vela = api({ movePath, listDir });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openFile("src/a.txt"));
@@ -344,7 +344,7 @@ describe("store workspace continuations", () => {
   });
 
   it("follows a correlated external rename for an open editor tab", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openFile("src/old.txt"));
@@ -393,7 +393,7 @@ describe("store workspace continuations", () => {
   });
 
   it("removes restored files and created-then-deleted files while retaining deleted tracked files", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const workspace = store.session!.workspace;
@@ -432,7 +432,7 @@ describe("store workspace continuations", () => {
   });
 
   it("drops deleted change entries instead of remapping them to the destination", async () => {
-    window.openshell = api({ movePath: vi.fn(async () => {}) });
+    window.vela = api({ movePath: vi.fn(async () => {}) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => {
@@ -472,7 +472,7 @@ describe("store workspace continuations", () => {
 
   it("does not remap tabs for a move that completes in a newer workspace", async () => {
     const move = deferred();
-    window.openshell = api({ movePath: vi.fn(() => move.promise) });
+    window.vela = api({ movePath: vi.fn(() => move.promise) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openFile("same.txt"));
@@ -489,7 +489,7 @@ describe("store workspace continuations", () => {
 
   it("bulk moves against the captured workspace and remaps its active editor once", async () => {
     const movePath = vi.fn(async (_workspace: WorkspaceIdentity, _path: string, _destination: string) => {});
-    window.openshell = api({
+    window.vela = api({
       movePath,
       readFile: async (_workspace, path) => `content of ${path}`
     });
@@ -522,7 +522,7 @@ describe("store workspace continuations", () => {
       todos: [],
       usage: null
     }));
-    window.openshell = api({ activeSessions: () => startup.promise, openSessionById });
+    window.vela = api({ activeSessions: () => startup.promise, openSessionById });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/chosen"));
     await act(async () => startup.resolve([info("/restored", 2)]));
@@ -538,7 +538,7 @@ describe("store workspace continuations", () => {
       ...info(directory, generation, directory === "/one" ? "deepseek" : "opencode"),
       id: directory === "/one" ? "session-one" : "session-two"
     }));
-    window.openshell = api({ openSession });
+    window.vela = api({ openSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -553,7 +553,7 @@ describe("store workspace continuations", () => {
     document.body.append(container);
     root = createRoot(container);
     const openSessionById = vi.fn();
-    window.openshell = api({ activeSessions: async () => [], openSessionById });
+    window.vela = api({ activeSessions: async () => [], openSessionById });
 
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
@@ -564,7 +564,7 @@ describe("store workspace continuations", () => {
   });
 
   it("re-attaches live backend sessions on startup and drops stale persisted layout", async () => {
-    window.localStorage.setItem("mira.sessionLayout", JSON.stringify({
+    window.localStorage.setItem("vela.sessionLayout", JSON.stringify({
       version: 1,
       panels: [{ sessionID: "stale", runtimeID: "opencode" }],
       activeSessionID: "stale"
@@ -575,7 +575,7 @@ describe("store workspace continuations", () => {
       todos: [],
       usage: null
     }));
-    window.openshell = api({
+    window.vela = api({
       activeSessions: async () => [info("/live", 7, "deepseek")],
       openSessionById
     });
@@ -587,7 +587,7 @@ describe("store workspace continuations", () => {
     expect(openSessionById.mock.calls.map((call) => call[2])).toEqual([undefined]);
     expect(store.panels.map((panel) => panel.id)).toEqual(["session-7"]);
     expect(store.session?.id).toBe("session-7");
-    expect(window.localStorage.getItem("mira.sessionLayout")).toBeNull();
+    expect(window.localStorage.getItem("vela.sessionLayout")).toBeNull();
   });
 
   it("waits for backend readiness before re-attaching live sessions", async () => {
@@ -598,7 +598,7 @@ describe("store workspace continuations", () => {
       todos: [],
       usage: null
     }));
-    window.openshell = api({
+    window.vela = api({
       health: () => health.promise,
       activeSessions: async () => [info("/one", 1, "opencode")],
       openSessionById
@@ -624,7 +624,7 @@ describe("store workspace continuations", () => {
       usage: null
     }));
     const saveSavedWorkspaces = vi.fn(async (workspaces: { directory: string; name: string }[]) => workspaces);
-    window.openshell = api({
+    window.vela = api({
       savedWorkspaces: async () => ({ workspaces: [{ directory: "/missing", name: "Old workspace" }], initialized: true }),
       saveSavedWorkspaces,
       openSessionById
@@ -641,7 +641,7 @@ describe("store workspace continuations", () => {
   });
 
   it("opens parallel sessions and restores each session's own tabs when focus swaps", async () => {
-    window.openshell = api({
+    window.vela = api({
       openSession: async (directory: string, generation: number) => info(directory, generation),
       readFile: async (_workspace: unknown, path: string) => `content of ${path}`
     });
@@ -670,7 +670,7 @@ describe("store workspace continuations", () => {
       todos: [],
       usage: null
     }));
-    window.openshell = api({ openSessionById });
+    window.vela = api({ openSessionById });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -692,10 +692,10 @@ describe("store workspace continuations", () => {
       todos: [],
       usage: null
     }));
-    window.openshell = api({ closeSession, openSessionById });
+    window.vela = api({ closeSession, openSessionById });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/luno"));
-    await act(async () => store.addModelPanel("/mira"));
+    await act(async () => store.addModelPanel("/vela"));
     const previousSelected = store.panels[1];
 
     await act(async () => store.reopenSession("session-neptune"));
@@ -708,10 +708,10 @@ describe("store workspace continuations", () => {
   });
 
   it("updates a repeated session event in place without duplicating its panel", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/luno"));
-    await act(async () => store.addModelPanel("/mira"));
+    await act(async () => store.addModelPanel("/vela"));
     const first = store.panels[0];
     const refreshed = {
       ...first,
@@ -722,12 +722,12 @@ describe("store workspace continuations", () => {
     await act(async () => messageHandler!({ kind: "session", session: refreshed }));
 
     expect(store.panels.map((panel) => panel.id)).toEqual([first.id, store.panels[1].id]);
-    expect(store.panels.map((panel) => panel.directory)).toEqual(["/luno-renamed", "/mira"]);
+    expect(store.panels.map((panel) => panel.directory)).toEqual(["/luno-renamed", "/vela"]);
   });
 
   it("closes a panel, tears down its backend context, and keeps the neighbor focused", async () => {
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({ closeSession });
+    window.vela = api({ closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -747,11 +747,11 @@ describe("store workspace continuations", () => {
   });
 
   it("does not apply an older reopen completion after a newer reopen", async () => {
-    const older = deferred<Awaited<ReturnType<NonNullable<OpenShellApi["openSessionById"]>>>>();
-    const newer = deferred<Awaited<ReturnType<NonNullable<OpenShellApi["openSessionById"]>>>>();
+    const older = deferred<Awaited<ReturnType<NonNullable<VelaApi["openSessionById"]>>>>();
+    const newer = deferred<Awaited<ReturnType<NonNullable<VelaApi["openSessionById"]>>>>();
     const openSessionById = vi.fn((id: string) => id === "older" ? older.promise : newer.promise);
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({ openSessionById, closeSession });
+    window.vela = api({ openSessionById, closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     let olderPending!: Promise<SessionInfo | null>;
     let newerPending!: Promise<SessionInfo | null>;
@@ -768,7 +768,7 @@ describe("store workspace continuations", () => {
 
   it("replaces the displayed session and detaches every old session into Open now", async () => {
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({ closeSession });
+    window.vela = api({ closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -785,7 +785,7 @@ describe("store workspace continuations", () => {
   });
 
   it("keeps explicit model-panel additions separate from workspace replacement", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/one"));
@@ -796,7 +796,7 @@ describe("store workspace continuations", () => {
 
   it("replaces panels when the folder picker completes", async () => {
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({
+    window.vela = api({
       closeSession,
       selectFolder: vi.fn(async () => info("/picked", 99))
     });
@@ -820,7 +820,7 @@ describe("store workspace continuations", () => {
     const newer = deferred<SessionInfo>();
     const closeSession = vi.fn(async () => {});
     const openSession = vi.fn((directory: string) => directory === "/older" ? older.promise : newer.promise);
-    window.openshell = api({ openSession, closeSession });
+    window.vela = api({ openSession, closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     let olderPending!: Promise<SessionInfo | null>;
     let newerPending!: Promise<SessionInfo | null>;
@@ -845,7 +845,7 @@ describe("store workspace continuations", () => {
       if (directory === "/second") return second.promise;
       return Promise.resolve(info(directory, 3));
     });
-    window.openshell = api({ openSession, closeSession });
+    window.vela = api({ openSession, closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
 
     let firstPending!: Promise<void>;
@@ -869,7 +869,7 @@ describe("store workspace continuations", () => {
       id: "1786533818724-e85066e0-7d22-4d91-b476-ba097731f371:original",
       artifact: "original",
       originalPath: "save.txt",
-      recoveryPath: ".openshell-recovery/id/original",
+      recoveryPath: ".vela-recovery/id/original",
       createdAt: 1,
       acknowledged: false,
       reason: "saved"
@@ -877,7 +877,7 @@ describe("store workspace continuations", () => {
     const recoveryRecords = vi.fn(async () => [record]);
     const openRecovery = vi.fn(async () => {});
     const acknowledgeRecovery = vi.fn(async () => {});
-    window.openshell = api({ recoveryRecords, openRecovery, acknowledgeRecovery });
+    window.vela = api({ recoveryRecords, openRecovery, acknowledgeRecovery });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
 
@@ -890,7 +890,7 @@ describe("store workspace continuations", () => {
 
   it("ensureRootOpen refreshes an already-expanded root instead of collapsing it", async () => {
     const listDir = vi.fn(async () => [{ path: "alpha", type: "directory" as const }]);
-    window.openshell = api({ listDir });
+    window.vela = api({ listDir });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
 
@@ -907,7 +907,7 @@ describe("store workspace continuations", () => {
   });
 
   it("restores a nested workspace path when its workspace panel closes", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/parent"));
     await act(async () => store.addModelPanel("/parent/child"));
@@ -922,7 +922,7 @@ describe("store workspace continuations", () => {
     const entries = [{ path: "z.txt", type: "file" as const }, { path: ".DS_Store", type: "file" as const },
       { path: "node_modules", type: "directory" as const }, { path: "alpha", type: "directory" as const }];
     const listDir = vi.fn(async () => entries);
-    window.openshell = api({ listDir });
+    window.vela = api({ listDir });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.toggleDir("folder"));
@@ -937,7 +937,7 @@ describe("store workspace continuations", () => {
   it("ignores stale manual directory success but still reports a stale manual failure", async () => {
     let resolve!: (entries: Array<{ path: string; type: "file" }>) => void;
     let reject!: (error: Error) => void;
-    window.openshell = api({ listDir: () => new Promise((done, fail) => { resolve = done; reject = fail; }) });
+    window.vela = api({ listDir: () => new Promise((done, fail) => { resolve = done; reject = fail; }) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     let opening!: Promise<void>;
@@ -955,7 +955,7 @@ describe("store workspace continuations", () => {
 
   it("samples an observed baseline before a deferred editor file read", async () => {
     const read = deferred<string>();
-    window.openshell = api({ readFile: () => read.promise });
+    window.vela = api({ readFile: () => read.promise });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const panel = store.session!;
@@ -973,7 +973,7 @@ describe("store workspace continuations", () => {
   });
 
   it("rejects observed file updates addressed to another session or workspace generation", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const panel = store.session!;
@@ -989,7 +989,7 @@ describe("store workspace continuations", () => {
 
   it("retains the rendered active-tab selection captured by a deferred rename", async () => {
     const rename = deferred();
-    window.openshell = api({ renamePath: () => rename.promise });
+    window.vela = api({ renamePath: () => rename.promise });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.openFile("original.txt"));
@@ -1007,7 +1007,7 @@ describe("store workspace continuations", () => {
 
   it("uses last-render create intent when committing within the same batch", async () => {
     const createFile = vi.fn(async () => {});
-    window.openshell = api({ createFile });
+    window.vela = api({ createFile });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => {

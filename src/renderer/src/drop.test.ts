@@ -6,14 +6,14 @@ function dragEventWith(files: unknown[]): { dataTransfer: { files: unknown[] } }
 }
 
 describe("droppedFilePaths", () => {
-  const original = window.openshell;
+  const original = window.vela;
 
   afterEach(() => {
-    (window as { openshell?: unknown }).openshell = original;
+    (window as { vela?: unknown }).vela = original;
   });
 
   it("reads paths through the preload bridge when it is available", () => {
-    (window as { openshell?: unknown }).openshell = {
+    (window as { vela?: unknown }).vela = {
       getPathForFile: (file: File) => `/bridged/${(file as { name?: string }).name}`
     } as never;
     const e = dragEventWith([{ name: "a.txt" } as unknown as File]);
@@ -21,13 +21,13 @@ describe("droppedFilePaths", () => {
   });
 
   it("falls back to the legacy File.path property when no bridge exists", () => {
-    (window as { openshell?: unknown }).openshell = undefined;
+    (window as { vela?: unknown }).vela = undefined;
     const e = dragEventWith([{ path: "/legacy/a.txt" } as unknown as File]);
     expect(droppedFilePaths(e as never)).toEqual(["/legacy/a.txt"]);
   });
 
   it("skips files whose path cannot be resolved", () => {
-    (window as { openshell?: unknown }).openshell = undefined;
+    (window as { vela?: unknown }).vela = undefined;
     const e = dragEventWith([{ name: "no-path.txt" } as unknown as File]);
     expect(droppedFilePaths(e as never)).toEqual([]);
   });

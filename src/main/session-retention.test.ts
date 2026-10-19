@@ -11,7 +11,7 @@ vi.mock("electron", () => ({
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-import { OpenShellBackend } from "./opencode";
+import { VelaBackend } from "./opencode";
 import { RuntimeSessionIndex } from "./runtimes/runtime-session-index";
 
 interface RawSession {
@@ -57,10 +57,10 @@ function pagedClient(pages: Array<{ data: RawSession[]; next?: string | null }>)
   return { session: { list, remove }, message: { list: vi.fn(async () => []) } };
 }
 
-async function fixture(client: unknown): Promise<OpenShellBackend> {
-  const root = await mkdtemp(path.join(tmpdir(), "mira-retention-index-"));
+async function fixture(client: unknown): Promise<VelaBackend> {
+  const root = await mkdtemp(path.join(tmpdir(), "vela-retention-index-"));
   roots.push(root);
-  const backend = new OpenShellBackend(
+  const backend = new VelaBackend(
     () => {},
     () => { throw new Error("Runtime adapter is not used in retention tests"); },
     new RuntimeSessionIndex(path.join(root, "runtime-sessions.json"))

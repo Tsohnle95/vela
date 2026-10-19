@@ -20,10 +20,10 @@ contracts and renderer domain types, so internal owners can use those types
 without importing the orchestration module.
 
 `use-saved-workspaces.ts` owns bookmark state, hydration, pending mutation replay,
-revision protection and bookmark actions. It reads the prior
-`orbit.savedWorkspaces` local-storage value when the Mira key is absent, then
-writes the Mira key. It receives connection readiness and a stable notification
-callback; main-process storage remains authoritative after initialization.
+revision protection and bookmark actions. Renderer startup migrates prior
+product-prefixed local-storage keys before state initialization; this owner then
+reads and writes the Vela key. It receives connection readiness and a stable
+notification callback; main-process storage remains authoritative after initialization.
 Related bookmark behavior belongs in this owner rather than session attachment
 code. `panel-projection.ts` owns the pure panel view derivation
 from session/workspace records and the authoritative chat state. It preserves
@@ -73,7 +73,7 @@ Exposed state:
 | `session` | `SessionInfo \| null` | the focused session (derived from `panels` + `activeSessionID`); null → an empty IDE whose Explorer offers an **Open Workspace** action after the launch splash |
 | `panels` | `SessionInfo[]` | all attached/live sessions in panel order; each panel continues streaming even when normal coding mode renders only the focused coding session |
 | `activeSessions` | `SessionInfo[]` | backend-owned open contexts, reconciled every second independently of visible panels; drives the complete **Open now** inventory |
-| `savedWorkspaces` | `ProjectInfo[]` | Mira-owned workspace bookmarks stored in the main process under Electron user data with an atomic backup; startup imports `mira.savedWorkspaces` (falling back to `orbit.savedWorkspaces`) only when app storage is uninitialized, or OpenCode's validated project catalog on first use without that value; initialized app storage is authoritative. User additions/removals during hydration are replayed over that snapshot; a failed read never overwrites it with an empty value |
+| `savedWorkspaces` | `ProjectInfo[]` | Vela-owned workspace bookmarks stored in the main process under Electron user data with an atomic backup; startup imports the migrated local-storage value only when app storage is uninitialized, or OpenCode's validated project catalog on first use without that value; initialized app storage is authoritative. User additions/removals during hydration are replayed over that snapshot; a failed read never overwrites it with an empty value |
 | `panelViews` | `Record<workspaceID, PanelView>` | per-panel scoped projection (`session`, `busy`, `transcript`, `todos`, `sessionUsage`, `models`, `currentModel`, `agents`, `currentAgent`) consumed through `usePanel(workspace)` |
 | `activeSessionID` | `string \| null` | focused session id; the editor and terminal tray bind to the focused panel while the Explorer retains every open workspace tree and every panel keeps streaming |
 | `connected` | `boolean` | from `health()` on mount |
@@ -198,7 +198,7 @@ the existing notification callback. Busy pruning consumes captured render values
 closing an off-view context removes busy/abort records at its existing call site
 without clearing streaming records or activity clocks.
 
-Mira's synchronized streaming stack tracks which
+Vela's synchronized streaming stack tracks which
 message is streaming per session and its lifecycle phase
 (`streaming` / `cooldown` / `completed`) with `startedAt` / `lastUpdateAt` /
 `completedAt` timestamps; `lastUpdateAt` writes are throttled to a 1s
@@ -382,7 +382,7 @@ or tree. Focus has a monotonic version: a late activation completion never
 steals focus from a newer user action. Startup never reopens sessions from a
 previous process: a fresh launch shows the compact Folded light splash, then an empty IDE
 until the user opens a workspace or file, and any stale
-`mira.sessionLayout` record left by an older build is deleted on startup.
+`vela.sessionLayout` record left by an older build is deleted on startup.
 Only live backend contexts are re-attached at startup (which covers a
 renderer reload while the main process is still running). They reopen
 sequentially in backend order through the existing `openSessionById`
@@ -393,7 +393,7 @@ launch. Past sessions stay reachable through recents and the **Open now**
 inventory. A saved workspace's main row adds its file root beside existing open
 workspaces; its disclosure control expands that workspace's session history.
 Explicitly reopening a recent session can ask the user to locate a replacement folder when its saved location
-has disappeared, then updates Mira's saved workspace bookmark. Silent startup
+has disappeared, then updates Vela's saved workspace bookmark. Silent startup
 hydration never opens a folder picker. A renderer reload still restores live
 backend contexts; editor tabs, changes, terminals,
 permissions, queues, prompts, and other transient state are not persisted for
@@ -482,7 +482,7 @@ Key mechanisms:
   tab saves it first; unresolved conflicts keep the tab open. Any dirty tab in
   any workspace blocks window unload until the save completes or the user
   confirms discarding it. The native quit dialog can save all dirty editor files
-  across workspaces without navigating to their tabs; failed saves keep Mira open.
+  across workspaces without navigating to their tabs; failed saves keep Vela open.
   External updates advance a per-path conflict generation, so completion of a
   write already in flight cannot clear the newer conflict.
   External updates preserve edits and pause saving until explicit Reload,
@@ -532,7 +532,7 @@ Key mechanisms:
   follows OpenCode V2’s message timeline: a right-aligned user bubble, flat assistant
   parts, and a hover footer with copy plus the owning message’s agent/model and turn
   duration. Revert belongs to the user-message footer. The source styles under
-  `styles/opencode/` are pinned to upstream revision `03e67171`; Mira’s theme colors
+  `styles/opencode/` are pinned to upstream revision `03e67171`; Vela’s theme colors
   and responsive code/table wrapping remain intentional overrides in `_opencode-chat.scss`.
   Markdown tables use fixed column layout and break long cell content; paths
   and prose break within the panel rather than increasing its intrinsic width.
@@ -568,7 +568,7 @@ Key mechanisms:
   code retains stable tokens while its unfinished suffix changes. Per-part cache
   keys distinguish healed live blocks from finalized blocks. Worker revisions
   prevent stale asynchronous results from replacing newer content; completed
-  messages flush pending text. HTML is sanitized and external links retain Mira’s
+  messages flush pending text. HTML is sanitized and external links retain Vela’s
   URL policy. Tool disclosures start collapsed like upstream; running titles
   shimmer without an additional status badge. Failed tools replace the inline row with OpenCode's
   `ToolErrorCard`: the capitalized error head becomes the subtitle, the cleaned
@@ -587,7 +587,7 @@ Key mechanisms:
   use the upstream file accordions and `OpenCodeFile.tsx` / `opencode-file/`
   Pierre renderer: unified diff rows and gutters, syntax tokens, and partial/full
   patch semantics. Its Shiki worker uses the JavaScript regex engine so previews
-  render under Mira's existing CSP, which disallows Wasm compilation.
+  render under Vela's existing CSP, which disallows Wasm compilation.
   File metadata retains before/after contents and patch paths;
   write tools show the input file contents. Shell parts render `$ command` plus
   output in one scrollable pre. `OpenCodeSpecialTool.tsx` owns the upstream
@@ -621,9 +621,8 @@ Key mechanisms:
   folder also inserts the new entry into the tree and opens the new file tab
   optimistically in the renderer (`commitName`), with the authoritative
   `refreshTree`/`listDir` reconcile happening in the background.
-  Legacy `.openshell-recovery` and `.orbit-recovery` directories, plus the
-  current `.mira-recovery` directory, are hidden independently in main and
-  renderer.
+  Previous product recovery directories, plus the current `.vela-recovery`
+  directory, are hidden independently in main and renderer.
 - **Explorer selection and moves** — ordinary clicks keep opening files and
   expanding folders. Command/Control-click toggles rows and Shift-click selects
   the visible range. Delete/Backspace and the context menu move selected items
@@ -690,14 +689,14 @@ express a cross-component invariant or non-obvious state contract.
 | `App` | `App.tsx` | Workspace shell and activity rail; panel geometry and focus routing; the rail hosts Sessions/Files views, Terminal, the Changes review view, and browser creation with Settings pinned at the bottom and stays visible in Agent Mode; Settings overlays the mounted workspace so editor group state survives |
 | `Titlebar` | `Titlebar.tsx` | Left-panel toggle beside the traffic lights, a slot the focused editor group's tab strip portals into, and the titlebar actions (Agent Mode, add-agent panel, and the right-panel toggle in the corner); the leading block is sized so the strip starts exactly where the left app panel ends, and never narrower than its controls so a collapsed panel cannot clip the toggle; empty strip surface is part of the window drag region while tabs and controls set `no-drag`; both panel toggles are the same mirrored panel glyph pair (dashed while its panel is hidden) and flip with panel state without accent highlighting |
 | Launch bootstrap | `launch.ts`, `mount-app.tsx`, `src/renderer/index.html` | Static Folded light art paints before the IDE modules load; three visible seconds precede mounting the IDE, which opens at workspace size without selecting a session |
-| `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (Files when a workspace opens), Mira header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |
+| `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (Files when a workspace opens), Vela header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |
 | `ChangesView` | `ChangesView.tsx`, `changes-view-model.ts` | Editor-area review surface activated by the rail: a directory tree of observed file changes beside stacked Pierre diffs with per-file status and +/- counts; omits paths hidden for the focused workspace (detached paths and nested-workspace roots, matching the Explorer), and defers both per-file diff statistics and the Pierre diff until a section nears the viewport (one shared observer) so a large change set never diffs every file on mount |
 | `SettingsSidebar` | `SettingsSidebar.tsx` | Settings navigation |
 | `SettingsPage` | `SettingsPage.tsx` | The independent Codex/Classic interface chooser and all appearance palettes, including the persisted Experimental art toggle, plugins, providers, safety, voice, default model and OpenCode sync, mobile, and About with a direct GitHub update action, separate status check, and clickable unsaved-file list |
 | `ProviderSettings` | `ProviderSettings.tsx` | Runtime-neutral provider connection/status UI; never owns provider secrets |
-| `SessionsPane` | `SessionsPane.tsx` | Mira header with session filter, Pinned/Projects/Recents inventory, saved workspaces, session open/close navigation |
+| `SessionsPane` | `SessionsPane.tsx` | Vela header with session filter, Pinned/Projects/Recents inventory, saved workspaces, session open/close navigation |
 | `EditorPane` | `EditorPane.tsx` | Monaco edit views (files always open in the edit surface; diff review lives in the rail's Changes view) with a Codex-style breadcrumb trail (text segments, chevron separators, ghost ancestors, current file emphasized) and unconditional line wrapping, manual save/conflict UI, editor validation entry points, and up to four groups with independent tab membership, selection, and drag transfer; every group's file tabs share the titlebar strip (group blocks in panel order, separated by a hairline) so a split panel never grows a second strip inside itself, and selecting a tab there focuses its group; each group's split/close controls sit at the right end of its breadcrumb row beside the editor status menu (empty groups keep that row so they can still be split); new tabs route to the focused group ; browser tabs share that strip (chips after the file tabs, with their `+` immediately after the last visible browser chip; file-only strips omit it and the rail opens the first browser) and while one is showing the editor keeps its mount behind a concealed wrapper |
-| `BrowserPane` | `BrowserPane.tsx`, `use-browser-guest.ts`, `use-browser-tabs.ts` | Browser tab surface: a navigation row (back / forward / reload-or-stop, "Search or enter a URL" field that turns bare hosts into `https:` and everything else into a search) over a `<webview>` guest in the `mira-browser` partition. Guests are created lazily — a new tab is pure state with no guest at all — so opening one costs nothing, and a loading veil covers the frame until the page stops loading; `use-browser-guest` folds guest events into the browser slice |
+| `BrowserPane` | `BrowserPane.tsx`, `use-browser-guest.ts`, `use-browser-tabs.ts` | Browser tab surface: a navigation row (back / forward / reload-or-stop, "Search or enter a URL" field that turns bare hosts into `https:` and everything else into a search) over a `<webview>` guest in the `vela-browser` partition. Guests are created lazily — a new tab is pure state with no guest at all — so opening one costs nothing, and a loading veil covers the frame until the page stops loading; `use-browser-guest` folds guest events into the browser slice |
 | `BrowserTabsProvider` | `browser-tabs-context.tsx`, `browser-store-provider.tsx` | Browser tab state lives outside the app store, split into a *state* context (tab list + active tab, consumed by the strip and panes) and a stable *actions* context (consumed by the rail, the editor and the store). That split is a responsiveness contract, not a detail: when the slices lived in the app store, opening or closing a tab re-rendered every store consumer (measured 644ms with nine editors open; 2ms after the split)
 | `EditorTabs` | `EditorTabs.tsx`, `editor-groups.ts` | Tab strip for the editor groups: tabs share the strip width (90px floor, 240px ceiling) and overflow past the floor moves into an "all open tabs" menu button; a preview tab (`preview: true`, italic) marks a single Explorer click as transient so the next preview replaces it, while reopening the file, editing it, or pinning it removes that marker; each tab resolves its owning group (drag source and selection target) through the strip's group lookup; owns the tab drag MIME and the editor-group identity helpers |
 | `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (session/mode/close) behind a horizontal-dots control; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
@@ -759,7 +758,7 @@ Key cross-component invariants:
   state and reconcile every three seconds plus stream reconnect so a missed
   `form.created` event cannot leave the agent waiting without a GUI card. A
   form whose owner is not an open session is routed to the panels open at the
-  event's location using main's `miraSessionIDs`, so a location-global form, a
+  event's location using main's `velaSessionIDs`, so a location-global form, a
   delegated child, or an external `opencode` TUI question surfaces in the GUI;
   the form keeps its true session id and replies carry it so the answer reaches
   the owning session. A temporary list failure preserves the existing card.
@@ -776,7 +775,7 @@ Key cross-component invariants:
 ## Styles (`src/renderer/src/styles/`)
 
 `_opencode-chat.scss` owns the ordered integration of the pinned upstream
-partials and Mira's transcript overrides. Prompt, permission/form/revert,
+partials and Vela's transcript overrides. Prompt, permission/form/revert,
 todo and compact composer presentation lives in `_agent-prompt-dock.scss`;
 the transcript owner includes its mixin at the existing cascade position.
 `_agent.scss` owns the optional empty-state station mark and its prompt line.
@@ -794,7 +793,7 @@ Failed or superseded loads keep the last valid sheet. This changes no editor,
 session, or document state and does not reload the renderer.
 
 `main.scss` is the single renderer stylesheet entry and uses ordered Sass
-partials so the cascade stays explicit. Mira's runtime-neutral chat tokens,
+partials so the cascade stays explicit. Vela's runtime-neutral chat tokens,
 slots, typography, row geometry, and animations live in
 `_opencode-chat.scss`; other component rules are owned by `_sidebar.scss`,
 `_editor.scss`, `_agent.scss`, `_composer.scss`,
@@ -821,7 +820,7 @@ starts the active runtime command through `agentTuiStart` in the panel's
 workspace directory. OpenCode uses `opencode --session <session-id>`; the
 dormant DeepSeek runtime is not available to panels.
 Appearance and interface are separate axes. The selected *appearance* only
-supplies colours (and the scheme); the selected *interface* (`mira.ui`,
+supplies colours (and the scheme); the selected *interface* (`vela.ui`,
 `data-shell`) decides the chrome: `codex` is the new flat shell — icon rail, tab
 strip in the top bar, docked agent panel, browser tabs — and `classic` is the
 original card chrome. Every appearance works in both interfaces, and
@@ -858,7 +857,7 @@ With shells open, the leftmost header tab selects the first shell rather than
 acting as a separate panel selector. Selecting any shell tab returns from
 Problems and focuses its input; `+` also returns to the terminal view.
 Explorer context-menu requests add and focus a terminal whose cwd is the selected folder or a selected file's parent, and expand the normal bottom tray.
-When renderer HMR is newer than the still-running main/preload process, a missing resolved-cwd response triggers one safely quoted `cd`/`Set-Location` command through the existing terminal input channel, so folder terminals work without restarting Mira.
+When renderer HMR is newer than the still-running main/preload process, a missing resolved-cwd response triggers one safely quoted `cd`/`Set-Location` command through the existing terminal input channel, so folder terminals work without restarting Vela.
 The tray is toggled from the titlebar (⌥O) and drag-resized via the
 `tray-divider`. Dragging the divider down to the bottom of the window
 shrinks the tray to a 26px minimum and closes it only when the mouse is
@@ -868,8 +867,8 @@ released at that collapsed position.
 
 - Workers wired for editor/json/css/html/ts (`?worker` imports).
 - Codex profiles include Pierre-style syntax slots and language-specific token overrides; other profiles retain per-slot fallbacks. Comments use plain rather than italic text.
-- The persisted `mira.theme` color profile reads its prior `orbit.theme` value when the Mira key is absent and defaults to Codex; saved palette IDs remain compatible. The independent `mira.ui` preference similarly falls back to `orbit.ui` and defaults to `codex`, with `classic` restoring card chrome. Shell selection publishes `data-shell`; palette selection supplies colors. Switching either removes obsolete inline tokens before applying the new combination.
-- `mira-${appearanceId}` themes (diff insert/remove colors included) for all persisted color profiles. Saved `kitty` and `original` selections keep their IDs rather than mapping to Blueprint or Control Deck. Monaco
+- Startup migrates old product-prefixed local-storage keys before persisted preferences initialize. The `vela.theme` color profile defaults to Codex when absent; saved palette IDs remain compatible. The independent `vela.ui` preference defaults to `codex`, with `classic` restoring card chrome. Shell selection publishes `data-shell`; palette selection supplies colors. Switching either removes obsolete inline tokens before applying the new combination.
+- `vela-${appearanceId}` themes (diff insert/remove colors included) for all persisted color profiles. Saved `kitty` and `original` selections keep their IDs rather than mapping to Blueprint or Control Deck. Monaco
   parses theme palette colors with `Color.fromHex`, which silently maps any
   non-hex value to pure red — every palette color must be hex
   (`#RRGGBB` or `#RRGGBBAA`), never `rgba()`.
@@ -934,7 +933,7 @@ released at that collapsed position.
   from Monaco's Sass language service because the W3C CSS Validator cannot
   parse preprocessor syntax.
 - For HTML and CSS, `EditorStatusMenu` sends the active tab's content through
-  `window.openshell.validateW3c` and applies returned diagnostics as `w3c`-owner
+  `window.vela.validateW3c` and applies returned diagnostics as `w3c`-owner
   Monaco markers. For SCSS, it reads Sass diagnostics from Monaco's marker
   service. Both paths show error and warning counts (or a failure state) beside
   the button. The results also open
@@ -950,13 +949,13 @@ released at that collapsed position.
 - About shows the running app version and build flavor. Local development/test
   builds have no GitHub updater controls and make no release-check requests.
   Release builds compare their version with the latest published GitHub
-  release. **Update Mira** downloads that packaged release, shows progress in
-  the standalone updater window, then closes Mira while `electron-updater`
+  release. **Update Vela** downloads that packaged release, shows progress in
+  the standalone updater window, then closes Vela while `electron-updater`
   installs and relaunches the new bundle. **Check for updates** only checks the
   release version. Pushing a commit does not publish an app update; a matching
   version tag must create a GitHub release. The updater never modifies a source
   checkout or user workspace. Its popup retains progress after reload attempts
-  and provides a Return to Mira action after errors. Unsaved editor files are
+  and provides a Return to Vela action after errors. Unsaved editor files are
   listed with buttons to open each one and block both update and app close. A tab's dirty marker is
   derived from whether its buffer differs from its saved content, so undoing to
   the saved text clears the marker.
@@ -970,7 +969,7 @@ released at that collapsed position.
 the current frame uses `src/renderer/src/assets/folded-light.svg`, with the mint
 folded mark, Vela wordmark, and small “integrated development environment” caption.
 The local `design/experimental-art/experimental-landing-page/launch-comparison.html`
-preserves the earlier Mira Folded light and app-icon comparison frames. The 380 × 320 native landing window
+preserves the earlier Vela Folded light and app-icon comparison frames. The 380 × 320 native landing window
 appears before React, Monaco or backend readiness. `launch.ts` waits for image
 decode and a visible paint, loads the IDE modules in parallel with a three-second
 hold, and hands off only when both finish. `mount-app.tsx` removes the static
@@ -981,7 +980,7 @@ open requests keep their existing store ownership.
 
 `main.tsx` starts the launch coordinator and dynamically imports `mount-app.tsx`.
 `App` owns the theme/browser providers, with `BrowserStoreProvider` mounting the
-renderer store. `global.d.ts` types `window.openshell` from the preload API.
+renderer store. `global.d.ts` types `window.vela` from the preload API.
 
 Agent Mode is a temporary panel view. Normal coding mode renders only the
 focused coding session. Entering Agent Mode seeds its panel set with that one

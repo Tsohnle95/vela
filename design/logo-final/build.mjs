@@ -51,8 +51,8 @@ const sections = MARKS.map((m) => {
   </div>
   <div class="block">
     <h3>Lockup</h3>
-    <div class="lockup">${wrap(m.svg, 30)}<span class="word">Mira</span></div>
-    <div class="lockup dark-lockup">${wrap(m.svg, 30)}<span class="word">Mira</span></div>
+    <div class="lockup">${wrap(m.svg, 30)}<span class="word">Vela</span></div>
+    <div class="lockup dark-lockup">${wrap(m.svg, 30)}<span class="word">Vela</span></div>
   </div>
 </section>`;
 });
@@ -62,7 +62,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mira — Logo Finalists</title>
+<title>Vela — Logo Finalists</title>
 <style>
 :root {
   --ink: #2b2119;
@@ -159,7 +159,7 @@ header.page p { margin: 0 0 36px; color: var(--muted); max-width: 70ch; line-hei
 </head>
 <body>
 <header class="page">
-  <h1>Mira logo finalists</h1>
+  <h1>Vela logo finalists</h1>
   <p>Eight finished candidates refined from your iteration-4 shortlist. Every mark is shown
   at shipping contexts — light and dark, app-icon chips, a size ladder down to favicon,
   and a wordmark lockup. Shortlist one (or two) and the next step is real asset

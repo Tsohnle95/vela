@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AppUpdater } from "electron-updater";
-import { createDisabledMiraAppUpdater, createMiraAppUpdater } from "./app-updater";
+import { createDisabledVelaAppUpdater, createVelaAppUpdater } from "./app-updater";
 
 class FakeReleaseUpdater extends EventEmitter {
   autoDownload = true;
@@ -24,7 +24,7 @@ class FakeReleaseUpdater extends EventEmitter {
   downloadUpdate = vi.fn(async () => {
     if (this.downloadError) throw this.downloadError;
     this.emit("download-progress", { percent: 43.8, total: 100, transferred: 43, delta: 43, bytesPerSecond: 1024 });
-    return ["/tmp/mira-release.zip"];
+    return ["/tmp/vela-release.zip"];
   });
   quitAndInstall = vi.fn();
 }
@@ -42,15 +42,15 @@ function makeUpdater(overrides: {
   if (overrides.downloadError) client.downloadError = overrides.downloadError;
   return {
     client,
-    updater: createMiraAppUpdater(client as unknown as AppUpdater, "0.1.0")
+    updater: createVelaAppUpdater(client as unknown as AppUpdater, "0.1.0")
   };
 }
 
 afterEach(() => vi.clearAllMocks());
 
-describe("Mira app updater", () => {
+describe("Vela app updater", () => {
   it("disables GitHub updater work in local development and test builds", async () => {
-    const updater = createDisabledMiraAppUpdater("0.1.0");
+    const updater = createDisabledVelaAppUpdater("0.1.0");
 
     await expect(updater.check()).resolves.toEqual({
       state: "disabled",
@@ -92,7 +92,7 @@ describe("Mira app updater", () => {
     await expect(updater.check()).resolves.toMatchObject({
       state: "blocked",
       currentVersion: "0.1.0",
-      message: "Could not check GitHub Releases for Mira updates: GitHub is unreachable"
+      message: "Could not check GitHub Releases for Vela updates: GitHub is unreachable"
     });
     expect(client.downloadUpdate).not.toHaveBeenCalled();
     expect(client.quitAndInstall).not.toHaveBeenCalled();
@@ -107,7 +107,7 @@ describe("Mira app updater", () => {
       updated: true,
       currentVersion: "0.1.0",
       latestVersion: "0.2.0",
-      message: "Mira 0.2.0 is downloaded and ready to install."
+      message: "Vela 0.2.0 is downloaded and ready to install."
     });
 
     expect(client.checkForUpdates).toHaveBeenCalledOnce();
@@ -115,10 +115,10 @@ describe("Mira app updater", () => {
     expect(client.listenerCount("download-progress")).toBe(0);
     expect(client.quitAndInstall).not.toHaveBeenCalled();
     expect(progress).toEqual([
-      "Checking GitHub Releases for a Mira update…",
-      "Downloading Mira 0.2.0 from GitHub Releases…",
-      "Downloading Mira 0.2.0 from GitHub Releases (43%)…",
-      "Release downloaded. Installing it and restarting Mira…"
+      "Checking GitHub Releases for a Vela update…",
+      "Downloading Vela 0.2.0 from GitHub Releases…",
+      "Downloading Vela 0.2.0 from GitHub Releases (43%)…",
+      "Release downloaded. Installing it and restarting Vela…"
     ]);
 
     updater.installAndRestart();
@@ -133,19 +133,19 @@ describe("Mira app updater", () => {
       updated: false,
       currentVersion: "0.1.0",
       latestVersion: "0.1.0",
-      message: "Mira 0.1.0 is the latest published release."
+      message: "Vela 0.1.0 is the latest published release."
     });
     expect(client.downloadUpdate).not.toHaveBeenCalled();
     expect(client.quitAndInstall).not.toHaveBeenCalled();
   });
 
-  it("keeps Mira open and reports a release download failure", async () => {
+  it("keeps Vela open and reports a release download failure", async () => {
     const { client, updater } = makeUpdater({ downloadError: new Error("download interrupted") });
 
     await expect(updater.update()).resolves.toMatchObject({
       ok: false,
       updated: false,
-      message: "Mira could not download the release update. download interrupted"
+      message: "Vela could not download the release update. download interrupted"
     });
     expect(client.listenerCount("download-progress")).toBe(0);
     expect(client.quitAndInstall).not.toHaveBeenCalled();

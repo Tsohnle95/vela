@@ -26,7 +26,7 @@ afterEach(async () => {
 });
 
 async function directory(): Promise<string> {
-  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "mira-observation-")));
+  const root = await fsp.realpath(await fsp.mkdtemp(path.join(tmpdir(), "vela-observation-")));
   roots.push(root);
   return root;
 }
@@ -43,7 +43,7 @@ function open(root: string, generation: number): WatchSession {
   return session;
 }
 
-it.skipIf(process.env.MIRA_NATIVE_WATCH_TESTS !== "1")("closes native watchers and pending work, then reopens with fresh observation maps", async () => {
+it.skipIf(process.env.VELA_NATIVE_WATCH_TESTS !== "1")("closes native watchers and pending work, then reopens with fresh observation maps", async () => {
   const root = await directory();
   const file = path.join(root, "file.txt");
   await fsp.writeFile(file, "before");
@@ -71,7 +71,7 @@ it.skipIf(process.env.MIRA_NATIVE_WATCH_TESTS !== "1")("closes native watchers a
   expect(first.watchContext.lastKnown.get(file)).toBe("first activation");
 });
 
-it.skipIf(process.env.MIRA_NATIVE_WATCH_TESTS !== "1")("correlates native rename and directory move notifications using opened-file identity", async () => {
+it.skipIf(process.env.VELA_NATIVE_WATCH_TESTS !== "1")("correlates native rename and directory move notifications using opened-file identity", async () => {
   const root = await directory();
   await fsp.mkdir(path.join(root, "nested"));
   const old = path.join(root, "old.txt");
@@ -112,7 +112,7 @@ it("preserves rename and move destination timing when a listener closes the acti
   expect(context.lastKnown.has("/workspace/moved")).toBe(false);
 });
 
-it("ignores filesystem events for a path while Mira is writing it", async () => {
+it("ignores filesystem events for a path while Vela is writing it", async () => {
   vi.useFakeTimers();
   const context = observation.createContext("/workspace", "session", { id: "test", generation: 1 });
   const session: WatchSession = { directory: context.root, watchContext: context, watcher: null };
@@ -135,7 +135,7 @@ it("ignores filesystem events for a path while Mira is writing it", async () => 
   expect(changed).toHaveBeenCalledExactlyOnceWith(context, file, "change");
 });
 
-it("ignores direct observation of a path while Mira is writing it", async () => {
+it("ignores direct observation of a path while Vela is writing it", async () => {
   const context = observation.createContext("/workspace", "session", { id: "test", generation: 1 });
   const session: WatchSession = { directory: context.root, watchContext: context, watcher: null };
   active.set(context.workspace.id, session);

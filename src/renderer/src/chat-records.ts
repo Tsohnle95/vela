@@ -98,7 +98,7 @@ export function toolPartID(messageID: string, callID: string): string {
   return `${messageID}:tool:${callID}`;
 }
 
-export function errorText(error: unknown, fallbackCode = "MIRA_RUNTIME_FAILURE", fallbackMessage = "Operation failed"): string {
+export function errorText(error: unknown, fallbackCode = "VELA_RUNTIME_FAILURE", fallbackMessage = "Operation failed"): string {
   return formatFailure(error, fallbackCode, fallbackMessage);
 }
 

@@ -8,7 +8,7 @@ export function RecoveryNotice(): ReactNode {
   return (
     <section className="recovery-notice" aria-label="Recovery artifacts">
       <strong>Recovery files preserved</strong>
-      <p>Mira kept displaced or proposed bytes. Review them before acknowledging.</p>
+      <p>Vela kept displaced or proposed bytes. Review them before acknowledging.</p>
       <div className="recovery-list">
         {visible.map((record) => (
           <div className="recovery-record" key={record.id}>

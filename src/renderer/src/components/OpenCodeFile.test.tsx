@@ -76,7 +76,7 @@ describe("OpenCodeFile", () => {
     expect(full.additionLines.join("")).toBe("new");
   });
 
-  it("uses the narrow viewport gutter rule and follows Mira's selected color scheme", async () => {
+  it("uses the narrow viewport gutter rule and follows Vela's selected color scheme", async () => {
     vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
     document.documentElement.style.colorScheme = "light";
     await act(async () => root.render(<OpenCodeFile mode="diff" file="a.ts" before="one\n" after="two\n" />));

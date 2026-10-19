@@ -39,7 +39,7 @@ describe("frozen upstream stylesheet scope", () => {
   });
 
   it("rejects changed pins and imported new handwritten styles or privileged scripts through the actual CLI", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "mira-pinned-styles-test-"));
+    const root = await mkdtemp(path.join(tmpdir(), "vela-pinned-styles-test-"));
     try {
       await mkdir(path.join(root, "scripts"));
       await mkdir(path.join(root, "docs"));
@@ -64,7 +64,7 @@ describe("frozen upstream stylesheet scope", () => {
       const check = () => spawnSync(process.execPath, ["scripts/check-architecture.mjs"], { cwd: root, encoding: "utf8" });
       expect(check().status).toBe(0);
 
-      await writeFile(path.join(root, pin), await readFile(path.join(root, pin), "utf8") + "\n.mira-handwritten { color: red; }\n");
+      await writeFile(path.join(root, pin), await readFile(path.join(root, pin), "utf8") + "\n.vela-handwritten { color: red; }\n");
       const changed = check();
       expect(changed.status).toBe(1);
       expect(changed.stderr).toContain(`pinned-style-integrity: ${pin}`);

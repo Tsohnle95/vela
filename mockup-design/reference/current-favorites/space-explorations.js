@@ -1,17 +1,17 @@
-const miraSpaceExplorations = [
+const velaSpaceExplorations = [
   {
     id: "04-nocturne-eclipse", family: "04", lineage: "nocturne", name: "Eclipse", motif: "eclipsed moon / alpine night", note: "A luminous corona above layered midnight peaks.",
     title: "Find your way through the code.", lede: "The repository stays your point of reference while the agent follows the work into the dark.", section: "Every path has a source.", message: "The project remains your north star.",
     scene: "nocturne-eclipse", form: "inset", type: "serif", sky: "#0e1529", horizon: "#384b65", foreground: "#101b2b", glow: "#a5cae4", ink: "#f3f4ef", accent: "#bbd5dc", light: false
   },
   {
-    id: "04-nocturne-constellation", family: "04", lineage: "nocturne", name: "Constellation", motif: "star map / quiet ridgeline", note: "Fine orbital lines connect a field of stars over the valley.",
+    id: "04-nocturne-constellation", family: "04", lineage: "nocturne", name: "Constellation", motif: "star map / quiet ridgeline", note: "Fine celestial lines connect a field of stars over the valley.",
     title: "Connect every part of the work.", lede: "Files, questions, and changes form one clear constellation around your repository.", section: "The connections are the point.", message: "Keep the whole project in view.",
     scene: "nocturne-constellation", form: "diagram", type: "mono", sky: "#101b32", horizon: "#38546a", foreground: "#101d2b", glow: "#80b8bd", ink: "#eef5ed", accent: "#addad0", light: false
   },
   {
     id: "04-nocturne-pulsar", family: "04", lineage: "nocturne", name: "Pulsar", motif: "light pulse / distant mountains", note: "A single distant signal cuts across a still night landscape.",
-    title: "Stay close to the signal.", lede: "Mira keeps the repo in focus while the agent follows a question from file to answer.", section: "Less noise. More context.", message: "Follow the signal back to source.",
+    title: "Stay close to the signal.", lede: "Vela keeps the repo in focus while the agent follows a question from file to answer.", section: "Less noise. More context.", message: "Follow the signal back to source.",
     scene: "nocturne-pulsar", form: "floating", type: "sans", sky: "#161528", horizon: "#43385f", foreground: "#141b30", glow: "#d8a9c4", ink: "#faf2f4", accent: "#edc3d0", light: false
   },
   {
@@ -30,7 +30,7 @@ const miraSpaceExplorations = [
     scene: "ridge-saturn", form: "grounded", type: "serif", sky: "#203a41", horizon: "#6c8a73", foreground: "#1d3c32", glow: "#e1d6aa", ink: "#f8f4e9", accent: "#cce2b5", light: false
   },
   {
-    id: "04-ridge-observatory", family: "04", lineage: "ridge", name: "Observatory", motif: "signal dome / sunset peaks", note: "A small observatory beneath a vast orbital sky.",
+    id: "04-ridge-observatory", family: "04", lineage: "ridge", name: "Observatory", motif: "signal dome / sunset peaks", note: "A small observatory beneath a vast celestial sky.",
     title: "See the whole project clearly.", lede: "Keep the repository in view while you explore what the agent is working on.", section: "A vantage point for the work.", message: "Keep sight of where it all begins.",
     scene: "ridge-observatory", form: "inset", type: "sans", sky: "#e9d7c7", horizon: "#ac9d9d", foreground: "#3d4e50", glow: "#f9d9a6", ink: "#353f42", accent: "#496a6a", light: true
   },
@@ -45,8 +45,8 @@ const miraSpaceExplorations = [
     scene: "ridge-binary", form: "framed", type: "serif", sky: "#f1dfc0", horizon: "#cba975", foreground: "#57624f", glow: "#ffe2a0", ink: "#3d4b3c", accent: "#5b6f51", light: true
   },
   {
-    id: "04-ridge-halo", family: "04", lineage: "ridge", name: "Halo Ridge", motif: "orbital halo / evergreen peaks", note: "A bright orbital arc curves around a mountain summit.",
-    title: "Keep your bearings.", lede: "Every question can lead somewhere new. Mira keeps the source of the work close.", section: "Stay anchored in the project.", message: "Everything comes back around.",
+    id: "04-ridge-halo", family: "04", lineage: "ridge", name: "Halo Ridge", motif: "celestial halo / evergreen peaks", note: "A bright celestial arc curves around a mountain summit.",
+    title: "Keep your bearings.", lede: "Every question can lead somewhere new. Vela keeps the source of the work close.", section: "Stay anchored in the project.", message: "Everything comes back around.",
     scene: "ridge-halo", form: "diagram", type: "sans", sky: "#dce5dc", horizon: "#9bb8a0", foreground: "#305148", glow: "#e9f3d0", ink: "#28453d", accent: "#487a61", light: true
   },
   {
@@ -55,13 +55,13 @@ const miraSpaceExplorations = [
     scene: "mist-lunar", form: "inset", type: "serif", sky: "#e9edeb", horizon: "#bdcfd0", foreground: "#536f73", glow: "#f9fcf2", ink: "#2c4548", accent: "#4e7476", light: true
   },
   {
-    id: "04-mist-transit", family: "04", lineage: "mist", name: "Transit", motif: "orbital transit / silver clouds", note: "A dark passing sphere gives the bright haze a center.",
+    id: "04-mist-transit", family: "04", lineage: "mist", name: "Transit", motif: "celestial transit / silver clouds", note: "A dark passing sphere gives the bright haze a center.",
     title: "Focus follows the project.", lede: "From the code in front of you to the diff at the end, each step stays connected.", section: "One clear point of focus.", message: "Move through the work together.",
     scene: "mist-transit", form: "framed", type: "sans", sky: "#eff0e8", horizon: "#bec7c6", foreground: "#5d7471", glow: "#fffde8", ink: "#304845", accent: "#567d72", light: true
   },
   {
     id: "04-mist-starfield", family: "04", lineage: "mist", name: "Starfield", motif: "faint stars / morning fog", note: "A barely-there constellation through translucent cloud.",
-    title: "See the connections form.", lede: "Mira keeps files, questions, and changes visible while the work takes shape.", section: "A place for everything to connect.", message: "Even small signals make a pattern.",
+    title: "See the connections form.", lede: "Vela keeps files, questions, and changes visible while the work takes shape.", section: "A place for everything to connect.", message: "Even small signals make a pattern.",
     scene: "mist-starfield", form: "diagram", type: "mono", sky: "#e6eeec", horizon: "#b4cdca", foreground: "#4c7770", glow: "#f6f5e0", ink: "#294e49", accent: "#417b70", light: true
   },
   {
@@ -75,9 +75,9 @@ const miraSpaceExplorations = [
     scene: "mist-afterglow", form: "grounded", type: "sans", sky: "#e7ebe5", horizon: "#b5cbbd", foreground: "#4a6862", glow: "#f6f1d9", ink: "#2e4840", accent: "#4f7e6c", light: true
   },
   {
-    id: "10-dusk-mira", family: "10", lineage: "dusk", name: "Night Mira", motif: "planetary ring / city lights", note: "An orbital ring rises over a quiet working skyline.",
-    title: "A home for every Mira.", lede: "Your tools revolve around the project, not the other way around.", section: "Everything in its place.", message: "A desk for the whole journey.",
-    scene: "dusk-mira", form: "grounded", type: "serif", sky: "#151d35", horizon: "#4c5878", foreground: "#111a2c", glow: "#f0a88d", ink: "#f6f1ef", accent: "#edbca9", light: false
+    id: "10-dusk-vela", family: "10", lineage: "dusk", name: "Night Vela", motif: "planetary ring / city lights", note: "A celestial ring rises over a quiet working skyline.",
+    title: "A home for every Vela.", lede: "Your tools revolve around the project, not the other way around.", section: "Everything in its place.", message: "A desk for the whole journey.",
+    scene: "dusk-vela", form: "grounded", type: "serif", sky: "#151d35", horizon: "#4c5878", foreground: "#111a2c", glow: "#f0a88d", ink: "#f6f1ef", accent: "#edbca9", light: false
   },
   {
     id: "10-dusk-nebula", family: "10", lineage: "dusk", name: "Nebula Desk", motif: "nebula / city silhouette", note: "Colorful atmospheric light glows over a late-night desk.",
@@ -101,4 +101,4 @@ const miraSpaceExplorations = [
   }
 ];
 
-miraExplorations.push(...miraSpaceExplorations);
+velaExplorations.push(...velaSpaceExplorations);

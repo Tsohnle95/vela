@@ -61,11 +61,11 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
   const removeFromWorkspace = useCallback((path: string) => {
     const target = readFocusedSession()?.workspace;
     if (!target) return;
-    const confirmed = window.confirm(`Remove "${path}" from Mira? The item will remain on disk.`);
+    const confirmed = window.confirm(`Remove "${path}" from Vela? The item will remain on disk.`);
     if (!confirmed) return;
     closeCtxMenu();
     hidePath(target, path);
-    void window.openshell.detachPath(target, path).then(() => {
+    void window.vela.detachPath(target, path).then(() => {
       restoreDetachedPath(target, path);
       void refreshTree(ancestorDirs(path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : ""));
     }).catch((error) => toast(error instanceof Error ? error.message : String(error), "error"));
@@ -91,7 +91,7 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
     const target = readFocusedSession()?.workspace;
     if (!target) return;
     try {
-      await window.openshell.revealInFileManager(target, path);
+      await window.vela.revealInFileManager(target, path);
     } catch (err) {
       if (panelFor(target)) {
         toast(err instanceof Error ? err.message : String(err), "error");
@@ -111,7 +111,7 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
       if (!target) return;
       cancelPrefix(target, path);
       try {
-        await window.openshell.deletePath(target, path);
+        await window.vela.deletePath(target, path);
       } catch (err) {
         if (panelFor(target)) {
           toast(err instanceof Error ? err.message : String(err), "error");
@@ -135,7 +135,7 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
     for (const path of selected) {
       cancelPrefix(workspace, path);
       try {
-        await window.openshell.deletePath(workspace, path);
+        await window.vela.deletePath(workspace, path);
         deleted.push(path);
       } catch (err) {
         if (panelFor(workspace)) toast(err instanceof Error ? err.message : String(err), "error");
@@ -152,7 +152,7 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
       const target = readFocusedSession()?.workspace;
       if (!target || sources.length === 0) return;
       try {
-        const results = await window.openshell.importExternal(target, destDir, sources);
+        const results = await window.vela.importExternal(target, destDir, sources);
         if (!panelFor(target)) return;
         for (const result of results) {
           if (result.imported) toast(`Imported ${result.rel}`);
@@ -197,8 +197,8 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
         if (create) {
           const targetPath = create.parent ? `${create.parent}/${trimmed}` : trimmed;
           await (create.kind === "file"
-            ? window.openshell.createFile(target, targetPath)
-            : window.openshell.createDir(target, targetPath));
+            ? window.vela.createFile(target, targetPath)
+            : window.vela.createDir(target, targetPath));
           if (!panelFor(target)) return;
           recordCreatedEntry(target, create.parent, targetPath, create.kind);
           if (create.kind === "file") {
@@ -211,7 +211,7 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
             : "";
           const newPath = parent ? `${parent}/${trimmed}` : trimmed;
           cancelPrefix(target, rename.path);
-          await window.openshell.renamePath(target, rename.path, trimmed);
+          await window.vela.renamePath(target, rename.path, trimmed);
           if (!panelFor(target)) return;
           renameTabs(target, rename.path, newPath, trimmed, readRenderedActivePath(target));
           renameObservedPrefix(target, rename.path, newPath);
@@ -235,7 +235,7 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
       const newPath = destDir ? `${destDir}/${name}` : name;
       cancelPrefix(target, path);
       try {
-        await window.openshell.movePath(target, path, destDir);
+        await window.vela.movePath(target, path, destDir);
       } catch (err) {
         if (panelFor(target)) {
           toast(err instanceof Error ? err.message : String(err), "error");
@@ -261,7 +261,7 @@ export function useExplorerMutations(host: ExplorerHost, files: ExplorerFiles, e
       const newPath = destDir ? `${destDir}/${name}` : name;
       cancelPrefix(workspace, path);
       try {
-        await window.openshell.movePath(workspace, path, destDir);
+        await window.vela.movePath(workspace, path, destDir);
         moved.push({ path, newPath, name });
       } catch (err) {
         if (panelFor(workspace)) toast(err instanceof Error ? err.message : String(err), "error");

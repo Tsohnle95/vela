@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AgentOption, ModelOption, SessionInfo } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { useSessionSelection } from "./use-session-selection";
 
 function rejectLifecycleQueries(host: Parameters<typeof useSessionSelection>[0]) {
@@ -43,14 +43,14 @@ describe("session selection ownership", () => {
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    window.openshell = {
+    window.vela = {
       models: async () => [model],
       modelDefault: async () => model,
       sessionSelection: async () => null,
       agents: async () => [agent],
       switchModel: async () => {},
       switchAgent: async () => {}
-    } as unknown as OpenShellApi;
+    } as unknown as VelaApi;
     await act(async () => root.render(<Probe />));
   });
   afterEach(async () => {
@@ -62,8 +62,8 @@ describe("session selection ownership", () => {
   it("retains the global last-loaded catalog while background selections stay scoped", async () => {
     await act(async () => selection.loadModels(first.workspace));
     const background = { ...model, id: "background", name: "Background" };
-    window.openshell.models = async () => [background];
-    window.openshell.modelDefault = async () => background;
+    window.vela.models = async () => [background];
+    window.vela.modelDefault = async () => background;
     await act(async () => selection.loadModels(second.workspace));
     expect(selection.models).toEqual([model]);
     expect(selection.currentModel?.id).toBe(model.id);
@@ -80,8 +80,8 @@ describe("session selection ownership", () => {
     const agents = selection.agents;
     const freshAgent = { ...agent, description: "new metadata" };
     const freshModels = [{ ...model }];
-    window.openshell.models = async () => freshModels;
-    window.openshell.agents = async () => [freshAgent];
+    window.vela.models = async () => freshModels;
+    window.vela.agents = async () => [freshAgent];
     await act(async () => { await selection.loadModels(); await selection.loadAgents(); });
     expect(selection.models).toBe(models);
     expect(selection.availableModels).toBe(freshModels);
@@ -91,7 +91,7 @@ describe("session selection ownership", () => {
 
   it("rejects late catalogs for a replaced generation without populating global fallback", async () => {
     const catalog = deferred<ModelOption[]>();
-    window.openshell.models = async () => catalog.promise;
+    window.vela.models = async () => catalog.promise;
     const loading = selection.loadModels(first.workspace);
     panels = [{ ...first, workspace: { ...first.workspace, generation: 3 } }, second];
     await act(async () => { catalog.resolve([model]); await loading; });
@@ -102,10 +102,10 @@ describe("session selection ownership", () => {
   });
 
   it("keeps an existing selection when a pending switch loses its workspace", async () => {
-    window.openshell.agents = async () => [agent, { id: "other", name: "Other" }];
+    window.vela.agents = async () => [agent, { id: "other", name: "Other" }];
     await act(async () => selection.loadAgents());
     const switching = deferred<void>();
-    window.openshell.switchAgent = async () => switching.promise;
+    window.vela.switchAgent = async () => switching.promise;
     const task = selection.switchAgent("other", first.workspace);
     panels = [second];
     await act(async () => { switching.resolve(); await task; });
@@ -115,7 +115,7 @@ describe("session selection ownership", () => {
 
   it("uses synchronous focus refs and preserves failure and event fallback behavior", async () => {
     const models = vi.fn(async () => [model]);
-    window.openshell.models = models;
+    window.vela.models = models;
     sessionRef.current = second;
     await act(async () => selection.loadModels());
     expect(models).toHaveBeenCalledWith(second.workspace);
@@ -125,7 +125,7 @@ describe("session selection ownership", () => {
     expect(selection.currentAgent).toEqual({ id: "unknown-agent", name: "unknown-agent" });
     act(() => selection.applyModelSelection(second.workspace, { id: "missing-provider" }));
     expect(selection.currentModel?.id).toBe("unknown");
-    window.openshell.switchModel = async () => { throw new Error("switch failed"); };
+    window.vela.switchModel = async () => { throw new Error("switch failed"); };
     await act(async () => selection.switchModel(model.id, model.providerID));
     expect(notify).toHaveBeenCalledWith("switch failed", "error");
     expect(selection.currentModel?.id).toBe("unknown");

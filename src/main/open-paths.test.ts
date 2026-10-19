@@ -68,13 +68,13 @@ describe("collectLaunchPaths", () => {
 
   it("ignores the app executable in secondary-instance arguments", () => {
     const exists = vi.fn(() => true);
-    expect(collectLaunchPaths(["/Applications/Mira.app/Contents/MacOS/Mira", "/repo/a"], exists, "/Applications/Mira.app/Contents/MacOS/Mira"))
+    expect(collectLaunchPaths(["/Applications/Vela.app/Contents/MacOS/Vela", "/repo/a"], exists, "/Applications/Vela.app/Contents/MacOS/Vela"))
       .toEqual(["/repo/a"]);
   });
 
   it("keeps launch paths after the executable argument is removed", () => {
     const exists = vi.fn(() => true);
-    const argv = ["/different/Mira.app/Contents/MacOS/Electron", "/repo/a"];
-    expect(collectLaunchPaths(argv.slice(1), exists, "/Applications/Mira.app/Contents/MacOS/Mira")).toEqual(["/repo/a"]);
+    const argv = ["/different/Vela.app/Contents/MacOS/Electron", "/repo/a"];
+    expect(collectLaunchPaths(argv.slice(1), exists, "/Applications/Vela.app/Contents/MacOS/Vela")).toEqual(["/repo/a"]);
   });
 });

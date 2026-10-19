@@ -17,7 +17,7 @@ export function wireEmmetKeys(target: editor.IStandaloneCodeEditor): void {
     if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
     if (
       target.getDomNode()?.querySelector(".suggest-widget.visible") ||
-      document.getElementById("mira-monaco-overflow")?.querySelector(".suggest-widget.visible")
+      document.getElementById("vela-monaco-overflow")?.querySelector(".suggest-widget.visible")
     ) return;
     if ((target.getSelections() ?? []).length !== 1) return;
     const snippetController = SnippetController2.get(target);

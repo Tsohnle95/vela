@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, SessionInfo, SessionTranscript, TranscriptItem } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -28,7 +28,7 @@ const staleTail: TranscriptItem[] = [
   { kind: "assistant", id: "asst-1", messageID: "msg_1", parts: [], completed: false }
 ];
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -58,7 +58,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     projects: async () => [],
     providerUsage: async () => null,
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("store stream settle", () => {
@@ -73,7 +73,7 @@ describe("store stream settle", () => {
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.addModelPanel("/one"));
   });
@@ -278,7 +278,7 @@ describe("store stream settle", () => {
 
   it("stops a retrying turn locally and ignores late retry events", async () => {
     const sessionID = store.activeSessionID!;
-    window.openshell.interrupt = vi.fn(async () => {});
+    window.vela.interrupt = vi.fn(async () => {});
 
     await act(async () => {
       messageHandler!({
@@ -302,7 +302,7 @@ describe("store stream settle", () => {
 
     await act(async () => { await store.stop(); });
 
-    expect(window.openshell.interrupt).toHaveBeenCalledTimes(1);
+    expect(window.vela.interrupt).toHaveBeenCalledTimes(1);
     expect(store.busy).toBe(false);
     expect(store.transcript).toContainEqual(expect.objectContaining({ kind: "assistant", completed: true }));
     expect(store.transcript).not.toContainEqual(expect.objectContaining({ kind: "assistant", retry: expect.anything() }));
@@ -347,7 +347,7 @@ describe("store stream settle", () => {
 
   it.each([false, true])("preserves distinct visible/off-view close abort disposal (detached=%s)", async (detached) => {
     const sessionID = store.activeSessionID!;
-    window.openshell.interrupt = vi.fn(async () => {});
+    window.vela.interrupt = vi.fn(async () => {});
     await act(async () => store.stop());
     expect(store.panelViews[store.session!.workspace.id].assistantStatus?.wasAborted).toBe(true);
     if (detached) await act(async () => store.openSession("/two"));
@@ -361,10 +361,10 @@ describe("store stream settle", () => {
     expect(store.busy).toBe(false);
 
     let finishPrompt: ((value: SessionTranscript) => void) | undefined;
-    window.openshell.prompt = vi.fn(() => new Promise<SessionTranscript>((resolve) => {
+    window.vela.prompt = vi.fn(() => new Promise<SessionTranscript>((resolve) => {
       finishPrompt = resolve;
     }));
-    window.openshell.sessionTranscript = vi.fn(async () => ({ transcript: [], todos: [] }));
+    window.vela.sessionTranscript = vi.fn(async () => ({ transcript: [], todos: [] }));
 
     let submitted: Promise<void> | undefined;
     const submittedAt = Date.now();
@@ -393,7 +393,7 @@ describe("store stream settle", () => {
     });
 
     expect(store.busy).toBe(true);
-    expect(window.openshell.sessionTranscript).not.toHaveBeenCalled();
+    expect(window.vela.sessionTranscript).not.toHaveBeenCalled();
 
     await act(async () => {
       messageHandler!({
@@ -408,7 +408,7 @@ describe("store stream settle", () => {
 
   it("retains prompt IPC failures in the transcript with their code", async () => {
     await act(async () => { vi.advanceTimersByTime(61_500); });
-    window.openshell.prompt = vi.fn(async () => {
+    window.vela.prompt = vi.fn(async () => {
       throw Object.assign(new Error("model unavailable"), { code: "MODEL_UNAVAILABLE" });
     });
 

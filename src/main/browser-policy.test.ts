@@ -7,7 +7,7 @@ describe("browser guest policy", () => {
     for (const url of ["http://localhost:5173/", "https://example.com/", "about:blank"]) {
       expect(isAllowedBrowserUrl(url)).toBe(true);
     }
-    for (const url of ["", "example.com", "file:///tmp/secret", "javascript:alert(1)", "data:text/html,x", "mira://x", "https://user:password@example.com/", "about:blank?x", "about:blank#x"]) {
+    for (const url of ["", "example.com", "file:///tmp/secret", "javascript:alert(1)", "data:text/html,x", "vela://x", "https://user:password@example.com/", "about:blank?x", "about:blank#x"]) {
       expect(isAllowedBrowserUrl(url)).toBe(false);
     }
   });

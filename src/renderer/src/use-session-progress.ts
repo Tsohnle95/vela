@@ -78,8 +78,8 @@ export function useSessionProgress(host: ProgressHost) {
   const refreshSessionUsage = useCallback(async (sessionID: string): Promise<void> => {
     if (!panelForSession(sessionID)) return;
     try {
-      const usage = await (window.openshell.sessionUsage
-        ? window.openshell.sessionUsage(sessionID)
+      const usage = await (window.vela.sessionUsage
+        ? window.vela.sessionUsage(sessionID)
         : Promise.resolve(null));
       if (!panelForSession(sessionID) || !usage) return;
       recordUsage(sessionID, () => usage);
@@ -91,7 +91,7 @@ export function useSessionProgress(host: ProgressHost) {
     const sequence = ++providerUsageSeqRef.current;
     setProviderUsageLoading(true);
     try {
-      const next = await window.openshell.providerUsage();
+      const next = await window.vela.providerUsage();
       if (sequence === providerUsageSeqRef.current) setProviderUsage(next);
     } catch (err) {
       if (sequence === providerUsageSeqRef.current) toast(err instanceof Error ? err.message : String(err), "error");

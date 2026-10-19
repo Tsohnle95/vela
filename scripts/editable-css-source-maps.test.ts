@@ -14,8 +14,8 @@ afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, {
 
 describe("canonicalModuleId", () => {
   it("matches a Vite id against native realpath output on Windows", () => {
-    expect(canonicalModuleId("D:/a/Mira/main.scss", true)).toBe(canonicalModuleId("D:\\a\\Mira\\main.scss", true));
-    expect(canonicalModuleId("/d:/a/mira/MAIN.scss", true)).toBe(canonicalModuleId("D:\\a\\Mira\\main.scss", true));
+    expect(canonicalModuleId("D:/a/Vela/main.scss", true)).toBe(canonicalModuleId("D:\\a\\Vela\\main.scss", true));
+    expect(canonicalModuleId("/d:/a/vela/MAIN.scss", true)).toBe(canonicalModuleId("D:\\a\\Vela\\main.scss", true));
   });
 
   it("keeps POSIX ids case-sensitive", () => {
@@ -26,7 +26,7 @@ describe("canonicalModuleId", () => {
 
 describe("editable compiled stylesheets", () => {
   it("maps extracted rules and declarations back to their owning Sass partial after concatenation and asset rewriting", async () => {
-    const root = await realpath(await mkdtemp(path.join(tmpdir(), "mira-css-map-")));
+    const root = await realpath(await mkdtemp(path.join(tmpdir(), "vela-css-map-")));
     roots.push(root);
     await mkdir(path.join(root, "styles"));
     await writeFile(path.join(root, "index.html"), '<script type="module" src="/main.js"></script>');
@@ -47,7 +47,7 @@ describe("editable compiled stylesheets", () => {
     if (css?.type !== "asset" || map?.type !== "asset") throw new Error("Missing CSS/map assets");
     const text = String(css.source);
     expect(text).toContain(".vendor");
-    expect(text).not.toContain("mira-css-source:");
+    expect(text).not.toContain("vela-css-source:");
     expect(text).toContain(`sourceMappingURL=${path.basename(map.fileName)}`);
     const consumer = new SourceMapConsumer(JSON.parse(String(map.source)));
     for (const [needle, expectedLine] of [[".panel {", 2], ["color: purple", 3], ["background:", 4], [".panel:hover", 5], ["display: flex", 8]] as const) {

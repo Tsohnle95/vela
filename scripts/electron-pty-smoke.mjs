@@ -47,7 +47,7 @@ if (process.argv[2] !== "--child") {
 } else {
   const { spawn } = await import("node-pty");
   const shell = process.platform === "win32" ? process.env.COMSPEC ?? "powershell.exe" : process.env.SHELL ?? (process.platform === "darwin" ? "/bin/zsh" : "/bin/bash");
-  const marker = `openshell-electron-pty-${process.pid}`;
+  const marker = `vela-electron-pty-${process.pid}`;
   const pty = spawn(shell, [], {
     name: "xterm-256color",
     cols: 80,

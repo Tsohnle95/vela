@@ -1,13 +1,13 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { OpenShellBackend } from "./opencode";
+import { VelaBackend } from "./opencode";
 
 vi.mock("electron", () => ({ app: { getPath: () => "/fixture-home" }, shell: {} }));
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-function backend(reply: unknown): OpenShellBackend {
-  return Object.assign(Object.create(OpenShellBackend.prototype), {
+function backend(reply: unknown): VelaBackend {
+  return Object.assign(Object.create(VelaBackend.prototype), {
     runtimeAdapters: new Map(), client: { session: { get: vi.fn(async () => reply) } }
   });
 }

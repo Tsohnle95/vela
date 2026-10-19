@@ -2,12 +2,12 @@ import { concepts, createStage, DURATION } from './motions.js';
 const $=s=>document.querySelector(s);
 const gallery=$('#gallery'),dialog=$('#inspector');
 let saved;
-try{saved=new Set(JSON.parse(localStorage.getItem('mira.connected-favorites')||'[]'));}catch{saved=new Set();}
+try{saved=new Set(JSON.parse(localStorage.getItem('vela.connected-favorites')||'[]'));}catch{saved=new Set();}
 let filter='all',playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,speed=1,elapsed=0,last=performance.now();
 let focus=null,focusElapsed=0,focusPlaying=true,launchMode=false,launchDone=false;
 const cards=[];
 const updateSaved=()=>{
-  try{localStorage.setItem('mira.connected-favorites',JSON.stringify([...saved]));}catch{}
+  try{localStorage.setItem('vela.connected-favorites',JSON.stringify([...saved]));}catch{}
   $('#saved-count').textContent=saved.size;
   cards.forEach(c=>{const on=saved.has(c.info.id);c.save.setAttribute('aria-pressed',String(on));c.save.textContent=on?'◆':'◇';c.save.setAttribute('aria-label',`${on?'Unsave':'Save'} ${c.info.name}`);});
   if(focus){const on=saved.has(focus.info.id);$('#focus-save').setAttribute('aria-pressed',String(on));$('#focus-save').textContent=on?'Saved study ◆':'Save study ◇';}
@@ -45,7 +45,7 @@ $('#focus-play').addEventListener('click',()=>{if(launchDone){launchDone=false;l
 $('#focus-restart').addEventListener('click',()=>{focusElapsed=0;launchDone=false;focusPlaying=true;focusUI();});
 $('#launch-preview').addEventListener('click',()=>{focusElapsed=0;launchMode=true;launchDone=false;focusPlaying=true;focusUI();});
 $('#scrub').addEventListener('input',()=>{focusElapsed=Number($('#scrub').value);focusPlaying=false;launchMode=false;launchDone=false;focus.stage.draw(focusElapsed/DURATION);focusUI();$('#time').textContent=`${(focusElapsed/1000).toFixed(2)} / 3.00 s`;});
-$('#mock-choose').addEventListener('click',()=>{$('#launch-state').textContent='Workspace selection happens in Mira. This is a visual preview only.';});
+$('#mock-choose').addEventListener('click',()=>{$('#launch-state').textContent='Workspace selection happens in Vela. This is a visual preview only.';});
 $('#play-all').addEventListener('click',()=>{playing=!playing;$('#play-all').textContent=playing?'Pause all':'Play all';$('#play-all').setAttribute('aria-pressed',String(playing));});
 $('#restart-all').addEventListener('click',()=>{elapsed=0;cards.forEach(c=>c.stage.draw(0));});
 $('#speed').addEventListener('change',()=>{speed=Number($('#speed').value);});
@@ -61,4 +61,4 @@ document.addEventListener('visibilitychange',()=>{last=performance.now();});
 if(!playing)cards.forEach(c=>c.stage.draw(.65));
 requestAnimationFrame(tick);
 // Read-only inspection surface used by the browser verification page.
-window.miraMotionReview={concepts,cards,get playing(){return playing;},get focus(){return focus;},get launchDone(){return launchDone;}};
+window.velaMotionReview={concepts,cards,get playing(){return playing;},get focus(){return focus;},get launchDone(){return launchDone;}};

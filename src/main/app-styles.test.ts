@@ -13,7 +13,7 @@ let controller: AppStylesController | undefined;
 afterEach(async () => { await controller?.stop(); controller = undefined; if (root) await rm(root, { recursive: true, force: true }); });
 
 async function fixture() {
-  root = await realpath(await mkdtemp(path.join(tmpdir(), "mira-app-styles-")));
+  root = await realpath(await mkdtemp(path.join(tmpdir(), "vela-app-styles-")));
   const styles = path.join(root, "src/renderer/src/styles");
   const assets = path.join(root, "out/renderer/assets");
   await mkdir(styles, { recursive: true });
@@ -90,7 +90,7 @@ describe("compiled app stylesheet saves", () => {
   });
 
   it("does nothing for an installed package without application sources", async () => {
-    root = await mkdtemp(path.join(tmpdir(), "mira-app-styles-package-"));
+    root = await mkdtemp(path.join(tmpdir(), "vela-app-styles-package-"));
     const updates: unknown[] = [];
     const errors: string[] = [];
     controller = new AppStylesController(root, update => updates.push(update), error => errors.push(error));

@@ -712,7 +712,7 @@ const pathExtensions = new Set([
   "minid",
   "mint",
   "mir",
-  "mirah",
+  "velah",
   "mjml",
   "mjs",
   "mk",

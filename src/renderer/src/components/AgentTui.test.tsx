@@ -61,7 +61,7 @@ describe("AgentTui", () => {
     input.mockClear();
     resize.mockClear();
     stop.mockClear();
-    window.openshell = {
+    window.vela = {
       onMessage: (callback: (message: BackendMessage) => void) => {
         listener = callback;
         return () => {};
@@ -70,7 +70,7 @@ describe("AgentTui", () => {
       agentTuiInput: input,
       agentTuiResize: resize,
       agentTuiStop: stop
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -120,7 +120,7 @@ describe("AgentTui", () => {
   });
 
   it("keeps Kitty's embedded terminal transparent across appearance changes", async () => {
-    window.localStorage.setItem("mira.theme", "kitty");
+    window.localStorage.setItem("vela.theme", "kitty");
     const { AgentTui } = await import("./AgentTui");
     function SwitchTheme() {
       const { setTheme } = useTheme();

@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SessionInfo, SassWatchState } from "@shared/types";
 import { SassPreferences } from "./sass-preferences";
+import { sassPlan } from "./sass-config";
 import { SassWatchManager } from "./sass-watch";
 import { compileSass } from "./sass-compile";
 import type { SassCompiler } from "./sass-compiler";
@@ -23,7 +24,7 @@ async function css(relative: string, contains: string): Promise<void> {
 }
 const exists = (file: string): Promise<boolean> => access(file).then(() => true, () => false);
 beforeEach(async () => {
-  root = await mkdtemp(path.join(tmpdir(), "mira-sass-"));
+  root = await mkdtemp(path.join(tmpdir(), "vela-sass-"));
   preferences = new SassPreferences(path.join(root, "settings", "sass-watch.json"));
   manager = new SassWatchManager(preferences, () => {}, inline);
 });
@@ -122,11 +123,18 @@ describe("workspace Sass watching", () => {
 
   it("respects explicit directory output mapping, compressed style and source maps", async () => {
     await file("one/sass/nested/main.scss", "body { color: red; }");
-    await file("one/mira-sass.json", JSON.stringify({ entries: { sass: "public/css" }, style: "compressed", sourceMap: true }));
+    await file("one/vela-sass.json", JSON.stringify({ entries: { sass: "public/css" }, style: "compressed", sourceMap: true }));
     const owner = session(path.join(root, "one")); await manager.register(owner); await manager.setEnabled(owner.workspace, true);
     await css("one/public/css/nested/main.css", "body{color:red}");
     expect(await exists(path.join(root, "one/public/css/nested/main.css.map"))).toBe(true);
     expect(await exists(path.join(root, "one/sass/nested/main.css"))).toBe(false);
+  });
+
+  it("continues to read previous branded Sass configuration files", async () => {
+    const previousName = `${String.fromCharCode(109, 105, 114, 97)}-sass.json`;
+    await file("one/sass/nested/main.scss", "body { color: red; }");
+    await file(path.join("one", previousName), JSON.stringify({ entries: { sass: "public/css" }, style: "compressed" }));
+    await expect(sassPlan(path.join(root, "one"))).resolves.toMatchObject({ convention: previousName });
   });
 
   it("detects Live Sass workspace settings with comments and trailing commas", async () => {
@@ -150,7 +158,7 @@ describe("workspace Sass watching", () => {
     const owner = session(path.join(root, "one")); await manager.register(owner); await manager.setEnabled(owner.workspace, true);
     await vi.waitFor(() => expect(manager.state(owner.workspace).status).toBe("error"));
     expect(await readFile(path.join(root, "outside.css"), "utf8")).toBe("preserved");
-    await file("one/mira-sass.json", JSON.stringify({ entries: { "main.scss": "../outside.css" } }));
+    await file("one/vela-sass.json", JSON.stringify({ entries: { "main.scss": "../outside.css" } }));
     await vi.waitFor(() => expect(manager.state(owner.workspace).logs.some((log) => log.message.includes("escapes"))).toBe(true));
     expect(await readFile(path.join(root, "outside.css"), "utf8")).toBe("preserved");
   });

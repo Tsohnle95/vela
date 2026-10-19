@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { CommandOption, McpServerOption, MiraAppUpdateStatus, PluginOption, SkillOption } from "@shared/types";
+import type { CommandOption, McpServerOption, VelaAppUpdateStatus, PluginOption, SkillOption } from "@shared/types";
 import { useStore } from "../store";
 import type { UnsavedEditorFile } from "../store";
 import { useTheme } from "../theme";
 import { AppearanceSettings } from "./AppearanceSettings";
-import { MiraMark } from "./MiraMark";
+import { VelaMark } from "./VelaMark";
 import { ProviderSettings } from "./ProviderSettings";
 import { ServerSettings } from "./ServerSettings";
 import { MobileSetup } from "./MobileSetup";
@@ -12,14 +12,14 @@ import type { SettingsSection } from "./SettingsSidebar";
 
 
 const sectionCopy: Record<SettingsSection, { title: string; description: string }> = {
-  appearance: { title: "Appearance", description: "Choose how Mira looks and how code is presented." },
+  appearance: { title: "Appearance", description: "Choose how Vela looks and how code is presented." },
   plugins: { title: "Plugins", description: "Review commands and skills available in the current workspace." },
   providers: { title: "Providers", description: "Connect model services supported by OpenCode." },
   safety: { title: "Safety", description: "Set permission and follow-up defaults for agent behavior." },
   voice: { title: "Voice", description: "Configure voice input preferences and review availability." },
   model: { title: "Model", description: "Choose the model used by the current workspace." },
   servers: { title: "Servers", description: "See and stop the Vite preview servers running in this app." },
-  mobile: { title: "Mobile Setup", description: "Prepare secure access to Mira from another device." },
+  mobile: { title: "Mobile Setup", description: "Prepare secure access to Vela from another device." },
   about: { title: "About", description: "Version and product information for this installation." }
 };
 
@@ -32,10 +32,10 @@ function SettingRow({ title, detail, control }: { title: string; detail: string;
   );
 }
 
-function miraUpdateErrorMessage(error: unknown): string {
+function velaUpdateErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   if (/No handler registered for ['"]?shell:app-update(?:-check)?['"]?/.test(message)) {
-    return "The updater is not available in this running Mira process. Quit Mira completely and reopen it, then check again.";
+    return "The updater is not available in this running Vela process. Quit Vela completely and reopen it, then check again.";
   }
   return message;
 }
@@ -44,9 +44,9 @@ function SettingsHeader({ section, onClose }: { section: SettingsSection; onClos
   const copy = sectionCopy[section];
   return (
     <header className="settings-page-header">
-      <div className="settings-page-brand"><MiraMark size={34} /></div>
+      <div className="settings-page-brand"><VelaMark size={34} /></div>
       <div>
-        <p className="settings-page-kicker">Mira preferences</p>
+        <p className="settings-page-kicker">Vela preferences</p>
         <h1>{copy.title}</h1>
         <p>{copy.description}</p>
       </div>
@@ -85,31 +85,31 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
   const [skills, setSkills] = useState<SkillOption[]>([]);
   const [openCodeAction, setOpenCodeAction] = useState<"sync" | "update" | null>(null);
   const [openCodeFeedback, setOpenCodeFeedback] = useState("");
-  const [miraUpdateStatus, setMiraUpdateStatus] = useState<MiraAppUpdateStatus | null>(null);
-  const [miraUpdateAction, setMiraUpdateAction] = useState<"check" | "update" | null>(null);
-  const [miraUpdateFeedback, setMiraUpdateFeedback] = useState("");
-  const miraUpdateOperationRef = useRef(0);
+  const [velaUpdateStatus, setVelaUpdateStatus] = useState<VelaAppUpdateStatus | null>(null);
+  const [velaUpdateAction, setVelaUpdateAction] = useState<"check" | "update" | null>(null);
+  const [velaUpdateFeedback, setVelaUpdateFeedback] = useState("");
+  const velaUpdateOperationRef = useRef(0);
   const runtime = (runtimes ?? []).find((item) => item.id === (session?.runtimeID ?? "opencode"));
   const openCodeRuntime = (runtimes ?? []).find((item) => item.id === "opencode");
 
   const runOpenCodeAction = async (action: "sync" | "update"): Promise<void> => {
     if (openCodeAction) return;
     const intent = action === "update"
-      ? "OpenCode will update its global CLI using its own updater. Mira will then restart the shared OpenCode service to match."
-      : "Mira will restart the shared OpenCode service so it matches the installed CLI.";
-    if (!window.confirm(`${intent}\n\nActive agent runs in Mira or other OpenCode apps may be interrupted. Continue?`)) return;
+      ? "OpenCode will update its global CLI using its own updater. Vela will then restart the shared OpenCode service to match."
+      : "Vela will restart the shared OpenCode service so it matches the installed CLI.";
+    if (!window.confirm(`${intent}\n\nActive agent runs in Vela or other OpenCode apps may be interrupted. Continue?`)) return;
     setOpenCodeAction(action);
     setOpenCodeFeedback("");
     try {
       const result = action === "update"
-        ? await window.openshell.updateOpenCode()
-        : await window.openshell.syncOpenCode();
+        ? await window.vela.updateOpenCode()
+        : await window.vela.syncOpenCode();
       await refreshRuntimes().catch(() => []);
       setOpenCodeFeedback(action === "update"
         ? result.cliUpdated
-          ? `Updated OpenCode from ${result.previousVersion} to ${result.version}. Mira is synced.`
-          : `OpenCode ${result.version} is already current. Mira is synced.`
-        : `Mira is synced to OpenCode ${result.version}.`);
+          ? `Updated OpenCode from ${result.previousVersion} to ${result.version}. Vela is synced.`
+          : `OpenCode ${result.version} is already current. Vela is synced.`
+        : `Vela is synced to OpenCode ${result.version}.`);
     } catch (error) {
       setOpenCodeFeedback(error instanceof Error ? error.message : String(error));
     } finally {
@@ -117,50 +117,50 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
     }
   };
 
-  const checkMiraUpdate = async (): Promise<void> => {
-    if (!window.openshell.isReleaseBuild) return;
-    if (miraUpdateAction) return;
-    const operation = ++miraUpdateOperationRef.current;
-    setMiraUpdateAction("check");
-    setMiraUpdateFeedback("");
+  const checkVelaUpdate = async (): Promise<void> => {
+    if (!window.vela.isReleaseBuild) return;
+    if (velaUpdateAction) return;
+    const operation = ++velaUpdateOperationRef.current;
+    setVelaUpdateAction("check");
+    setVelaUpdateFeedback("");
     try {
-      const status = await window.openshell.checkAppUpdate();
-      if (miraUpdateOperationRef.current === operation) setMiraUpdateStatus(status);
+      const status = await window.vela.checkAppUpdate();
+      if (velaUpdateOperationRef.current === operation) setVelaUpdateStatus(status);
     } catch (error) {
-      if (miraUpdateOperationRef.current === operation) setMiraUpdateFeedback(miraUpdateErrorMessage(error));
+      if (velaUpdateOperationRef.current === operation) setVelaUpdateFeedback(velaUpdateErrorMessage(error));
     } finally {
-      if (miraUpdateOperationRef.current === operation) setMiraUpdateAction(null);
+      if (velaUpdateOperationRef.current === operation) setVelaUpdateAction(null);
     }
   };
 
-  const updateMira = async (): Promise<void> => {
-    if (!window.openshell.isReleaseBuild) return;
-    if (miraUpdateAction === "update") return;
+  const updateVela = async (): Promise<void> => {
+    if (!window.vela.isReleaseBuild) return;
+    if (velaUpdateAction === "update") return;
     if (unsavedEditorFileCount > 0) {
-      setMiraUpdateFeedback(`Save ${unsavedEditorFileCount} unsaved file${unsavedEditorFileCount === 1 ? "" : "s"} before Mira installs the release and relaunches. Select a file below to return to it.`);
+      setVelaUpdateFeedback(`Save ${unsavedEditorFileCount} unsaved file${unsavedEditorFileCount === 1 ? "" : "s"} before Vela installs the release and relaunches. Select a file below to return to it.`);
       return;
     }
-    const operation = ++miraUpdateOperationRef.current;
-    setMiraUpdateAction("update");
-    setMiraUpdateFeedback("");
+    const operation = ++velaUpdateOperationRef.current;
+    setVelaUpdateAction("update");
+    setVelaUpdateFeedback("");
     try {
-      const result = await window.openshell.updateApp();
-      if (miraUpdateOperationRef.current !== operation) return;
-      setMiraUpdateFeedback(result.message);
+      const result = await window.vela.updateApp();
+      if (velaUpdateOperationRef.current !== operation) return;
+      setVelaUpdateFeedback(result.message);
       if (result.updated && result.latestVersion) {
-        setMiraUpdateStatus({
+        setVelaUpdateStatus({
           state: "current",
           currentVersion: result.latestVersion,
           latestVersion: result.latestVersion
         });
       } else {
-        const status = await window.openshell.checkAppUpdate();
-        if (miraUpdateOperationRef.current === operation) setMiraUpdateStatus(status);
+        const status = await window.vela.checkAppUpdate();
+        if (velaUpdateOperationRef.current === operation) setVelaUpdateStatus(status);
       }
     } catch (error) {
-      if (miraUpdateOperationRef.current === operation) setMiraUpdateFeedback(miraUpdateErrorMessage(error));
+      if (velaUpdateOperationRef.current === operation) setVelaUpdateFeedback(velaUpdateErrorMessage(error));
     } finally {
-      if (miraUpdateOperationRef.current === operation) setMiraUpdateAction(null);
+      if (velaUpdateOperationRef.current === operation) setVelaUpdateAction(null);
     }
   };
 
@@ -177,21 +177,21 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
   };
 
   useEffect(() => {
-    if (section !== "about" || !window.openshell.isReleaseBuild) return;
+    if (section !== "about" || !window.vela.isReleaseBuild) return;
     let cancelled = false;
-    const operation = ++miraUpdateOperationRef.current;
-    setMiraUpdateAction("check");
-    setMiraUpdateFeedback("");
-    void window.openshell.checkAppUpdate().then((status) => {
-      if (!cancelled && miraUpdateOperationRef.current === operation) setMiraUpdateStatus(status);
+    const operation = ++velaUpdateOperationRef.current;
+    setVelaUpdateAction("check");
+    setVelaUpdateFeedback("");
+    void window.vela.checkAppUpdate().then((status) => {
+      if (!cancelled && velaUpdateOperationRef.current === operation) setVelaUpdateStatus(status);
     }).catch((error: unknown) => {
-      if (!cancelled && miraUpdateOperationRef.current === operation) setMiraUpdateFeedback(miraUpdateErrorMessage(error));
+      if (!cancelled && velaUpdateOperationRef.current === operation) setVelaUpdateFeedback(velaUpdateErrorMessage(error));
     }).finally(() => {
-      if (!cancelled && miraUpdateOperationRef.current === operation) setMiraUpdateAction(null);
+      if (!cancelled && velaUpdateOperationRef.current === operation) setVelaUpdateAction(null);
     });
     return () => {
       cancelled = true;
-      if (miraUpdateOperationRef.current === operation) miraUpdateOperationRef.current++;
+      if (velaUpdateOperationRef.current === operation) velaUpdateOperationRef.current++;
     };
   }, [section]);
 
@@ -210,10 +210,10 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
       setSkills([]);
       return;
     }
-    void window.openshell.commands(session.workspace).then(setCommands).catch(() => setCommands([]));
-    void window.openshell.mcpList(session.workspace).then(setMcpServers).catch(() => setMcpServers([]));
-    void window.openshell.pluginsList(session.workspace).then(setPlugins).catch(() => setPlugins([]));
-    void window.openshell.skillsList(session.workspace).then(setSkills).catch(() => setSkills([]));
+    void window.vela.commands(session.workspace).then(setCommands).catch(() => setCommands([]));
+    void window.vela.mcpList(session.workspace).then(setMcpServers).catch(() => setMcpServers([]));
+    void window.vela.pluginsList(session.workspace).then(setPlugins).catch(() => setPlugins([]));
+    void window.vela.skillsList(session.workspace).then(setSkills).catch(() => setSkills([]));
   }, [section, session]);
 
   useEffect(() => {
@@ -254,7 +254,7 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
 
       {section === "providers" && <section className="settings-section">
         {runtime && !runtime.capabilities.providerCredentials
-          ? <div className="settings-callout"><strong>Managed by {runtime.name}</strong><p>This runtime does not expose provider credential editing through Mira. Configure credentials in the runtime, then refresh its model list here.</p></div>
+          ? <div className="settings-callout"><strong>Managed by {runtime.name}</strong><p>This runtime does not expose provider credential editing through Vela. Configure credentials in the runtime, then refresh its model list here.</p></div>
           : <ProviderSettings workspace={session?.workspace ?? null} usage={providerUsage} refreshModels={() => loadModels(session?.workspace)} />}
       </section>}
 
@@ -291,11 +291,11 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
           />
         </div>
         <h2 className="settings-group-title">OpenCode</h2>
-        <div className="settings-callout"><strong>Mira uses the global OpenCode CLI.</strong><p>Sync and update restart the shared OpenCode service. Active runs in Mira or other OpenCode apps may be interrupted.</p></div>
+        <div className="settings-callout"><strong>Vela uses the global OpenCode CLI.</strong><p>Sync and update restart the shared OpenCode service. Active runs in Vela or other OpenCode apps may be interrupted.</p></div>
         <div className="settings-list">
           <SettingRow
             title="Installed CLI"
-            detail="The version resolved from Mira's PATH."
+            detail="The version resolved from Vela's PATH."
             control={<span className="settings-badge">{openCodeRuntime?.version ?? "Not found"}</span>}
           />
           <SettingRow
@@ -317,39 +317,39 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
       {section === "mobile" && <MobileSetup />}
 
       {section === "about" && <section className="settings-section">
-        <div className="settings-about"><MiraMark size={72} /><div><h2>Mira</h2><p>Version {window.openshell.appVersion} · {window.openshell.isReleaseBuild ? "Release build" : "Development/test build"}</p><small>A native desktop cockpit for coding agents.</small></div></div>
+        <div className="settings-about"><VelaMark size={72} /><div><h2>Vela</h2><p>Version {window.vela.appVersion} · {window.vela.isReleaseBuild ? "Release build" : "Development/test build"}</p><small>A native desktop cockpit for coding agents.</small></div></div>
         <h2 className="settings-group-title">App updates</h2>
         <div className="settings-list">
           <SettingRow
-            title={window.openshell.isReleaseBuild ? "GitHub Releases" : "Development build"}
-            detail={window.openshell.isReleaseBuild
-              ? "Checks published Mira releases only. GitHub commits become app updates after a release is published. Update downloads and installs that release, then restarts Mira."
+            title={window.vela.isReleaseBuild ? "GitHub Releases" : "Development build"}
+            detail={window.vela.isReleaseBuild
+              ? "Checks published Vela releases only. GitHub commits become app updates after a release is published. Update downloads and installs that release, then restarts Vela."
               : "GitHub app updates are disabled here. Develop and test this local checkout; source edits do not update the installed app through the release updater."}
-            control={window.openshell.isReleaseBuild
+            control={window.vela.isReleaseBuild
               ? <div className="settings-update-actions">
                 <button
                   className="settings-action-button primary"
-                  disabled={miraUpdateAction === "update"}
-                  onClick={() => void updateMira()}
-                >{miraUpdateAction === "update" ? "Downloading…" : "Update Mira"}</button>
+                  disabled={velaUpdateAction === "update"}
+                  onClick={() => void updateVela()}
+                >{velaUpdateAction === "update" ? "Downloading…" : "Update Vela"}</button>
                 <button
                   className="settings-action-button"
-                  disabled={miraUpdateAction !== null}
-                  onClick={() => void checkMiraUpdate()}
-                >{miraUpdateAction === "check" ? "Checking…" : "Check for updates"}</button>
+                  disabled={velaUpdateAction !== null}
+                  onClick={() => void checkVelaUpdate()}
+                >{velaUpdateAction === "check" ? "Checking…" : "Check for updates"}</button>
               </div>
               : <small>Updater disabled</small>}
           />
         </div>
-        {window.openshell.isReleaseBuild && (miraUpdateFeedback || miraUpdateStatus) && <p className="settings-action-feedback" role="status" aria-live="polite">
-          {miraUpdateFeedback || (miraUpdateStatus?.state === "available"
-            ? `Mira ${miraUpdateStatus.currentVersion} is installed · release ${miraUpdateStatus.latestVersion} is available. Click Update Mira to download and install it, then Mira will restart.`
-            : miraUpdateStatus?.state === "current"
-              ? `Mira ${miraUpdateStatus.currentVersion} is up to date with the latest published release (${miraUpdateStatus.latestVersion}). New commits are available after a release is published.`
-              : miraUpdateStatus?.message)}
+        {window.vela.isReleaseBuild && (velaUpdateFeedback || velaUpdateStatus) && <p className="settings-action-feedback" role="status" aria-live="polite">
+          {velaUpdateFeedback || (velaUpdateStatus?.state === "available"
+            ? `Vela ${velaUpdateStatus.currentVersion} is installed · release ${velaUpdateStatus.latestVersion} is available. Click Update Vela to download and install it, then Vela will restart.`
+            : velaUpdateStatus?.state === "current"
+              ? `Vela ${velaUpdateStatus.currentVersion} is up to date with the latest published release (${velaUpdateStatus.latestVersion}). New commits are available after a release is published.`
+              : velaUpdateStatus?.message)}
         </p>}
         {unsavedEditorFileCount > 0 && <div className="settings-unsaved-files" role="alert">
-          <strong>Save these files before closing or updating Mira.</strong>
+          <strong>Save these files before closing or updating Vela.</strong>
           <ul>
             {unsavedEditorFiles.map((file) => <li key={`${file.workspaceID}:${file.path}`}>
               <button

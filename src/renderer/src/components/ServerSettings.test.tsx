@@ -40,11 +40,11 @@ describe("ServerSettings", () => {
     const viteStop = vi.fn(async (id: string) => {
       running.splice(running.findIndex((item) => item.id === id), 1);
     });
-    window.openshell = {
+    window.vela = {
       viteServers: vi.fn(async () => [...running]),
       viteStop,
       viteStopAll: vi.fn(async () => {})
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<ServerSettings />));
     await act(async () => { await flush(); });
@@ -64,11 +64,11 @@ describe("ServerSettings", () => {
 
   it("stops every server at once", async () => {
     const viteStopAll = vi.fn(async () => {});
-    window.openshell = {
+    window.vela = {
       viteServers: vi.fn(async () => [server("a.html"), server("b.html")]),
       viteStop: vi.fn(async () => {}),
       viteStopAll
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<ServerSettings />));
     await act(async () => { await flush(); });
@@ -83,11 +83,11 @@ describe("ServerSettings", () => {
   });
 
   it("shows an empty state when nothing is running", async () => {
-    window.openshell = {
+    window.vela = {
       viteServers: vi.fn(async () => []),
       viteStop: vi.fn(async () => {}),
       viteStopAll: vi.fn(async () => {})
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
 
     await act(async () => root.render(<ServerSettings />));
     await act(async () => { await flush(); });

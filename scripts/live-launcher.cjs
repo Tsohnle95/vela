@@ -3,8 +3,8 @@ const { randomUUID } = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const MARKER_FILE = ".mira-live-build-failed";
-const REPO_CONFIG_FILE = ".mira-repo.json";
+const MARKER_FILE = ".vela-live-build-failed";
+const REPO_CONFIG_FILE = ".vela-repo.json";
 const SOURCE_EXTENSIONS = /\.(?:ts|tsx|js|mjs|cjs|scss|sass|css|html|json)$/;
 const REQUIRED_BUILD_FILES = ["main/index.js", "preload/index.js", "renderer/index.html"];
 const SKIPPED_DIRECTORIES = new Set([
@@ -77,7 +77,7 @@ function resolveRepository(appRoot = path.resolve(__dirname)) {
 function runBuild(options = {}) {
   const projectRoot = options.projectRoot;
   const spawn = options.spawnSync ?? spawnSync;
-  const stageName = `.mira-launcher-stage-${randomUUID()}`;
+  const stageName = `.vela-launcher-stage-${randomUUID()}`;
   const stagePath = path.join(projectRoot, stageName);
   let result;
   try {
@@ -104,7 +104,7 @@ function runBuild(options = {}) {
   }
 
   const outputPath = path.join(projectRoot, "out");
-  const backupPath = path.join(projectRoot, `.mira-launcher-backup-${randomUUID()}`);
+  const backupPath = path.join(projectRoot, `.vela-launcher-backup-${randomUUID()}`);
   let movedOutput = false;
   try {
     try {
@@ -141,7 +141,7 @@ function warn(message, buttons, options = {}) {
     try {
       const choice = options.dialog.showMessageBoxSync({
         type: "warning",
-        title: "Mira",
+        title: "Vela",
         message,
         buttons,
         defaultId: 0,
@@ -182,8 +182,8 @@ async function main(options = {}) {
     } else {
       fs.writeFileSync(marker, "");
       const message = previousFailure
-        ? `The automatic Mira build failed again (${decision.reason}). Start the last known good build instead?`
-        : `The automatic Mira build failed (${decision.reason}). Start the last known good build instead? Fix the build or delete ${MARKER_FILE} in the repository to stop seeing this prompt.`;
+        ? `The automatic Vela build failed again (${decision.reason}). Start the last known good build instead?`
+        : `The automatic Vela build failed (${decision.reason}). Start the last known good build instead? Fix the build or delete ${MARKER_FILE} in the repository to stop seeing this prompt.`;
       const choice = warn(message, ["Use last working build", "Quit"], { dialog });
       if (choice === 1) return 1;
     }
@@ -191,7 +191,7 @@ async function main(options = {}) {
 
   const entryPoint = path.join(projectRoot, "out", "main", "index.js");
   if (!fs.existsSync(entryPoint)) {
-    warn("No Mira build exists yet and the automatic build failed.", ["Quit"], { dialog });
+    warn("No Vela build exists yet and the automatic build failed.", ["Quit"], { dialog });
     return 1;
   }
   require(entryPoint);

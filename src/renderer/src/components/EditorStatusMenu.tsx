@@ -87,7 +87,7 @@ function useValidationControl(
     setResult(null);
     const validation = scssFile
       ? Promise.resolve(scssDiagnostics(tab.path))
-      : window.openshell.validateW3c(tab.path, tab.content);
+      : window.vela.validateW3c(tab.path, tab.content);
     void validation
       .then((diagnostics) => {
         if (runId !== runIdRef.current) return;
@@ -192,7 +192,7 @@ function SassWatchItem(): ReactNode {
   const title = !session
     ? "Open a workspace to watch Sass"
     : !sass.available
-      ? "Restart Mira to enable Sass watching"
+      ? "Restart Vela to enable Sass watching"
       : sass.state?.error
         ? `${sass.state.error}\nSee Sass Output in the terminal panel. Click to ${sass.state.enabled ? "stop watching" : "retry starting"}.`
         : `${sass.state?.enabled ? "Stop" : "Start"} Sass watching in ${session.directory}; saved Sass files compile to CSS on disk`;

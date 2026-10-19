@@ -1,26 +1,26 @@
 # Workspace Sass compilation
 
-This guide covers user-workspace CSS output. Mira interface styles have a
+This guide covers user-workspace CSS output. Vela interface styles have a
 [separate application-only live-save owner](main.md), independent of this toggle.
 
 `src/main/sass-watch.ts` owns local watchers, compiler lifetimes, preferences,
 and CSS disk output. It never installs tools or executes workspace scripts.
-Compilation uses Mira's shipped `sass` dependency in `sass-worker.ts`, keeping
+Compilation uses Vela's shipped `sass` dependency in `sass-worker.ts`, keeping
 CPU-heavy Sass off Electron's main thread.
 
 ## Compiler research and selection
 
 Official sources checked on 2026-10-07:
 
-| Option | Cost / redistribution | Maintenance and compatibility | Disk output / Mira fit |
+| Option | Cost / redistribution | Maintenance and compatibility | Disk output / Vela fit |
 | --- | --- | --- | --- |
-| [Dart Sass `sass`](https://sass-lang.com/documentation/js-api/) | Free; [MIT](https://github.com/sass/dart-sass/blob/main/LICENSE). Retain notices, including the Dart SDK notices bundled in the npm package's LICENSE. | Maintained Sass reference implementation; [recent releases](https://github.com/sass/dart-sass/releases). Pure JavaScript supports Node platforms. The installed package requires Node ≥20.19, compatible with Mira's Node 22 toolchain and Electron. | CLI writes CSS; API returns CSS that Mira writes to the selected workspace. Chosen for portable dependency packaging without a native compiler executable. |
+| [Dart Sass `sass`](https://sass-lang.com/documentation/js-api/) | Free; [MIT](https://github.com/sass/dart-sass/blob/main/LICENSE). Retain notices, including the Dart SDK notices bundled in the npm package's LICENSE. | Maintained Sass reference implementation; [recent releases](https://github.com/sass/dart-sass/releases). Pure JavaScript supports Node platforms. The installed package requires Node ≥20.19, compatible with Vela's Node 22 toolchain and Electron. | CLI writes CSS; API returns CSS that Vela writes to the selected workspace. Chosen for portable dependency packaging without a native compiler executable. |
 | [`sass-embedded`](https://github.com/sass/embedded-host-node) | Free; [MIT host](https://github.com/sass/embedded-host-node/blob/main/LICENSE), plus bundled compiler/runtime notices. | Same Dart Sass language/API; generally faster. Current host requires Node ≥20.19 and ships platform-specific executables for macOS, Windows, Linux and additional listed targets. | Supports the same CSS outputs, but adds native executable packaging and architecture testing. |
-| [Live Sass Compiler, glenn2223](https://marketplace.visualstudio.com/items?itemName=glenn2223.live-sass) | Free MIT extension; redistribution retains its notices. Donations are optional. | Maintained fork; [v6.1.5](https://github.com/glenn2223/vscode-live-sass-compiler/releases/tag/v6.1.5) released February 2026. Requires the VS Code extension host/API, not a standalone Node library. | Writes configured CSS for VS Code workspaces. Mira has no VS Code extension host; it detects compatible output settings and uses Sass directly. |
+| [Live Sass Compiler, glenn2223](https://marketplace.visualstudio.com/items?itemName=glenn2223.live-sass) | Free MIT extension; redistribution retains its notices. Donations are optional. | Maintained fork; [v6.1.5](https://github.com/glenn2223/vscode-live-sass-compiler/releases/tag/v6.1.5) released February 2026. Requires the VS Code extension host/API, not a standalone Node library. | Writes configured CSS for VS Code workspaces. Vela has no VS Code extension host; it detects compatible output settings and uses Sass directly. |
 
 The [installation guide](https://sass-lang.com/install/) and
 [JS API documentation](https://sass-lang.com/documentation/js-api/) explain
-the portability/speed tradeoff. Mira promotes its already installed, locked
+the portability/speed tradeoff. Vela promotes its already installed, locked
 compiler to a production dependency without downloading an update. Versions
 are owned by package.json/package-lock.json; app packaging retains the compiler
 package and its LICENSE. No paid service, PATH installation, npx fallback, or
@@ -48,8 +48,8 @@ workspace dependency installation is involved.
 
 ## Output conventions
 
-Precedence: `mira-sass.json` (or legacy `orbit-sass.json` when the Mira file is
-absent), compatible Live Sass workspace settings, literal Sass CLI mappings in
+Precedence: `vela-sass.json` (or a prior product-branded Sass config when the
+Vela file is absent), compatible Live Sass workspace settings, literal Sass CLI mappings in
 package scripts, then CSS beside its source:
 `css/styles.scss` → `css/styles.css`. Directory mappings preserve relative paths.
 Workspace scripts and JavaScript build configuration are never executed.
@@ -71,7 +71,7 @@ autoprefixer are not run; use an explicit mapping for complex projects.
 Entries/load paths are workspace-relative. Omitted entries mean all discovered
 non-partial files compile beside themselves. Source maps are optional and use
 relative source URLs, suitable for static hosting. Static HTML must link to the
-generated CSS paths; Mira does not rewrite workspace HTML.
+generated CSS paths; Vela does not rewrite workspace HTML.
 
 Detected Live Sass settings: formats (style, extensionName, savePath or literal
 savePathReplacementPairs), generateMap, includeItems, and excludeList. Root `/css`

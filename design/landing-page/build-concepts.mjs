@@ -1,5 +1,5 @@
 // Generates 50 landing concepts (001-050) distilled from shortlisted 001
-// "Atelier Split": bare Mira mark (no container chip), fixed hierarchy
+// "Atelier Split": bare Vela mark (no container chip), fixed hierarchy
 // (mark -> title -> one line -> one action -> calm recents), no feature
 // lists, no drop hints. Emits concepts/*.html, landing-pages.css,
 // landing-pages.js (legacy, removed) and index.html gallery.
@@ -15,9 +15,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const mark = (size = 32) => `<svg class="mark-svg" viewBox="0 0 96 96" width="${size}" height="${size}" aria-hidden="true"><g fill="none" stroke-linecap="round"><ellipse cx="48" cy="48" rx="36" ry="15" transform="rotate(24 48 48)" stroke="#9eb4a1" stroke-width="4.5"/><ellipse cx="48" cy="48" rx="36" ry="15" transform="rotate(-24 48 48)" stroke="#617a68" stroke-width="5"/><circle cx="48" cy="48" r="9" fill="#46584b"/><circle cx="62.1" cy="28.3" r="6" fill="#9eb4a1"/></g></svg>`;
 
 const RECENTS = [
-  { name: "Refine sessions panel", project: "mira", when: "just now", live: true },
-  { name: "Provider usage cleanup", project: "mira", when: "18m ago", live: true },
-  { name: "Update runtime docs", project: "mira", when: "yesterday" },
+  { name: "Refine sessions panel", project: "vela", when: "just now", live: true },
+  { name: "Provider usage cleanup", project: "vela", when: "18m ago", live: true },
+  { name: "Update runtime docs", project: "vela", when: "yesterday" },
   { name: "Polish daily notes", project: "atlas-notes", when: "2h ago" },
   { name: "Improve quick search", project: "atlas-notes", when: "Tue" },
 ];
@@ -67,7 +67,7 @@ const CONCEPTS = [
 .c-001 .rows .is-live .row-dot{background:var(--accent)}
 .c-001 .rows .row-meta{display:none}
 .c-001 .btn{margin-bottom:34px}`,
-    body: `${mark(40)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({})}</div>`,
+    body: `${mark(40)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({})}</div>`,
   },
   {
     id: "002", name: "Side Rail", fam: "split",
@@ -80,7 +80,7 @@ const CONCEPTS = [
 .c-002 .title{font-family:var(--serif);font-size:46px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-002 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-002 .rows{margin-top:auto;padding-top:18px;border-top:1px solid var(--border-subtle)}`,
-    body: `<div class="rail">${mark(34)}<span class="rail-line"></span><span class="rail-vword">Mira</span></div><div class="main"><h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}<div class="rows-wrap">${rowsList({})}</div></div>`,
+    body: `<div class="rail">${mark(34)}<span class="rail-line"></span><span class="rail-vword">Vela</span></div><div class="main"><h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}<div class="rows-wrap">${rowsList({})}</div></div>`,
   },
   {
     id: "003", name: "Shared Baseline", fam: "split",
@@ -92,7 +92,7 @@ const CONCEPTS = [
 .c-003 .sub{margin:14px 0 26px;color:var(--text-dim);font-size:13px;max-width:30ch}
 .c-003 .right{width:270px;flex:none;border-left:1px solid var(--border-subtle);padding-left:32px}
 .c-003 .kicker{font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-faint);margin:0 0 14px}`,
-    body: `<div class="left"><div class="lockup">${mark(44)}<h1 class="title">Mira</h1></div><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right"><p class="kicker">Recent</p><div class="rows-wrap">${rowsList({})}</div></div>`,
+    body: `<div class="left"><div class="lockup">${mark(44)}<h1 class="title">Vela</h1></div><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right"><p class="kicker">Recent</p><div class="rows-wrap">${rowsList({})}</div></div>`,
   },
   {
     id: "004", name: "Watermark", fam: "atmos",
@@ -104,7 +104,7 @@ const CONCEPTS = [
 .c-004 .title{font-family:var(--serif);font-size:56px;font-weight:500;margin:0 0 10px;letter-spacing:-0.02em}
 .c-004 .sub{margin:0 0 28px;color:var(--text-dim);font-size:13px}
 .c-004 .rows{margin-top:44px;width:100%;max-width:360px}`,
-    body: `<div class="watermark">${mark(340)}</div><div class="inner">${mark(34)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ ghost: true })}</div></div>`,
+    body: `<div class="watermark">${mark(340)}</div><div class="inner">${mark(34)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ ghost: true })}</div></div>`,
   },
   {
     id: "005", name: "Quiet Cross", fam: "frame",
@@ -120,7 +120,7 @@ const CONCEPTS = [
 .c-005 .title{font-family:var(--serif);font-size:40px;font-weight:500;margin:0;letter-spacing:-0.02em}
 .c-005 .sub{margin:0;color:var(--text-dim);font-size:12.5px}
 .c-005 .center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:14px}`,
-    body: `<span class="vline"></span><span class="hline"></span><div class="cell cell-tl">${mark(30)}</div><div class="cell cell-tr">v0.1 — macOS</div><div class="center">${cta("Open a folder")}</div><div class="cell cell-bl"><h1 class="title">Mira</h1><p class="sub">${SUB}</p></div><div class="cell cell-br"><div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
+    body: `<span class="vline"></span><span class="hline"></span><div class="cell cell-tl">${mark(30)}</div><div class="cell cell-tr">v0.1 — macOS</div><div class="center">${cta("Open a folder")}</div><div class="cell cell-bl"><h1 class="title">Vela</h1><p class="sub">${SUB}</p></div><div class="cell cell-br"><div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
   },
   {
     id: "006", name: "Margin Notes", fam: "list",
@@ -135,7 +135,7 @@ const CONCEPTS = [
 .c-006 .mrow-name{font-family:var(--serif);font-style:italic;font-size:15.5px}
 .c-006 .mrow-when{font-size:10.5px;color:var(--text-faint);letter-spacing:0.04em}
 .c-006 .mrow.is-live .mrow-name{color:var(--accent)}`,
-    body: `<div class="left">${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right">${RECENTS.map((r) => `<div class="mrow${r.live ? " is-live" : ""}"><span class="mrow-name">${r.name}</span><span class="mrow-when">${r.project} — ${r.when}</span></div>`).join("")}</div>`,
+    body: `<div class="left">${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right">${RECENTS.map((r) => `<div class="mrow${r.live ? " is-live" : ""}"><span class="mrow-name">${r.name}</span><span class="mrow-when">${r.project} — ${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "007", name: "Aperture", fam: "mark",
@@ -145,7 +145,7 @@ const CONCEPTS = [
 .c-007 .title{font-family:var(--serif);font-size:46px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-007 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-007 .rows{width:100%;max-width:380px;margin-top:38px;border-top:1px solid var(--border-subtle);padding-top:8px}`,
-    body: `<div class="aperture">${mark(56)}</div><h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}<div class="rows-wrap">${rowsList({})}</div>`,
+    body: `<div class="aperture">${mark(56)}</div><h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}<div class="rows-wrap">${rowsList({})}</div>`,
   },
   {
     id: "008", name: "Duet", fam: "split",
@@ -157,7 +157,7 @@ const CONCEPTS = [
 .c-008 .half-a .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:26ch}
 .c-008 .half-b{justify-content:center;background:var(--bg)}
 .c-008 .kicker{font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-faint);margin:0 0 16px}`,
-    body: `<div class="half half-a">${mark(40)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="half half-b"><p class="kicker">Recent sessions</p><div class="rows-wrap">${rowsList({})}</div></div>`,
+    body: `<div class="half half-a">${mark(40)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="half half-b"><p class="kicker">Recent sessions</p><div class="rows-wrap">${rowsList({})}</div></div>`,
   },
   {
     id: "009", name: "Underline", fam: "type",
@@ -167,7 +167,7 @@ const CONCEPTS = [
 .c-009 .rule{width:180px;height:5px;background:var(--accent);margin:18px 0 20px;border-radius:2px}
 .c-009 .sub{margin:0 0 28px;color:var(--text-dim);font-size:13px;max-width:44ch}
 .c-009 .rows{margin-top:auto;border-top:1px solid var(--border-subtle);padding-top:10px}`,
-    body: `${mark(30)}<h1 class="title">Mira</h1><div class="rule"></div><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}<div class="rows-wrap">${rowsList({})}</div>`,
+    body: `${mark(30)}<h1 class="title">Vela</h1><div class="rule"></div><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}<div class="rows-wrap">${rowsList({})}</div>`,
   },
   {
     id: "010", name: "Dot Directory", fam: "list",
@@ -183,7 +183,7 @@ const CONCEPTS = [
 .c-010 .drow.is-live .ddot{background:var(--accent);border-color:var(--accent)}
 .c-010 .dname{font-size:14px;font-weight:500}
 .c-010 .dwhen{margin-left:auto;font-size:11px;color:var(--text-faint)}`,
-    body: `<div class="left">${mark(34)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right">${RECENTS.map((r) => `<div class="drow${r.live ? " is-live" : ""}"><span class="ddot"></span><span class="dname">${r.name}</span><span class="dwhen">${r.when}</span></div>`).join("")}</div>`,
+    body: `<div class="left">${mark(34)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right">${RECENTS.map((r) => `<div class="drow${r.live ? " is-live" : ""}"><span class="ddot"></span><span class="dname">${r.name}</span><span class="dwhen">${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "011", name: "Ledger", fam: "table",
@@ -192,7 +192,7 @@ const CONCEPTS = [
 .c-011 .title{font-family:var(--serif);font-size:46px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-011 .sub{margin:0 0 22px;color:var(--text-dim);font-size:13px}
 .c-011 .mono-wrap{margin-top:auto;border-top:1px solid var(--border-subtle);padding:10px 0 18px}`,
-    body: `${mark(32)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="mono-wrap">${monoList()}</div>`,
+    body: `${mark(32)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="mono-wrap">${monoList()}</div>`,
   },
   {
     id: "012", name: "Wide Gutter", fam: "split",
@@ -207,7 +207,7 @@ const CONCEPTS = [
 .c-012 .blk:last-child{border-bottom:0}
 .c-012 .blk-name{display:block;font-size:12.5px;font-weight:500}
 .c-012 .blk-meta{display:block;margin-top:3px;font-size:10.5px;color:var(--text-faint)}`,
-    body: `<div class="left">${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right"><p class="kicker">Recent sessions</p>${RECENTS.map((r) => `<div class="blk"><span class="blk-name">${r.name}</span><span class="blk-meta">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
+    body: `<div class="left">${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right"><p class="kicker">Recent sessions</p>${RECENTS.map((r) => `<div class="blk"><span class="blk-name">${r.name}</span><span class="blk-meta">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "013", name: "Corner Post", fam: "frame",
@@ -219,7 +219,7 @@ const CONCEPTS = [
 .c-013 .q-br{bottom:40px;right:44px;width:280px}
 .c-013 .title{font-family:var(--serif);font-size:58px;font-weight:500;line-height:0.95;letter-spacing:-0.02em;margin:0}
 .c-013 .sub{margin:10px 0 0;color:var(--text-dim);font-size:12.5px}`,
-    body: `<div class="q q-tl">${mark(34)}</div><div class="q q-tr">${cta("Open a folder")}</div><div class="q q-bl"><h1 class="title">Mira</h1><p class="sub">${SUB}</p></div><div class="q q-br"><div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
+    body: `<div class="q q-tl">${mark(34)}</div><div class="q q-tr">${cta("Open a folder")}</div><div class="q q-bl"><h1 class="title">Vela</h1><p class="sub">${SUB}</p></div><div class="q q-br"><div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
   },
   {
     id: "014", name: "Nave", fam: "type",
@@ -229,7 +229,7 @@ const CONCEPTS = [
 .c-014 .title{font-family:var(--serif);font-size:46px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-014 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:26ch}
 .c-014 .foot{margin-top:auto;width:100%;border-top:1px solid var(--border-subtle);padding-top:8px}`,
-    body: `<div class="nave">${mark(38)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="foot">${rowsList({})}</div></div>`,
+    body: `<div class="nave">${mark(38)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="foot">${rowsList({})}</div></div>`,
   },
   {
     id: "015", name: "Baseline", fam: "type",
@@ -244,7 +244,7 @@ const CONCEPTS = [
 .c-015 .ri{display:flex;align-items:center;gap:6px}
 .c-015 .ri-dot{width:5px;height:5px;border-radius:50%;background:var(--border-strong)}
 .c-015 .ri.is-live .ri-dot{background:var(--accent)}`,
-    body: `<div class="lockup">${mark(30)}<h1 class="title">Mira</h1><div class="rule"></div><div class="under"><p class="sub">${SUB}</p>${cta("Open a folder")}</div></div><div class="strip">${RECENTS.map((r) => `<span class="ri${r.live ? " is-live" : ""}"><span class="ri-dot"></span>${r.name}</span>`).join("")}</div>`,
+    body: `<div class="lockup">${mark(30)}<h1 class="title">Vela</h1><div class="rule"></div><div class="under"><p class="sub">${SUB}</p>${cta("Open a folder")}</div></div><div class="strip">${RECENTS.map((r) => `<span class="ri${r.live ? " is-live" : ""}"><span class="ri-dot"></span>${r.name}</span>`).join("")}</div>`,
   },
   {
     id: "016", name: "Twin Desk", fam: "split",
@@ -255,7 +255,7 @@ const CONCEPTS = [
 .c-016 .title{font-family:var(--serif);font-size:50px;font-weight:500;margin:0 0 10px;letter-spacing:-0.02em}
 .c-016 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:28ch}
 .c-016 .kicker{font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-faint);margin:0 0 16px}`,
-    body: `<div class="half half-a">${mark(38)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="half half-b"><p class="kicker">Recent</p><div class="rows-wrap">${numList()}</div></div>`,
+    body: `<div class="half half-a">${mark(38)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="half half-b"><p class="kicker">Recent</p><div class="rows-wrap">${numList()}</div></div>`,
   },
   {
     id: "017", name: "Halo", fam: "mark",
@@ -266,7 +266,7 @@ const CONCEPTS = [
 .c-017 .title{font-family:var(--serif);font-size:48px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-017 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-017 .rows{width:100%;max-width:300px;margin-top:36px}`,
-    body: `<div class="halo">${mark(60)}</div><h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
+    body: `<div class="halo">${mark(60)}</div><h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
   },
   {
     id: "018", name: "Spine", fam: "frame",
@@ -277,7 +277,7 @@ const CONCEPTS = [
 .c-018 .title{font-family:var(--serif);font-size:52px;font-weight:500;margin:0 0 10px;letter-spacing:-0.02em}
 .c-018 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:34ch}
 .c-018 .rows{margin-top:auto;border-top:1px solid var(--border-subtle);padding-top:8px}`,
-    body: `<span class="spine"></span><span class="spine-label">Mira</span>${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({})}</div>`,
+    body: `<span class="spine"></span><span class="spine-label">Vela</span>${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({})}</div>`,
   },
   {
     id: "019", name: "Triptych Bands", fam: "stack",
@@ -292,7 +292,7 @@ const CONCEPTS = [
 .c-019 .ri{display:flex;align-items:center;gap:6px}
 .c-019 .ri-dot{width:5px;height:5px;border-radius:50%;background:var(--border-strong)}
 .c-019 .ri.is-live .ri-dot{background:var(--accent)}`,
-    body: `<div class="band band-mark">${mark(28)}</div><div class="band band-main"><h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="band band-recents">${RECENTS.map((r) => `<span class="ri${r.live ? " is-live" : ""}"><span class="ri-dot"></span>${r.name}</span>`).join("")}</div>`,
+    body: `<div class="band band-mark">${mark(28)}</div><div class="band band-main"><h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="band band-recents">${RECENTS.map((r) => `<span class="ri${r.live ? " is-live" : ""}"><span class="ri-dot"></span>${r.name}</span>`).join("")}</div>`,
   },
   {
     id: "020", name: "Graph Paper", fam: "atmos",
@@ -306,7 +306,7 @@ const CONCEPTS = [
 .c-020 .title{font-family:var(--serif);font-size:48px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-020 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-020 .rows{width:100%;max-width:320px;margin-top:34px}`,
-    body: `<span class="tick t-tl"></span><span class="tick t-tr"></span><span class="tick t-bl"></span><span class="tick t-br"></span>${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div>`,
+    body: `<span class="tick t-tl"></span><span class="tick t-tr"></span><span class="tick t-bl"></span><span class="tick t-br"></span>${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div>`,
   },
   {
     id: "021", name: "Cards Row", fam: "cards",
@@ -320,7 +320,7 @@ const CONCEPTS = [
 .c-021 .card-meta{margin-top:4px;font-size:10.5px;color:var(--text-faint);display:flex;align-items:center;gap:6px}
 .c-021 .card-dot{width:5px;height:5px;border-radius:50%;background:var(--border-strong)}
 .c-021 .card.is-live .card-dot{background:var(--accent)}`,
-    body: `${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="cards">${RECENTS.slice(0, 3).map((r) => `<div class="card${r.live ? " is-live" : ""}"><div class="card-name">${r.name}</div><div class="card-meta"><span class="card-dot"></span>${r.project} · ${r.when}</div></div>`).join("")}</div>`,
+    body: `${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="cards">${RECENTS.slice(0, 3).map((r) => `<div class="card${r.live ? " is-live" : ""}"><div class="card-name">${r.name}</div><div class="card-meta"><span class="card-dot"></span>${r.project} · ${r.when}</div></div>`).join("")}</div>`,
   },
   {
     id: "022", name: "Marquee", fam: "type",
@@ -330,7 +330,7 @@ const CONCEPTS = [
 .c-022 .title{font-family:var(--serif);font-size:110px;font-weight:500;line-height:0.85;letter-spacing:-0.04em;margin:0}
 .c-022 .right{width:250px;flex:none;border-left:1px solid var(--border-subtle);padding-left:36px;display:flex;flex-direction:column;justify-content:center;gap:22px}
 .c-022 .sub{margin:0;color:var(--text-dim);font-size:13px}`,
-    body: `<div class="left">${mark(34)}<h1 class="title">Mira</h1></div><div class="right"><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 3 })}</div></div>`,
+    body: `<div class="left">${mark(34)}<h1 class="title">Vela</h1></div><div class="right"><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 3 })}</div></div>`,
   },
   {
     id: "023", name: "Footnotes", fam: "list",
@@ -342,18 +342,18 @@ const CONCEPTS = [
 .c-023 .note{display:flex;align-items:baseline;gap:8px;font-size:11.5px;color:var(--text-dim);padding:5px 0}
 .c-023 .fn-i{font-family:var(--serif);font-style:italic;color:var(--accent);font-size:13px;min-width:16px}
 .c-023 .fn-when{margin-left:auto;color:var(--text-faint);font-size:10.5px}`,
-    body: `${mark(32)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="notes">${RECENTS.map((r, i) => `<div class="note"><span class="fn-i">${i + 1}.</span><span>${r.name}</span><span class="fn-when">${r.when}</span></div>`).join("")}</div>`,
+    body: `${mark(32)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="notes">${RECENTS.map((r, i) => `<div class="note"><span class="fn-i">${i + 1}.</span><span>${r.name}</span><span class="fn-when">${r.when}</span></div>`).join("")}</div>`,
   },
   {
-    id: "024", name: "Orbits", fam: "mark",
+    id: "024", name: "Velas", fam: "mark",
     css: `.c-024 .mock{position:relative;min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:52px 48px}
-.c-024 .orbits{position:absolute;top:-150px;left:50%;transform:translateX(-50%);pointer-events:none}
+.c-024 .velas{position:absolute;top:-150px;left:50%;transform:translateX(-50%);pointer-events:none}
 .c-024 .inner{position:relative;display:flex;flex-direction:column;align-items:center}
 .c-024 .mark-svg{width:42px;height:42px;margin-bottom:22px}
 .c-024 .title{font-family:var(--serif);font-size:54px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-024 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-024 .rows{width:100%;max-width:340px;margin-top:34px}`,
-    body: `<svg class="orbits" width="700" height="360" viewBox="0 0 700 360" aria-hidden="true"><g fill="none"><ellipse cx="350" cy="180" rx="330" ry="120" transform="rotate(-14 350 180)" stroke="var(--accent)" stroke-opacity="0.22" stroke-width="1.5"/><ellipse cx="350" cy="180" rx="250" ry="86" transform="rotate(-14 350 180)" stroke="var(--border-strong)" stroke-width="1"/><circle cx="565" cy="95" r="5" fill="var(--accent)" fill-opacity="0.55"/></g></svg><div class="inner">${mark(42)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({})}</div></div>`,
+    body: `<svg class="velas" width="700" height="360" viewBox="0 0 700 360" aria-hidden="true"><g fill="none"><ellipse cx="350" cy="180" rx="330" ry="120" transform="rotate(-14 350 180)" stroke="var(--accent)" stroke-opacity="0.22" stroke-width="1.5"/><ellipse cx="350" cy="180" rx="250" ry="86" transform="rotate(-14 350 180)" stroke="var(--border-strong)" stroke-width="1"/><circle cx="565" cy="95" r="5" fill="var(--accent)" fill-opacity="0.55"/></g></svg><div class="inner">${mark(42)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({})}</div></div>`,
   },
   {
     id: "025", name: "Inset Panel", fam: "split",
@@ -364,7 +364,7 @@ const CONCEPTS = [
 .c-025 .sub{margin:0 0 28px;color:var(--text-dim);font-size:13px;max-width:28ch}
 .c-025 .panel{width:290px;flex:none;background:var(--bg-panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-sm);padding:26px 28px;display:flex;flex-direction:column;justify-content:center}
 .c-025 .kicker{font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-faint);margin:0 0 14px}`,
-    body: `<div class="left">${mark(38)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="panel"><p class="kicker">Recent sessions</p><div class="rows-wrap">${rowsList({})}</div></div>`,
+    body: `<div class="left">${mark(38)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="panel"><p class="kicker">Recent sessions</p><div class="rows-wrap">${rowsList({})}</div></div>`,
   },
   {
     id: "026", name: "Ticker", fam: "atmos",
@@ -376,7 +376,7 @@ const CONCEPTS = [
 .c-026 .title{font-family:var(--serif);font-size:48px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-026 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-026 .rows{width:100%;max-width:320px;margin-top:34px}`,
-    body: `<div class="ticker"><span class="live-dot"></span><span>Refine sessions panel&nbsp;&nbsp;·&nbsp;&nbsp;Provider usage cleanup&nbsp;&nbsp;·&nbsp;&nbsp;3 quiet</span></div>${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div>`,
+    body: `<div class="ticker"><span class="live-dot"></span><span>Refine sessions panel&nbsp;&nbsp;·&nbsp;&nbsp;Provider usage cleanup&nbsp;&nbsp;·&nbsp;&nbsp;3 quiet</span></div>${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div>`,
   },
   {
     id: "027", name: "Small Caps", fam: "type",
@@ -387,7 +387,7 @@ const CONCEPTS = [
 .c-027 .title{font-family:var(--serif);font-size:42px;font-weight:500;margin:0 0 10px;letter-spacing:-0.01em}
 .c-027 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:30ch}
 .c-027 .right{width:260px;flex:none;border-left:1px solid var(--border-subtle);padding-left:32px;display:flex;flex-direction:column;justify-content:center}`,
-    body: `<div class="left">${mark(26)}<p class="kicker">Every agent</p><h1 class="title">Mira</h1><p class="sub">One surface.</p>${cta("Open a folder")}</div><div class="right"><div class="rows-wrap">${rowsList({})}</div></div>`,
+    body: `<div class="left">${mark(26)}<p class="kicker">Every agent</p><h1 class="title">Vela</h1><p class="sub">One surface.</p>${cta("Open a folder")}</div><div class="right"><div class="rows-wrap">${rowsList({})}</div></div>`,
   },
   {
     id: "028", name: "Meridian", fam: "split",
@@ -400,7 +400,7 @@ const CONCEPTS = [
 .c-028 .mark-svg{width:36px;height:36px;margin-bottom:24px}
 .c-028 .title{font-family:var(--serif);font-size:50px;font-weight:500;margin:0 0 10px;letter-spacing:-0.02em}
 .c-028 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:30ch}`,
-    body: `<span class="rail"></span>${RECENTS.map((r, i) => `<span class="node${r.live ? " is-live" : ""}" style="top:${16 + i * 17}%"></span><span class="item${r.live ? " is-live" : ""}" style="top:${16 + i * 17}%">${r.when} — ${r.name}</span>`).join("")}${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}`,
+    body: `<span class="rail"></span>${RECENTS.map((r, i) => `<span class="node${r.live ? " is-live" : ""}" style="top:${16 + i * 17}%"></span><span class="item${r.live ? " is-live" : ""}" style="top:${16 + i * 17}%">${r.when} — ${r.name}</span>`).join("")}${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}`,
   },
   {
     id: "029", name: "Thirds", fam: "frame",
@@ -410,7 +410,7 @@ const CONCEPTS = [
 .c-029 .col-b{border-left:1px solid var(--border-subtle);border-right:1px solid var(--border-subtle)}
 .c-029 .title{font-family:var(--serif);font-size:40px;font-weight:500;margin:0 0 8px;letter-spacing:-0.015em}
 .c-029 .sub{margin:0 0 24px;color:var(--text-dim);font-size:12.5px}`,
-    body: `<div class="col col-a">${mark(40)}</div><div class="col col-b"><h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="col col-c"><div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
+    body: `<div class="col col-a">${mark(40)}</div><div class="col col-b"><h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="col col-c"><div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
   },
   {
     id: "030", name: "Ghost O", fam: "atmos",
@@ -420,7 +420,7 @@ const CONCEPTS = [
 .c-030 .title{font-family:var(--serif);font-size:56px;font-weight:500;margin:0 0 10px;letter-spacing:-0.02em}
 .c-030 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:30ch}
 .c-030 .rows{width:100%;max-width:320px;margin-top:36px}`,
-    body: `<span class="ghost">O</span>${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
+    body: `<span class="ghost">O</span>${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
   },
   {
     id: "031", name: "Two-Up Ledger", fam: "table",
@@ -432,7 +432,7 @@ const CONCEPTS = [
 .c-031 .ledger{margin-top:auto;border-top:1px solid var(--border-subtle);padding:12px 0 16px}
 .c-031 .mono-list{columns:2;column-gap:44px}
 .c-031 .mono-list li{break-inside:avoid}`,
-    body: `<div class="head">${mark(30)}<h1 class="title">Mira</h1></div><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="ledger">${monoList()}</div>`,
+    body: `<div class="head">${mark(30)}<h1 class="title">Vela</h1></div><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="ledger">${monoList()}</div>`,
   },
   {
     id: "032", name: "Plaque", fam: "frame",
@@ -442,7 +442,7 @@ const CONCEPTS = [
 .c-032 .title{font-family:var(--serif);font-size:48px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-032 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-032 .rows{width:100%;max-width:300px;margin-top:32px}`,
-    body: `<div class="plaque">${mark(38)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
+    body: `<div class="plaque">${mark(38)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
   },
   {
     id: "033", name: "Tab Base", fam: "list",
@@ -454,7 +454,7 @@ const CONCEPTS = [
 .c-033 .tab{flex:1;background:var(--bg-inset);border:1px solid var(--border);border-bottom:0;border-radius:10px 10px 0 0;padding:12px 14px 16px;font-size:11px;color:var(--text-dim)}
 .c-033 .tab .t-when{display:block;margin-top:3px;color:var(--text-faint);font-size:10px}
 .c-033 .tab.is-live{background:var(--bg-panel);color:var(--text);font-weight:500;transform:translateY(-5px)}`,
-    body: `${mark(34)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="tabs">${RECENTS.map((r) => `<div class="tab${r.live ? " is-live" : ""}">${r.name}<span class="t-when">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
+    body: `${mark(34)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="tabs">${RECENTS.map((r) => `<div class="tab${r.live ? " is-live" : ""}">${r.name}<span class="t-when">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "034", name: "Nightcap", fam: "split",
@@ -467,7 +467,7 @@ const CONCEPTS = [
 .c-034 .field .btn-ghost{border-color:rgba(251,247,236,0.4);color:#fbf7ec}
 .c-034 .field .btn-ghost:hover{background:rgba(251,247,236,0.08)}
 .c-034 .paper{flex:1;padding:30px 52px;display:flex;flex-direction:column;justify-content:center}`,
-    body: `<div class="field">${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}</div><div class="paper"><div class="rows-wrap">${rowsList({})}</div></div>`,
+    body: `<div class="field">${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder", "Open a file…")}</div><div class="paper"><div class="rows-wrap">${rowsList({})}</div></div>`,
   },
   {
     id: "035", name: "Dial", fam: "mark",
@@ -478,7 +478,7 @@ const CONCEPTS = [
 .c-035 .title{font-family:var(--serif);font-size:46px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-035 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-035 .rows{width:100%;max-width:320px;margin-top:34px}`,
-    body: `<div class="dial">${mark(54)}</div><h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
+    body: `<div class="dial">${mark(54)}</div><h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
   },
   {
     id: "036", name: "Sidenotes", fam: "list",
@@ -493,7 +493,7 @@ const CONCEPTS = [
 .c-036 .sn-i{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--accent);min-width:18px}
 .c-036 .sn-name{display:block;font-weight:500}
 .c-036 .sn-when{display:block;margin-top:2px;color:var(--text-faint);font-size:10.5px}`,
-    body: `<div class="left">${mark(34)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right">${RECENTS.map((r, i) => `<div class="snote"><span class="sn-i">${i + 1}.</span><span class="sn-body"><span class="sn-name">${r.name}</span><span class="sn-when">${r.project} · ${r.when}</span></span></div>`).join("")}</div>`,
+    body: `<div class="left">${mark(34)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="right">${RECENTS.map((r, i) => `<div class="snote"><span class="sn-i">${i + 1}.</span><span class="sn-body"><span class="sn-name">${r.name}</span><span class="sn-when">${r.project} · ${r.when}</span></span></div>`).join("")}</div>`,
   },
   {
     id: "037", name: "Inverse Field", fam: "atmos",
@@ -503,7 +503,7 @@ const CONCEPTS = [
 .c-037 .title{font-family:var(--serif);font-size:52px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-037 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-037 .rows{width:100%;max-width:320px;margin-top:34px}`,
-    body: `${mark(40)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div>`,
+    body: `${mark(40)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div>`,
   },
   {
     id: "038", name: "Quiet Table", fam: "table",
@@ -518,7 +518,7 @@ const CONCEPTS = [
 .c-038 .tr-dot{width:5px;height:5px;border-radius:50%;background:var(--border-strong)}
 .c-038 .tr.is-live .tr-dot{background:var(--accent)}
 .c-038 .tr-when{font-size:11px;color:var(--text-faint)}`,
-    body: `${mark(30)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="tbl"><div class="th"><span>Session</span><span>Updated</span></div>${RECENTS.map((r) => `<div class="tr${r.live ? " is-live" : ""}"><span class="tr-name"><span class="tr-dot"></span>${r.name}</span><span class="tr-when">${r.when}</span></div>`).join("")}</div>`,
+    body: `${mark(30)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="tbl"><div class="th"><span>Session</span><span>Updated</span></div>${RECENTS.map((r) => `<div class="tr${r.live ? " is-live" : ""}"><span class="tr-name"><span class="tr-dot"></span>${r.name}</span><span class="tr-when">${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "039", name: "Stacked Wordmark", fam: "type",
@@ -541,7 +541,7 @@ const CONCEPTS = [
 .c-040 .title{font-family:var(--serif);font-size:48px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-040 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-040 .rows{width:100%;max-width:330px;margin-top:30px}`,
-    body: `<div class="arch">${mark(48)}<span class="vtag">v0.5</span></div><h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
+    body: `<div class="arch">${mark(48)}<span class="vtag">v0.5</span></div><h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
   },
   {
     id: "041", name: "Tri Columns", fam: "cards",
@@ -554,7 +554,7 @@ const CONCEPTS = [
 .c-041 .col-dot{width:5px;height:5px;border-radius:50%;background:var(--border-strong)}
 .c-041 .col.is-live .col-dot{background:var(--accent)}
 .c-041 .col-meta{margin-top:3px;font-size:10.5px;color:var(--text-faint)}`,
-    body: `${mark(36)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="cols">${RECENTS.slice(0, 3).map((r) => `<div class="col${r.live ? " is-live" : ""}"><span class="col-name"><span class="col-dot"></span>${r.name}</span><span class="col-meta">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
+    body: `${mark(36)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="cols">${RECENTS.slice(0, 3).map((r) => `<div class="col${r.live ? " is-live" : ""}"><span class="col-name"><span class="col-dot"></span>${r.name}</span><span class="col-meta">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "042", name: "Double Rule", fam: "frame",
@@ -567,7 +567,7 @@ const CONCEPTS = [
 .c-042 .title{font-family:var(--serif);font-size:52px;font-weight:500;margin:0 0 10px;letter-spacing:-0.02em}
 .c-042 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px;max-width:36ch}
 .c-042 .rows{margin-top:28px}`,
-    body: `<div class="frame">${mark(34)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="rows-wrap">${rowsList({})}</div>`,
+    body: `<div class="frame">${mark(34)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div><div class="rows-wrap">${rowsList({})}</div>`,
   },
   {
     id: "043", name: "Numbered Margin", fam: "list",
@@ -584,7 +584,7 @@ const CONCEPTS = [
 .c-043 .num{font-family:var(--serif);font-style:italic;font-size:26px;line-height:1;color:var(--text);opacity:0.18;min-width:44px}
 .c-043 .nm{font-size:13px;font-weight:500}
 .c-043 .wh{margin-left:auto;font-size:11px;color:var(--text-faint)}`,
-    body: `<div class="head">${mark(28)}<h1 class="title">Mira</h1>${cta("Open a folder")}</div><p class="sub">${SUB}</p><div class="list">${RECENTS.map((r, i) => `<div class="li"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="nm">${r.name}</span><span class="wh">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
+    body: `<div class="head">${mark(28)}<h1 class="title">Vela</h1>${cta("Open a folder")}</div><p class="sub">${SUB}</p><div class="list">${RECENTS.map((r, i) => `<div class="li"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="nm">${r.name}</span><span class="wh">${r.project} · ${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "044", name: "Mirror", fam: "split",
@@ -594,7 +594,7 @@ const CONCEPTS = [
 .c-044 .mark-svg{width:38px;height:38px;margin-bottom:24px}
 .c-044 .title{font-family:var(--serif);font-size:52px;font-weight:500;margin:0 0 10px;letter-spacing:-0.02em}
 .c-044 .sub{margin:0 0 28px;color:var(--text-dim);font-size:13px;max-width:28ch}`,
-    body: `<div class="half-l"><div class="rows-wrap">${rowsList({})}</div></div><div class="half-r">${mark(38)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div>`,
+    body: `<div class="half-l"><div class="rows-wrap">${rowsList({})}</div></div><div class="half-r">${mark(38)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}</div>`,
   },
   {
     id: "045", name: "Eclipse", fam: "mark",
@@ -606,7 +606,7 @@ const CONCEPTS = [
 .c-045 .title{font-family:var(--serif);font-size:54px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-045 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-045 .rows{width:100%;max-width:330px;margin-top:34px}`,
-    body: `<span class="eclipse"></span><div class="inner">${mark(40)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
+    body: `<span class="eclipse"></span><div class="inner">${mark(40)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div></div>`,
   },
   {
     id: "046", name: "Column Rules", fam: "table",
@@ -619,7 +619,7 @@ const CONCEPTS = [
 .c-046 .ncol:first-child{border-left:0;padding-left:0}
 .c-046 .ne-name{font-family:var(--serif);font-style:italic;font-size:14.5px}
 .c-046 .ne-when{margin-top:3px;font-size:10px;color:var(--text-faint);letter-spacing:0.04em}`,
-    body: `${mark(28)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="news">${[0, 1, 2].map((c) => `<div class="ncol">${RECENTS.filter((_, i) => i % 3 === c).map((r) => `<div class="ne"><div class="ne-name"${r.live ? ' style="color:var(--accent)"' : ""}>${r.name}</div><div class="ne-when">${r.project.toUpperCase()} — ${r.when}</div></div>`).join("")}</div>`).join("")}</div>`,
+    body: `${mark(28)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="news">${[0, 1, 2].map((c) => `<div class="ncol">${RECENTS.filter((_, i) => i % 3 === c).map((r) => `<div class="ne"><div class="ne-name"${r.live ? ' style="color:var(--accent)"' : ""}>${r.name}</div><div class="ne-when">${r.project.toUpperCase()} — ${r.when}</div></div>`).join("")}</div>`).join("")}</div>`,
   },
   {
     id: "047", name: "Stepwell", fam: "stack",
@@ -638,7 +638,7 @@ const CONCEPTS = [
 .c-047 .step.is-live{background:var(--bg-panel);border-color:var(--border-strong);color:var(--text);font-weight:500}
 .c-047 .step.is-live .st-dot{background:var(--accent)}
 .c-047 .st-when{margin-left:auto;font-size:10.5px;color:var(--text-faint)}`,
-    body: `${mark(32)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="steps">${RECENTS.map((r) => `<div class="step${r.live ? " is-live" : ""}"><span class="st-dot"></span>${r.name}<span class="st-when">${r.when}</span></div>`).join("")}</div>`,
+    body: `${mark(32)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="steps">${RECENTS.map((r) => `<div class="step${r.live ? " is-live" : ""}"><span class="st-dot"></span>${r.name}<span class="st-when">${r.when}</span></div>`).join("")}</div>`,
   },
   {
     id: "048", name: "Vignette", fam: "atmos",
@@ -649,7 +649,7 @@ const CONCEPTS = [
 .c-048 .title{font-family:var(--serif);font-size:50px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-048 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-048 .rows{width:100%;max-width:310px;margin-top:34px}`,
-    body: `<div class="inner">${mark(38)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div></div>`,
+    body: `<div class="inner">${mark(38)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4, ghost: true })}</div></div>`,
   },
   {
     id: "049", name: "Kicker Bar", fam: "frame",
@@ -659,7 +659,7 @@ const CONCEPTS = [
 .c-049 .title{font-family:var(--serif);font-size:50px;font-weight:500;margin:0 0 8px;letter-spacing:-0.02em}
 .c-049 .sub{margin:0 0 26px;color:var(--text-dim);font-size:13px}
 .c-049 .rows{width:100%;max-width:330px;margin-top:34px}`,
-    body: `<span class="bar"></span>${mark(38)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
+    body: `<span class="bar"></span>${mark(38)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p>${cta("Open a folder")}<div class="rows-wrap">${rowsList({ count: 4 })}</div>`,
   },
   {
     id: "050", name: "Colophon", fam: "type",
@@ -673,7 +673,7 @@ const CONCEPTS = [
 .c-050 .ri{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text-faint)}
 .c-050 .ri-dot{width:5px;height:5px;border-radius:50%;background:var(--border-strong)}
 .c-050 .ri.is-live .ri-dot{background:var(--accent)}`,
-    body: `${mark(34)}<h1 class="title">Mira</h1><p class="sub">${SUB}</p><div class="colo">${cta("Open a folder")}<span class="sep"></span>${RECENTS.map((r) => `<span class="ri${r.live ? " is-live" : ""}"><span class="ri-dot"></span>${r.name}</span>`).join("")}</div>`,
+    body: `${mark(34)}<h1 class="title">Vela</h1><p class="sub">${SUB}</p><div class="colo">${cta("Open a folder")}<span class="sep"></span>${RECENTS.map((r) => `<span class="ri${r.live ? " is-live" : ""}"><span class="ri-dot"></span>${r.name}</span>`).join("")}</div>`,
   },
 ]
 
@@ -769,7 +769,7 @@ const SPEC = {
   "001": "Centered monolith: mark, oversized serif title, one action, recents as a bottom ticker.",
   "002": "Sage side rail with rotated wordmark; hero and recents share the remaining canvas.",
   "003": "Mark and title locked into one horizontal unit; recents behind a hairline divider.",
-  "004": "A giant ghost mira mark backs a centered lockup; recents fade to whispers.",
+  "004": "A giant ghost vela mark backs a centered lockup; recents fade to whispers.",
   "005": "Hairline cross divides the canvas into quadrants; content posts to three of them.",
   "006": "Serif italic session names read like margin notes beside the hero.",
   "007": "The mark sits in a thin circular aperture above the title.",
@@ -789,7 +789,7 @@ const SPEC = {
   "021": "Compact hero over three hairline session cards in a row.",
   "022": "Marquee type: 110px title left, action and recents in a side column.",
   "023": "Sessions demote to numbered footnotes in two columns at the base.",
-  "024": "Tilted mira ellipses sweep behind the centered lockup.",
+  "024": "Tilted vela ellipses sweep behind the centered lockup.",
   "025": "Recents recess into a raised inset panel beside the hero.",
   "026": "A slim live-session ticker pins the top edge with a pulsing dot.",
   "027": "Small-caps sage kicker leads a modest serif title; list on the right.",
@@ -848,7 +848,7 @@ function gallery() {
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Mira — fifty calm fronts</title>
+<title>Vela — fifty calm fronts</title>
 <link rel="stylesheet" href="./landing-pages.css"/>
 <style>
 .gal-shell { max-width: 1560px; margin: 0 auto; padding: 40px 28px 80px; }
@@ -891,7 +891,7 @@ function gallery() {
 <body>
 <div class="gal-shell">
 <header class="gal-head">
-<div><span class="gal-kicker">Mira · landing study</span><h1>Fifty calm fronts</h1><p>One distilled direction — bare mark, serif title, one line, one action, calm recents — composed fifty ways. Star up to four to shortlist; previews follow your theme.</p></div>
+<div><span class="gal-kicker">Vela · landing study</span><h1>Fifty calm fronts</h1><p>One distilled direction — bare mark, serif title, one line, one action, calm recents — composed fifty ways. Star up to four to shortlist; previews follow your theme.</p></div>
 <div class="gal-controls">
 <label class="gal-search"><input id="gal-q" type="search" placeholder="Search id, name, family…" autocomplete="off"/></label>
 <select id="gal-fam" class="gal-select"><option value="">All families</option>${fams.map((f) => `<option value="${f}">${f}</option>`).join("")}</select>
@@ -907,7 +907,7 @@ ${cards}
 </div>
 <script>
 (function () {
-  var KEY = "mira-landing-shortlist";
+  var KEY = "vela-landing-shortlist";
   var picked = [];
   try { picked = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { picked = []; }
   var count = document.getElementById("gal-count");
@@ -960,10 +960,10 @@ ${cards}
     var root = document.documentElement;
     var next = root.dataset.theme === "dark" ? "paper" : "dark";
     root.dataset.theme = next;
-    try { localStorage.setItem("mira-landing-theme", next); } catch (e) {}
+    try { localStorage.setItem("vela-landing-theme", next); } catch (e) {}
   });
   try {
-    var theme = localStorage.getItem("mira-landing-theme");
+    var theme = localStorage.getItem("vela-landing-theme");
     if (theme) document.documentElement.dataset.theme = theme;
   } catch (e) {}
 

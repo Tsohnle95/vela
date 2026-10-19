@@ -95,7 +95,7 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
   const loadPreview = async (path: string): Promise<void> => {
     if (!isImagePath(path)) return;
     try {
-      const dataUrl = await window.openshell.readImagePreview(path);
+      const dataUrl = await window.vela.readImagePreview(path);
       if (!dataUrl) return;
       setPreviews((current) => ({ ...current, [path]: dataUrl }));
     } catch {
@@ -281,7 +281,7 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
                 hidden
                 onChange={(event) => {
                   addAttachmentPaths([...event.currentTarget.files ?? []]
-                    .map((file) => window.openshell.getPathForFile(file))
+                    .map((file) => window.vela.getPathForFile(file))
                     .filter(Boolean));
                   event.currentTarget.value = "";
                 }}

@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -23,7 +23,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -50,7 +50,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     readFile: async () => "content",
     listDir: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 async function seedChanges(): Promise<void> {
@@ -88,7 +88,7 @@ describe("store dismiss changes", () => {
   });
 
   it("dismisses a single change and keeps the rest", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await seedChanges();
     expect([...store.agentFiles.keys()].sort()).toEqual(["a.txt", "gone.txt"]);
@@ -99,7 +99,7 @@ describe("store dismiss changes", () => {
   });
 
   it("ignores dismissing an unknown path", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await seedChanges();
 
@@ -109,7 +109,7 @@ describe("store dismiss changes", () => {
   });
 
   it("dismisses every change at once", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await seedChanges();
 
@@ -119,7 +119,7 @@ describe("store dismiss changes", () => {
   });
 
   it("opens a deleted change as a deleted tab instead of erroring", async () => {
-    window.openshell = api({ readFile: async () => null });
+    window.vela = api({ readFile: async () => null });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await seedChanges();
     const errorsBefore = store.toasts.filter((toast) => toast.tone === "error").length;

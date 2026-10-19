@@ -7,7 +7,7 @@ vi.mock("@opencode/client/service", () => ({
   Service: { discover: vi.fn(), ensure: vi.fn(), headers: () => undefined }
 }));
 
-import { OpenShellBackend } from "./opencode";
+import { VelaBackend } from "./opencode";
 
 type BackendInternals = {
   client: unknown;
@@ -18,13 +18,13 @@ type BackendInternals = {
 
 type EmittedMessage = { kind?: string; type?: string; data?: { error?: { code?: string; message?: string } } };
 
-describe("OpenShellBackend stream recovery", () => {
-  let backend: OpenShellBackend;
+describe("VelaBackend stream recovery", () => {
+  let backend: VelaBackend;
   let internals: BackendInternals;
   let messages: EmittedMessage[];
 
   beforeEach(() => {
-    backend = new OpenShellBackend();
+    backend = new VelaBackend();
     internals = backend as unknown as BackendInternals;
     messages = [];
     backend.onMessage((msg) => messages.push(msg as EmittedMessage));
@@ -55,10 +55,10 @@ describe("OpenShellBackend stream recovery", () => {
   });
 
   it("reports each outage as a structured global error", () => {
-    internals.handleStreamError("[MIRA_STREAM_FAILED] Live event stream failed");
+    internals.handleStreamError("[VELA_STREAM_FAILED] Live event stream failed");
 
     const error = messages.find((msg) => msg.type === "global.error");
-    expect(error?.data?.error?.code).toBe("MIRA_STREAM_FAILED");
+    expect(error?.data?.error?.code).toBe("VELA_STREAM_FAILED");
     expect(error?.data?.error?.message).toBe("Live event stream failed");
   });
 

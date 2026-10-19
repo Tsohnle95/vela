@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, SessionInfo, TranscriptItem } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -23,7 +23,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -50,7 +50,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     readFile: async () => "content",
     listDir: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 function transcriptEvent(sessionID: string, text: string): void {
@@ -98,7 +98,7 @@ describe("open panel retention", () => {
   });
 
   it("never evicts open panel transcripts or usage when subagent streams flood in", async () => {
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -132,7 +132,7 @@ describe("open panel retention", () => {
       todos: [],
       usage: { cost: 5, tokens: { input: 5, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }
     }));
-    window.openshell = api({ openSessionById });
+    window.vela = api({ openSessionById });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -155,7 +155,7 @@ describe("open panel retention", () => {
       todos: [],
       usage: null
     }));
-    window.openshell = api({ openSessionById });
+    window.vela = api({ openSessionById });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const first = store.panels[0];

@@ -35,8 +35,8 @@ import type {
   RuntimeID,
   RuntimeManifest,
   OpenCodeSyncResult,
-  MiraAppUpdateResult,
-  MiraAppUpdateStatus,
+  VelaAppUpdateResult,
+  VelaAppUpdateStatus,
   SessionInfo,
   SessionSelection,
   SessionSummary,
@@ -49,13 +49,13 @@ import type {
   WorkspaceIdentity
 } from "@shared/types";
 
-const appVersionArgument = process.argv.find((argument) => argument.startsWith("--mira-app-version="));
+const appVersionArgument = process.argv.find((argument) => argument.startsWith("--vela-app-version="));
 
 const api = {
   platform: process.platform,
-  isPackaged: process.argv.includes("--openshell-packaged"),
-  isReleaseBuild: process.argv.includes("--mira-release-build"),
-  appVersion: appVersionArgument?.slice("--mira-app-version=".length) ?? "unknown",
+  isPackaged: process.argv.includes("--vela-packaged"),
+  isReleaseBuild: process.argv.includes("--vela-release-build"),
+  appVersion: appVersionArgument?.slice("--vela-app-version=".length) ?? "unknown",
   onMessage: (cb: (msg: BackendMessage) => void): (() => void) => {
     const listener = (_e: unknown, msg: BackendMessage): void => cb(msg);
     ipcRenderer.on("shell:message", listener);
@@ -79,8 +79,8 @@ const api = {
   runtimes: (): Promise<RuntimeManifest[]> => ipcRenderer.invoke("shell:runtimes"),
   syncOpenCode: (): Promise<OpenCodeSyncResult> => ipcRenderer.invoke("shell:sync-opencode"),
   updateOpenCode: (): Promise<OpenCodeSyncResult> => ipcRenderer.invoke("shell:update-opencode"),
-  checkAppUpdate: (): Promise<MiraAppUpdateStatus> => ipcRenderer.invoke("shell:app-update-check"),
-  updateApp: (): Promise<MiraAppUpdateResult> => ipcRenderer.invoke("shell:app-update"),
+  checkAppUpdate: (): Promise<VelaAppUpdateStatus> => ipcRenderer.invoke("shell:app-update-check"),
+  updateApp: (): Promise<VelaAppUpdateResult> => ipcRenderer.invoke("shell:app-update"),
   reportUnsavedEditorFiles: (paths: string[]): Promise<void> =>
     ipcRenderer.invoke("shell:unsaved-editor-files", paths),
   onSaveAllEditorFiles: (save: () => Promise<boolean>): (() => void) => {
@@ -238,6 +238,6 @@ const api = {
     ipcRenderer.invoke("shell:take-pending-paths")
 };
 
-export type OpenShellApi = typeof api;
+export type VelaApi = typeof api;
 
-contextBridge.exposeInMainWorld("openshell", api);
+contextBridge.exposeInMainWorld("vela", api);

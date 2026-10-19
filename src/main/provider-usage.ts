@@ -694,19 +694,19 @@ function envEntryFor(spec: ProviderSpec): OAuthEntry | null {
 
 const SNAPSHOT_MAX_AGE_MS = 15 * 60 * 1000;
 
-export function miraUsageSnapshotCandidates(): string[] {
-  const override = process.env.MIRA_USAGE_SNAPSHOT ?? process.env.ORBIT_USAGE_SNAPSHOT;
+export function velaUsageSnapshotCandidates(): string[] {
+  const override = process.env.VELA_USAGE_SNAPSHOT ?? process.env.VELA_USAGE_SNAPSHOT;
   if (override) return [override];
   const data = process.env.XDG_DATA_HOME ?? path.join(homedir(), ".local", "share");
   return [
-    path.join(data, "opencode", "mira-usage.json"),
-    path.join(data, "opencode", "orbit-usage.json"),
-    path.join(homedir(), "Library", "Application Support", "ai.opencode.desktop", "opencode", "mira-usage.json")
+    path.join(data, "opencode", "vela-usage.json"),
+    path.join(data, "opencode", "vela-usage.json"),
+    path.join(homedir(), "Library", "Application Support", "ai.opencode.desktop", "opencode", "vela-usage.json")
   ];
 }
 
-export async function readMiraUsageSnapshot(
-  candidates: string[] = miraUsageSnapshotCandidates(),
+export async function readVelaUsageSnapshot(
+  candidates: string[] = velaUsageSnapshotCandidates(),
   now = Date.now()
 ): Promise<ProviderUsageResult[]> {
   for (const candidate of candidates) {
@@ -733,7 +733,7 @@ export async function readMiraUsageSnapshot(
 }
 
 export async function fetchProviderUsage(): Promise<ProviderUsageResult[]> {
-  const snapshotted = await readMiraUsageSnapshot();
+  const snapshotted = await readVelaUsageSnapshot();
   const snapshotByProvider = new Map(snapshotted.map((result) => [result.provider, result]));
   const auth = await readOAuthEntries();
   const results: ProviderUsageResult[] = [];

@@ -713,7 +713,7 @@
     }
   ],
   "reproduction": {
-    "compileCommand": "PATH=/Users/tdawg/.local/share/mira-toolchains/node-v22.23.2/bin:$PATH node --input-type=commonjs -e 'const fs=require(\"node:fs\"),sass=require(\"sass\");fs.writeFileSync(\"/private/tmp/mira-styles.css\",sass.compile(\"src/renderer/src/styles/main.scss\",{style:\"expanded\"}).css)'",
+    "compileCommand": "PATH=/Users/tdawg/.local/share/vela-toolchains/node-v22.23.2/bin:$PATH node --input-type=commonjs -e 'const fs=require(\"node:fs\"),sass=require(\"sass\");fs.writeFileSync(\"/private/tmp/vela-styles.css\",sass.compile(\"src/renderer/src/styles/main.scss\",{style:\"expanded\"}).css)'",
     "beforeSource": "Read the three pre-change stylesheets from sourceCheckpoint in Git; retain all other main.scss inputs unchanged.",
     "procedure": [
       "Compile main.scss with sass.compile(path,{style:\"expanded\"}) for the before/after source snapshots.",
@@ -722,7 +722,7 @@
       "Compare the exact remaining walkRules selector/context sequence, excluding only root occurrences whose selector AND full ordered declarations match one of the five groups. Check each grouped occurrence is unique before and after.",
       "Check crossed count-summary selectors have attribute specificity greater than1. For the hidden done track, crossed equal/higher specificity selectors must target the mutually exclusive active slot; lower specificity default-done remains overridden."
     ],
-    "temporaryCompleteEvidence": "/private/tmp/mira-style-consolidation-full.json",
-    "temporaryVerifier": "/private/tmp/mira-verify-style-consolidation.mjs"
+    "temporaryCompleteEvidence": "/private/tmp/vela-style-consolidation-full.json",
+    "temporaryVerifier": "/private/tmp/vela-verify-style-consolidation.mjs"
   }
 }

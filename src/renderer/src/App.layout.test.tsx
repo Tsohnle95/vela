@@ -44,7 +44,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(): typeof window.openshell {
+function api(): typeof window.vela {
   let openedGeneration = 3;
   return {
     platform: "darwin",
@@ -74,7 +74,7 @@ function api(): typeof window.openshell {
     recoveryRecords: async () => [],
     windowView: async () => {},
     reportUnsavedEditorFiles: async () => {}
-  } as unknown as typeof window.openshell;
+  } as unknown as typeof window.vela;
 }
 
 function setWidth(value: number): void {
@@ -101,7 +101,7 @@ describe("Layout panel sizing", () => {
     messageHandlers = [];
     window.localStorage.clear();
     Object.defineProperty(window, "innerWidth", { value: 1480, configurable: true });
-    window.openshell = api();
+    window.vela = api();
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -1218,7 +1218,7 @@ describe("Layout panel sizing", () => {
 
     const add = (): HTMLButtonElement => container.querySelector<HTMLButtonElement>('button[aria-label="Add model panel"]')!;
     expect(add().getAttribute("aria-label")).toBe("Add model panel");
-    const selectFolder = vi.spyOn(window.openshell, "selectFolder");
+    const selectFolder = vi.spyOn(window.vela, "selectFolder");
 
     await act(async () => {
       add().click();
@@ -1265,7 +1265,7 @@ describe("Layout panel sizing", () => {
   it("only the plus control adds a model panel", async () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
-    const openSession = vi.spyOn(window.openshell, "openSession");
+    const openSession = vi.spyOn(window.vela, "openSession");
     const modeButton = (): HTMLButtonElement => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-model-mode"]')!;
 
     await act(async () => {
@@ -1303,7 +1303,7 @@ describe("Layout panel sizing", () => {
       }]
     }];
     let parentOpenCount = 0;
-    window.openshell = {
+    window.vela = {
       ...api(),
       state: async () => parent,
       activeSessions: async () => [parent],
@@ -1464,7 +1464,7 @@ describe("Layout panel sizing", () => {
     const cta = container.querySelector<HTMLButtonElement>(".sessions-new");
     expect(cta?.textContent?.trim()).toBe("Open Workspace");
 
-    const selectFolder = vi.spyOn(window.openshell, "selectFolder");
+    const selectFolder = vi.spyOn(window.vela, "selectFolder");
     await act(async () => {
       cta!.click();
       await new Promise((resolve) => setTimeout(resolve, 30));
@@ -1473,14 +1473,14 @@ describe("Layout panel sizing", () => {
   });
 
   it("opens an empty IDE without a welcome picker or automatic session on cold start", async () => {
-    window.openshell = {
+    window.vela = {
       ...api(),
       state: async () => null,
       activeSessions: async () => []
     };
-    const selectFolder = vi.spyOn(window.openshell, "selectFolder");
-    const openSession = vi.spyOn(window.openshell, "openSession");
-    const windowView = vi.spyOn(window.openshell, "windowView");
+    const selectFolder = vi.spyOn(window.vela, "selectFolder");
+    const openSession = vi.spyOn(window.vela, "openSession");
+    const windowView = vi.spyOn(window.vela, "windowView");
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
 

@@ -69,7 +69,7 @@ export class AppStylesController {
     try { this.entry = await realpath(source); } catch { return; }
     const assets = path.join(this.root, "out/renderer/assets");
     for (const name of await readdir(assets)) {
-      if (!name.endsWith(".css") || name === "mira-live.css") continue;
+      if (!name.endsWith(".css") || name === "vela-live.css") continue;
       const file = path.join(assets, name);
       const css = await readFile(file, "utf8");
       const start = css.indexOf(APP_STYLES_START);
@@ -80,9 +80,9 @@ export class AppStylesController {
       this.originalURL = pathToFileURL(file).href;
       break;
     }
-    if (!this.originalURL) throw new Error("Rebuild Mira to enable live app stylesheet saves");
+    if (!this.originalURL) throw new Error("Rebuild Vela to enable live app stylesheet saves");
     if (this.closed) return;
-    this.output = path.join(assets, "mira-live.css");
+    this.output = path.join(assets, "vela-live.css");
     this.compiler = this.compilerFactory();
     this.watcher = watch(path.dirname(this.entry), { ignoreInitial: true, followSymlinks: false, usePolling: true, interval: 200 });
     this.watcher.on("all", (_event, file) => { if (/\.(scss|sass|css)$/i.test(file)) this.schedule(); });

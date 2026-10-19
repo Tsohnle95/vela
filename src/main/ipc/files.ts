@@ -1,10 +1,10 @@
-import type { OpenShellBackend } from "../opencode";
+import type { VelaBackend } from "../opencode";
 import type { FileWriteIdentity, WorkspaceIdentity } from "@shared/types";
 import { absoluteFilePath, absoluteFilePaths, fileContent, workspaceId } from "../workspace-security";
 import { fileWriteIdentity, movePayload, selectionId, workspacePath } from "../ipc-schema";
 import type { TrustedIpcRegistrar } from "./registration";
 
-export function registerFilesIpc(handleTrusted: TrustedIpcRegistrar, backend: OpenShellBackend): void {
+export function registerFilesIpc(handleTrusted: TrustedIpcRegistrar, backend: VelaBackend): void {
 
   handleTrusted("shell:open-external", async (_e, workspace: WorkspaceIdentity, file: string) => {
     workspaceId(workspace);

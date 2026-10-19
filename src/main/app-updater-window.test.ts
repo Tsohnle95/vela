@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { appUpdaterWindowDocument, appUpdaterWindowUrl, shouldBlockAppUpdaterReload } from "./app-updater-window";
 
-describe("Mira updater window", () => {
+describe("Vela updater window", () => {
   it("renders a self-contained, sandbox-friendly progress window", () => {
     const document = appUpdaterWindowDocument();
 
     expect(document).toContain("Content-Security-Policy");
     expect(document).toContain("default-src 'none'");
     expect(document).toContain('role="status"');
-    expect(document).toContain("Mira will close while the downloaded release is installed.");
-    expect(document).toContain("window.setMiraUpdaterStatus");
-    expect(document).toContain("location.hash = 'return-to-mira'");
-    expect(document).toContain("Return to Mira to close this window and retry from Settings.");
+    expect(document).toContain("Vela will close while the downloaded release is installed.");
+    expect(document).toContain("window.setVelaUpdaterStatus");
+    expect(document).toContain("location.hash = 'return-to-vela'");
+    expect(document).toContain("Return to Vela to close this window and retry from Settings.");
     expect(appUpdaterWindowUrl()).toMatch(/^data:text\/html;charset=utf-8,/);
   });
 

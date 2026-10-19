@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BackendMessage, ProjectInfo, SessionInfo, SessionInboxEntry } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { StoreProvider, useStore } from "./store";
 
 let store: ReturnType<typeof useStore>;
@@ -16,7 +16,7 @@ function deferred<T>() {
   const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; });
   return { promise, resolve, reject };
 }
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin", onMessage: (handler) => { receive = handler; return () => {}; },
     health: async () => true, takePendingPaths: async () => [], state: async () => null,
@@ -27,7 +27,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     closeSession: async () => {}, recoveryRecords: async () => [], listPermissions: async () => [], formsList: async () => [],
     inboxList: async () => [], inboxCancel: async () => {}, inboxSteer: async () => {},
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 function seedLocalQueue() {
   window.localStorage.setItem("messageQueue", JSON.stringify({
@@ -58,8 +58,8 @@ describe("Store inbox and local queue authority", () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
-  async function open(overrides: Partial<OpenShellApi> = {}) {
-    window.openshell = api(overrides);
+  async function open(overrides: Partial<VelaApi> = {}) {
+    window.vela = api(overrides);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession(first.directory));
   }
@@ -85,7 +85,7 @@ describe("Store inbox and local queue authority", () => {
 
   it("requeues a failed local send for its captured session after that panel closes", async () => {
     seedLocalQueue();
-    const prompt = deferred<Awaited<ReturnType<OpenShellApi["prompt"]>>>();
+    const prompt = deferred<Awaited<ReturnType<VelaApi["prompt"]>>>();
     await open({ prompt: () => prompt.promise });
     let sending!: Promise<void>;
     act(() => { sending = store.sendQueuedNow(first.workspace, localID); });
@@ -153,7 +153,7 @@ describe("Store inbox and local queue authority", () => {
     await act(async () => { firstRead.reject(new Error("closed read failure")); try { await firstRead.promise; } catch {} });
     expect(store.toasts.some((toast) => toast.text.includes("closed read failure"))).toBe(false);
     const secondRead = deferred<SessionInboxEntry[]>();
-    window.openshell.inboxList = () => secondRead.promise;
+    window.vela.inboxList = () => secondRead.promise;
     await act(async () => store.openSession(first.directory));
     await act(async () => { secondRead.reject(new Error("attached read failure")); try { await secondRead.promise; } catch {} });
     expect(store.toasts.at(-1)?.text).toContain("attached read failure");
@@ -175,10 +175,10 @@ describe("Store inbox and local queue authority", () => {
     { name: "valid", queue: '{"followUpBehavior":"steer","queuedMessages":{}}', saved: '[]', denied: "", expected: "steer" },
     { name: "malformed", queue: '{invalid', saved: '{invalid', denied: "", expected: "queue" },
     { name: "queue read denied", queue: '{"followUpBehavior":"steer"}', saved: '[]', denied: "messageQueue", expected: "queue" },
-    { name: "saved-workspace read denied", queue: '{"followUpBehavior":"steer"}', saved: '[]', denied: "mira.savedWorkspaces", expected: "steer" }
+    { name: "saved-workspace read denied", queue: '{"followUpBehavior":"steer"}', saved: '[]', denied: "vela.savedWorkspaces", expected: "steer" }
   ])("initializes independent storage keys before hydration effects ($name)", async ({ queue, saved, denied, expected }) => {
     window.localStorage.setItem("messageQueue", queue);
-    window.localStorage.setItem("mira.savedWorkspaces", saved);
+    window.localStorage.setItem("vela.savedWorkspaces", saved);
     const trace: string[] = [];
     const original = window.localStorage.getItem.bind(window.localStorage);
     vi.spyOn(window.localStorage, "getItem").mockImplementation((key) => {
@@ -189,7 +189,7 @@ describe("Store inbox and local queue authority", () => {
     await open({ savedWorkspaces: async () => { trace.push("hydrate:saved"); return { workspaces: [], initialized: true }; } });
     expect(store.followUpBehavior).toBe(expected);
     expect(trace.indexOf("read:messageQueue")).toBeLessThan(trace.indexOf("hydrate:saved"));
-    expect(trace.indexOf("read:mira.savedWorkspaces")).toBeLessThan(trace.indexOf("hydrate:saved"));
+    expect(trace.indexOf("read:vela.savedWorkspaces")).toBeLessThan(trace.indexOf("hydrate:saved"));
   });
 
 });

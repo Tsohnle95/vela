@@ -199,7 +199,7 @@ export function useSessionExecution(records: ExecutionRecords) {
       setSessionBusy(targetSessionID, true);
       if (attachRetry(targetSessionID, {
         attempt: Number(status.attempt ?? 1),
-        message: formatFailure(status.message, "MIRA_RETRY_SCHEDULED", "Retrying"),
+        message: formatFailure(status.message, "VELA_RETRY_SCHEDULED", "Retrying"),
         next: status.next
       })) {
         applyProjection(targetSessionID);

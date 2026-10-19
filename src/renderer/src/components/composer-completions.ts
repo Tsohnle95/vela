@@ -102,7 +102,7 @@ function useCompletionCandidates(workspace: WorkspaceIdentity | null,
     if (!workspace) return;
     if (kind === "command") {
       try {
-        const raw = await window.openshell.commands(workspace);
+        const raw = await window.vela.commands(workspace);
         if (fetchSeqRef.current !== seq || !sameWorkspace(workspace, workspaceRef.current)) return;
         const items: CompletionItem[] = raw.map((c) => ({
           label: c.name,
@@ -122,7 +122,7 @@ function useCompletionCandidates(workspace: WorkspaceIdentity | null,
     mentionTimerRef.current = setTimeout(() => {
       void (async () => {
         try {
-          const raw = await window.openshell.references(workspace, query);
+          const raw = await window.vela.references(workspace, query);
           if (fetchSeqRef.current !== seq || !sameWorkspace(workspace, workspaceRef.current)) return;
           const items: CompletionItem[] = raw.map((r) => ({
             label: r.rel,

@@ -1,12 +1,12 @@
 import fsp from "node:fs/promises";
-import type { OpenShellBackend } from "../opencode";
+import type { VelaBackend } from "../opencode";
 import type { TerminalManager } from "../terminal";
 import type { WorkspaceIdentity } from "@shared/types";
 import { confinedPath, terminalDimensions, terminalId, terminalInput } from "../workspace-security";
 import { workspacePath } from "../ipc-schema";
 import type { TrustedIpcRegistrar } from "./registration";
 
-export function registerTerminalIpc(handleTrusted: TrustedIpcRegistrar, backend: OpenShellBackend, terminals: TerminalManager): void {
+export function registerTerminalIpc(handleTrusted: TrustedIpcRegistrar, backend: VelaBackend, terminals: TerminalManager): void {
 
   handleTrusted("shell:terminal-start", async (_e, workspace: WorkspaceIdentity, requestedId: string, rel = "", cols = 100, rows = 24) => {
     const target = workspacePath(workspace, rel, true);

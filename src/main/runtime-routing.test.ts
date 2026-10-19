@@ -9,7 +9,7 @@ vi.mock("electron", () => ({ shell: { trashItem: vi.fn(), openPath: vi.fn() } })
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
 vi.mock("@opencode/client/service", () => ({ Service: {} }));
 
-import { OpenShellBackend } from "./opencode";
+import { VelaBackend } from "./opencode";
 
 const roots: string[] = [];
 
@@ -55,7 +55,7 @@ function adapter(directory: string): RuntimeAdapter {
 
 describe("runtime routing", () => {
   it("keeps DeepSeek disabled in the application backend", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "mira-disabled-runtime-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "vela-disabled-runtime-"));
     roots.push(directory);
     const runtimeIndex = new RuntimeSessionIndex(path.join(directory, "runtime-sessions.json"));
     await runtimeIndex.put({
@@ -65,7 +65,7 @@ describe("runtime routing", () => {
       directory,
       updatedAt: Date.now()
     });
-    const backend = new OpenShellBackend(() => {}, undefined, runtimeIndex);
+    const backend = new VelaBackend(() => {}, undefined, runtimeIndex);
 
     await expect(backend.openSession(directory, 1, "deepseek")).rejects.toThrow("DeepSeek Harness runtime is disabled");
     await expect(backend.listSessions()).resolves.toEqual([]);
@@ -76,10 +76,10 @@ describe("runtime routing", () => {
   });
 
   it("keeps workspace services in core and routes agent operations by session runtime", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "mira-runtime-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "vela-runtime-"));
     roots.push(directory);
     const runtime = adapter(directory);
-    const backend = new OpenShellBackend(() => {}, () => runtime, new RuntimeSessionIndex(path.join(directory, "runtime-sessions.json")));
+    const backend = new VelaBackend(() => {}, () => runtime, new RuntimeSessionIndex(path.join(directory, "runtime-sessions.json")));
     const session = await backend.openSession(directory, 1, "deepseek");
     expect(session).toMatchObject({ id: "deepseek-session", runtimeID: "deepseek" });
     await expect(backend.workspaceDirectory(session.workspace)).resolves.toBe(session.directory);
@@ -92,7 +92,7 @@ describe("runtime routing", () => {
     expect(runtime.stop).toHaveBeenCalledOnce();
 
     const reopenedRuntime = adapter(directory);
-    const reopenedBackend = new OpenShellBackend(
+    const reopenedBackend = new VelaBackend(
       () => {},
       () => reopenedRuntime,
       new RuntimeSessionIndex(path.join(directory, "runtime-sessions.json"))
@@ -104,7 +104,7 @@ describe("runtime routing", () => {
   });
 
   it("remaps a cold-reopened session to the selected runtime on the same directory", async () => {
-    const directory = await realpath(await mkdtemp(path.join(os.tmpdir(), "mira-runtime-remap-")));
+    const directory = await realpath(await mkdtemp(path.join(os.tmpdir(), "vela-runtime-remap-")));
     roots.push(directory);
     const client = {
       session: {
@@ -120,7 +120,7 @@ describe("runtime routing", () => {
       file: { read: vi.fn(async () => "content") }
     };
     const runtime = adapter(directory);
-    const backend = new OpenShellBackend(() => {}, () => runtime, new RuntimeSessionIndex(path.join(directory, "runtime-sessions.json")));
+    const backend = new VelaBackend(() => {}, () => runtime, new RuntimeSessionIndex(path.join(directory, "runtime-sessions.json")));
     const state = backend as unknown as { client: unknown };
     state.client = client;
     const opencode = await backend.openSession(directory, 1);

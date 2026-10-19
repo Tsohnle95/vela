@@ -97,7 +97,7 @@ async function sample() {
   if (operation === "workspace-files") entries.push({ path: "node_modules", type: "directory" }, { path: ".DS_Store", type: "file" });
   const entryOrder = JSON.stringify(entries);
   const diskText = (file) => `Disk content for ${file}\n`;
-  window.openshell = {
+  window.vela = {
     platform: "darwin", onMessage: (callback) => { handler = callback; return () => { handler = null; }; },
     health: async () => true, takePendingPaths: empty, state: async () => null,
     activeSessions: operation !== "streaming" ? async () => activeSessions : empty,
@@ -154,7 +154,7 @@ async function sample() {
     if (operation === "session-requests") {
       const previousRenders = renders;
       const emit = (type, data, id) => handler({ kind: "event", type,
-        data: { id: `${type}-${id}`, created: 1, miraSessionIDs: [session.id], data: { sessionID: session.id, ...data } } });
+        data: { id: `${type}-${id}`, created: 1, velaSessionIDs: [session.id], data: { sessionID: session.id, ...data } } });
       start = performance.now();
       for (let index = 0; index < 100; index++) {
         const id = `form-${index}`;

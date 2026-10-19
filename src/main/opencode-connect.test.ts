@@ -14,7 +14,7 @@ vi.mock("@opencode/client/service", () => ({
 }));
 
 import packageJson from "../../package.json";
-import { OpenShellBackend, serverVersionPredicate } from "./opencode";
+import { VelaBackend, serverVersionPredicate } from "./opencode";
 
 describe("serverVersionPredicate", () => {
   it("accepts the pinned V2 SDK's service version", () => {
@@ -39,8 +39,8 @@ describe("serverVersionPredicate", () => {
   });
 });
 
-describe("OpenShellBackend.connect", () => {
-  const stubInstalledVersion = (backend: OpenShellBackend, version: string | null): void => {
+describe("VelaBackend.connect", () => {
+  const stubInstalledVersion = (backend: VelaBackend, version: string | null): void => {
     (backend as unknown as { installedServerVersion: () => Promise<string | null> }).installedServerVersion =
       async () => version;
   };
@@ -55,7 +55,7 @@ describe("OpenShellBackend.connect", () => {
   it("reuses a running V2 service", async () => {
     const endpoint = { url: "http://127.0.0.1:1", auth: undefined };
     hoisted.discover.mockResolvedValue(endpoint);
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     stubInstalledVersion(backend, "opencode v2.0.15");
 
     await expect(backend.connect()).resolves.toBe(true);
@@ -73,7 +73,7 @@ describe("OpenShellBackend.connect", () => {
       options.version(legacyVersion) ? { url: "http://127.0.0.1:1", auth: undefined } : undefined
     );
     hoisted.ensure.mockResolvedValue({ url: "http://127.0.0.1:2", auth: undefined });
-    const backend = new OpenShellBackend();
+    const backend = new VelaBackend();
     stubInstalledVersion(backend, "opencode v2.0.15");
 
     await expect(backend.connect()).resolves.toBe(true);

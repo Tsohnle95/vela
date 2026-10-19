@@ -28,9 +28,9 @@ export function useSessionSelection(host: SelectionHost) {
     if (!target) return;
     try {
       const [list, def, selection] = await Promise.all([
-        window.openshell.models(target),
-        window.openshell.modelDefault(target),
-        window.openshell.sessionSelection(target)
+        window.vela.models(target),
+        window.vela.modelDefault(target),
+        window.vela.sessionSelection(target)
       ]);
       if (!panelFor(target)) return;
       setModelsByWorkspace((prev) => {
@@ -60,7 +60,7 @@ export function useSessionSelection(host: SelectionHost) {
       const target = workspace ?? readFocusedSession()?.workspace;
       if (!target) return;
       try {
-        await window.openshell.switchModel(target, id, providerID, variant);
+        await window.vela.switchModel(target, id, providerID, variant);
         if (!panelFor(target)) return;
         const base = modelsByWorkspaceRef.current[target.id]?.find((m) => m.id === id && m.providerID === providerID);
         if (base) setCurrentModelByWorkspace((prev) => ({ ...prev, [target.id]: { ...base, ...(variant ? { variant } : {}) } }));
@@ -76,8 +76,8 @@ export function useSessionSelection(host: SelectionHost) {
     if (!target) return;
     try {
       const [list, selection] = await Promise.all([
-        window.openshell.agents(target),
-        window.openshell.sessionSelection(target)
+        window.vela.agents(target),
+        window.vela.sessionSelection(target)
       ]);
       if (!panelFor(target)) return;
       setAgentsByWorkspace((prev) => {
@@ -99,7 +99,7 @@ export function useSessionSelection(host: SelectionHost) {
       const panel = panelFor(target);
       const id = selection?.agent?.id ?? panel?.agent ?? "build";
       if (!selection?.agent && list.some((agent) => agent.id === id) && panel?.agent !== id) {
-        await window.openshell.switchAgent(target, id);
+        await window.vela.switchAgent(target, id);
       }
     } catch (err) {
       if (panelFor(target)) toast(err instanceof Error ? err.message : String(err), "error");
@@ -111,7 +111,7 @@ export function useSessionSelection(host: SelectionHost) {
       const target = workspace ?? readFocusedSession()?.workspace;
       if (!target) return;
       try {
-        await window.openshell.switchAgent(target, id);
+        await window.vela.switchAgent(target, id);
         if (!panelFor(target)) return;
         const base = agentsByWorkspaceRef.current[target.id]?.find((agent) => agent.id === id);
         if (base) setCurrentAgentByWorkspace((prev) => ({ ...prev, [target.id]: base }));

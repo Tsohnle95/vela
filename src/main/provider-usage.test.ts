@@ -121,7 +121,7 @@ describe("provider usage from opencode store", () => {
   });
 
   it("prefers live OpenAI windows over a still-fresh disk snapshot", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "mira-usage-test-"));
+    const root = await mkdtemp(path.join(tmpdir(), "vela-usage-test-"));
     tempRoots.push(root);
     const snapshot = path.join(root, "usage.json");
     await writeFile(snapshot, JSON.stringify({
@@ -138,7 +138,7 @@ describe("provider usage from opencode store", () => {
         }
       }]
     }));
-    vi.stubEnv("MIRA_USAGE_SNAPSHOT", snapshot);
+    vi.stubEnv("VELA_USAGE_SNAPSHOT", snapshot);
     mockDbRows([{ url: "https://chatgpt.com", access_token: "token", token_expiry: 0 }], []);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
       plan_type: "plus",

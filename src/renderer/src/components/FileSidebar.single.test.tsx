@@ -90,9 +90,9 @@ describe("FileSidebar single-file mode and external drops", () => {
 
   beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-    window.openshell = {
+    window.vela = {
       externalKind: vi.fn(async (path: string) => ({ kind: /\.[^/]+$/.test(path) ? "file" as const : "directory" as const }))
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     store.singleFile = null;
     store.panels = [];
     store.tabs = [];

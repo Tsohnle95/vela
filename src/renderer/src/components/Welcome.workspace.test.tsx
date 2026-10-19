@@ -24,9 +24,9 @@ describe("Welcome saved workspaces", () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     store.openSession.mockClear();
     store.savedWorkspaces = [{ directory: "/workspace", name: "Workspace" }];
-    window.openshell = {
+    window.vela = {
       sessions: vi.fn(async () => [{ id: "closed", title: "Recent work", directory: "/missing", updatedAt: 1 }])
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -73,7 +73,7 @@ describe("Welcome saved workspaces", () => {
     store.sessions = [{ id: "closed", title: "Updated title", directory: "/workspace", updatedAt: 2 }];
     await act(async () => root.render(<Welcome />));
     expect(container.textContent).toContain("Updated title");
-    expect(window.openshell.sessions).not.toHaveBeenCalled();
+    expect(window.vela.sessions).not.toHaveBeenCalled();
   });
 
 });

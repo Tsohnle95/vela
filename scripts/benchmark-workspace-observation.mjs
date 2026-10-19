@@ -33,9 +33,9 @@ const baseline = execFileSync("git", ["show", `${ref}:src/main/opencode.ts`], { 
 if (operation === "observation" && !/\b(?:private\s+)?async onFsChanged\s*\(/.test(baseline)) throw new Error("Baseline revision must precede the observation extraction and define backend onFsChanged");
 if (operation === "mutations" && (!/async writeFile\s*\(/.test(baseline) || /\bworkspaceMutations\b/.test(baseline))) throw new Error("Baseline revision must precede the mutation extraction and define backend writeFile");
 const testFile = `src/main/workspace-${operation === "mutations" ? "mutations" : "observation"}.benchmark.test.ts`;
-const marker = operation === "mutations" ? "MIRA_MUTATION_RESULT " : "MIRA_OBSERVATION_RESULT ";
+const marker = operation === "mutations" ? "VELA_MUTATION_RESULT " : "VELA_OBSERVATION_RESULT ";
 const currentImplementation = operation === "mutations" ? "WorkspaceMutations" : "WorkspaceObservation";
-const directory = await fs.mkdtemp(path.join(tmpdir(), "mira-observation-benchmark-"));
+const directory = await fs.mkdtemp(path.join(tmpdir(), "vela-observation-benchmark-"));
 try {
   const original = path.join(directory, "baseline-opencode.ts");
   const rebased = baseline.replace(/(\b(?:from|import)\s*)(["'])(\.[^"']+)\2/g, (_match, prefix, _quote, specifier) => {
@@ -54,14 +54,14 @@ try {
 export default { ...base, root: ${JSON.stringify(root)}, resolve: { ...base.resolve, alias: [${alias}${alias ? "," : ""} ${packageAliases}, ...base.resolve.alias] } };\n`);
       const stdout = execFileSync(process.execPath, [require.resolve("vitest/vitest.mjs"), "run", testFile, "--config", config], {
         cwd: root,
-        env: { ...process.env, MIRA_OBSERVATION_BENCHMARK: operation === "observation" ? "1" : "0", MIRA_MUTATION_BENCHMARK: operation === "mutations" ? "1" : "0", MIRA_BENCHMARK_VARIANT: variant },
+        env: { ...process.env, VELA_OBSERVATION_BENCHMARK: operation === "observation" ? "1" : "0", VELA_MUTATION_BENCHMARK: operation === "mutations" ? "1" : "0", VELA_BENCHMARK_VARIANT: variant },
         encoding: "utf8",
         maxBuffer: 4 * 1024 * 1024
       });
       const result = stdout.split("\n").find((line) => line.startsWith(marker));
       if (!result) throw new Error(`${variant} benchmark did not emit measurements`);
       const measurement = JSON.parse(result.slice(marker.length));
-      const implementation = variant === "baseline" ? "OpenShellBackend" : currentImplementation;
+      const implementation = variant === "baseline" ? "VelaBackend" : currentImplementation;
       if (measurement.variant !== variant || measurement.implementation !== implementation) throw new Error(`Wrong implementation measured for ${variant}`);
       runs.push({ repeat: repeat + 1, ...measurement });
     }

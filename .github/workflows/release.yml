@@ -24,12 +24,12 @@ jobs:
           GITHUB_REF_NAME: ${{ github.ref_name }}
       - name: Require macOS signing and notarization credentials
         env:
-          CSC_LINK: ${{ secrets.MIRA_MAC_CERTIFICATE_P12 || secrets.ORBIT_MAC_CERTIFICATE_P12 }}
-          CSC_NAME: ${{ secrets.MIRA_MAC_CERTIFICATE_NAME || secrets.ORBIT_MAC_CERTIFICATE_NAME }}
-          CSC_KEY_PASSWORD: ${{ secrets.MIRA_MAC_CERTIFICATE_PASSWORD || secrets.ORBIT_MAC_CERTIFICATE_PASSWORD }}
-          APPLE_API_KEY_BASE64: ${{ secrets.MIRA_APPLE_API_KEY_P8_BASE64 || secrets.ORBIT_APPLE_API_KEY_P8_BASE64 }}
-          APPLE_API_KEY_ID: ${{ secrets.MIRA_APPLE_API_KEY_ID || secrets.ORBIT_APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.MIRA_APPLE_API_ISSUER || secrets.ORBIT_APPLE_API_ISSUER }}
+          CSC_LINK: ${{ secrets.VELA_MAC_CERTIFICATE_P12 || secrets.VELA_MAC_CERTIFICATE_P12 }}
+          CSC_NAME: ${{ secrets.VELA_MAC_CERTIFICATE_NAME || secrets.VELA_MAC_CERTIFICATE_NAME }}
+          CSC_KEY_PASSWORD: ${{ secrets.VELA_MAC_CERTIFICATE_PASSWORD || secrets.VELA_MAC_CERTIFICATE_PASSWORD }}
+          APPLE_API_KEY_BASE64: ${{ secrets.VELA_APPLE_API_KEY_P8_BASE64 || secrets.VELA_APPLE_API_KEY_P8_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.VELA_APPLE_API_KEY_ID || secrets.VELA_APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.VELA_APPLE_API_ISSUER || secrets.VELA_APPLE_API_ISSUER }}
         run: |
           for name in CSC_LINK CSC_NAME CSC_KEY_PASSWORD APPLE_API_KEY_BASE64 APPLE_API_KEY_ID APPLE_API_ISSUER; do
             if [ -z "${!name}" ]; then
@@ -37,18 +37,18 @@ jobs:
               exit 1
             fi
           done
-          printf '%s' "$APPLE_API_KEY_BASE64" | base64 -D > "$RUNNER_TEMP/MiraAuthKey.p8"
-          echo "APPLE_API_KEY=$RUNNER_TEMP/MiraAuthKey.p8" >> "$GITHUB_ENV"
-      - name: Compile the release updater into Mira
+          printf '%s' "$APPLE_API_KEY_BASE64" | base64 -D > "$RUNNER_TEMP/VelaAuthKey.p8"
+          echo "APPLE_API_KEY=$RUNNER_TEMP/VelaAuthKey.p8" >> "$GITHUB_ENV"
+      - name: Compile the release updater into Vela
         run: npm run build:compile
         env:
-          MIRA_RELEASE_BUILD: "1"
+          VELA_RELEASE_BUILD: "1"
       - name: Package, sign, notarize, and publish the release
         run: ./node_modules/.bin/electron-builder --config electron-builder.release.yml --mac dmg zip --x64 --arm64 --publish onTag
         env:
           GH_TOKEN: ${{ github.token }}
-          CSC_LINK: ${{ secrets.MIRA_MAC_CERTIFICATE_P12 || secrets.ORBIT_MAC_CERTIFICATE_P12 }}
-          CSC_NAME: ${{ secrets.MIRA_MAC_CERTIFICATE_NAME || secrets.ORBIT_MAC_CERTIFICATE_NAME }}
-          CSC_KEY_PASSWORD: ${{ secrets.MIRA_MAC_CERTIFICATE_PASSWORD || secrets.ORBIT_MAC_CERTIFICATE_PASSWORD }}
-          APPLE_API_KEY_ID: ${{ secrets.MIRA_APPLE_API_KEY_ID || secrets.ORBIT_APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.MIRA_APPLE_API_ISSUER || secrets.ORBIT_APPLE_API_ISSUER }}
+          CSC_LINK: ${{ secrets.VELA_MAC_CERTIFICATE_P12 || secrets.VELA_MAC_CERTIFICATE_P12 }}
+          CSC_NAME: ${{ secrets.VELA_MAC_CERTIFICATE_NAME || secrets.VELA_MAC_CERTIFICATE_NAME }}
+          CSC_KEY_PASSWORD: ${{ secrets.VELA_MAC_CERTIFICATE_PASSWORD || secrets.VELA_MAC_CERTIFICATE_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.VELA_APPLE_API_KEY_ID || secrets.VELA_APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.VELA_APPLE_API_ISSUER || secrets.VELA_APPLE_API_ISSUER }}

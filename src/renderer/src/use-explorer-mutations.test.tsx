@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SessionInfo, WorkspaceIdentity } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { useExplorerMutations } from "./use-explorer-mutations";
 
 const first: SessionInfo = { id: "first", directory: "/first", workspace: { id: "first-workspace", generation: 1 } };
@@ -47,11 +47,11 @@ describe("Explorer mutation authority", () => {
     focused = first;
     attached = [first, second];
     files.isHiddenPath.mockReturnValue(false);
-    window.openshell = {
+    window.vela = {
       createFile: async () => {}, createDir: async () => {}, renamePath: async () => {},
       deletePath: async () => {}, movePath: async () => {}, detachPath: async () => {},
       importExternal: async () => [], revealInFileManager: async () => {}
-    } as unknown as OpenShellApi;
+    } as unknown as VelaApi;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -83,7 +83,7 @@ describe("Explorer mutation authority", () => {
 
   it("commits last-render intent, rejects invalid names, and retains failed creation intent", async () => {
     const createFile = vi.fn(async () => { throw new Error("creation failed"); });
-    window.openshell.createFile = createFile;
+    window.vela.createFile = createFile;
     await act(async () => {
       explorer.startCreate("", "file");
       await explorer.commitName("same-batch");
@@ -102,7 +102,7 @@ describe("Explorer mutation authority", () => {
 
   it("samples rendered active selection only after rename completion and before observed remap", async () => {
     const pending = deferred<void>();
-    window.openshell.renamePath = () => pending.promise;
+    window.vela.renamePath = () => pending.promise;
     act(() => explorer.startRename("old/file"));
     let completion!: Promise<void>;
     act(() => { completion = explorer.commitName("new"); });
@@ -121,7 +121,7 @@ describe("Explorer mutation authority", () => {
       if (path === "a") return firstMove.promise;
       if (path === "c") throw new Error("blocked");
     });
-    window.openshell.movePath = movePath;
+    window.vela.movePath = movePath;
     let completion!: Promise<void>;
     act(() => { completion = explorer.moveEntries(["a", "b", "c"], "dest"); });
     expect(movePath.mock.calls.map(([, path]) => path)).toEqual(["a"]);
@@ -142,7 +142,7 @@ describe("Explorer mutation authority", () => {
       if (path === "a") return pending.promise;
       throw new Error("stale failure");
     });
-    window.openshell.deletePath = deletePath;
+    window.vela.deletePath = deletePath;
     let completion!: Promise<void>;
     act(() => { completion = explorer.deleteEntries(["a", "b"]); });
     attached = [second];
@@ -156,7 +156,7 @@ describe("Explorer mutation authority", () => {
 
   it("keeps detach restoration on original workspace and leaves refresh focus resolution deferred", async () => {
     const pending = deferred<void>();
-    window.openshell.detachPath = () => pending.promise;
+    window.vela.detachPath = () => pending.promise;
     vi.spyOn(window, "confirm").mockReturnValue(true);
     act(() => explorer.removeFromWorkspace("parent/file"));
     expect(files.hidePath).toHaveBeenCalledWith(first.workspace, "parent/file");
@@ -167,8 +167,8 @@ describe("Explorer mutation authority", () => {
   });
 
   it("retains captured import visibility queries with focused unhide/default refresh", async () => {
-    const pending = deferred<Awaited<ReturnType<OpenShellApi["importExternal"]>>>();
-    window.openshell.importExternal = () => pending.promise;
+    const pending = deferred<Awaited<ReturnType<VelaApi["importExternal"]>>>();
+    window.vela.importExternal = () => pending.promise;
     files.isHiddenPath.mockReturnValue(true);
     let completion!: Promise<void>;
     act(() => { completion = explorer.importPaths("dest", ["/outside"]); });
@@ -186,7 +186,7 @@ describe("Explorer mutation authority", () => {
   it("preserves stale completion and single-operation cancellation ordering", async () => {
     const pending = deferred<void>();
     const deletePath = vi.fn(() => pending.promise);
-    window.openshell.deletePath = deletePath;
+    window.vela.deletePath = deletePath;
     let completion!: Promise<void>;
     act(() => { completion = explorer.deleteEntry("file"); });
     expect(editor.cancelPrefix.mock.invocationCallOrder[0]).toBeLessThan(deletePath.mock.invocationCallOrder[0]);

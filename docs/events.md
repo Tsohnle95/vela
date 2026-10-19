@@ -20,7 +20,7 @@ start it. Prompt submission never drives a history polling loop, so OpenCode's
 pushed events are the live authority.
 
 Failure records use the shared `{code, message, details?}` shape from
-`src/shared/errors.ts`. Missing provider/runtime codes receive a stable `MIRA_*`
+`src/shared/errors.ts`. Missing provider/runtime codes receive a stable `VELA_*`
 code, and the renderer includes the code in the persistent timeline error and
 toast. Prompt IPC rejection, runtime execution failure, stream failure, malformed
 events, and event-delivery failure all produce a report instead of being silently
@@ -153,7 +153,7 @@ The transport pipeline in `src/main/stream-pipeline.ts` (see the scheduling
 paragraph above) delivers per-directory batches into `deliverEvents` in
 `src/main/opencode.ts`, which forwards each event and then runs
 `handleServerEvent`. `deliverEvents` drops interactive prompts (`form.*`,
-`permission.*`, `session.inbox.*`) for sessions Mira never opened: the
+`permission.*`, `session.inbox.*`) for sessions Vela never opened: the
 global daemon is shared with external `opencode` terminal sessions, and
 forwarding those prompts would misattribute them to the focused panel
 (`form.created` carries its session only inside `data.form`, so
@@ -161,7 +161,7 @@ forwarding those prompts would misattribute them to the focused panel
 form's owner is not an open context (a delegated child, a location-global
 form, or an external `opencode` TUI sharing the directory), main canonicalizes
 the event location, attaches the open session ids for that location as
-`miraSessionIDs`, and forwards it only when Mira owns that location. The
+`velaSessionIDs`, and forwards it only when Vela owns that location. The
 renderer routes the request to the panels open there while preserving the
 form's true session id, so the prompt is answerable in the GUI and the reply
 reaches the owning session. Forms from sessions outside every open workspace
@@ -221,5 +221,5 @@ them. These are local app notifications, not OpenCode runtime events. See
 
 `ui-command` notifications `reload-app-styles` and `app-styles-error` are
 consumed by the root app-style hook rather than the chat reducer. They refresh
-Mira's own compiled stylesheet or report compilation failure; see the
+Vela's own compiled stylesheet or report compilation failure; see the
 [application style owner](main.md). They are independent of workspace Sass state.

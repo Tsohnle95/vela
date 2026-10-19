@@ -107,7 +107,7 @@ for (const { id, scheme, colors } of APPEARANCES) {
   const decorator = colors.syntaxDecorator ?? colors.syntaxFunction;
   const namespace = colors.syntaxNamespace ?? colors.syntaxNumber;
   const regexp = colors.syntaxRegexp ?? colors.syntaxString;
-  monaco.editor.defineTheme(`mira-${id}`, {
+  monaco.editor.defineTheme(`vela-${id}`, {
     base: scheme === "light" ? "vs" : "vs-dark",
     inherit: true,
     rules: [

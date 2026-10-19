@@ -753,7 +753,7 @@ export default function App(): ReactNode {
   useEffect(() => {
     document.documentElement.classList.toggle(
       "darwin",
-      window.openshell.platform === "darwin"
+      window.vela.platform === "darwin"
     );
   }, []);
 
@@ -782,8 +782,8 @@ function Root(): ReactNode {
   }, [unsavedEditorFileCount]);
 
   useEffect(() => {
-    if (typeof window.openshell.onSaveAllEditorFiles !== "function") return;
-    return window.openshell.onSaveAllEditorFiles(async () => {
+    if (typeof window.vela.onSaveAllEditorFiles !== "function") return;
+    return window.vela.onSaveAllEditorFiles(async () => {
       const saved = await saveAllEditorFiles();
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       return saved;
@@ -793,12 +793,12 @@ function Root(): ReactNode {
   const unsavedFilePaths = unsavedEditorFiles.map((file) => file.displayPath);
   const unsavedFilePathsKey = JSON.stringify(unsavedFilePaths);
   useEffect(() => {
-    const reportUnsaved = window.openshell.reportUnsavedEditorFiles;
+    const reportUnsaved = window.vela.reportUnsavedEditorFiles;
     if (typeof reportUnsaved === "function") void reportUnsaved(unsavedFilePaths).catch(() => {});
   }, [unsavedFilePathsKey]);
 
   useEffect(() => {
-    void window.openshell.windowView("session").catch(() => {});
+    void window.vela.windowView("session").catch(() => {});
   }, []);
 
   return <Layout />;

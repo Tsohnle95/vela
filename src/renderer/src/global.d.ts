@@ -1,8 +1,8 @@
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 
 declare global {
   interface Window {
-    openshell: OpenShellApi;
+    vela: VelaApi;
   }
 }
 

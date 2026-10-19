@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, ProjectInfo, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -29,7 +29,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler) => {
@@ -59,7 +59,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     readFile: async () => "content",
     listDir: async () => [],
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("per-panel workspace selection", () => {
@@ -82,18 +82,18 @@ describe("per-panel workspace selection", () => {
     vi.restoreAllMocks();
   });
 
-  it("persists and removes Mira workspace bookmarks without touching the folder", async () => {
+  it("persists and removes Vela workspace bookmarks without touching the folder", async () => {
     const selectDirectory = vi.fn(async () => "/saved/workspace");
     const saveSavedWorkspaces = vi.fn(async (workspaces: ProjectInfo[]) => workspaces);
     const deletePath = vi.fn(async () => {});
     const detachPath = vi.fn(async () => {});
-    window.openshell = api({ selectDirectory, deletePath, detachPath, saveSavedWorkspaces });
+    window.vela = api({ selectDirectory, deletePath, detachPath, saveSavedWorkspaces });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
 
     await act(async () => store.saveWorkspace());
     expect(store.savedWorkspaces).toEqual([{ directory: "/saved/workspace", name: "workspace" }]);
-    expect(JSON.parse(window.localStorage.getItem("mira.savedWorkspaces") ?? "[]")).toEqual(store.savedWorkspaces);
-    expect(window.openshell.saveSavedWorkspaces).toHaveBeenLastCalledWith(store.savedWorkspaces);
+    expect(JSON.parse(window.localStorage.getItem("vela.savedWorkspaces") ?? "[]")).toEqual(store.savedWorkspaces);
+    expect(window.vela.saveSavedWorkspaces).toHaveBeenLastCalledWith(store.savedWorkspaces);
 
     await act(async () => store.removeWorkspace("/saved/workspace"));
     expect(store.savedWorkspaces).toEqual([]);
@@ -105,10 +105,10 @@ describe("per-panel workspace selection", () => {
     const stored = deferred<{ workspaces: ProjectInfo[]; initialized: boolean }>();
     const saveSavedWorkspaces = vi.fn(async (workspaces: ProjectInfo[]) => workspaces);
     const projects = vi.fn(async () => [{ directory: "/opencode", name: "OpenCode" }]);
-    window.localStorage.setItem("mira.savedWorkspaces", JSON.stringify([
+    window.localStorage.setItem("vela.savedWorkspaces", JSON.stringify([
       { directory: "/legacy", name: "Legacy" }
     ]));
-    window.openshell = api({
+    window.vela = api({
       savedWorkspaces: () => stored.promise,
       saveSavedWorkspaces,
       projects
@@ -125,14 +125,14 @@ describe("per-panel workspace selection", () => {
     const expected = [{ directory: "/durable", name: "Durable" }];
     expect(store.savedWorkspaces).toEqual(expected);
     expect(saveSavedWorkspaces).toHaveBeenLastCalledWith(expected);
-    expect(JSON.parse(window.localStorage.getItem("mira.savedWorkspaces") ?? "[]")).toEqual(expected);
+    expect(JSON.parse(window.localStorage.getItem("vela.savedWorkspaces") ?? "[]")).toEqual(expected);
     expect(projects).not.toHaveBeenCalled();
   });
 
   it("keeps additions and removals made while durable storage is loading", async () => {
     const stored = deferred<{ workspaces: ProjectInfo[]; initialized: boolean }>();
-    window.localStorage.setItem("mira.savedWorkspaces", JSON.stringify([{ directory: "/removed", name: "Removed" }]));
-    window.openshell = api({
+    window.localStorage.setItem("vela.savedWorkspaces", JSON.stringify([{ directory: "/removed", name: "Removed" }]));
+    window.vela = api({
       savedWorkspaces: () => stored.promise,
       selectDirectory: async () => "/added"
     });
@@ -147,17 +147,17 @@ describe("per-panel workspace selection", () => {
   });
 
   it("does not resurrect removed bookmarks from another renderer's old localStorage", async () => {
-    window.localStorage.setItem("mira.savedWorkspaces", JSON.stringify([{ directory: "/removed", name: "Removed" }]));
-    window.openshell = api({ savedWorkspaces: async () => ({ workspaces: [], initialized: true }) });
+    window.localStorage.setItem("vela.savedWorkspaces", JSON.stringify([{ directory: "/removed", name: "Removed" }]));
+    window.vela = api({ savedWorkspaces: async () => ({ workspaces: [], initialized: true }) });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     expect(store.savedWorkspaces).toEqual([]);
-    expect(window.localStorage.getItem("mira.savedWorkspaces")).toBe("[]");
+    expect(window.localStorage.getItem("vela.savedWorkspaces")).toBe("[]");
   });
 
   it("imports OpenCode projects on first use when no legacy bookmark list exists", async () => {
     const projects = [{ directory: "/recovered", name: "Recovered" }];
     const saveSavedWorkspaces = vi.fn(async (workspaces: ProjectInfo[]) => workspaces);
-    window.openshell = api({
+    window.vela = api({
       savedWorkspaces: async () => ({ workspaces: [], initialized: false }),
       saveSavedWorkspaces,
       projects: vi.fn(async () => projects)
@@ -172,7 +172,7 @@ describe("per-panel workspace selection", () => {
     const closeSession = vi.fn(async () => {});
     const picked = info("/picked", 7);
     const selectFolder = vi.fn(async () => picked);
-    window.openshell = api({ closeSession, selectFolder });
+    window.vela = api({ closeSession, selectFolder });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
 
@@ -187,7 +187,7 @@ describe("per-panel workspace selection", () => {
 
   it("keeps an existing file root visible when a saved workspace is added, then restores focus when it is closed", async () => {
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({ closeSession });
+    window.vela = api({ closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/first"));
     const first = store.panels[0];
@@ -210,7 +210,7 @@ describe("per-panel workspace selection", () => {
     const closeSession = vi.fn(async () => {});
     const picked = info("/picked", 4);
     const selectFolder = vi.fn(async () => picked);
-    window.openshell = api({ closeSession, selectFolder });
+    window.vela = api({ closeSession, selectFolder });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -236,7 +236,7 @@ describe("per-panel workspace selection", () => {
   it("swap drops the swapped panel's per-workspace editor and tree state", async () => {
     const closeSession = vi.fn(async () => {});
     const picked = info("/picked", 4);
-    window.openshell = api({
+    window.vela = api({
       closeSession,
       selectFolder: vi.fn(async () => picked),
       readFile: async (_workspace: unknown, path: string) => `content of ${path}`
@@ -258,7 +258,7 @@ describe("per-panel workspace selection", () => {
   it("keeps a running session active when its panel changes workspace", async () => {
     const closeSession = vi.fn(async () => {});
     const picked = info("/picked", 4);
-    window.openshell = api({
+    window.vela = api({
       closeSession,
       selectFolder: vi.fn(async () => picked)
     });
@@ -287,7 +287,7 @@ describe("per-panel workspace selection", () => {
   it("changes a panel to a directory without a picker", async () => {
     const closeSession = vi.fn(async () => {});
     const openSession = vi.fn(async (directory: string, generation: number) => info(directory, generation));
-    window.openshell = api({ closeSession, openSession });
+    window.vela = api({ closeSession, openSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => store.addModelPanel("/two"));
@@ -306,7 +306,7 @@ describe("per-panel workspace selection", () => {
   it("folds a mid-swap session event into the in-place swap instead of appending a panel", async () => {
     const picked = deferred<SessionInfo>();
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({
+    window.vela = api({
       closeSession,
       selectFolder: vi.fn(() => picked.promise)
     });
@@ -330,7 +330,7 @@ describe("per-panel workspace selection", () => {
   it("closes a stale swap result that completes after a full workspace replacement", async () => {
     const picked = deferred<SessionInfo>();
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({
+    window.vela = api({
       closeSession,
       selectFolder: vi.fn(() => picked.promise)
     });
@@ -350,7 +350,7 @@ describe("per-panel workspace selection", () => {
 
   it("detaches idle panels into Open now on full replacement until explicitly closed", async () => {
     const closeSession = vi.fn(async () => {});
-    window.openshell = api({ closeSession });
+    window.vela = api({ closeSession });
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const first = store.panels[0];

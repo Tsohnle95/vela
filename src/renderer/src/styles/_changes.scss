@@ -26,7 +26,7 @@
    presentation tokens (--syntax-diff-*, --syntax-*, --color-background-stronger).
    Outside the agent panel those tokens are undefined, so Pierre falls back to
    placeholder colors and additions/deletions lose their highlight. Bridge them
-   to Mira's global semantic colors for this surface. */
+   to Vela's global semantic colors for this surface. */
 .changes-view {
   --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-family-mono--font-feature-settings: normal;

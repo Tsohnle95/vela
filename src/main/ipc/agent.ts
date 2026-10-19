@@ -1,11 +1,11 @@
-import type { OpenShellBackend } from "../opencode";
+import type { VelaBackend } from "../opencode";
 import type { FormAnswers, PermissionReply, PromptDelivery, PromptFile, WorkspaceIdentity } from "@shared/types";
 import { formatFailure, normalizeFailure } from "@shared/errors";
 import { workspaceId } from "../workspace-security";
 import { commandPayload, optionalSelectionId, permissionPayload, providerCredentialPayload, promptPayload, queryText, selectionId, sessionId } from "../ipc-schema";
 import type { TrustedIpcRegistrar } from "./registration";
 
-export function registerAgentIpc(handleTrusted: TrustedIpcRegistrar, backend: OpenShellBackend): void {
+export function registerAgentIpc(handleTrusted: TrustedIpcRegistrar, backend: VelaBackend): void {
 
   handleTrusted("shell:session-transcript", async (_e, sessionID: string) =>
     backend.sessionTranscript(sessionId(sessionID))
@@ -20,7 +20,7 @@ export function registerAgentIpc(handleTrusted: TrustedIpcRegistrar, backend: Op
       const payload = promptPayload(workspace, text, files);
       return await backend.prompt(payload.workspace, payload.text, payload.files, delivery);
     } catch (error) {
-      const failure = normalizeFailure(error, "MIRA_PROMPT_FAILED", "Prompt failed");
+      const failure = normalizeFailure(error, "VELA_PROMPT_FAILED", "Prompt failed");
       const reported = new Error(formatFailure(failure));
       reported.name = failure.code;
       Object.assign(reported, failure);

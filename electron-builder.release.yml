@@ -3,7 +3,7 @@ forceCodeSigning: true
 publish:
   provider: github
   owner: Tsohnle95
-  repo: Orbit
+  repo: vela
   releaseType: release
 mac:
   identity: "${env.CSC_NAME}"

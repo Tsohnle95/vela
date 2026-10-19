@@ -1,7 +1,7 @@
 # 01 — Tokens
 
 > **Source:** `src/renderer/src/styles/_foundation.scss:1`
-> **Theme switch:** `src/renderer/src/theme.tsx:10` — `ThemeId = "original" | "paper"`, default `paper`, persisted as `mira.theme`, applied as `document.documentElement.dataset.theme`
+> **Theme switch:** `src/renderer/src/theme.tsx:10` — `ThemeId = "original" | "paper"`, default `paper`, persisted as `vela.theme`, applied as `document.documentElement.dataset.theme`
 
 Every visual value in the product is a CSS custom property on `:root`. Paper overrides live in `:root[data-theme="paper"]`. There are no SCSS variables — tokens are consumed at runtime so the theme can flip without recompilation.
 

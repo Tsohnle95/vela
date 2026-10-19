@@ -45,7 +45,7 @@
     {
       "repeat": 1,
       "variant": "baseline",
-      "implementation": "OpenShellBackend",
+      "implementation": "VelaBackend",
       "workload": {
         "files": 20,
         "eventsPerSample": 200,
@@ -109,7 +109,7 @@
     {
       "repeat": 2,
       "variant": "baseline",
-      "implementation": "OpenShellBackend",
+      "implementation": "VelaBackend",
       "workload": {
         "files": 20,
         "eventsPerSample": 200,

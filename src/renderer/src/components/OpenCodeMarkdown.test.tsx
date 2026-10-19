@@ -59,7 +59,7 @@ describe("OpenCodeMarkdown", () => {
     await vi.waitFor(() => expect(container.querySelector('[data-markdown-complete="true"]')).not.toBeNull());
   });
 
-  it("uses upstream code decorations, copies code, and keeps Mira's external URL policy", async () => {
+  it("uses upstream code decorations, copies code, and keeps Vela's external URL policy", async () => {
     const open = vi.spyOn(window, "open").mockImplementation(() => null);
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });

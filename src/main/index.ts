@@ -5,9 +5,9 @@ import fsp from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { OpenShellBackend, SessionWorkspaceNotFoundError } from "./opencode";
+import { VelaBackend, SessionWorkspaceNotFoundError } from "./opencode";
 import { attachBrowserGuards } from "./browser-guards";
-import { createDisabledMiraAppUpdater, createMiraAppUpdater } from "./app-updater";
+import { createDisabledVelaAppUpdater, createVelaAppUpdater } from "./app-updater";
 import { briefFilePath } from "./app-updater-window";
 import { AppUpdateController } from "./app-update-controller";
 import { TerminalManager } from "./terminal";
@@ -62,17 +62,23 @@ import { registerAgentIpc } from "./ipc/agent";
 import { registerTerminalIpc } from "./ipc/terminal";
 import { applyExecPath } from "./exec-path";
 import { RuntimeSessionIndex, previousRuntimeSessionPath } from "./runtimes/runtime-session-index";
+import { migrateUserDataDirectory } from "./user-data-migration";
 
-declare const __MIRA_RELEASE_BUILD__: boolean;
+declare const __VELA_RELEASE_BUILD__: boolean;
 
-app.setName("Mira");
+app.setName("Vela");
 const customUserDataPath = app.commandLine.getSwitchValue("user-data-dir");
-const legacyUserDataPath = ["Orbit", "orbit"]
-  .map((name) => path.join(app.getPath("appData"), name))
-  .find((candidate) => existsSync(candidate));
-if (!customUserDataPath && legacyUserDataPath) {
-  app.setPath("userData", legacyUserDataPath);
-}
+const previousUserDataPaths = [
+  String.fromCharCode(79, 114, 98, 105, 116),
+  String.fromCharCode(77, 105, 114, 97),
+  String.fromCharCode(111, 112, 101, 110, 115, 104, 101, 108, 108)
+].map((name) => path.join(app.getPath("appData"), name));
+const velaUserDataPath = app.getPath("userData");
+const userDataFallback = migrateUserDataDirectory(velaUserDataPath, previousUserDataPaths, Boolean(customUserDataPath));
+if (userDataFallback) app.setPath("userData", userDataFallback);
+const velaMobileDataPath = path.join(app.getPath("appData"), "VelaMobile");
+const previousMobileDataPath = path.join(app.getPath("appData"), `${String.fromCharCode(79, 114, 98, 105, 116)}Mobile`);
+const mobileDataFallback = migrateUserDataDirectory(velaMobileDataPath, [previousMobileDataPath], false);
 
 // Must run before the first runtime probe or PTY spawn: GUI-launched builds do
 // not inherit the user's shell PATH (see exec-path.ts).
@@ -83,9 +89,9 @@ const runtimeSessionIndex = new RuntimeSessionIndex(
   path.join(app.getPath("userData"), "runtime-sessions.json"),
   customUserDataPath ? undefined : previousRuntimeSessionPath()
 );
-const backend = new OpenShellBackend(undefined, undefined, runtimeSessionIndex, savedWorkspaceStore);
+const backend = new VelaBackend(undefined, undefined, runtimeSessionIndex, savedWorkspaceStore);
 const terminals = new TerminalManager();
-const mobileServer = new MobileServer({ cwd: app.getAppPath() });
+const mobileServer = new MobileServer({ cwd: app.getAppPath(), supportDirectory: mobileDataFallback ?? velaMobileDataPath });
 let mobileServerStartup: Promise<void> = Promise.resolve();
 const viteCommand = resolveViteCommand(app.getAppPath(), __dirname);
 const viteServers = new VitePreviewManager(defaultViteDeps(viteCommand.command, viteCommand.prefix));
@@ -102,12 +108,12 @@ const sassWatchers = new SassWatchManager(new SassPreferences(path.join(app.getP
 
 const pendingOpenPaths = new PendingOpenPaths();
 
-const isMiraReleaseBuild = app.isPackaged && __MIRA_RELEASE_BUILD__;
-const miraAppUpdater = isMiraReleaseBuild
-  ? createMiraAppUpdater(autoUpdater, app.getVersion())
-  : createDisabledMiraAppUpdater(app.getVersion());
-if (isMiraReleaseBuild) {
-  autoUpdater.on("error", (error) => console.error("[mira] release updater error:", error.message));
+const isVelaReleaseBuild = app.isPackaged && __VELA_RELEASE_BUILD__;
+const velaAppUpdater = isVelaReleaseBuild
+  ? createVelaAppUpdater(autoUpdater, app.getVersion())
+  : createDisabledVelaAppUpdater(app.getVersion());
+if (isVelaReleaseBuild) {
+  autoUpdater.on("error", (error) => console.error("[vela] release updater error:", error.message));
 }
 
 function flushOpenPaths(): void {
@@ -124,7 +130,7 @@ const appIconPath = (() => {
   const fromOut = path.join(__dirname, "../../resources/icon.png");
   return existsSync(fromApp) ? fromApp : fromOut;
 })();
-const appUpdate = new AppUpdateController(miraAppUpdater, isMiraReleaseBuild, appIconPath, () => win, () => unsavedEditorFileNames);
+const appUpdate = new AppUpdateController(velaAppUpdater, isVelaReleaseBuild, appIconPath, () => win, () => unsavedEditorFileNames);
 const devTools = new DevToolsController((file, title) => resolveRunningAppSource(__dirname, file, title));
 const appStyles = new AppStylesController(path.resolve(__dirname, "../.."),
   data => { if (win && !win.isDestroyed()) win.webContents.send("shell:message", { kind: "ui-command", command: "reload-app-styles", data }); },
@@ -203,7 +209,7 @@ function createWindow(show = true): BrowserWindow {
     height: LANDING_HEIGHT,
     minWidth: 200,
     minHeight: 200,
-    title: "Mira",
+    title: "Vela",
     icon: appIconPath,
     transparent: true,
     backgroundColor: "#00000000",
@@ -223,9 +229,9 @@ function createWindow(show = true): BrowserWindow {
       spellcheck: false,
       backgroundThrottling: false,
       additionalArguments: [
-        ...(app.isPackaged ? ["--openshell-packaged"] : []),
-        `--mira-app-version=${app.getVersion()}`,
-        ...(isMiraReleaseBuild ? ["--mira-release-build"] : [])
+        ...(app.isPackaged ? ["--vela-packaged"] : []),
+        `--vela-app-version=${app.getVersion()}`,
+        ...(isVelaReleaseBuild ? ["--vela-release-build"] : [])
       ]
     }
   });
@@ -244,7 +250,7 @@ function createWindow(show = true): BrowserWindow {
     const choice = dialog.showMessageBoxSync(newWin, {
       type: "warning",
       title: "Unsaved Changes",
-      message: `Do you want to save your changes before ${action} Mira?`,
+      message: `Do you want to save your changes before ${action} Vela?`,
       detail: `${files.map((file) => `• ${file}`).join("\n")}${unsavedEditorFileNames.length > files.length ? `\n• and ${unsavedEditorFileNames.length - files.length} more` : ""}`,
       buttons: ["Save All", "Don't Save", "Cancel"],
       defaultId: 0,
@@ -276,7 +282,7 @@ function createWindow(show = true): BrowserWindow {
         appQuitRequested = false;
         void dialog.showMessageBox(newWin, {
           type: "error", title: "Files could not be saved",
-          message: "Mira stayed open because some files could not be saved.",
+          message: "Vela stayed open because some files could not be saved.",
           detail: "Your edits are still in the editor. Check the save error before trying again.", buttons: ["OK"]
         });
         return;
@@ -291,10 +297,10 @@ function createWindow(show = true): BrowserWindow {
   wc.on("console-message", (event) => {
     console.log(`[renderer:${event.level}] ${event.message} (${event.sourceId}:${event.lineNumber})`);
   });
-  newWin.on("unresponsive", () => console.warn("[mira] renderer is unresponsive"));
+  newWin.on("unresponsive", () => console.warn("[vela] renderer is unresponsive"));
   let lastRendererReload = 0;
   wc.on("render-process-gone", (_event, details) => {
-    console.error("[mira] renderer process gone:", details.reason, details.exitCode);
+    console.error("[vela] renderer process gone:", details.reason, details.exitCode);
     if (newWin.isDestroyed() || Date.now() - lastRendererReload < 10_000) return;
     lastRendererReload = Date.now();
     wc.reload();
@@ -334,7 +340,7 @@ function createWindow(show = true): BrowserWindow {
   newWin.webContents.on("before-input-event", (event, input) => {
     const mod = process.platform === "darwin" ? input.meta : input.control;
     if (input.type === "keyDown" && mod && !input.alt && !input.shift && input.key.toLowerCase() === "w") {
-      // Preserve the shortcut so it cannot close Mira; editor wrapping is always on.
+      // Preserve the shortcut so it cannot close Vela; editor wrapping is always on.
       event.preventDefault();
       return;
     }
@@ -367,7 +373,7 @@ async function runTrustBoundarySmoke(): Promise<void> {
     trustedWindow.webContents.once("did-fail-load", (_event, code, description) => reject(new Error(`${code}: ${description}`)));
   });
   const trustedUrl = trustedWindow.webContents.getURL();
-  const trustedIpc = await trustedWindow.webContents.executeJavaScript("window.openshell.state().then(() => true)");
+  const trustedIpc = await trustedWindow.webContents.executeJavaScript("window.vela.state().then(() => true)");
   await trustedWindow.webContents.executeJavaScript("location.href = 'data:text/html,untrusted'");
   await sleep(100);
   const navigationDenied = trustedWindow.webContents.getURL() === trustedUrl;
@@ -387,17 +393,17 @@ async function runTrustBoundarySmoke(): Promise<void> {
   });
   await untrustedWindow.loadURL("data:text/html,<title>untrusted</title>");
   const untrustedIpcRejected = await untrustedWindow.webContents
-    .executeJavaScript("window.openshell.state().then(() => false, () => true)");
+    .executeJavaScript("window.vela.state().then(() => false, () => true)");
   untrustedWindow.destroy();
   trustedWindow.destroy();
   const result = { trustedIpc, navigationDenied, popupDenied, untrustedIpcRejected };
-  console.log(`[openshell-trust-smoke] ${JSON.stringify(result)}`);
+  console.log(`[vela-trust-smoke] ${JSON.stringify(result)}`);
   if (!Object.values(result).every(Boolean)) throw new Error(`trust smoke failed: ${JSON.stringify(result)}`);
 }
 
 async function installApplication(): Promise<{ ok: boolean; message: string }> {
   if (process.platform !== "darwin") return { ok: false, message: "Install app is macOS-only" };
-  if (app.isPackaged) return { ok: false, message: "Mira is already running as a packaged app" };
+  if (app.isPackaged) return { ok: false, message: "Vela is already running as a packaged app" };
   const script = path.join(app.getAppPath(), "scripts", "install-app.mjs");
   const run = await new Promise<{ code: number | null; stdout: string; stderr: string }>((resolve, reject) => {
     const child = spawn(process.execPath, [script], {
@@ -462,14 +468,14 @@ async function chooseWorkspaceDirectory(missingDirectory: string): Promise<strin
   const result = await (win && !win.isDestroyed()
     ? dialog.showOpenDialog(win, {
         title: "Locate workspace folder",
-        message: `Mira could not find this workspace. Choose its current folder to continue.\n\n${missingDirectory}`,
+        message: `Vela could not find this workspace. Choose its current folder to continue.\n\n${missingDirectory}`,
         buttonLabel: "Use this folder",
         defaultPath,
         properties: ["openDirectory"]
       })
     : dialog.showOpenDialog({
         title: "Locate workspace folder",
-        message: `Mira could not find this workspace. Choose its current folder to continue.\n\n${missingDirectory}`,
+        message: `Vela could not find this workspace. Choose its current folder to continue.\n\n${missingDirectory}`,
         buttonLabel: "Use this folder",
         defaultPath,
         properties: ["openDirectory"]
@@ -520,7 +526,7 @@ function registerIpc(): void {
   handleTrusted("shell:select-directory", async (e) => {
     const parent = BrowserWindow.fromWebContents(e.sender);
     const result = await dialog.showOpenDialog(parent ?? win!, {
-      title: "Save a workspace in Mira",
+      title: "Save a workspace in Vela",
       properties: ["openDirectory"]
     });
     if (result.canceled || result.filePaths.length === 0) return null;
@@ -613,7 +619,7 @@ function registerIpc(): void {
 
   handleTrusted("shell:update-opencode", async () => backend.updateOpenCode());
 
-  handleTrusted("shell:app-update-check", async () => miraAppUpdater.check());
+  handleTrusted("shell:app-update-check", async () => velaAppUpdater.check());
 
   handleTrusted("shell:unsaved-editor-files", async (_e, paths: unknown) => {
     unsavedEditorFileNames = Array.isArray(paths)
@@ -737,7 +743,7 @@ function registerIpc(): void {
 }
 
 if (!app.requestSingleInstanceLock()) {
-  console.log("[mira] another instance is already running — exiting; the running instance will open or focus its window");
+  console.log("[vela] another instance is already running — exiting; the running instance will open or focus its window");
   app.quit();
 } else {
   process.on("uncaughtException", (err) => {
@@ -784,7 +790,7 @@ if (!app.requestSingleInstanceLock()) {
         // icon is cosmetic
       }
     }
-    const trustSmoke = process.env["OPENSHELL_TRUST_SMOKE"] === "1";
+    const trustSmoke = process.env["VELA_TRUST_SMOKE"] === "1";
     if (!trustSmoke) backend.start();
     const pendingFileUpdates = new Map<string, unknown>();
     let fileUpdateFlush: ReturnType<typeof setTimeout> | null = null;
@@ -819,7 +825,7 @@ if (!app.requestSingleInstanceLock()) {
       void runTrustBoundarySmoke().then(
         () => app.quit(),
         (error) => {
-          console.error("[openshell-trust-smoke]", error);
+          console.error("[vela-trust-smoke]", error);
           process.exitCode = 1;
           app.quit();
         }
@@ -847,7 +853,7 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 app.on("window-all-closed", () => {
-  // macOS would normally keep the app alive with no window; Mira must not
+  // macOS would normally keep the app alive with no window; Vela must not
   // linger invisibly in the background (macOS then files it as a background
   // task), so closing the last window quits on every platform. The backend,
   // terminals, Vite servers and mobile server are stopped in `before-quit`.

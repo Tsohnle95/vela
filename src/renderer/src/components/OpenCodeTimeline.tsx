@@ -12,7 +12,7 @@ import { toolKey, isContextTool, renderableAssistantPart, consolidateSubagentToo
   type AssistantItem, type AssistantPart, type RenderablePart, type VisibleTimelineItem, type TimelineTurn } from "./timeline-model";
 
 // OpenCode groups all assistant messages of a turn into one assistant part stream before
-// folding context runs. Mira renders a contiguous run of assistant transcript items through
+// folding context runs. Vela renders a contiguous run of assistant transcript items through
 // this component so context runs can span message boundaries.
 function AssistantRun({
   items,

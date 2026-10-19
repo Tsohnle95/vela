@@ -2,7 +2,7 @@ import { act, Component, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BackendMessage, PendingFormRequest, PendingPermissionRequest, SessionInfo } from "@shared/types";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import { StoreProvider, useStore } from "./store";
 let store: ReturnType<typeof useStore>;
 let receive: (message: BackendMessage) => void;
@@ -14,7 +14,7 @@ function deferred<T>() {
   const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; });
   return { promise, resolve, reject };
 }
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin", onMessage: (handler) => { receive = handler; return () => {}; },
     health: async () => true, takePendingPaths: async () => [], state: async () => null,
@@ -26,10 +26,10 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     closeSession: async () => {}, recoveryRecords: async () => [], listPermissions: async () => [],
     formsList: async () => [], formReply: async () => {}, formCancel: async () => {},
     inboxList: async () => [], permissionReply: async () => {}, ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 function event(type: string, data: Record<string, unknown>, ownerIDs?: string[]) {
-  receive({ kind: "event", type, data: { id: `event-${type}`, type, created: 1, ...(ownerIDs ? { miraSessionIDs: ownerIDs } : {}), data } });
+  receive({ kind: "event", type, data: { id: `event-${type}`, type, created: 1, ...(ownerIDs ? { velaSessionIDs: ownerIDs } : {}), data } });
 }
 class Boundary extends Component<{ children: ReactNode; failed: (error: Error) => void }, { failed: boolean }> {
   state = { failed: false };
@@ -45,8 +45,8 @@ describe("Store request timing and authority", () => {
     container = document.createElement("div"); document.body.append(container); root = createRoot(container);
   });
   afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
-  async function open(overrides: Partial<OpenShellApi> = {}) {
-    window.openshell = api(overrides);
+  async function open(overrides: Partial<VelaApi> = {}) {
+    window.vela = api(overrides);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession(panel.directory));
   }
@@ -63,7 +63,7 @@ describe("Store request timing and authority", () => {
     const trace: string[] = []; const failed = vi.fn();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(window.localStorage, "getItem").mockImplementation((key) => { trace.push(key); if (key === "approvalMode") throw new Error("approval denied"); return null; });
-    window.openshell = api();
+    window.vela = api();
     await act(async () => root.render(<Boundary failed={failed}><StoreProvider><Probe /></StoreProvider></Boundary>));
     expect(failed).toHaveBeenCalledWith(expect.objectContaining({ message: "approval denied" }));
     expect(trace).toContain("approvalMode");

@@ -9,7 +9,7 @@ import {
 
 describe("renderer navigation policy", () => {
   it("always selects the packaged file and ignores renderer environment overrides", () => {
-    const packaged = "file:///Applications/Mira.app/Contents/Resources/app/out/renderer/index.html";
+    const packaged = "file:///Applications/Vela.app/Contents/Resources/app/out/renderer/index.html";
     expect(applicationUrl(true, "https://evil.test/app", packaged)).toBe(packaged);
     expect(trustedApplicationLocation(applicationUrl(true, "file:///tmp/evil.html", packaged))).toEqual({
       kind: "exact",
@@ -27,10 +27,10 @@ describe("renderer navigation policy", () => {
     }
   });
   it("allows the exact packaged document but denies other main-frame navigations and redirects", () => {
-    const trusted = trustedApplicationLocation("file:///Applications/Mira.app/Contents/Resources/app/out/renderer/index.html");
+    const trusted = trustedApplicationLocation("file:///Applications/Vela.app/Contents/Resources/app/out/renderer/index.html");
 
-    expect(isAllowedMainFrameNavigation("file:///Applications/Mira.app/Contents/Resources/app/out/renderer/index.html", true, trusted)).toBe(true);
-    expect(isAllowedMainFrameNavigation("file:///Applications/Mira.app/Contents/Resources/app/out/renderer/other.html", true, trusted)).toBe(false);
+    expect(isAllowedMainFrameNavigation("file:///Applications/Vela.app/Contents/Resources/app/out/renderer/index.html", true, trusted)).toBe(true);
+    expect(isAllowedMainFrameNavigation("file:///Applications/Vela.app/Contents/Resources/app/out/renderer/other.html", true, trusted)).toBe(false);
     expect(isAllowedMainFrameNavigation("https://example.com/redirect", true, trusted)).toBe(false);
     expect(isAllowedMainFrameNavigation("https://example.com/subframe", false, trusted)).toBe(true);
   });

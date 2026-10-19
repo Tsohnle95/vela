@@ -58,7 +58,7 @@ export function wireHtmlAttributeQuotes(target: editor.IStandaloneCodeEditor): {
       });
       if (nextCharacter === '"' || nextCharacter === "'") return;
 
-      target.executeEdits("mira.html-auto-close-attribute", [{
+      target.executeEdits("vela.html-auto-close-attribute", [{
         range: {
           startLineNumber: position.lineNumber,
           startColumn: position.column,

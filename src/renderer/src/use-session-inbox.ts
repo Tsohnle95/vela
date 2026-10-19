@@ -61,7 +61,7 @@ export function useSessionInbox(host: InboxHost, transcript: InboxTranscript, se
     if (!target) return;
     if (!messageID.startsWith("queued-")) {
       removeInboxEntry(target.sessionID, messageID);
-      window.openshell.inboxCancel(workspace, messageID).catch(() => {});
+      window.vela.inboxCancel(workspace, messageID).catch(() => {});
       return;
     }
     commitQueue(removeFromQueue(messageQueueRef.current, target, messageID));
@@ -76,7 +76,7 @@ export function useSessionInbox(host: InboxHost, transcript: InboxTranscript, se
       );
       if (!entry) return null;
       removeInboxEntry(target.sessionID, messageID);
-      window.openshell.inboxCancel(workspace, messageID).catch(() => {});
+      window.vela.inboxCancel(workspace, messageID).catch(() => {});
       return { id: entry.id, content: entry.text, createdAt: entry.createdAt };
     }
     const popped = popToInput(messageQueueRef.current, target, messageID);
@@ -94,11 +94,11 @@ export function useSessionInbox(host: InboxHost, transcript: InboxTranscript, se
     const panel = panelForSession(sessionID);
     if (!panel) return;
     try {
-      const entries = await window.openshell.inboxList(panel.workspace);
+      const entries = await window.vela.inboxList(panel.workspace);
       setInboxBySession((current) => ({ ...current, [sessionID]: entries }));
     } catch (error) {
       if (panelForSession(sessionID)) {
-        toast(formatFailure(error, "MIRA_INBOX_REFRESH_FAILED", "Queued prompts could not be refreshed"), "error");
+        toast(formatFailure(error, "VELA_INBOX_REFRESH_FAILED", "Queued prompts could not be refreshed"), "error");
       }
     }
   }, [panelForSession, toast]);
@@ -109,10 +109,10 @@ export function useSessionInbox(host: InboxHost, transcript: InboxTranscript, se
     if (!messageID.startsWith("queued-")) {
       removeInboxEntry(panel.id, messageID);
       try {
-        await window.openshell.inboxSteer(workspace, messageID);
+        await window.vela.inboxSteer(workspace, messageID);
       } catch (err) {
         void refreshInbox(panel.id);
-        const failure = formatFailure(err, "MIRA_INBOX_STEER_FAILED", "Queued prompt could not be sent");
+        const failure = formatFailure(err, "VELA_INBOX_STEER_FAILED", "Queued prompt could not be sent");
         appendUniqueTranscriptItem(panel.id, { kind: "status", id: `queued-steer-error-${messageID}`, text: failure, tone: "error" });
         if (panelFor(workspace)) toast(failure, "error");
       }
@@ -137,9 +137,9 @@ export function useSessionInbox(host: InboxHost, transcript: InboxTranscript, se
         ...(attachments.length > 0 ? { attachments } : {})
     });
     try {
-      await window.openshell.prompt(workspace, promptText, popped.attachments ?? []);
+      await window.vela.prompt(workspace, promptText, popped.attachments ?? []);
     } catch (err) {
-      const failure = formatFailure(err, "MIRA_PROMPT_FAILED", "Queued prompt failed");
+      const failure = formatFailure(err, "VELA_PROMPT_FAILED", "Queued prompt failed");
       const queueTarget = createMessageQueueTarget(panel.id, panel.workspace.id);
       if (queueTarget) commitQueue(addToQueue(messageQueueRef.current, queueTarget, {
         content: promptText,

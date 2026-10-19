@@ -109,7 +109,7 @@ export class SassWatchManager {
     } catch (error) { record.active = false; this.error(record, error); }
   }
   private relevant(root: string, file: string): boolean {
-    return isSassSource(file) || ["mira-sass.json", "orbit-sass.json", "package.json", path.join(".vscode", "settings.json")].includes(path.relative(root, file));
+    return isSassSource(file) || ["vela-sass.json", "vela-sass.json", "package.json", path.join(".vscode", "settings.json")].includes(path.relative(root, file));
   }
   private schedule(record: RecordState): void {
     clearTimeout(record.timer);
@@ -168,7 +168,7 @@ export class SassWatchManager {
     const existing = await lstat(file).catch((error) => { if (error.code === "ENOENT") return null; throw error; });
     if (existing && (!existing.isFile() || existing.isSymbolicLink())) throw new Error("Sass output is not a regular file");
     if (!record.active) return;
-    const temp = path.join(directory, `.mira-sass-${randomUUID()}.tmp`);
+    const temp = path.join(directory, `.vela-sass-${randomUUID()}.tmp`);
     try {
       await writeFile(temp, content, { flag: "wx" });
       if (record.active) await rename(temp, file);

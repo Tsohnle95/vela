@@ -12,7 +12,7 @@ function validateReleaseTag(tag, version) {
 if (require.main === module) {
   try {
     const { version } = JSON.parse(readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
-    console.log(`Publishing Mira ${validateReleaseTag(process.env.GITHUB_REF_NAME, version)}.`);
+    console.log(`Publishing Vela ${validateReleaseTag(process.env.GITHUB_REF_NAME, version)}.`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

@@ -114,14 +114,14 @@ export function AgentTui({
       } catch {
         return;
       }
-      void window.openshell.agentTuiResize(workspace, id, terminal.cols, terminal.rows).catch(() => {});
+      void window.vela.agentTuiResize(workspace, id, terminal.cols, terminal.rows).catch(() => {});
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(host);
     terminal.onData((data) => {
-      void window.openshell.agentTuiInput(workspace, id, data).catch(() => {});
+      void window.vela.agentTuiInput(workspace, id, data).catch(() => {});
     });
-    const off = window.openshell.onMessage((message) => {
+    const off = window.vela.onMessage((message) => {
       if (message.kind === "terminal-data" && message.terminal.id === id) {
         const data = themeRef.current === "kitty"
           ? stripKittyTuiBackgrounds(message.terminal.data, ansiStateRef.current)
@@ -131,7 +131,7 @@ export function AgentTui({
       if (message.kind === "terminal-exit" && message.terminal.id === id) onExitRef.current(message.terminal.exitCode);
     });
     resize();
-    void window.openshell.agentTuiStart(workspace, id)
+    void window.vela.agentTuiStart(workspace, id)
       .then(() => {
         // The PTY starts at the terminal manager's default size, so the fitted
         // size has to follow the spawn. Resizing before the start lands on an
@@ -148,7 +148,7 @@ export function AgentTui({
       resizeObserver.disconnect();
       terminal.dispose();
       terminalRef.current = null;
-      void window.openshell.agentTuiStop(workspace, id).catch(() => {});
+      void window.vela.agentTuiStop(workspace, id).catch(() => {});
     };
   }, [workspace.id, workspace.generation]);
 

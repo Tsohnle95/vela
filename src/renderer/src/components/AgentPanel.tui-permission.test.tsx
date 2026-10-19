@@ -103,20 +103,20 @@ describe("AgentPanel interactive prompt surface", () => {
     agentTuiStart.mockClear();
     currentTranscript = [];
     currentPendingForms = [];
-    window.openshell = {
+    window.vela = {
       onMessage: () => () => {},
       agentTuiStart,
       agentTuiInput: vi.fn(async () => {}),
       agentTuiResize: vi.fn(async () => {}),
       agentTuiStop: vi.fn(async () => {})
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     currentSession = {
       id: "one",
       directory: "/workspace",
       workspace: { id: "11111111-1111-4111-8111-111111111111", generation: 1 }
     };
     window.localStorage.clear();
-    window.localStorage.setItem("mira.agent-panel-mode.one", "tui");
+    window.localStorage.setItem("vela.agent-panel-mode.one", "tui");
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -138,7 +138,7 @@ describe("AgentPanel interactive prompt surface", () => {
   };
 
   const switchToGui = async (): Promise<void> => {
-    window.localStorage.setItem("mira.agent-panel-mode.one", "gui");
+    window.localStorage.setItem("vela.agent-panel-mode.one", "gui");
     await act(async () => root.unmount());
     container.remove();
     container = document.createElement("div");

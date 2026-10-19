@@ -16,7 +16,7 @@ export function getFileWorkerPool(): WorkerPoolManager | undefined {
       workerFactory: () => new Worker(ShikiWorkerUrl, { type: "module" }),
       poolSize: 2
     },
-    // Mira's renderer CSP disallows Wasm compilation; use Shiki's supported JS engine.
+    // Vela's renderer CSP disallows Wasm compilation; use Shiki's supported JS engine.
     { theme: "OpenCode", lineDiffType: "none", preferredHighlighter: "shiki-js" }
   );
   void unified.initialize();

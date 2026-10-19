@@ -95,7 +95,7 @@ function TermInstance({ id, active, height, focusRevision, workspace, onRegister
     }
 
     term.onData((data) => {
-      void window.openshell.terminalInput(workspace, id, data);
+      void window.vela.terminalInput(workspace, id, data);
     });
 
     onRegister(id, (data) => term.write(data));
@@ -106,11 +106,11 @@ function TermInstance({ id, active, height, focusRevision, workspace, onRegister
       } catch {
         /* hidden */
       }
-      void window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch(() => {});
+      void window.vela.terminalResize(workspace, id, term.cols, term.rows).catch(() => {});
     });
     ro.observe(host);
 
-    void window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch(() => {});
+    void window.vela.terminalResize(workspace, id, term.cols, term.rows).catch(() => {});
 
     return () => {
       onUnregister(id);
@@ -118,7 +118,7 @@ function TermInstance({ id, active, height, focusRevision, workspace, onRegister
       term.dispose();
       termRef.current = null;
       fitRef.current = null;
-      void window.openshell.terminalStop(workspace, id).catch(() => {});
+      void window.vela.terminalStop(workspace, id).catch(() => {});
     };
   }, [id, workspace, onRegister, onUnregister]);
 
@@ -139,7 +139,7 @@ function TermInstance({ id, active, height, focusRevision, workspace, onRegister
       } catch {
         /* hidden */
       }
-      void window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch(() => {});
+      void window.vela.terminalResize(workspace, id, term.cols, term.rows).catch(() => {});
       term.focus();
     });
     return () => cancelAnimationFrame(frame);
@@ -196,7 +196,7 @@ export function TerminalTray({
   }, []);
 
   useEffect(() => {
-    const off = window.openshell.onMessage((msg) => {
+    const off = window.vela.onMessage((msg) => {
       if (msg.kind === "terminal-data") {
         const terminal = msg.terminal;
         const writer = writersRef.current.get(terminal.id);
@@ -220,7 +220,7 @@ export function TerminalTray({
 
   const refreshServers = useCallback(async (): Promise<void> => {
     try {
-      const running = await window.openshell.viteServers();
+      const running = await window.vela.viteServers();
       setViteServers(running.filter((server) => server.workspaceId === workspace.id));
     } catch {
       setViteServers([]);
@@ -240,10 +240,10 @@ export function TerminalTray({
     setTabs((current) => ({ terms: [...current.terms, { id, name, defaultName: !directory }], activeId: id }));
     try {
       const size = initialTerminalSize(trayRef.current);
-      const startedDirectory = await window.openshell.terminalStart(workspace, id, directory, size.cols, size.rows);
+      const startedDirectory = await window.vela.terminalStart(workspace, id, directory, size.cols, size.rows);
       if (directory && !startedDirectory) {
-        const command = terminalDirectoryCommand(window.openshell.platform, sessionDirectory, directory);
-        if (command) await window.openshell.terminalInput(workspace, id, command);
+        const command = terminalDirectoryCommand(window.vela.platform, sessionDirectory, directory);
+        if (command) await window.vela.terminalInput(workspace, id, command);
       }
     } catch (err) {
       pendingOutputRef.current.remove(id);
@@ -263,9 +263,9 @@ export function TerminalTray({
       setTabs({ terms: [{ id, name: "Terminal", defaultName: true }], activeId: id });
       try {
         const size = initialTerminalSize(trayRef.current);
-        await window.openshell.terminalStart(workspace, id, "", size.cols, size.rows);
+        await window.vela.terminalStart(workspace, id, "", size.cols, size.rows);
         if (token !== bootTokenRef.current) {
-          void window.openshell.terminalStop(workspace, id).catch(() => {});
+          void window.vela.terminalStop(workspace, id).catch(() => {});
           return;
         }
       } catch (err) {
@@ -295,8 +295,8 @@ export function TerminalTray({
       ? activePath
       : undefined;
     const toggle = entryPath
-      ? window.openshell.viteToggle(workspace, entryPath)
-      : window.openshell.viteToggle(workspace);
+      ? window.vela.viteToggle(workspace, entryPath)
+      : window.vela.viteToggle(workspace);
     void toggle
       .then(async (result) => {
         if (!result.running) setNotice("Vite server stopped");
@@ -309,19 +309,19 @@ export function TerminalTray({
   };
 
   const stopVite = (serverID: string): void => {
-    void window.openshell.viteStop(serverID)
+    void window.vela.viteStop(serverID)
       .then(() => refreshServers())
       .catch(() => {});
   };
 
   const stopAllVite = (): void => {
-    void window.openshell.viteStopAll()
+    void window.vela.viteStopAll()
       .then(() => refreshServers())
       .catch(() => {});
   };
 
   const closeTerminal = (id: string): void => {
-    void window.openshell.terminalStop(workspace, id).catch(() => {});
+    void window.vela.terminalStop(workspace, id).catch(() => {});
     const next = removeTerminal({ terms, activeId }, id);
     writersRef.current.delete(id);
     pendingOutputRef.current.remove(id);

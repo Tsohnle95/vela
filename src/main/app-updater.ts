@@ -1,13 +1,13 @@
 import type { AppUpdater } from "electron-updater";
-import type { MiraAppUpdateResult, MiraAppUpdateStatus } from "@shared/types";
+import type { VelaAppUpdateResult, VelaAppUpdateStatus } from "@shared/types";
 
-export interface MiraAppUpdater {
-  check(): Promise<MiraAppUpdateStatus>;
-  update(onProgress?: (message: string) => void): Promise<MiraAppUpdateResult>;
+export interface VelaAppUpdater {
+  check(): Promise<VelaAppUpdateStatus>;
+  update(onProgress?: (message: string) => void): Promise<VelaAppUpdateResult>;
   installAndRestart(): void;
 }
 
-export function createDisabledMiraAppUpdater(currentVersion: string): MiraAppUpdater {
+export function createDisabledVelaAppUpdater(currentVersion: string): VelaAppUpdater {
   const message = "GitHub release updates are disabled in local development and test builds.";
   return {
     async check() {
@@ -20,7 +20,7 @@ export function createDisabledMiraAppUpdater(currentVersion: string): MiraAppUpd
   };
 }
 
-export function createMiraAppUpdater(updater: AppUpdater, currentVersion: string): MiraAppUpdater {
+export function createVelaAppUpdater(updater: AppUpdater, currentVersion: string): VelaAppUpdater {
   updater.autoDownload = false;
   updater.autoInstallOnAppQuit = false;
   updater.allowPrerelease = false;
@@ -28,14 +28,14 @@ export function createMiraAppUpdater(updater: AppUpdater, currentVersion: string
 
   let updateInProgress = false;
 
-  async function check(): Promise<MiraAppUpdateStatus> {
+  async function check(): Promise<VelaAppUpdateStatus> {
     try {
       const result = await updater.checkForUpdates();
       if (!result) {
         return {
           state: "blocked",
           currentVersion,
-          message: "Mira could not check GitHub Releases because this app has no release update feed."
+          message: "Vela could not check GitHub Releases because this app has no release update feed."
         };
       }
       const latestVersion = result.updateInfo.version;
@@ -47,18 +47,18 @@ export function createMiraAppUpdater(updater: AppUpdater, currentVersion: string
       return {
         state: "blocked",
         currentVersion,
-        message: `Could not check GitHub Releases for Mira updates: ${detail}`
+        message: `Could not check GitHub Releases for Vela updates: ${detail}`
       };
     }
   }
 
-  async function update(onProgress?: (message: string) => void): Promise<MiraAppUpdateResult> {
+  async function update(onProgress?: (message: string) => void): Promise<VelaAppUpdateResult> {
     if (updateInProgress) {
-      return { ok: false, updated: false, currentVersion, message: "A Mira update is already running." };
+      return { ok: false, updated: false, currentVersion, message: "A Vela update is already running." };
     }
     updateInProgress = true;
     try {
-      onProgress?.("Checking GitHub Releases for a Mira update…");
+      onProgress?.("Checking GitHub Releases for a Vela update…");
       const status = await check();
       if (status.state === "blocked" || status.state === "disabled") {
         return { ok: false, updated: false, currentVersion, message: status.message };
@@ -69,18 +69,18 @@ export function createMiraAppUpdater(updater: AppUpdater, currentVersion: string
           updated: false,
           currentVersion,
           latestVersion: status.latestVersion,
-          message: `Mira ${currentVersion} is the latest published release.`
+          message: `Vela ${currentVersion} is the latest published release.`
         };
       }
 
-      onProgress?.(`Downloading Mira ${status.latestVersion} from GitHub Releases…`);
+      onProgress?.(`Downloading Vela ${status.latestVersion} from GitHub Releases…`);
       const reportDownloadProgress = (progress: { percent: number }): void => {
         const percent = Number.isFinite(progress.percent)
           ? Math.max(0, Math.min(100, Math.floor(progress.percent)))
           : null;
         onProgress?.(percent === null
-          ? `Downloading Mira ${status.latestVersion} from GitHub Releases…`
-          : `Downloading Mira ${status.latestVersion} from GitHub Releases (${percent}%)…`);
+          ? `Downloading Vela ${status.latestVersion} from GitHub Releases…`
+          : `Downloading Vela ${status.latestVersion} from GitHub Releases (${percent}%)…`);
       };
       updater.on("download-progress", reportDownloadProgress);
       try {
@@ -89,13 +89,13 @@ export function createMiraAppUpdater(updater: AppUpdater, currentVersion: string
         updater.removeListener("download-progress", reportDownloadProgress);
       }
 
-      onProgress?.("Release downloaded. Installing it and restarting Mira…");
+      onProgress?.("Release downloaded. Installing it and restarting Vela…");
       return {
         ok: true,
         updated: true,
         currentVersion,
         latestVersion: status.latestVersion,
-        message: `Mira ${status.latestVersion} is downloaded and ready to install.`
+        message: `Vela ${status.latestVersion} is downloaded and ready to install.`
       };
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
@@ -103,7 +103,7 @@ export function createMiraAppUpdater(updater: AppUpdater, currentVersion: string
         ok: false,
         updated: false,
         currentVersion,
-        message: `Mira could not download the release update. ${detail}`
+        message: `Vela could not download the release update. ${detail}`
       };
     } finally {
       updateInProgress = false;

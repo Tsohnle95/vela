@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 // Ports of OpenCode's `animated-number`, `tool-count-label`, and
-// `tool-count-summary` components. English-only: Mira has no i18n layer, so the
+// `tool-count-summary` components. English-only: Vela has no i18n layer, so the
 // plural copy is inlined from OpenCode's `en.ts`.
 
 const TRACK = Array.from({ length: 30 }, (_, index) => index % 10);

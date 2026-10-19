@@ -1,7 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -23,7 +23,7 @@ function info(directory: string, generation: number): SessionInfo {
   };
 }
 
-function api(listPermissions: OpenShellApi["listPermissions"]): OpenShellApi {
+function api(listPermissions: VelaApi["listPermissions"]): VelaApi {
   return {
     platform: "darwin",
     onMessage: (handler: (message: BackendMessage) => void) => {
@@ -44,7 +44,7 @@ function api(listPermissions: OpenShellApi["listPermissions"]): OpenShellApi {
     readFile: async () => "content",
     listDir: async () => [],
     listPermissions
-  } as unknown as OpenShellApi;
+  } as unknown as VelaApi;
 }
 
 function permissionEvent(sessionID: string, requestID: string): BackendMessage {
@@ -86,7 +86,7 @@ describe("renderer permission prompts", () => {
   });
 
   it("keeps an event-backed approval visible when the list is temporarily empty", async () => {
-    window.openshell = api(async () => []);
+    window.vela = api(async () => []);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
 
@@ -103,8 +103,8 @@ describe("renderer permission prompts", () => {
   });
 
   it("does not discard existing approvals when permission listing fails", async () => {
-    const listPermissions = vi.fn<OpenShellApi["listPermissions"]>(async () => []);
-    window.openshell = api(listPermissions);
+    const listPermissions = vi.fn<VelaApi["listPermissions"]>(async () => []);
+    window.vela = api(listPermissions);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     await act(async () => {
@@ -127,7 +127,7 @@ describe("renderer permission prompts", () => {
   it("keeps automatic replies in the attributed session transport after row scheduling", async () => {
     window.localStorage.setItem("approvalMode", "approve");
     const permissionReply = vi.fn(async () => {});
-    window.openshell = { ...api(async () => []), permissionReply };
+    window.vela = { ...api(async () => []), permissionReply };
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
     await act(async () => store.openSession("/one"));
     const panel = store.session!;

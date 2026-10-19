@@ -34,9 +34,9 @@ export function editableCssSourceMaps(entry: string): Plugin {
   const entryKey = canonicalModuleId(entryPath);
   const locations: SourceLocation[] = [];
   let outputDirectory = "";
-  const marker = /\/\* mira-css-source:(\d+) \*\//g;
+  const marker = /\/\* vela-css-source:(\d+) \*\//g;
   return {
-    name: "mira-editable-css-source-maps",
+    name: "vela-editable-css-source-maps",
     apply: "build",
     configResolved(config) { outputDirectory = path.resolve(config.root, config.build.outDir); },
     buildStart() { locations.length = 0; },
@@ -60,7 +60,7 @@ export function editableCssSourceMaps(entry: string): Plugin {
         const source = original.source.startsWith("file:") ? original.source
           : pathToFileURL(path.resolve(path.dirname(id), original.source)).href;
         const index = locations.push({ source, line: original.line, column: original.column }) - 1;
-        insertions.push({ offset: start.offset!, text: `/* mira-css-source:${index} */` });
+        insertions.push({ offset: start.offset!, text: `/* vela-css-source:${index} */` });
       });
       if (nextOriginal !== originals.length) this.error("Compiled CSS lost source nodes before source mapping");
       for (const { offset, text } of insertions.sort((a, b) => b.offset - a.offset)) {
@@ -73,7 +73,7 @@ export function editableCssSourceMaps(entry: string): Plugin {
       for (const asset of Object.values(bundle)) {
         if (asset.type !== "asset" || !asset.fileName.endsWith(".css") || typeof asset.source !== "string") continue;
         const css = asset.source;
-        if (!css.includes("/* mira-css-source:")) continue;
+        if (!css.includes("/* vela-css-source:")) continue;
         const map = new SourceMapGenerator({ file: path.basename(asset.fileName) });
         let output = "";
         let offset = 0;

@@ -26,14 +26,14 @@ describe("execution PATH", () => {
   });
 
   it("applyExecPath rewrites process.env.PATH", () => {
-    process.env.MIRA_TEST_PATH = "sentinel";
+    process.env.VELA_TEST_PATH = "sentinel";
     const original = process.env.PATH;
     try {
       process.env.PATH = "/usr/bin:/bin";
       applyExecPath();
       expect(process.env.PATH).not.toBe("/usr/bin:/bin");
       expect(process.env.PATH?.split(path.delimiter)).toContain("/usr/bin");
-      expect(process.env.MIRA_TEST_PATH).toBe("sentinel");
+      expect(process.env.VELA_TEST_PATH).toBe("sentinel");
     } finally {
       process.env.PATH = original;
     }

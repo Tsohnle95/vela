@@ -155,7 +155,7 @@ describe("composer workspace continuations", () => {
     await act(async () => toggle.click());
 
     expect(toggle.getAttribute("aria-checked")).toBe("false");
-    expect(window.localStorage.getItem("mira.experimentalArt")).toBe("false");
+    expect(window.localStorage.getItem("vela.experimentalArt")).toBe("false");
     expect(document.documentElement.dataset.experimentalArt).toBe("false");
     expect(container.querySelector(".agent-empty-art")).toBeNull();
     expect(container.querySelector(".agent-empty p")?.textContent).toBe("Tell the agent what to work on.");
@@ -175,13 +175,13 @@ describe("composer workspace continuations", () => {
 
   it("switches the agent panel into the runtime TUI from its mode menu", async () => {
     const agentTuiStart = vi.fn(async () => {});
-    window.openshell = {
+    window.vela = {
       onMessage: vi.fn(() => () => {}),
       agentTuiStart,
       agentTuiInput: vi.fn(async () => {}),
       agentTuiResize: vi.fn(async () => {}),
       agentTuiStop: vi.fn(async () => {})
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<AgentPanel />));
 
     await act(async () => container.querySelector<HTMLButtonElement>('button[aria-label="Agent panel options"]')!.click());
@@ -310,9 +310,9 @@ describe("composer workspace continuations", () => {
 
   it("discards slash completions returned after a workspace switch", async () => {
     const commands = deferred<{ name: string; description?: string }[]>();
-    window.openshell = {
+    window.vela = {
       commands: vi.fn(() => commands.promise)
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector("textarea")!;
     await act(async () => {
@@ -328,10 +328,10 @@ describe("composer workspace continuations", () => {
   });
 
   it("attaches dropped images and shows a thumbnail preview", async () => {
-    window.openshell = {
+    window.vela = {
       getPathForFile: vi.fn((file: File) => (file as File & { path?: string }).path ?? ""),
       readImagePreview: vi.fn(async () => "data:image/png;base64,AAA")
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<Composer />));
     const composer = container.querySelector(".composer")!;
     const drop = new Event("drop", { bubbles: true }) as DragEvent;

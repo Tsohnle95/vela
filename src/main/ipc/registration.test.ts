@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { IpcMainInvokeEvent } from "electron";
-import type { OpenShellBackend } from "../opencode";
+import type { VelaBackend } from "../opencode";
 import type { TerminalManager } from "../terminal";
 import type { TrustedIpcRegistrar } from "./registration";
 import { registerAgentIpc } from "./agent";
@@ -18,15 +18,15 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-function handlers(backend: Partial<OpenShellBackend>, terminals: Partial<TerminalManager> = {}) {
+function handlers(backend: Partial<VelaBackend>, terminals: Partial<TerminalManager> = {}) {
   const callbacks = new Map<string, (event: IpcMainInvokeEvent, ...args: any[]) => unknown>();
   const register: TrustedIpcRegistrar = (channel, callback) => {
     if (callbacks.has(channel)) throw new Error(`duplicate IPC channel ${channel}`);
     callbacks.set(channel, callback);
   };
-  registerFilesIpc(register, backend as OpenShellBackend);
-  registerAgentIpc(register, backend as OpenShellBackend);
-  registerTerminalIpc(register, backend as OpenShellBackend, terminals as TerminalManager);
+  registerFilesIpc(register, backend as VelaBackend);
+  registerAgentIpc(register, backend as VelaBackend);
+  registerTerminalIpc(register, backend as VelaBackend, terminals as TerminalManager);
   return {
     channels: [...callbacks.keys()],
     invoke: (channel: string, ...args: unknown[]) => callbacks.get(channel)!({} as IpcMainInvokeEvent, ...args)
@@ -45,7 +45,7 @@ describe("domain IPC registration", () => {
     const prompt = vi.fn();
     const { invoke } = handlers({ readFile, prompt });
     await expect(invoke("shell:fs-read", workspace, "../escape")).rejects.toThrow("invalid workspace path");
-    await expect(invoke("shell:prompt", workspace, 42)).rejects.toMatchObject({ name: "MIRA_PROMPT_FAILED" });
+    await expect(invoke("shell:prompt", workspace, 42)).rejects.toMatchObject({ name: "VELA_PROMPT_FAILED" });
     expect(readFile).not.toHaveBeenCalled();
     expect(prompt).not.toHaveBeenCalled();
   });
@@ -70,7 +70,7 @@ describe("domain IPC registration", () => {
   });
 
   it("keeps terminal defaults and stops a started PTY when its captured workspace becomes stale", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "mira-ipc-"));
+    const root = await mkdtemp(path.join(tmpdir(), "vela-ipc-"));
     roots.push(root);
     const workspaceDirectory = vi.fn().mockResolvedValueOnce(root).mockRejectedValueOnce(new Error("stale workspace"));
     const start = vi.fn().mockResolvedValue(undefined);

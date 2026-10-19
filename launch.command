@@ -7,5 +7,5 @@ if [ ! -d node_modules ]; then
   npm install
 fi
 
-echo "Launching OpenShell (dev mode)..."
+echo "Launching Vela (dev mode)..."
 npm run dev

@@ -94,10 +94,10 @@ describe("FileSidebar tabs and sessions pane", () => {
     ]) {
       mock.mockClear();
     }
-    window.openshell = {
+    window.vela = {
       projects: vi.fn(async () => [{ directory: "/workspace", name: "Workspace" }]),
       commands: vi.fn(async () => [{ name: "compact", description: "Compact the thread" }])
-    } as unknown as typeof window.openshell;
+    } as unknown as typeof window.vela;
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -183,7 +183,7 @@ describe("FileSidebar tabs and sessions pane", () => {
 
   it("keeps the redundant file-sidebar folder control removed with multiple panels open", async () => {
     const first = { ...session, id: "first", directory: "/luno", workspace: { id: "first-workspace", generation: 1 } };
-    const second = { ...session, id: "second", directory: "/mira", workspace: { id: "second-workspace", generation: 2 } };
+    const second = { ...session, id: "second", directory: "/vela", workspace: { id: "second-workspace", generation: 2 } };
     store.panels = [first, second];
     store.session = second;
     store.activeSessionID = second.id;
@@ -230,7 +230,7 @@ describe("FileSidebar tabs and sessions pane", () => {
     );
     await settle();
     expect(container.querySelector(".sessions-pane")).toBeNull();
-    expect(container.querySelector(".sidebar-brand")?.textContent).toBe("Mira");
+    expect(container.querySelector(".sidebar-brand")?.textContent).toBe("Vela");
     const labels = [...container.querySelectorAll(".section-toggle")].map((el) => el.textContent ?? "");
     expect(labels).toEqual(["workspace"]);
 
@@ -250,7 +250,7 @@ describe("FileSidebar tabs and sessions pane", () => {
     const pin = recents.querySelectorAll<HTMLButtonElement>(".sessions-row-pin")[0];
     await act(async () => pin.click());
 
-    expect(JSON.parse(window.localStorage.getItem("openshell.pinnedSessions") ?? "[]")).toEqual(["s1"]);
+    expect(JSON.parse(window.localStorage.getItem("vela.pinnedSessions") ?? "[]")).toEqual(["s1"]);
     const pinned = section("Pinned");
     expect(pinned.textContent).toContain("First");
     expect(pinned.querySelector(".sessions-row-pin")?.classList.contains("pinned")).toBe(true);

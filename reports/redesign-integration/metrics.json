@@ -691,7 +691,7 @@
       "sha256": "a93e04aef0456740182008e10045e3859c6cdfa8e91fa1d355e8586af3cc7708"
     },
     {
-      "path": "src/renderer/src/components/MiraMark.tsx",
+      "path": "src/renderer/src/components/VelaMark.tsx",
       "loc": 20,
       "rawLines": 21,
       "bytes": 820,

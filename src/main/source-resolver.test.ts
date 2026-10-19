@@ -18,7 +18,7 @@ afterEach(async () => {
 
 describe("resolveAppSource", () => {
   it("resolves an absolute source only inside the application root", async () => {
-    const appRoot = await tempRoot("mira-source");
+    const appRoot = await tempRoot("vela-source");
     const source = path.join(appRoot, "src/renderer/styles/main.scss");
     await mkdir(path.dirname(source), { recursive: true });
     await writeFile(source, ".root {}", "utf8");
@@ -27,8 +27,8 @@ describe("resolveAppSource", () => {
   });
 
   it("resolves the screenshot link from the running checkout when Electron appPath belongs to a launcher wrapper", async () => {
-    const appRoot = await tempRoot("mira-wrapper");
-    const checkout = await tempRoot("mira-checkout");
+    const appRoot = await tempRoot("vela-wrapper");
+    const checkout = await tempRoot("vela-checkout");
     const source = path.join(checkout, "src/renderer/src/styles/_sessions.scss");
     const mainDirectory = path.join(checkout, "out/main");
     await mkdir(path.dirname(source), { recursive: true });
@@ -43,9 +43,9 @@ describe("resolveAppSource", () => {
   });
 
   it("keeps the running-source boundary closed to unrelated files and source-less packages", async () => {
-    const checkout = await tempRoot("mira-checkout");
-    const wrapper = await tempRoot("mira-package");
-    const outside = await tempRoot("mira-private");
+    const checkout = await tempRoot("vela-checkout");
+    const wrapper = await tempRoot("vela-package");
+    const outside = await tempRoot("vela-private");
     const source = path.join(outside, "private.scss");
     await writeFile(source, ".private {}", "utf8");
     await expect(resolveRunningAppSource(path.join(checkout, "out/main"), source, `${source}:1`)).resolves.toBeNull();
@@ -53,7 +53,7 @@ describe("resolveAppSource", () => {
   });
 
   it("rejects an absolute source from an unrelated workspace", async () => {
-    const appRoot = await tempRoot("mira-source");
+    const appRoot = await tempRoot("vela-source");
     const workspace = await tempRoot("unrelated-workspace");
     const source = path.join(workspace, "private.scss");
     await writeFile(source, ".private {}", "utf8");
@@ -62,7 +62,7 @@ describe("resolveAppSource", () => {
   });
 
   it("maps a development server URL into the application source tree", async () => {
-    const appRoot = await tempRoot("mira-source");
+    const appRoot = await tempRoot("vela-source");
     const source = path.join(appRoot, "src/renderer/styles/main.scss");
     await mkdir(path.dirname(source), { recursive: true });
     await writeFile(source, ".root {}", "utf8");
@@ -72,7 +72,7 @@ describe("resolveAppSource", () => {
   });
 
   it("rejects a source symlink that leaves the application root", async () => {
-    const appRoot = await tempRoot("mira-source");
+    const appRoot = await tempRoot("vela-source");
     const outside = await tempRoot("outside-source");
     const target = path.join(outside, "outside.scss");
     const source = path.join(appRoot, "linked.scss");

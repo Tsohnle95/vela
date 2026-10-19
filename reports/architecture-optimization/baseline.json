@@ -553,7 +553,7 @@
         "sha256": "79fcc3092905fb12e9fc1e0e65f49bda65f0ef53ea005781e0dbb4e5fb3cb6f4"
       },
       {
-        "path": "src/renderer/src/components/MiraMark.tsx",
+        "path": "src/renderer/src/components/VelaMark.tsx",
         "loc": 20,
         "rawLines": 21,
         "bytes": 820,
@@ -1581,7 +1581,7 @@
       "sha256": "86f9576a26d7f7e85cf8277b6c8bc04b9f91d865a7a49b4f188982c621b05cbc"
     },
     {
-      "path": "plugin/mira-usage.ts",
+      "path": "plugin/vela-usage.ts",
       "category": "plugins",
       "loc": 143,
       "rawLines": 154,
@@ -3169,8 +3169,8 @@
     },
     {
       "file": "src/main/index.ts",
-      "name": "updateMiraApp",
-      "identity": "updateMiraApp#1",
+      "name": "updateVelaApp",
+      "identity": "updateVelaApp#1",
       "line": 695,
       "endLine": 828,
       "physicalLines": 134,
@@ -3214,7 +3214,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "writeFile",
-      "identity": "OpenShellBackend/writeFile#1",
+      "identity": "VelaBackend/writeFile#1",
       "line": 3084,
       "endLine": 3193,
       "physicalLines": 110,
@@ -3324,7 +3324,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "openSessionById",
-      "identity": "OpenShellBackend/openSessionById#1",
+      "identity": "VelaBackend/openSessionById#1",
       "line": 1992,
       "endLine": 2093,
       "physicalLines": 102,
@@ -3389,8 +3389,8 @@
     },
     {
       "file": "src/main/app-updater.ts",
-      "name": "createMiraAppUpdater",
-      "identity": "createMiraAppUpdater#1",
+      "name": "createVelaAppUpdater",
+      "identity": "createVelaAppUpdater#1",
       "line": 23,
       "endLine": 120,
       "physicalLines": 98,
@@ -3401,7 +3401,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/writeFile/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/writeFile/this.mutations.run callback:root#1",
       "line": 3103,
       "endLine": 3192,
       "physicalLines": 90,
@@ -3445,7 +3445,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onFsChanged",
-      "identity": "OpenShellBackend/onFsChanged#1",
+      "identity": "VelaBackend/onFsChanged#1",
       "line": 1536,
       "endLine": 1625,
       "physicalLines": 90,
@@ -3489,7 +3489,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "renamePath",
-      "identity": "OpenShellBackend/renamePath#1",
+      "identity": "VelaBackend/renamePath#1",
       "line": 3258,
       "endLine": 3342,
       "physicalLines": 85,
@@ -3511,7 +3511,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/renamePath/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/renamePath/this.mutations.run callback:root#1",
       "line": 3259,
       "endLine": 3341,
       "physicalLines": 83,
@@ -3544,7 +3544,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listProviderIntegrations",
-      "identity": "OpenShellBackend/listProviderIntegrations#1",
+      "identity": "VelaBackend/listProviderIntegrations#1",
       "line": 2533,
       "endLine": 2610,
       "physicalLines": 78,
@@ -3665,7 +3665,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "importExternal",
-      "identity": "OpenShellBackend/importExternal#1",
+      "identity": "VelaBackend/importExternal#1",
       "line": 3013,
       "endLine": 3082,
       "physicalLines": 70,
@@ -3786,7 +3786,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/importExternal/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/importExternal/this.mutations.run callback:root#1",
       "line": 3018,
       "endLine": 3081,
       "physicalLines": 64,
@@ -3918,7 +3918,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods#1",
       "line": 2552,
       "endLine": 2609,
       "physicalLines": 58,
@@ -3984,7 +3984,7 @@
     {
       "file": "src/main/app-updater.ts",
       "name": "update",
-      "identity": "createMiraAppUpdater/update#1",
+      "identity": "createVelaAppUpdater/update#1",
       "line": 55,
       "endLine": 111,
       "physicalLines": 57,
@@ -3995,7 +3995,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listSessions",
-      "identity": "OpenShellBackend/listSessions#1",
+      "identity": "VelaBackend/listSessions#1",
       "line": 1868,
       "endLine": 1922,
       "physicalLines": 55,
@@ -4116,7 +4116,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "startRuntimeSubscription",
-      "identity": "OpenShellBackend/startRuntimeSubscription#1",
+      "identity": "VelaBackend/startRuntimeSubscription#1",
       "line": 872,
       "endLine": 922,
       "physicalLines": 51,
@@ -4182,7 +4182,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "openSession",
-      "identity": "OpenShellBackend/openSession#1",
+      "identity": "VelaBackend/openSession#1",
       "line": 1817,
       "endLine": 1866,
       "physicalLines": 50,
@@ -4215,7 +4215,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "movePath",
-      "identity": "OpenShellBackend/movePath#1",
+      "identity": "VelaBackend/movePath#1",
       "line": 3344,
       "endLine": 3391,
       "physicalLines": 48,
@@ -4237,7 +4237,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "deliverEvents",
-      "identity": "OpenShellBackend/deliverEvents#1",
+      "identity": "VelaBackend/deliverEvents#1",
       "line": 994,
       "endLine": 1051,
       "physicalLines": 58,
@@ -4292,7 +4292,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/startRuntimeSubscription/anonymous#1",
+      "identity": "VelaBackend/startRuntimeSubscription/anonymous#1",
       "line": 876,
       "endLine": 921,
       "physicalLines": 46,
@@ -4303,7 +4303,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/movePath/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/movePath/this.mutations.run callback:root#1",
       "line": 3345,
       "endLine": 3390,
       "physicalLines": 46,
@@ -4457,7 +4457,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "reconcileRecovery",
-      "identity": "OpenShellBackend/reconcileRecovery#1",
+      "identity": "VelaBackend/reconcileRecovery#1",
       "line": 1270,
       "endLine": 1312,
       "physicalLines": 43,
@@ -4501,7 +4501,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "activateSession",
-      "identity": "OpenShellBackend/activateSession#1",
+      "identity": "VelaBackend/activateSession#1",
       "line": 1755,
       "endLine": 1796,
       "physicalLines": 42,
@@ -4567,7 +4567,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "gitShow",
-      "identity": "OpenShellBackend/gitShow#1",
+      "identity": "VelaBackend/gitShow#1",
       "line": 1419,
       "endLine": 1459,
       "physicalLines": 41,
@@ -4688,7 +4688,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "copyExternal",
-      "identity": "OpenShellBackend/copyExternal#1",
+      "identity": "VelaBackend/copyExternal#1",
       "line": 1713,
       "endLine": 1751,
       "physicalLines": 39,
@@ -4754,7 +4754,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fields",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields#1",
       "line": 2555,
       "endLine": 2592,
       "physicalLines": 38,
@@ -4842,7 +4842,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "writeStandaloneFile",
-      "identity": "OpenShellBackend/writeStandaloneFile#1",
+      "identity": "VelaBackend/writeStandaloneFile#1",
       "line": 2962,
       "endLine": 2998,
       "physicalLines": 37,
@@ -5018,7 +5018,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "manageOpenCode",
-      "identity": "OpenShellBackend/manageOpenCode#1",
+      "identity": "VelaBackend/manageOpenCode#1",
       "line": 798,
       "endLine": 833,
       "physicalLines": 36,
@@ -5029,7 +5029,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "prompt",
-      "identity": "OpenShellBackend/prompt#1",
+      "identity": "VelaBackend/prompt#1",
       "line": 2251,
       "endLine": 2285,
       "physicalLines": 35,
@@ -5106,7 +5106,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "modelDefault",
-      "identity": "OpenShellBackend/modelDefault#1",
+      "identity": "VelaBackend/modelDefault#1",
       "line": 2827,
       "endLine": 2860,
       "physicalLines": 34,
@@ -5282,7 +5282,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runCommand",
-      "identity": "OpenShellBackend/runCommand#1",
+      "identity": "VelaBackend/runCommand#1",
       "line": 2429,
       "endLine": 2460,
       "physicalLines": 32,
@@ -5491,7 +5491,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runOpenCodeUpgrade",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade#1",
+      "identity": "VelaBackend/runOpenCodeUpgrade#1",
       "line": 748,
       "endLine": 777,
       "physicalLines": 30,
@@ -5502,7 +5502,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listModels",
-      "identity": "OpenShellBackend/listModels#1",
+      "identity": "VelaBackend/listModels#1",
       "line": 2502,
       "endLine": 2531,
       "physicalLines": 30,
@@ -5545,8 +5545,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "updateMira",
-      "identity": "SettingsPage/updateMira#1",
+      "name": "updateVela",
+      "identity": "SettingsPage/updateVela#1",
       "line": 125,
       "endLine": 154,
       "physicalLines": 30,
@@ -5612,7 +5612,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runtimeManifests",
-      "identity": "OpenShellBackend/runtimeManifests#1",
+      "identity": "VelaBackend/runtimeManifests#1",
       "line": 2203,
       "endLine": 2231,
       "physicalLines": 29,
@@ -5623,7 +5623,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listCommands",
-      "identity": "OpenShellBackend/listCommands#1",
+      "identity": "VelaBackend/listCommands#1",
       "line": 2399,
       "endLine": 2427,
       "physicalLines": 29,
@@ -5678,7 +5678,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade/anonymous#1",
+      "identity": "VelaBackend/runOpenCodeUpgrade/anonymous#1",
       "line": 749,
       "endLine": 776,
       "physicalLines": 28,
@@ -5689,7 +5689,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "loadSessionMessages",
-      "identity": "OpenShellBackend/loadSessionMessages#1",
+      "identity": "VelaBackend/loadSessionMessages#1",
       "line": 1924,
       "endLine": 1951,
       "physicalLines": 28,
@@ -5821,7 +5821,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "emitFileUpdate",
-      "identity": "OpenShellBackend/emitFileUpdate#1",
+      "identity": "VelaBackend/emitFileUpdate#1",
       "line": 1627,
       "endLine": 1653,
       "physicalLines": 27,
@@ -5887,7 +5887,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "handleServerEvent",
-      "identity": "OpenShellBackend/handleServerEvent#1",
+      "identity": "VelaBackend/handleServerEvent#1",
       "line": 1053,
       "endLine": 1078,
       "physicalLines": 26,
@@ -5897,8 +5897,8 @@
     },
     {
       "file": "src/main/provider-usage.ts",
-      "name": "readMiraUsageSnapshot",
-      "identity": "readMiraUsageSnapshot#1",
+      "name": "readVelaUsageSnapshot",
+      "identity": "readVelaUsageSnapshot#1",
       "line": 877,
       "endLine": 902,
       "physicalLines": 26,
@@ -6140,7 +6140,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "createRecoveryTransaction",
-      "identity": "OpenShellBackend/createRecoveryTransaction#1",
+      "identity": "VelaBackend/createRecoveryTransaction#1",
       "line": 1173,
       "endLine": 1196,
       "physicalLines": 24,
@@ -6151,7 +6151,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "readRecoveryTransactions",
-      "identity": "OpenShellBackend/readRecoveryTransactions#1",
+      "identity": "VelaBackend/readRecoveryTransactions#1",
       "line": 1221,
       "endLine": 1244,
       "physicalLines": 24,
@@ -6162,7 +6162,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listInbox",
-      "identity": "OpenShellBackend/listInbox#1",
+      "identity": "VelaBackend/listInbox#1",
       "line": 2287,
       "endLine": 2310,
       "physicalLines": 24,
@@ -6261,7 +6261,7 @@
     {
       "file": "src/main/app-updater.ts",
       "name": "check",
-      "identity": "createMiraAppUpdater/check#1",
+      "identity": "createVelaAppUpdater/check#1",
       "line": 31,
       "endLine": 53,
       "physicalLines": 23,
@@ -6272,7 +6272,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "recoveryRecords",
-      "identity": "OpenShellBackend/recoveryRecords#1",
+      "identity": "VelaBackend/recoveryRecords#1",
       "line": 1246,
       "endLine": 1268,
       "physicalLines": 23,
@@ -6437,7 +6437,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "validRecoveryTransaction",
-      "identity": "OpenShellBackend/validRecoveryTransaction#1",
+      "identity": "VelaBackend/validRecoveryTransaction#1",
       "line": 1198,
       "endLine": 1219,
       "physicalLines": 22,
@@ -6448,7 +6448,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "openSessionByIdInDirectory",
-      "identity": "OpenShellBackend/openSessionByIdInDirectory#1",
+      "identity": "VelaBackend/openSessionByIdInDirectory#1",
       "line": 1969,
       "endLine": 1990,
       "physicalLines": 22,
@@ -6459,7 +6459,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "searchFiles",
-      "identity": "OpenShellBackend/searchFiles#1",
+      "identity": "VelaBackend/searchFiles#1",
       "line": 2462,
       "endLine": 2483,
       "physicalLines": 22,
@@ -6591,7 +6591,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "sessionUsage",
-      "identity": "OpenShellBackend/sessionUsage#1",
+      "identity": "VelaBackend/sessionUsage#1",
       "line": 2103,
       "endLine": 2125,
       "physicalLines": 23,
@@ -6602,7 +6602,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listPermissions",
-      "identity": "OpenShellBackend/listPermissions#1",
+      "identity": "VelaBackend/listPermissions#1",
       "line": 2875,
       "endLine": 2895,
       "physicalLines": 21,
@@ -6778,7 +6778,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listForms",
-      "identity": "OpenShellBackend/listForms#1",
+      "identity": "VelaBackend/listForms#1",
       "line": 2331,
       "endLine": 2353,
       "physicalLines": 23,
@@ -6789,7 +6789,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "connectProviderKey",
-      "identity": "OpenShellBackend/connectProviderKey#1",
+      "identity": "VelaBackend/connectProviderKey#1",
       "line": 2612,
       "endLine": 2631,
       "physicalLines": 20,
@@ -6800,7 +6800,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listSkills",
-      "identity": "OpenShellBackend/listSkills#1",
+      "identity": "VelaBackend/listSkills#1",
       "line": 2756,
       "endLine": 2775,
       "physicalLines": 20,
@@ -7108,7 +7108,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "openRecovery",
-      "identity": "OpenShellBackend/openRecovery#1",
+      "identity": "VelaBackend/openRecovery#1",
       "line": 1372,
       "endLine": 1390,
       "physicalLines": 19,
@@ -7119,7 +7119,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "startWatcher",
-      "identity": "OpenShellBackend/startWatcher#1",
+      "identity": "VelaBackend/startWatcher#1",
       "line": 1461,
       "endLine": 1479,
       "physicalLines": 19,
@@ -7130,7 +7130,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "walk",
-      "identity": "OpenShellBackend/copyExternal/walk#1",
+      "identity": "VelaBackend/copyExternal/walk#1",
       "line": 1725,
       "endLine": 1743,
       "physicalLines": 19,
@@ -7141,7 +7141,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/openSessionById/anonymous#1",
+      "identity": "VelaBackend/openSessionById/anonymous#1",
       "line": 2060,
       "endLine": 2082,
       "physicalLines": 23,
@@ -7282,9 +7282,9 @@
       "cyclomatic": 9
     },
     {
-      "file": "src/renderer/src/components/MiraMark.tsx",
-      "name": "MiraMark",
-      "identity": "MiraMark#1",
+      "file": "src/renderer/src/components/VelaMark.tsx",
+      "name": "VelaMark",
+      "identity": "VelaMark#1",
       "line": 3,
       "endLine": 21,
       "physicalLines": 19,
@@ -7482,7 +7482,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "ensureExactOpenCodeVersion",
-      "identity": "OpenShellBackend/ensureExactOpenCodeVersion#1",
+      "identity": "VelaBackend/ensureExactOpenCodeVersion#1",
       "line": 779,
       "endLine": 796,
       "physicalLines": 18,
@@ -7493,7 +7493,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "scheduleWatch",
-      "identity": "OpenShellBackend/scheduleWatch#1",
+      "identity": "VelaBackend/scheduleWatch#1",
       "line": 1488,
       "endLine": 1505,
       "physicalLines": 18,
@@ -7504,7 +7504,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "refreshGitBaselines",
-      "identity": "OpenShellBackend/refreshGitBaselines#1",
+      "identity": "VelaBackend/refreshGitBaselines#1",
       "line": 1517,
       "endLine": 1534,
       "physicalLines": 18,
@@ -7515,7 +7515,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "startProviderOAuth",
-      "identity": "OpenShellBackend/startProviderOAuth#1",
+      "identity": "VelaBackend/startProviderOAuth#1",
       "line": 2633,
       "endLine": 2650,
       "physicalLines": 18,
@@ -7526,7 +7526,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listPlugins",
-      "identity": "OpenShellBackend/listPlugins#1",
+      "identity": "VelaBackend/listPlugins#1",
       "line": 2737,
       "endLine": 2754,
       "physicalLines": 18,
@@ -7537,7 +7537,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "createFile",
-      "identity": "OpenShellBackend/createFile#1",
+      "identity": "VelaBackend/createFile#1",
       "line": 3195,
       "endLine": 3212,
       "physicalLines": 18,
@@ -7911,7 +7911,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "checkedRecoveryRoot",
-      "identity": "OpenShellBackend/checkedRecoveryRoot#1",
+      "identity": "VelaBackend/checkedRecoveryRoot#1",
       "line": 1127,
       "endLine": 1143,
       "physicalLines": 17,
@@ -7922,7 +7922,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "locations.map callback:recoveryRoot",
-      "identity": "OpenShellBackend/readRecoveryTransactions/locations.map callback:recoveryRoot#1",
+      "identity": "VelaBackend/readRecoveryTransactions/locations.map callback:recoveryRoot#1",
       "line": 1226,
       "endLine": 1242,
       "physicalLines": 17,
@@ -7933,7 +7933,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "sessionSelection",
-      "identity": "OpenShellBackend/sessionSelection#1",
+      "identity": "VelaBackend/sessionSelection#1",
       "line": 2233,
       "endLine": 2249,
       "physicalLines": 17,
@@ -7944,7 +7944,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as Array<Record<string, unknown>>).flatMap callback",
-      "identity": "OpenShellBackend/listInbox/(arr as Array<Record<string, unknown>>).flatMap callback#1",
+      "identity": "VelaBackend/listInbox/(arr as Array<Record<string, unknown>>).flatMap callback#1",
       "line": 2293,
       "endLine": 2309,
       "physicalLines": 17,
@@ -7955,7 +7955,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listAgents",
-      "identity": "OpenShellBackend/listAgents#1",
+      "identity": "VelaBackend/listAgents#1",
       "line": 2801,
       "endLine": 2817,
       "physicalLines": 17,
@@ -7966,7 +7966,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "detachPath",
-      "identity": "OpenShellBackend/detachPath#1",
+      "identity": "VelaBackend/detachPath#1",
       "line": 3240,
       "endLine": 3256,
       "physicalLines": 17,
@@ -8362,7 +8362,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "migrateLegacyRecovery",
-      "identity": "OpenShellBackend/migrateLegacyRecovery#1",
+      "identity": "VelaBackend/migrateLegacyRecovery#1",
       "line": 1314,
       "endLine": 1329,
       "physicalLines": 16,
@@ -8373,7 +8373,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "purgeExpiredRecovery",
-      "identity": "OpenShellBackend/purgeExpiredRecovery#1",
+      "identity": "VelaBackend/purgeExpiredRecovery#1",
       "line": 1337,
       "endLine": 1352,
       "physicalLines": 16,
@@ -8384,7 +8384,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "ptyDirectory",
-      "identity": "OpenShellBackend/ptyDirectory#1",
+      "identity": "VelaBackend/ptyDirectory#1",
       "line": 2173,
       "endLine": 2188,
       "physicalLines": 16,
@@ -8395,7 +8395,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "interrupt",
-      "identity": "OpenShellBackend/interrupt#1",
+      "identity": "VelaBackend/interrupt#1",
       "line": 2485,
       "endLine": 2500,
       "physicalLines": 16,
@@ -8406,7 +8406,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "stageRevert",
-      "identity": "OpenShellBackend/stageRevert#1",
+      "identity": "VelaBackend/stageRevert#1",
       "line": 2691,
       "endLine": 2706,
       "physicalLines": 16,
@@ -8417,7 +8417,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/createFile/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/createFile/this.mutations.run callback:root#1",
       "line": 3196,
       "endLine": 3211,
       "physicalLines": 16,
@@ -8428,7 +8428,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "deletePath",
-      "identity": "OpenShellBackend/deletePath#1",
+      "identity": "VelaBackend/deletePath#1",
       "line": 3223,
       "endLine": 3238,
       "physicalLines": 16,
@@ -8439,7 +8439,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "stop",
-      "identity": "OpenShellBackend/stop#1",
+      "identity": "VelaBackend/stop#1",
       "line": 3408,
       "endLine": 3423,
       "physicalLines": 16,
@@ -8879,7 +8879,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "subscribeEvents",
-      "identity": "OpenShellBackend/subscribeEvents#1",
+      "identity": "VelaBackend/subscribeEvents#1",
       "line": 978,
       "endLine": 992,
       "physicalLines": 15,
@@ -8890,7 +8890,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "snapshotInputs",
-      "identity": "OpenShellBackend/snapshotInputs#1",
+      "identity": "VelaBackend/snapshotInputs#1",
       "line": 1402,
       "endLine": 1417,
       "physicalLines": 16,
@@ -8901,7 +8901,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "sessionDirectory",
-      "identity": "OpenShellBackend/sessionDirectory#1",
+      "identity": "VelaBackend/sessionDirectory#1",
       "line": 1953,
       "endLine": 1967,
       "physicalLines": 15,
@@ -8912,7 +8912,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "pollProviderOAuth",
-      "identity": "OpenShellBackend/pollProviderOAuth#1",
+      "identity": "VelaBackend/pollProviderOAuth#1",
       "line": 2652,
       "endLine": 2666,
       "physicalLines": 15,
@@ -8923,7 +8923,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "switchModel",
-      "identity": "OpenShellBackend/switchModel#1",
+      "identity": "VelaBackend/switchModel#1",
       "line": 2785,
       "endLine": 2799,
       "physicalLines": 15,
@@ -8934,7 +8934,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "readFile",
-      "identity": "OpenShellBackend/readFile#1",
+      "identity": "VelaBackend/readFile#1",
       "line": 2923,
       "endLine": 2937,
       "physicalLines": 15,
@@ -8945,7 +8945,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/detachPath/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/detachPath/this.mutations.run callback:root#1",
       "line": 3241,
       "endLine": 3255,
       "physicalLines": 15,
@@ -9263,8 +9263,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "checkMiraUpdate",
-      "identity": "SettingsPage/checkMiraUpdate#1",
+      "name": "checkVelaUpdate",
+      "identity": "SettingsPage/checkVelaUpdate#1",
       "line": 109,
       "endLine": 123,
       "physicalLines": 15,
@@ -9407,7 +9407,7 @@
     {
       "file": "src/main/index.ts",
       "name": "setTimeout callback",
-      "identity": "updateMiraApp/setTimeout callback#1",
+      "identity": "updateVelaApp/setTimeout callback#1",
       "line": 792,
       "endLine": 805,
       "physicalLines": 14,
@@ -9429,7 +9429,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "syncDirectory",
-      "identity": "OpenShellBackend/syncDirectory#1",
+      "identity": "VelaBackend/syncDirectory#1",
       "line": 1145,
       "endLine": 1158,
       "physicalLines": 14,
@@ -9440,7 +9440,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listMcpServers",
-      "identity": "OpenShellBackend/listMcpServers#1",
+      "identity": "VelaBackend/listMcpServers#1",
       "line": 2722,
       "endLine": 2735,
       "physicalLines": 14,
@@ -9451,7 +9451,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listDir",
-      "identity": "OpenShellBackend/listDir#1",
+      "identity": "VelaBackend/listDir#1",
       "line": 2897,
       "endLine": 2910,
       "physicalLines": 14,
@@ -9462,7 +9462,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/deletePath/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/deletePath/this.mutations.run callback:root#1",
       "line": 3224,
       "endLine": 3237,
       "physicalLines": 14,
@@ -9473,7 +9473,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listProjects",
-      "identity": "OpenShellBackend/listProjects#1",
+      "identity": "VelaBackend/listProjects#1",
       "line": 3393,
       "endLine": 3406,
       "physicalLines": 14,
@@ -9946,7 +9946,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "connect",
-      "identity": "OpenShellBackend/connect#1",
+      "identity": "VelaBackend/connect#1",
       "line": 720,
       "endLine": 732,
       "physicalLines": 13,
@@ -9957,7 +9957,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runEventLoop",
-      "identity": "OpenShellBackend/runEventLoop#1",
+      "identity": "VelaBackend/runEventLoop#1",
       "line": 924,
       "endLine": 941,
       "physicalLines": 18,
@@ -9968,7 +9968,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "recoveryRoot",
-      "identity": "OpenShellBackend/recoveryRoot#1",
+      "identity": "VelaBackend/recoveryRoot#1",
       "line": 1113,
       "endLine": 1125,
       "physicalLines": 13,
@@ -9979,7 +9979,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "entries.filter((entry) => entry.isDirectory()).map callback",
-      "identity": "OpenShellBackend/readRecoveryTransactions/locations.map callback:recoveryRoot/entries.filter((entry) => entry.isDirectory()).map callback#1",
+      "identity": "VelaBackend/readRecoveryTransactions/locations.map callback:recoveryRoot/entries.filter((entry) => entry.isDirectory()).map callback#1",
       "line": 1229,
       "endLine": 1241,
       "physicalLines": 13,
@@ -9990,7 +9990,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "acknowledgeRecovery",
-      "identity": "OpenShellBackend/acknowledgeRecovery#1",
+      "identity": "VelaBackend/acknowledgeRecovery#1",
       "line": 1358,
       "endLine": 1370,
       "physicalLines": 13,
@@ -10001,7 +10001,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "rows.flatMap callback",
-      "identity": "OpenShellBackend/listPermissions/rows.flatMap callback#1",
+      "identity": "VelaBackend/listPermissions/rows.flatMap callback#1",
       "line": 2882,
       "endLine": 2894,
       "physicalLines": 13,
@@ -10396,8 +10396,8 @@
     },
     {
       "file": "src/main/app-updater.ts",
-      "name": "createDisabledMiraAppUpdater",
-      "identity": "createDisabledMiraAppUpdater#1",
+      "name": "createDisabledVelaAppUpdater",
+      "identity": "createDisabledVelaAppUpdater#1",
       "line": 10,
       "endLine": 21,
       "physicalLines": 12,
@@ -10551,7 +10551,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "writeRecoveryTransaction",
-      "identity": "OpenShellBackend/writeRecoveryTransaction#1",
+      "identity": "VelaBackend/writeRecoveryTransaction#1",
       "line": 1160,
       "endLine": 1171,
       "physicalLines": 12,
@@ -10562,7 +10562,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "missingIdentitySource",
-      "identity": "OpenShellBackend/missingIdentitySource#1",
+      "identity": "VelaBackend/missingIdentitySource#1",
       "line": 1660,
       "endLine": 1671,
       "physicalLines": 12,
@@ -10573,7 +10573,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "captureDirectMutation",
-      "identity": "OpenShellBackend/captureDirectMutation#1",
+      "identity": "VelaBackend/captureDirectMutation#1",
       "line": 1680,
       "endLine": 1691,
       "physicalLines": 12,
@@ -10584,7 +10584,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "canonicalExternalFile",
-      "identity": "OpenShellBackend/canonicalExternalFile#1",
+      "identity": "VelaBackend/canonicalExternalFile#1",
       "line": 1693,
       "endLine": 1704,
       "physicalLines": 12,
@@ -10595,7 +10595,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "resolveWorkspaceDirectory",
-      "identity": "OpenShellBackend/resolveWorkspaceDirectory#1",
+      "identity": "VelaBackend/resolveWorkspaceDirectory#1",
       "line": 1798,
       "endLine": 1809,
       "physicalLines": 12,
@@ -10606,7 +10606,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "files.map callback:stat",
-      "identity": "OpenShellBackend/prompt/files.map callback:stat#1",
+      "identity": "VelaBackend/prompt/files.map callback:stat#1",
       "line": 2263,
       "endLine": 2274,
       "physicalLines": 12,
@@ -10617,7 +10617,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "cancelInbox",
-      "identity": "OpenShellBackend/cancelInbox#1",
+      "identity": "VelaBackend/cancelInbox#1",
       "line": 2312,
       "endLine": 2323,
       "physicalLines": 12,
@@ -10628,7 +10628,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "formSessionID",
-      "identity": "OpenShellBackend/formSessionID#1",
+      "identity": "VelaBackend/formSessionID#1",
       "line": 2382,
       "endLine": 2393,
       "physicalLines": 12,
@@ -10639,7 +10639,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "completeProviderOAuth",
-      "identity": "OpenShellBackend/completeProviderOAuth#1",
+      "identity": "VelaBackend/completeProviderOAuth#1",
       "line": 2668,
       "endLine": 2679,
       "physicalLines": 12,
@@ -10650,7 +10650,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(rows as Array<Record<string, unknown>>).flatMap callback:id",
-      "identity": "OpenShellBackend/listSkills/(rows as Array<Record<string, unknown>>).flatMap callback:id#1",
+      "identity": "VelaBackend/listSkills/(rows as Array<Record<string, unknown>>).flatMap callback:id#1",
       "line": 2763,
       "endLine": 2774,
       "physicalLines": 12,
@@ -10661,7 +10661,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "replyPermission",
-      "identity": "OpenShellBackend/replyPermission#1",
+      "identity": "VelaBackend/replyPermission#1",
       "line": 2862,
       "endLine": 2873,
       "physicalLines": 12,
@@ -10672,7 +10672,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "openFileWorkspace",
-      "identity": "OpenShellBackend/openFileWorkspace#1",
+      "identity": "VelaBackend/openFileWorkspace#1",
       "line": 3000,
       "endLine": 3011,
       "physicalLines": 12,
@@ -11310,7 +11310,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "start",
-      "identity": "OpenShellBackend/start#1",
+      "identity": "VelaBackend/start#1",
       "line": 860,
       "endLine": 870,
       "physicalLines": 11,
@@ -11321,7 +11321,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "watch callback",
-      "identity": "OpenShellBackend/startWatcher/watch callback#1",
+      "identity": "VelaBackend/startWatcher/watch callback#1",
       "line": 1463,
       "endLine": 1473,
       "physicalLines": 11,
@@ -11332,7 +11332,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "resolveExternalOpen",
-      "identity": "OpenShellBackend/resolveExternalOpen#1",
+      "identity": "VelaBackend/resolveExternalOpen#1",
       "line": 2939,
       "endLine": 2949,
       "physicalLines": 11,
@@ -11904,7 +11904,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "ensureBounded",
-      "identity": "OpenShellBackend/ensureBounded#1",
+      "identity": "VelaBackend/ensureBounded#1",
       "line": 849,
       "endLine": 858,
       "physicalLines": 10,
@@ -11915,7 +11915,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/gitShow/anonymous#1",
+      "identity": "VelaBackend/gitShow/anonymous#1",
       "line": 1449,
       "endLine": 1458,
       "physicalLines": 10,
@@ -11926,7 +11926,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "activeSessions",
-      "identity": "OpenShellBackend/activeSessions#1",
+      "identity": "VelaBackend/activeSessions#1",
       "line": 2131,
       "endLine": 2140,
       "physicalLines": 10,
@@ -11937,7 +11937,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "closeSession",
-      "identity": "OpenShellBackend/closeSession#1",
+      "identity": "VelaBackend/closeSession#1",
       "line": 2142,
       "endLine": 2151,
       "physicalLines": 10,
@@ -11948,7 +11948,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "replyForm",
-      "identity": "OpenShellBackend/replyForm#1",
+      "identity": "VelaBackend/replyForm#1",
       "line": 2355,
       "endLine": 2364,
       "physicalLines": 10,
@@ -11959,7 +11959,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "cancelForm",
-      "identity": "OpenShellBackend/cancelForm#1",
+      "identity": "VelaBackend/cancelForm#1",
       "line": 2366,
       "endLine": 2375,
       "physicalLines": 10,
@@ -11970,7 +11970,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(rows as Array<Record<string, unknown>>).flatMap callback:id",
-      "identity": "OpenShellBackend/listPlugins/(rows as Array<Record<string, unknown>>).flatMap callback:id#1",
+      "identity": "VelaBackend/listPlugins/(rows as Array<Record<string, unknown>>).flatMap callback:id#1",
       "line": 2744,
       "endLine": 2753,
       "physicalLines": 10,
@@ -11981,7 +11981,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "revealInFileManager",
-      "identity": "OpenShellBackend/revealInFileManager#1",
+      "identity": "VelaBackend/revealInFileManager#1",
       "line": 2912,
       "endLine": 2921,
       "physicalLines": 10,
@@ -11992,7 +11992,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "statExternal",
-      "identity": "OpenShellBackend/statExternal#1",
+      "identity": "VelaBackend/statExternal#1",
       "line": 2951,
       "endLine": 2960,
       "physicalLines": 10,
@@ -12806,7 +12806,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "child.once callback",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade/anonymous/child.once callback#2",
+      "identity": "VelaBackend/runOpenCodeUpgrade/anonymous/child.once callback#2",
       "line": 767,
       "endLine": 775,
       "physicalLines": 9,
@@ -12817,7 +12817,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "mobileEndpoint",
-      "identity": "OpenShellBackend/mobileEndpoint#1",
+      "identity": "VelaBackend/mobileEndpoint#1",
       "line": 839,
       "endLine": 847,
       "physicalLines": 9,
@@ -12828,7 +12828,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "scheduleGitRefresh",
-      "identity": "OpenShellBackend/scheduleGitRefresh#1",
+      "identity": "VelaBackend/scheduleGitRefresh#1",
       "line": 1507,
       "endLine": 1515,
       "physicalLines": 9,
@@ -12839,7 +12839,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "deleteSession",
-      "identity": "OpenShellBackend/deleteSession#1",
+      "identity": "VelaBackend/deleteSession#1",
       "line": 2153,
       "endLine": 2163,
       "physicalLines": 11,
@@ -12850,7 +12850,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback",
-      "identity": "OpenShellBackend/listModels/(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback#2",
+      "identity": "VelaBackend/listModels/(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback#2",
       "line": 2521,
       "endLine": 2529,
       "physicalLines": 9,
@@ -12861,7 +12861,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "cancelProviderOAuth",
-      "identity": "OpenShellBackend/cancelProviderOAuth#1",
+      "identity": "VelaBackend/cancelProviderOAuth#1",
       "line": 2681,
       "endLine": 2689,
       "physicalLines": 9,
@@ -13763,7 +13763,7 @@
     {
       "file": "src/main/app-updater.ts",
       "name": "reportDownloadProgress",
-      "identity": "createMiraAppUpdater/update/reportDownloadProgress#1",
+      "identity": "createVelaAppUpdater/update/reportDownloadProgress#1",
       "line": 77,
       "endLine": 84,
       "physicalLines": 8,
@@ -13906,7 +13906,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "activeTarget",
-      "identity": "OpenShellBackend/activeTarget#1",
+      "identity": "VelaBackend/activeTarget#1",
       "line": 665,
       "endLine": 672,
       "physicalLines": 8,
@@ -13917,7 +13917,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "assertTarget",
-      "identity": "OpenShellBackend/assertTarget#1",
+      "identity": "VelaBackend/assertTarget#1",
       "line": 674,
       "endLine": 681,
       "physicalLines": 8,
@@ -13928,7 +13928,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "discoverEndpoint",
-      "identity": "OpenShellBackend/discoverEndpoint#1",
+      "identity": "VelaBackend/discoverEndpoint#1",
       "line": 711,
       "endLine": 718,
       "physicalLines": 8,
@@ -13939,7 +13939,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "tuiCommand",
-      "identity": "OpenShellBackend/tuiCommand#1",
+      "identity": "VelaBackend/tuiCommand#1",
       "line": 2190,
       "endLine": 2197,
       "physicalLines": 8,
@@ -13950,7 +13950,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as { path?: string }[])\n      .filter((r) => typeof r.path === \"string\" &&  callback:rel",
-      "identity": "OpenShellBackend/searchFiles/(arr as { path?: string }[])\n      .filter((r) => typeof r.path === \"string\" &&  callback:rel#1",
+      "identity": "VelaBackend/searchFiles/(arr as { path?: string }[])\n      .filter((r) => typeof r.path === \"string\" &&  callback:rel#1",
       "line": 2475,
       "endLine": 2482,
       "physicalLines": 8,
@@ -13961,7 +13961,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "createDir",
-      "identity": "OpenShellBackend/createDir#1",
+      "identity": "VelaBackend/createDir#1",
       "line": 3214,
       "endLine": 3221,
       "physicalLines": 8,
@@ -13982,8 +13982,8 @@
     },
     {
       "file": "src/main/provider-usage.ts",
-      "name": "miraUsageSnapshotCandidates",
-      "identity": "miraUsageSnapshotCandidates#1",
+      "name": "velaUsageSnapshotCandidates",
+      "identity": "velaUsageSnapshotCandidates#1",
       "line": 868,
       "endLine": 875,
       "physicalLines": 8,
@@ -15060,8 +15060,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.detachPath(target, path).then callback",
-      "identity": "StoreBody/removeFromWorkspace/window.openshell.detachPath(target, path).then callback#1",
+      "name": "window.vela.detachPath(target, path).then callback",
+      "identity": "StoreBody/removeFromWorkspace/window.vela.detachPath(target, path).then callback#1",
       "line": 2326,
       "endLine": 2333,
       "physicalLines": 8,
@@ -15347,7 +15347,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "installedServerVersion",
-      "identity": "OpenShellBackend/installedServerVersion#1",
+      "identity": "VelaBackend/installedServerVersion#1",
       "line": 703,
       "endLine": 709,
       "physicalLines": 7,
@@ -15358,7 +15358,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "handleStreamReconnect",
-      "identity": "OpenShellBackend/handleStreamReconnect#1",
+      "identity": "VelaBackend/handleStreamReconnect#1",
       "line": 948,
       "endLine": 954,
       "physicalLines": 7,
@@ -15369,7 +15369,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "handleStreamError",
-      "identity": "OpenShellBackend/handleStreamError#1",
+      "identity": "VelaBackend/handleStreamError#1",
       "line": 970,
       "endLine": 976,
       "physicalLines": 7,
@@ -15380,7 +15380,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "sessionIDsAtLocation",
-      "identity": "OpenShellBackend/sessionIDsAtLocation#1",
+      "identity": "VelaBackend/sessionIDsAtLocation#1",
       "line": 1082,
       "endLine": 1088,
       "physicalLines": 7,
@@ -15391,7 +15391,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "reportedRoot",
-      "identity": "OpenShellBackend/reportedRoot#1",
+      "identity": "VelaBackend/reportedRoot#1",
       "line": 1090,
       "endLine": 1096,
       "physicalLines": 7,
@@ -15402,7 +15402,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "sessionTranscript",
-      "identity": "OpenShellBackend/sessionTranscript#1",
+      "identity": "VelaBackend/sessionTranscript#1",
       "line": 2095,
       "endLine": 2101,
       "physicalLines": 7,
@@ -15413,7 +15413,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "isDirectory",
-      "identity": "OpenShellBackend/ptyDirectory/isDirectory#1",
+      "identity": "VelaBackend/ptyDirectory/isDirectory#1",
       "line": 2180,
       "endLine": 2186,
       "physicalLines": 7,
@@ -15424,7 +15424,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "removeProviderCredential",
-      "identity": "OpenShellBackend/removeProviderCredential#1",
+      "identity": "VelaBackend/removeProviderCredential#1",
       "line": 2777,
       "endLine": 2783,
       "physicalLines": 7,
@@ -15435,7 +15435,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "switchAgent",
-      "identity": "OpenShellBackend/switchAgent#1",
+      "identity": "VelaBackend/switchAgent#1",
       "line": 2819,
       "endLine": 2825,
       "physicalLines": 7,
@@ -16094,8 +16094,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "miraUpdateErrorMessage",
-      "identity": "miraUpdateErrorMessage#1",
+      "name": "velaUpdateErrorMessage",
+      "identity": "velaUpdateErrorMessage#1",
       "line": 40,
       "endLine": 46,
       "physicalLines": 7,
@@ -16821,7 +16821,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "constructor",
-      "identity": "OpenShellBackend/constructor#1",
+      "identity": "VelaBackend/constructor#1",
       "line": 623,
       "endLine": 628,
       "physicalLines": 6,
@@ -16832,7 +16832,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "contextFor",
-      "identity": "OpenShellBackend/contextFor#1",
+      "identity": "VelaBackend/contextFor#1",
       "line": 639,
       "endLine": 644,
       "physicalLines": 6,
@@ -16843,7 +16843,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "contextBySessionID",
-      "identity": "OpenShellBackend/contextBySessionID#1",
+      "identity": "VelaBackend/contextBySessionID#1",
       "line": 650,
       "endLine": 655,
       "physicalLines": 6,
@@ -16854,7 +16854,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "beginActivation",
-      "identity": "OpenShellBackend/beginActivation#1",
+      "identity": "VelaBackend/beginActivation#1",
       "line": 683,
       "endLine": 688,
       "physicalLines": 6,
@@ -16865,7 +16865,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "stopWatcher",
-      "identity": "OpenShellBackend/stopWatcher#1",
+      "identity": "VelaBackend/stopWatcher#1",
       "line": 1481,
       "endLine": 1486,
       "physicalLines": 6,
@@ -16876,7 +16876,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "baselineForObservedPath",
-      "identity": "OpenShellBackend/baselineForObservedPath#1",
+      "identity": "VelaBackend/baselineForObservedPath#1",
       "line": 1673,
       "endLine": 1678,
       "physicalLines": 6,
@@ -16887,7 +16887,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.realpath(original).then callback",
-      "identity": "OpenShellBackend/canonicalExternalFile/fsp.realpath(original).then callback#1",
+      "identity": "VelaBackend/canonicalExternalFile/fsp.realpath(original).then callback#1",
       "line": 1695,
       "endLine": 1700,
       "physicalLines": 6,
@@ -16898,7 +16898,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "readExternalText",
-      "identity": "OpenShellBackend/readExternalText#1",
+      "identity": "VelaBackend/readExternalText#1",
       "line": 1706,
       "endLine": 1711,
       "physicalLines": 6,
@@ -16909,7 +16909,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "copyFile",
-      "identity": "OpenShellBackend/copyExternal/copyFile#1",
+      "identity": "VelaBackend/copyExternal/copyFile#1",
       "line": 1719,
       "endLine": 1724,
       "physicalLines": 6,
@@ -16920,7 +16920,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "steerInbox",
-      "identity": "OpenShellBackend/steerInbox#1",
+      "identity": "VelaBackend/steerInbox#1",
       "line": 2325,
       "endLine": 2330,
       "physicalLines": 6,
@@ -16931,7 +16931,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "field.when.flatMap callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields/field.when.flatMap callback#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields/field.when.flatMap callback#1",
       "line": 2574,
       "endLine": 2579,
       "physicalLines": 6,
@@ -16942,7 +16942,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "commitRevert",
-      "identity": "OpenShellBackend/commitRevert#1",
+      "identity": "VelaBackend/commitRevert#1",
       "line": 2708,
       "endLine": 2713,
       "physicalLines": 6,
@@ -16953,7 +16953,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "clearRevert",
-      "identity": "OpenShellBackend/clearRevert#1",
+      "identity": "VelaBackend/clearRevert#1",
       "line": 2715,
       "endLine": 2720,
       "physicalLines": 6,
@@ -16964,7 +16964,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(rows as Array<Record<string, unknown>>).flatMap callback:name",
-      "identity": "OpenShellBackend/listMcpServers/(rows as Array<Record<string, unknown>>).flatMap callback:name#1",
+      "identity": "VelaBackend/listMcpServers/(rows as Array<Record<string, unknown>>).flatMap callback:name#1",
       "line": 2729,
       "endLine": 2734,
       "physicalLines": 6,
@@ -16975,7 +16975,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/createDir/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/createDir/this.mutations.run callback:root#1",
       "line": 3215,
       "endLine": 3220,
       "physicalLines": 6,
@@ -16986,7 +16986,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as { canonical?: string; directory?: string; name?: string }[])\n      .map callback:directory",
-      "identity": "OpenShellBackend/listProjects/(arr as { canonical?: string; directory?: string; name?: string }[])\n      .map callback:directory#1",
+      "identity": "VelaBackend/listProjects/(arr as { canonical?: string; directory?: string; name?: string }[])\n      .map callback:directory#1",
       "line": 3398,
       "endLine": 3403,
       "physicalLines": 6,
@@ -18339,7 +18339,7 @@
     {
       "file": "src/main/index.ts",
       "name": "report",
-      "identity": "updateMiraApp/report#1",
+      "identity": "updateVelaApp/report#1",
       "line": 768,
       "endLine": 772,
       "physicalLines": 5,
@@ -18482,7 +18482,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "discoverFiles",
-      "identity": "OpenShellBackend/discoverFiles#1",
+      "identity": "VelaBackend/discoverFiles#1",
       "line": 690,
       "endLine": 694,
       "physicalLines": 5,
@@ -18493,7 +18493,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/installedServerVersion/anonymous#1",
+      "identity": "VelaBackend/installedServerVersion/anonymous#1",
       "line": 704,
       "endLine": 708,
       "physicalLines": 5,
@@ -18504,7 +18504,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "installedOpenCodeVersion",
-      "identity": "OpenShellBackend/installedOpenCodeVersion#1",
+      "identity": "VelaBackend/installedOpenCodeVersion#1",
       "line": 742,
       "endLine": 746,
       "physicalLines": 5,
@@ -18515,7 +18515,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.eventLoop.start callback",
-      "identity": "OpenShellBackend/start/this.eventLoop.start callback#2",
+      "identity": "VelaBackend/start/this.eventLoop.start callback#2",
       "line": 864,
       "endLine": 868,
       "physicalLines": 5,
@@ -18526,7 +18526,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "handleStreamFailure",
-      "identity": "OpenShellBackend/handleStreamFailure#1",
+      "identity": "VelaBackend/handleStreamFailure#1",
       "line": 962,
       "endLine": 966,
       "physicalLines": 5,
@@ -18537,7 +18537,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "emitRecoveryFor",
-      "identity": "OpenShellBackend/emitRecoveryFor#1",
+      "identity": "VelaBackend/emitRecoveryFor#1",
       "line": 1331,
       "endLine": 1335,
       "physicalLines": 5,
@@ -18548,7 +18548,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "resolveOpenCodeSessionDirectory",
-      "identity": "OpenShellBackend/resolveOpenCodeSessionDirectory#1",
+      "identity": "VelaBackend/resolveOpenCodeSessionDirectory#1",
       "line": 1811,
       "endLine": 1815,
       "physicalLines": 5,
@@ -18559,7 +18559,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(skillArr as { id?: string; name?: string; description?: string }[])\n      .map callback",
-      "identity": "OpenShellBackend/listCommands/(skillArr as { id?: string; name?: string; description?: string }[])\n      .map callback#1",
+      "identity": "VelaBackend/listCommands/(skillArr as { id?: string; name?: string; description?: string }[])\n      .map callback#1",
       "line": 2415,
       "endLine": 2419,
       "physicalLines": 5,
@@ -18570,7 +18570,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "builtinItems",
-      "identity": "OpenShellBackend/listCommands/builtinItems#1",
+      "identity": "VelaBackend/listCommands/builtinItems#1",
       "line": 2421,
       "endLine": 2425,
       "physicalLines": 5,
@@ -18581,7 +18581,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as { id?: string; name?: string; color?: string }[])\n      .map callback",
-      "identity": "OpenShellBackend/listAgents/(arr as { id?: string; name?: string; color?: string }[])\n      .map callback#1",
+      "identity": "VelaBackend/listAgents/(arr as { id?: string; name?: string; color?: string }[])\n      .map callback#1",
       "line": 2811,
       "endLine": 2815,
       "physicalLines": 5,
@@ -19031,8 +19031,8 @@
     },
     {
       "file": "src/renderer/src/App.tsx",
-      "name": "window.openshell.onSaveAllEditorFiles callback:saved",
-      "identity": "Root/useEffect callback/window.openshell.onSaveAllEditorFiles callback:saved#1",
+      "name": "window.vela.onSaveAllEditorFiles callback:saved",
+      "identity": "Root/useEffect callback/window.vela.onSaveAllEditorFiles callback:saved#1",
       "line": 1188,
       "endLine": 1192,
       "physicalLines": 5,
@@ -20297,7 +20297,7 @@
     {
       "file": "src/renderer/src/store.tsx",
       "name": "setHiddenPathsByWorkspace callback:next",
-      "identity": "StoreBody/removeFromWorkspace/window.openshell.detachPath(target, path).then callback/setHiddenPathsByWorkspace callback:next#1",
+      "identity": "StoreBody/removeFromWorkspace/window.vela.detachPath(target, path).then callback/setHiddenPathsByWorkspace callback:next#1",
       "line": 2327,
       "endLine": 2331,
       "physicalLines": 5,
@@ -20979,7 +20979,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onMessage",
-      "identity": "OpenShellBackend/onMessage#1",
+      "identity": "VelaBackend/onMessage#1",
       "line": 630,
       "endLine": 633,
       "physicalLines": 4,
@@ -20990,7 +20990,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "timeout",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade/anonymous/timeout#1",
+      "identity": "VelaBackend/runOpenCodeUpgrade/anonymous/timeout#1",
       "line": 759,
       "endLine": 762,
       "physicalLines": 4,
@@ -21001,7 +21001,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "child.once callback",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade/anonymous/child.once callback#1",
+      "identity": "VelaBackend/runOpenCodeUpgrade/anonymous/child.once callback#1",
       "line": 763,
       "endLine": 766,
       "physicalLines": 4,
@@ -21012,7 +21012,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "relKey",
-      "identity": "OpenShellBackend/relKey#1",
+      "identity": "VelaBackend/relKey#1",
       "line": 1108,
       "endLine": 1111,
       "physicalLines": 4,
@@ -21023,7 +21023,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(recoveryRoot).catch callback",
-      "identity": "OpenShellBackend/checkedRecoveryRoot/fsp.lstat(recoveryRoot).catch callback#1",
+      "identity": "VelaBackend/checkedRecoveryRoot/fsp.lstat(recoveryRoot).catch callback#1",
       "line": 1133,
       "endLine": 1136,
       "physicalLines": 4,
@@ -21034,7 +21034,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.open(directory, \"r\").catch callback",
-      "identity": "OpenShellBackend/syncDirectory/fsp.open(directory, \"r\").catch callback#1",
+      "identity": "VelaBackend/syncDirectory/fsp.open(directory, \"r\").catch callback#1",
       "line": 1146,
       "endLine": 1149,
       "physicalLines": 4,
@@ -21045,7 +21045,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "shouldSkip",
-      "identity": "OpenShellBackend/shouldSkip#1",
+      "identity": "VelaBackend/shouldSkip#1",
       "line": 1392,
       "endLine": 1395,
       "physicalLines": 4,
@@ -21056,7 +21056,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "isGitMetadata",
-      "identity": "OpenShellBackend/isGitMetadata#1",
+      "identity": "VelaBackend/isGitMetadata#1",
       "line": 1397,
       "endLine": 1400,
       "physicalLines": 4,
@@ -21067,7 +21067,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "setTimeout callback",
-      "identity": "OpenShellBackend/scheduleWatch/setTimeout callback#1",
+      "identity": "VelaBackend/scheduleWatch/setTimeout callback#1",
       "line": 1500,
       "endLine": 1503,
       "physicalLines": 4,
@@ -21078,7 +21078,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "setTimeout callback",
-      "identity": "OpenShellBackend/scheduleGitRefresh/setTimeout callback#1",
+      "identity": "VelaBackend/scheduleGitRefresh/setTimeout callback#1",
       "line": 1511,
       "endLine": 1514,
       "physicalLines": 4,
@@ -21089,7 +21089,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fileIdentity",
-      "identity": "OpenShellBackend/fileIdentity#1",
+      "identity": "VelaBackend/fileIdentity#1",
       "line": 1655,
       "endLine": 1658,
       "physicalLines": 4,
@@ -21100,7 +21100,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.stat(real).then callback",
-      "identity": "OpenShellBackend/canonicalExternalFile/fsp.realpath(original).then callback/fsp.stat(real).then callback#1",
+      "identity": "VelaBackend/canonicalExternalFile/fsp.realpath(original).then callback/fsp.stat(real).then callback#1",
       "line": 1696,
       "endLine": 1699,
       "physicalLines": 4,
@@ -21111,7 +21111,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.realpath(original).then((real) => {\n      return fsp.stat(real).then((stat)  callback",
-      "identity": "OpenShellBackend/canonicalExternalFile/fsp.realpath(original).then((real) => {\n      return fsp.stat(real).then((stat)  callback#1",
+      "identity": "VelaBackend/canonicalExternalFile/fsp.realpath(original).then((real) => {\n      return fsp.stat(real).then((stat)  callback#1",
       "line": 1700,
       "endLine": 1703,
       "physicalLines": 4,
@@ -21122,7 +21122,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "probe",
-      "identity": "OpenShellBackend/runtimeManifests/probe#1",
+      "identity": "VelaBackend/runtimeManifests/probe#1",
       "line": 2204,
       "endLine": 2207,
       "physicalLines": 4,
@@ -21133,7 +21133,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/runtimeManifests/probe/anonymous#1",
+      "identity": "VelaBackend/runtimeManifests/probe/anonymous#1",
       "line": 2204,
       "endLine": 2207,
       "physicalLines": 4,
@@ -21144,7 +21144,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "field.options.flatMap callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields/field.options.flatMap callback#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields/field.options.flatMap callback#1",
       "line": 2582,
       "endLine": 2585,
       "physicalLines": 4,
@@ -21155,7 +21155,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "entries\n      .filter((e) => !(clean === \"\" && (e.name === RECOVERY_DIR || e.nam callback",
-      "identity": "OpenShellBackend/listDir/entries\n      .filter((e) => !(clean === \"\" && (e.name === RECOVERY_DIR || e.nam callback#1",
+      "identity": "VelaBackend/listDir/entries\n      .filter((e) => !(clean === \"\" && (e.name === RECOVERY_DIR || e.nam callback#1",
       "line": 2906,
       "endLine": 2909,
       "physicalLines": 4,
@@ -21166,7 +21166,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(target).catch callback",
-      "identity": "OpenShellBackend/renamePath/this.mutations.run callback:root/fsp.lstat(target).catch callback#1",
+      "identity": "VelaBackend/renamePath/this.mutations.run callback:root/fsp.lstat(target).catch callback#1",
       "line": 3271,
       "endLine": 3274,
       "physicalLines": 4,
@@ -23168,7 +23168,7 @@
     {
       "file": "src/main/app-updater.ts",
       "name": "check",
-      "identity": "createDisabledMiraAppUpdater/check#1",
+      "identity": "createDisabledVelaAppUpdater/check#1",
       "line": 13,
       "endLine": 15,
       "physicalLines": 3,
@@ -23179,7 +23179,7 @@
     {
       "file": "src/main/app-updater.ts",
       "name": "update",
-      "identity": "createDisabledMiraAppUpdater/update#1",
+      "identity": "createDisabledVelaAppUpdater/update#1",
       "line": 16,
       "endLine": 18,
       "physicalLines": 3,
@@ -23190,7 +23190,7 @@
     {
       "file": "src/main/app-updater.ts",
       "name": "installAndRestart",
-      "identity": "createMiraAppUpdater/installAndRestart#1",
+      "identity": "createVelaAppUpdater/installAndRestart#1",
       "line": 116,
       "endLine": 118,
       "physicalLines": 3,
@@ -23410,7 +23410,7 @@
     {
       "file": "src/main/index.ts",
       "name": "popup.on callback",
-      "identity": "updateMiraApp/popup.on callback#1",
+      "identity": "updateVelaApp/popup.on callback#1",
       "line": 747,
       "endLine": 749,
       "physicalLines": 3,
@@ -23421,7 +23421,7 @@
     {
       "file": "src/main/index.ts",
       "name": "popup.on callback",
-      "identity": "updateMiraApp/popup.on callback#2",
+      "identity": "updateVelaApp/popup.on callback#2",
       "line": 750,
       "endLine": 752,
       "physicalLines": 3,
@@ -23432,7 +23432,7 @@
     {
       "file": "src/main/index.ts",
       "name": "popup.webContents.on callback",
-      "identity": "updateMiraApp/popup.webContents.on callback#2",
+      "identity": "updateVelaApp/popup.webContents.on callback#2",
       "line": 761,
       "endLine": 763,
       "physicalLines": 3,
@@ -23443,7 +23443,7 @@
     {
       "file": "src/main/index.ts",
       "name": "popup.webContents.on callback",
-      "identity": "updateMiraApp/popup.webContents.on callback#3",
+      "identity": "updateVelaApp/popup.webContents.on callback#3",
       "line": 764,
       "endLine": 766,
       "physicalLines": 3,
@@ -23454,7 +23454,7 @@
     {
       "file": "src/main/index.ts",
       "name": "setTimeout callback",
-      "identity": "updateMiraApp/setTimeout callback#2",
+      "identity": "updateVelaApp/setTimeout callback#2",
       "line": 813,
       "endLine": 815,
       "physicalLines": 3,
@@ -23718,7 +23718,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "emit",
-      "identity": "OpenShellBackend/emit#1",
+      "identity": "VelaBackend/emit#1",
       "line": 635,
       "endLine": 637,
       "physicalLines": 3,
@@ -23729,7 +23729,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "currentContext",
-      "identity": "OpenShellBackend/currentContext#1",
+      "identity": "VelaBackend/currentContext#1",
       "line": 646,
       "endLine": 648,
       "physicalLines": 3,
@@ -23740,7 +23740,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "primaryContext",
-      "identity": "OpenShellBackend/primaryContext#1",
+      "identity": "VelaBackend/primaryContext#1",
       "line": 657,
       "endLine": 659,
       "physicalLines": 3,
@@ -23751,7 +23751,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "workspaceRoot",
-      "identity": "OpenShellBackend/workspaceRoot#1",
+      "identity": "VelaBackend/workspaceRoot#1",
       "line": 661,
       "endLine": 663,
       "physicalLines": 3,
@@ -23762,7 +23762,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "serverVersionPredicate",
-      "identity": "OpenShellBackend/serverVersionPredicate#1",
+      "identity": "VelaBackend/serverVersionPredicate#1",
       "line": 698,
       "endLine": 700,
       "physicalLines": 3,
@@ -23773,7 +23773,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "execFile callback",
-      "identity": "OpenShellBackend/installedServerVersion/anonymous/execFile callback#1",
+      "identity": "VelaBackend/installedServerVersion/anonymous/execFile callback#1",
       "line": 705,
       "endLine": 707,
       "physicalLines": 3,
@@ -23784,7 +23784,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "syncOpenCode",
-      "identity": "OpenShellBackend/syncOpenCode#1",
+      "identity": "VelaBackend/syncOpenCode#1",
       "line": 734,
       "endLine": 736,
       "physicalLines": 3,
@@ -23795,7 +23795,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "updateOpenCode",
-      "identity": "OpenShellBackend/updateOpenCode#1",
+      "identity": "VelaBackend/updateOpenCode#1",
       "line": 738,
       "endLine": 740,
       "physicalLines": 3,
@@ -23806,7 +23806,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/ensureExactOpenCodeVersion/anonymous#1",
+      "identity": "VelaBackend/ensureExactOpenCodeVersion/anonymous#1",
       "line": 789,
       "endLine": 791,
       "physicalLines": 3,
@@ -23817,7 +23817,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onStreamEnd",
-      "identity": "OpenShellBackend/runEventLoop/onStreamEnd#1",
+      "identity": "VelaBackend/runEventLoop/onStreamEnd#1",
       "line": 931,
       "endLine": 938,
       "physicalLines": 8,
@@ -23828,7 +23828,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "currentWatch",
-      "identity": "OpenShellBackend/currentWatch#1",
+      "identity": "VelaBackend/currentWatch#1",
       "line": 1100,
       "endLine": 1102,
       "physicalLines": 3,
@@ -23839,7 +23839,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "abs",
-      "identity": "OpenShellBackend/abs#1",
+      "identity": "VelaBackend/abs#1",
       "line": 1104,
       "endLine": 1106,
       "physicalLines": 3,
@@ -23850,7 +23850,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "handle.sync().catch callback",
-      "identity": "OpenShellBackend/syncDirectory/handle.sync().catch callback#1",
+      "identity": "VelaBackend/syncDirectory/handle.sync().catch callback#1",
       "line": 1152,
       "endLine": 1154,
       "physicalLines": 3,
@@ -23861,7 +23861,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listRecovery",
-      "identity": "OpenShellBackend/listRecovery#1",
+      "identity": "VelaBackend/listRecovery#1",
       "line": 1354,
       "endLine": 1356,
       "physicalLines": 3,
@@ -23872,7 +23872,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "execFile callback",
-      "identity": "OpenShellBackend/gitShow/anonymous/execFile callback#1",
+      "identity": "VelaBackend/gitShow/anonymous/execFile callback#1",
       "line": 1454,
       "endLine": 1456,
       "physicalLines": 3,
@@ -23883,7 +23883,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "getState",
-      "identity": "OpenShellBackend/getState#1",
+      "identity": "VelaBackend/getState#1",
       "line": 2127,
       "endLine": 2129,
       "physicalLines": 3,
@@ -23894,7 +23894,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "workspaceDirectory",
-      "identity": "OpenShellBackend/workspaceDirectory#1",
+      "identity": "VelaBackend/workspaceDirectory#1",
       "line": 2165,
       "endLine": 2167,
       "physicalLines": 3,
@@ -23905,7 +23905,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "providerUsage",
-      "identity": "OpenShellBackend/providerUsage#1",
+      "identity": "VelaBackend/providerUsage#1",
       "line": 2199,
       "endLine": 2201,
       "physicalLines": 3,
@@ -23916,7 +23916,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "globalFormRequestOptions",
-      "identity": "OpenShellBackend/globalFormRequestOptions#1",
+      "identity": "VelaBackend/globalFormRequestOptions#1",
       "line": 2395,
       "endLine": 2397,
       "physicalLines": 3,
@@ -23927,7 +23927,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "connections.flatMap callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/connections.flatMap callback#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/connections.flatMap callback#1",
       "line": 2598,
       "endLine": 2600,
       "physicalLines": 3,
@@ -23938,7 +23938,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "methods.flatMap callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/methods.flatMap callback#2",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/methods.flatMap callback#2",
       "line": 2605,
       "endLine": 2607,
       "physicalLines": 3,
@@ -24872,8 +24872,8 @@
     },
     {
       "file": "src/renderer/src/components/AgentTui.tsx",
-      "name": "window.openshell.agentTuiStart(workspace, id)\n      .then callback",
-      "identity": "AgentTui/useEffect callback:host/window.openshell.agentTuiStart(workspace, id)\n      .then callback#1",
+      "name": "window.vela.agentTuiStart(workspace, id)\n      .then callback",
+      "identity": "AgentTui/useEffect callback:host/window.vela.agentTuiStart(workspace, id)\n      .then callback#1",
       "line": 135,
       "endLine": 141,
       "physicalLines": 7,
@@ -24883,8 +24883,8 @@
     },
     {
       "file": "src/renderer/src/components/AgentTui.tsx",
-      "name": "window.openshell.agentTuiStart(workspace, id)\n      .then(() => {\n        // The callback",
-      "identity": "AgentTui/useEffect callback:host/window.openshell.agentTuiStart(workspace, id)\n      .then(() => {\n        // The callback#1",
+      "name": "window.vela.agentTuiStart(workspace, id)\n      .then(() => {\n        // The callback",
+      "identity": "AgentTui/useEffect callback:host/window.vela.agentTuiStart(workspace, id)\n      .then(() => {\n        // The callback#1",
       "line": 142,
       "endLine": 144,
       "physicalLines": 3,
@@ -25345,8 +25345,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "window.openshell.checkAppUpdate().then callback",
-      "identity": "SettingsPage/useEffect callback/window.openshell.checkAppUpdate().then callback#1",
+      "name": "window.vela.checkAppUpdate().then callback",
+      "identity": "SettingsPage/useEffect callback/window.vela.checkAppUpdate().then callback#1",
       "line": 174,
       "endLine": 176,
       "physicalLines": 3,
@@ -25356,8 +25356,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "window.openshell.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback",
-      "identity": "SettingsPage/useEffect callback/window.openshell.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback#1",
+      "name": "window.vela.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback",
+      "identity": "SettingsPage/useEffect callback/window.vela.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback#1",
       "line": 176,
       "endLine": 178,
       "physicalLines": 3,
@@ -25367,8 +25367,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "window.openshell.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback",
-      "identity": "SettingsPage/useEffect callback/window.openshell.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback#2",
+      "name": "window.vela.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback",
+      "identity": "SettingsPage/useEffect callback/window.vela.checkAppUpdate().then((status) => {\n      if (!cancelled && orb callback#2",
       "line": 178,
       "endLine": 180,
       "physicalLines": 3,
@@ -26016,8 +26016,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.interrupt(target).catch callback",
-      "identity": "StoreBody/stop/window.openshell.interrupt(target).catch callback#1",
+      "name": "window.vela.interrupt(target).catch callback",
+      "identity": "StoreBody/stop/window.vela.interrupt(target).catch callback#1",
       "line": 2187,
       "endLine": 2189,
       "physicalLines": 3,
@@ -26104,8 +26104,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell\n              .listDir(expected, parent)\n              .then callback",
-      "identity": "StoreBody/useEffect callback:processMessage/processMessage/setTimeout callback/window.openshell\n              .listDir(expected, parent)\n              .then callback#1",
+      "name": "window.vela\n              .listDir(expected, parent)\n              .then callback",
+      "identity": "StoreBody/useEffect callback:processMessage/processMessage/setTimeout callback/window.vela\n              .listDir(expected, parent)\n              .then callback#1",
       "line": 3197,
       "endLine": 3199,
       "physicalLines": 3,
@@ -26192,8 +26192,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.takePendingPaths().then callback",
-      "identity": "StoreBody/useEffect callback:processMessage/window.openshell.takePendingPaths().then callback#1",
+      "name": "window.vela.takePendingPaths().then callback",
+      "identity": "StoreBody/useEffect callback:processMessage/window.vela.takePendingPaths().then callback#1",
       "line": 3712,
       "endLine": 3714,
       "physicalLines": 3,
@@ -26479,7 +26479,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "execFile callback",
-      "identity": "OpenShellBackend/runtimeManifests/probe/anonymous/execFile callback#1",
+      "identity": "VelaBackend/runtimeManifests/probe/anonymous/execFile callback#1",
       "line": 2205,
       "endLine": 2206,
       "physicalLines": 2,
@@ -26501,7 +26501,7 @@
     {
       "file": "src/main/provider-usage.ts",
       "name": "usable",
-      "identity": "readMiraUsageSnapshot/usable#1",
+      "identity": "readVelaUsageSnapshot/usable#1",
       "line": 893,
       "endLine": 894,
       "physicalLines": 2,
@@ -27611,8 +27611,8 @@
     },
     {
       "file": "src/main/app-updater-window.ts",
-      "name": "window.webContents.executeJavaScript(`window.setMiraUpdaterStatus?.(${argument} callback",
-      "identity": "setAppUpdaterWindowStatus/window.webContents.executeJavaScript(`window.setMiraUpdaterStatus?.(${argument} callback#1",
+      "name": "window.webContents.executeJavaScript(`window.setVelaUpdaterStatus?.(${argument} callback",
+      "identity": "setAppUpdaterWindowStatus/window.webContents.executeJavaScript(`window.setVelaUpdaterStatus?.(${argument} callback#1",
       "line": 81,
       "endLine": 81,
       "physicalLines": 1,
@@ -27623,7 +27623,7 @@
     {
       "file": "src/main/app-updater.ts",
       "name": "installAndRestart",
-      "identity": "createDisabledMiraAppUpdater/installAndRestart#1",
+      "identity": "createDisabledVelaAppUpdater/installAndRestart#1",
       "line": 19,
       "endLine": 19,
       "physicalLines": 1,
@@ -27831,8 +27831,8 @@
     },
     {
       "file": "src/main/index.ts",
-      "name": "dtc\n        .executeJavaScript(`(() => {\n          const k = window.__openshellK callback",
-      "identity": "createWindow/pollDevTools/dtc\n        .executeJavaScript(`(() => {\n          const k = window.__openshellK callback#1",
+      "name": "dtc\n        .executeJavaScript(`(() => {\n          const k = window.__velaK callback",
+      "identity": "createWindow/pollDevTools/dtc\n        .executeJavaScript(`(() => {\n          const k = window.__velaK callback#1",
       "line": 483,
       "endLine": 483,
       "physicalLines": 1,
@@ -27887,7 +27887,7 @@
     {
       "file": "src/main/index.ts",
       "name": "popup.webContents.setWindowOpenHandler callback",
-      "identity": "updateMiraApp/popup.webContents.setWindowOpenHandler callback#1",
+      "identity": "updateVelaApp/popup.webContents.setWindowOpenHandler callback#1",
       "line": 753,
       "endLine": 753,
       "physicalLines": 1,
@@ -27898,7 +27898,7 @@
     {
       "file": "src/main/index.ts",
       "name": "popup.webContents.on callback",
-      "identity": "updateMiraApp/popup.webContents.on callback#1",
+      "identity": "updateVelaApp/popup.webContents.on callback#1",
       "line": 760,
       "endLine": 760,
       "physicalLines": 1,
@@ -27908,8 +27908,8 @@
     },
     {
       "file": "src/main/index.ts",
-      "name": "miraAppUpdater.update callback",
-      "identity": "updateMiraApp/miraAppUpdater.update callback#1",
+      "name": "velaAppUpdater.update callback",
+      "identity": "updateVelaApp/velaAppUpdater.update callback#1",
       "line": 789,
       "endLine": 789,
       "physicalLines": 1,
@@ -28481,7 +28481,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/constructor/anonymous#1",
+      "identity": "VelaBackend/constructor/anonymous#1",
       "line": 624,
       "endLine": 624,
       "physicalLines": 1,
@@ -28492,7 +28492,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/onMessage/anonymous#1",
+      "identity": "VelaBackend/onMessage/anonymous#1",
       "line": 632,
       "endLine": 632,
       "physicalLines": 1,
@@ -28503,7 +28503,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "Service.discover({ ...(file ? { file } : {}), version }).catch callback",
-      "identity": "OpenShellBackend/discoverEndpoint/Service.discover({ ...(file ? { file } : {}), version }).catch callback#1",
+      "identity": "VelaBackend/discoverEndpoint/Service.discover({ ...(file ? { file } : {}), version }).catch callback#1",
       "line": 714,
       "endLine": 714,
       "physicalLines": 1,
@@ -28514,7 +28514,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "appendTail",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade/anonymous/appendTail#1",
+      "identity": "VelaBackend/runOpenCodeUpgrade/anonymous/appendTail#1",
       "line": 756,
       "endLine": 756,
       "physicalLines": 1,
@@ -28525,7 +28525,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "child.stdout?.on callback",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade/anonymous/child.stdout?.on callback#1",
+      "identity": "VelaBackend/runOpenCodeUpgrade/anonymous/child.stdout?.on callback#1",
       "line": 757,
       "endLine": 757,
       "physicalLines": 1,
@@ -28536,7 +28536,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "child.stderr?.on callback",
-      "identity": "OpenShellBackend/runOpenCodeUpgrade/anonymous/child.stderr?.on callback#1",
+      "identity": "VelaBackend/runOpenCodeUpgrade/anonymous/child.stderr?.on callback#1",
       "line": 758,
       "endLine": 758,
       "physicalLines": 1,
@@ -28547,7 +28547,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "setTimeout callback",
-      "identity": "OpenShellBackend/ensureExactOpenCodeVersion/anonymous/setTimeout callback#1",
+      "identity": "VelaBackend/ensureExactOpenCodeVersion/anonymous/setTimeout callback#1",
       "line": 790,
       "endLine": 790,
       "physicalLines": 1,
@@ -28558,7 +28558,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "attempt",
-      "identity": "OpenShellBackend/ensureBounded/attempt#1",
+      "identity": "VelaBackend/ensureBounded/attempt#1",
       "line": 855,
       "endLine": 855,
       "physicalLines": 1,
@@ -28569,7 +28569,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "timeout",
-      "identity": "OpenShellBackend/ensureBounded/timeout#1",
+      "identity": "VelaBackend/ensureBounded/timeout#1",
       "line": 856,
       "endLine": 856,
       "physicalLines": 1,
@@ -28580,7 +28580,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.eventLoop.start callback",
-      "identity": "OpenShellBackend/start/this.eventLoop.start callback#1",
+      "identity": "VelaBackend/start/this.eventLoop.start callback#1",
       "line": 863,
       "endLine": 863,
       "physicalLines": 1,
@@ -28591,7 +28591,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "subscribe",
-      "identity": "OpenShellBackend/runEventLoop/subscribe#1",
+      "identity": "VelaBackend/runEventLoop/subscribe#1",
       "line": 926,
       "endLine": 926,
       "physicalLines": 1,
@@ -28602,7 +28602,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onEvents",
-      "identity": "OpenShellBackend/runEventLoop/onEvents#1",
+      "identity": "VelaBackend/runEventLoop/onEvents#1",
       "line": 927,
       "endLine": 927,
       "physicalLines": 1,
@@ -28613,7 +28613,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onReconnect",
-      "identity": "OpenShellBackend/runEventLoop/onReconnect#1",
+      "identity": "VelaBackend/runEventLoop/onReconnect#1",
       "line": 928,
       "endLine": 928,
       "physicalLines": 1,
@@ -28624,7 +28624,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onStreamError",
-      "identity": "OpenShellBackend/runEventLoop/onStreamError#1",
+      "identity": "VelaBackend/runEventLoop/onStreamError#1",
       "line": 929,
       "endLine": 929,
       "physicalLines": 1,
@@ -28635,7 +28635,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onStreamFailure",
-      "identity": "OpenShellBackend/runEventLoop/onStreamFailure#1",
+      "identity": "VelaBackend/runEventLoop/onStreamFailure#1",
       "line": 930,
       "endLine": 930,
       "physicalLines": 1,
@@ -28646,7 +28646,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...this.contexts.values()]\n      .filter callback",
-      "identity": "OpenShellBackend/sessionIDsAtLocation/[...this.contexts.values()]\n      .filter callback#1",
+      "identity": "VelaBackend/sessionIDsAtLocation/[...this.contexts.values()]\n      .filter callback#1",
       "line": 1086,
       "endLine": 1086,
       "physicalLines": 1,
@@ -28657,7 +28657,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...this.contexts.values()]\n      .filter((context) => context.directory === rep callback",
-      "identity": "OpenShellBackend/sessionIDsAtLocation/[...this.contexts.values()]\n      .filter((context) => context.directory === rep callback#1",
+      "identity": "VelaBackend/sessionIDsAtLocation/[...this.contexts.values()]\n      .filter((context) => context.directory === rep callback#1",
       "line": 1087,
       "endLine": 1087,
       "physicalLines": 1,
@@ -28668,7 +28668,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.realpath(directory).catch callback",
-      "identity": "OpenShellBackend/reportedRoot/fsp.realpath(directory).catch callback#1",
+      "identity": "VelaBackend/reportedRoot/fsp.realpath(directory).catch callback#1",
       "line": 1093,
       "endLine": 1093,
       "physicalLines": 1,
@@ -28679,7 +28679,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(git).catch callback",
-      "identity": "OpenShellBackend/recoveryRoot/fsp.lstat(git).catch callback#1",
+      "identity": "VelaBackend/recoveryRoot/fsp.lstat(git).catch callback#1",
       "line": 1115,
       "endLine": 1115,
       "physicalLines": 1,
@@ -28690,7 +28690,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "transaction.acknowledged.every callback",
-      "identity": "OpenShellBackend/validRecoveryTransaction/transaction.acknowledged.every callback#1",
+      "identity": "VelaBackend/validRecoveryTransaction/transaction.acknowledged.every callback#1",
       "line": 1218,
       "endLine": 1218,
       "physicalLines": 1,
@@ -28701,7 +28701,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.readdir(recoveryRoot, { withFileTypes: true }).catch callback",
-      "identity": "OpenShellBackend/readRecoveryTransactions/locations.map callback:recoveryRoot/fsp.readdir(recoveryRoot, { withFileTypes: true }).catch callback#1",
+      "identity": "VelaBackend/readRecoveryTransactions/locations.map callback:recoveryRoot/fsp.readdir(recoveryRoot, { withFileTypes: true }).catch callback#1",
       "line": 1228,
       "endLine": 1228,
       "physicalLines": 1,
@@ -28712,7 +28712,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "entries.filter callback",
-      "identity": "OpenShellBackend/readRecoveryTransactions/locations.map callback:recoveryRoot/entries.filter callback#1",
+      "identity": "VelaBackend/readRecoveryTransactions/locations.map callback:recoveryRoot/entries.filter callback#1",
       "line": 1229,
       "endLine": 1229,
       "physicalLines": 1,
@@ -28723,7 +28723,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "transactions.flat().filter callback",
-      "identity": "OpenShellBackend/readRecoveryTransactions/transactions.flat().filter callback#1",
+      "identity": "VelaBackend/readRecoveryTransactions/transactions.flat().filter callback#1",
       "line": 1243,
       "endLine": 1243,
       "physicalLines": 1,
@@ -28734,7 +28734,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(file).catch callback",
-      "identity": "OpenShellBackend/recoveryRecords/fsp.lstat(file).catch callback#1",
+      "identity": "VelaBackend/recoveryRecords/fsp.lstat(file).catch callback#1",
       "line": 1255,
       "endLine": 1255,
       "physicalLines": 1,
@@ -28745,7 +28745,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "records.sort callback",
-      "identity": "OpenShellBackend/recoveryRecords/records.sort callback#1",
+      "identity": "VelaBackend/recoveryRecords/records.sort callback#1",
       "line": 1267,
       "endLine": 1267,
       "physicalLines": 1,
@@ -28756,7 +28756,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/reconcileRecovery/anonymous#1",
+      "identity": "VelaBackend/reconcileRecovery/anonymous#1",
       "line": 1270,
       "endLine": 1270,
       "physicalLines": 1,
@@ -28767,7 +28767,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(original).catch callback",
-      "identity": "OpenShellBackend/reconcileRecovery/fsp.lstat(original).catch callback#1",
+      "identity": "VelaBackend/reconcileRecovery/fsp.lstat(original).catch callback#1",
       "line": 1278,
       "endLine": 1278,
       "physicalLines": 1,
@@ -28778,7 +28778,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.stat(target).catch callback",
-      "identity": "OpenShellBackend/reconcileRecovery/fsp.stat(target).catch callback#1",
+      "identity": "VelaBackend/reconcileRecovery/fsp.stat(target).catch callback#1",
       "line": 1284,
       "endLine": 1284,
       "physicalLines": 1,
@@ -28789,7 +28789,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(canonical).catch callback",
-      "identity": "OpenShellBackend/reconcileRecovery/fsp.lstat(canonical).catch callback#1",
+      "identity": "VelaBackend/reconcileRecovery/fsp.lstat(canonical).catch callback#1",
       "line": 1295,
       "endLine": 1295,
       "physicalLines": 1,
@@ -28800,7 +28800,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "legacy",
-      "identity": "OpenShellBackend/migrateLegacyRecovery/legacy#1",
+      "identity": "VelaBackend/migrateLegacyRecovery/legacy#1",
       "line": 1317,
       "endLine": 1317,
       "physicalLines": 1,
@@ -28811,7 +28811,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(target).catch callback",
-      "identity": "OpenShellBackend/migrateLegacyRecovery/fsp.lstat(target).catch callback#1",
+      "identity": "VelaBackend/migrateLegacyRecovery/fsp.lstat(target).catch callback#1",
       "line": 1323,
       "endLine": 1323,
       "physicalLines": 1,
@@ -28822,7 +28822,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.rename(directory, target).catch callback",
-      "identity": "OpenShellBackend/migrateLegacyRecovery/fsp.rename(directory, target).catch callback#1",
+      "identity": "VelaBackend/migrateLegacyRecovery/fsp.rename(directory, target).catch callback#1",
       "line": 1324,
       "endLine": 1324,
       "physicalLines": 1,
@@ -28833,7 +28833,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.syncDirectory(destination).catch callback",
-      "identity": "OpenShellBackend/migrateLegacyRecovery/this.syncDirectory(destination).catch callback#1",
+      "identity": "VelaBackend/migrateLegacyRecovery/this.syncDirectory(destination).catch callback#1",
       "line": 1326,
       "endLine": 1326,
       "physicalLines": 1,
@@ -28844,7 +28844,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.syncDirectory(legacyRoot).catch callback",
-      "identity": "OpenShellBackend/migrateLegacyRecovery/this.syncDirectory(legacyRoot).catch callback#1",
+      "identity": "VelaBackend/migrateLegacyRecovery/this.syncDirectory(legacyRoot).catch callback#1",
       "line": 1327,
       "endLine": 1327,
       "physicalLines": 1,
@@ -28855,7 +28855,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.rmdir(legacyRoot).catch callback",
-      "identity": "OpenShellBackend/migrateLegacyRecovery/fsp.rmdir(legacyRoot).catch callback#1",
+      "identity": "VelaBackend/migrateLegacyRecovery/fsp.rmdir(legacyRoot).catch callback#1",
       "line": 1328,
       "endLine": 1328,
       "physicalLines": 1,
@@ -28866,7 +28866,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.readRecoveryTransactions(root).catch callback",
-      "identity": "OpenShellBackend/purgeExpiredRecovery/this.readRecoveryTransactions(root).catch callback#1",
+      "identity": "VelaBackend/purgeExpiredRecovery/this.readRecoveryTransactions(root).catch callback#1",
       "line": 1338,
       "endLine": 1338,
       "physicalLines": 1,
@@ -28877,7 +28877,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.rm(directory, { recursive: true, force: true }).catch callback",
-      "identity": "OpenShellBackend/purgeExpiredRecovery/fsp.rm(directory, { recursive: true, force: true }).catch callback#1",
+      "identity": "VelaBackend/purgeExpiredRecovery/fsp.rm(directory, { recursive: true, force: true }).catch callback#1",
       "line": 1347,
       "endLine": 1347,
       "physicalLines": 1,
@@ -28888,7 +28888,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.syncDirectory(location).catch callback",
-      "identity": "OpenShellBackend/purgeExpiredRecovery/this.syncDirectory(location).catch callback#1",
+      "identity": "VelaBackend/purgeExpiredRecovery/this.syncDirectory(location).catch callback#1",
       "line": 1350,
       "endLine": 1350,
       "physicalLines": 1,
@@ -28899,7 +28899,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "item",
-      "identity": "OpenShellBackend/acknowledgeRecovery/item#1",
+      "identity": "VelaBackend/acknowledgeRecovery/item#1",
       "line": 1362,
       "endLine": 1362,
       "physicalLines": 1,
@@ -28910,7 +28910,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(await this.recoveryRecords(root)).some callback",
-      "identity": "OpenShellBackend/acknowledgeRecovery/(await this.recoveryRecords(root)).some callback#1",
+      "identity": "VelaBackend/acknowledgeRecovery/(await this.recoveryRecords(root)).some callback#1",
       "line": 1366,
       "endLine": 1366,
       "physicalLines": 1,
@@ -28921,7 +28921,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "record",
-      "identity": "OpenShellBackend/openRecovery/record#1",
+      "identity": "VelaBackend/openRecovery/record#1",
       "line": 1374,
       "endLine": 1374,
       "physicalLines": 1,
@@ -28932,7 +28932,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "item",
-      "identity": "OpenShellBackend/openRecovery/item#1",
+      "identity": "VelaBackend/openRecovery/item#1",
       "line": 1384,
       "endLine": 1384,
       "physicalLines": 1,
@@ -28943,7 +28943,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "rel.split(path.sep).some callback",
-      "identity": "OpenShellBackend/shouldSkip/rel.split(path.sep).some callback#1",
+      "identity": "VelaBackend/shouldSkip/rel.split(path.sep).some callback#1",
       "line": 1394,
       "endLine": 1394,
       "physicalLines": 1,
@@ -28954,7 +28954,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "context.watcher.on callback",
-      "identity": "OpenShellBackend/startWatcher/context.watcher.on callback#1",
+      "identity": "VelaBackend/startWatcher/context.watcher.on callback#1",
       "line": 1474,
       "endLine": 1474,
       "physicalLines": 1,
@@ -28965,7 +28965,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...(context.identities ?? [])]\n      .filter callback",
-      "identity": "OpenShellBackend/missingIdentitySource/[...(context.identities ?? [])]\n      .filter callback#1",
+      "identity": "VelaBackend/missingIdentitySource/[...(context.identities ?? [])]\n      .filter callback#1",
       "line": 1662,
       "endLine": 1662,
       "physicalLines": 1,
@@ -28976,7 +28976,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "candidates",
-      "identity": "OpenShellBackend/missingIdentitySource/candidates#1",
+      "identity": "VelaBackend/missingIdentitySource/candidates#1",
       "line": 1663,
       "endLine": 1663,
       "physicalLines": 1,
@@ -28987,7 +28987,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.stat(candidate).catch callback",
-      "identity": "OpenShellBackend/missingIdentitySource/fsp.stat(candidate).catch callback#1",
+      "identity": "VelaBackend/missingIdentitySource/fsp.stat(candidate).catch callback#1",
       "line": 1666,
       "endLine": 1666,
       "physicalLines": 1,
@@ -28998,7 +28998,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.stat(abs).catch callback",
-      "identity": "OpenShellBackend/readExternalText/fsp.stat(abs).catch callback#1",
+      "identity": "VelaBackend/readExternalText/fsp.stat(abs).catch callback#1",
       "line": 1707,
       "endLine": 1707,
       "physicalLines": 1,
@@ -29009,7 +29009,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.readFile(abs, \"utf8\").catch callback",
-      "identity": "OpenShellBackend/readExternalText/fsp.readFile(abs, \"utf8\").catch callback#1",
+      "identity": "VelaBackend/readExternalText/fsp.readFile(abs, \"utf8\").catch callback#1",
       "line": 1710,
       "endLine": 1710,
       "physicalLines": 1,
@@ -29020,7 +29020,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.reconcileRecovery callback",
-      "identity": "OpenShellBackend/activateSession/this.reconcileRecovery callback#1",
+      "identity": "VelaBackend/activateSession/this.reconcileRecovery callback#1",
       "line": 1788,
       "endLine": 1788,
       "physicalLines": 1,
@@ -29031,7 +29031,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.migrateLegacyRecovery callback",
-      "identity": "OpenShellBackend/activateSession/this.migrateLegacyRecovery callback#1",
+      "identity": "VelaBackend/activateSession/this.migrateLegacyRecovery callback#1",
       "line": 1789,
       "endLine": 1789,
       "physicalLines": 1,
@@ -29042,7 +29042,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.purgeExpiredRecovery callback",
-      "identity": "OpenShellBackend/activateSession/this.purgeExpiredRecovery callback#1",
+      "identity": "VelaBackend/activateSession/this.purgeExpiredRecovery callback#1",
       "line": 1791,
       "endLine": 1791,
       "physicalLines": 1,
@@ -29053,7 +29053,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "entries.find callback",
-      "identity": "OpenShellBackend/resolveWorkspaceDirectory/entries.find callback#1",
+      "identity": "VelaBackend/resolveWorkspaceDirectory/entries.find callback#1",
       "line": 1807,
       "endLine": 1807,
       "physicalLines": 1,
@@ -29064,7 +29064,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...new Set(this.runtimeAdapters.values())].map callback",
-      "identity": "OpenShellBackend/listSessions/[...new Set(this.runtimeAdapters.values())].map callback#1",
+      "identity": "VelaBackend/listSessions/[...new Set(this.runtimeAdapters.values())].map callback#1",
       "line": 1870,
       "endLine": 1870,
       "physicalLines": 1,
@@ -29075,7 +29075,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runtime.listSessions().catch callback",
-      "identity": "OpenShellBackend/listSessions/[...new Set(this.runtimeAdapters.values())].map callback/runtime.listSessions().catch callback#1",
+      "identity": "VelaBackend/listSessions/[...new Set(this.runtimeAdapters.values())].map callback/runtime.listSessions().catch callback#1",
       "line": 1870,
       "endLine": 1870,
       "physicalLines": 1,
@@ -29086,7 +29086,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...persistedRuntimeSummaries, ...liveRuntimeSummaries]\n      .filter callback",
-      "identity": "OpenShellBackend/listSessions/[...persistedRuntimeSummaries, ...liveRuntimeSummaries]\n      .filter callback#1",
+      "identity": "VelaBackend/listSessions/[...persistedRuntimeSummaries, ...liveRuntimeSummaries]\n      .filter callback#1",
       "line": 1872,
       "endLine": 1872,
       "physicalLines": 1,
@@ -29097,7 +29097,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...persistedRuntimeSummaries, ...liveRuntimeSummaries]\n      .filter((summary)  callback",
-      "identity": "OpenShellBackend/listSessions/[...persistedRuntimeSummaries, ...liveRuntimeSummaries]\n      .filter((summary)  callback#1",
+      "identity": "VelaBackend/listSessions/[...persistedRuntimeSummaries, ...liveRuntimeSummaries]\n      .filter((summary)  callback#1",
       "line": 1873,
       "endLine": 1873,
       "physicalLines": 1,
@@ -29108,7 +29108,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runtimeSummaries.sort callback",
-      "identity": "OpenShellBackend/listSessions/runtimeSummaries.sort callback#1",
+      "identity": "VelaBackend/listSessions/runtimeSummaries.sort callback#1",
       "line": 1874,
       "endLine": 1874,
       "physicalLines": 1,
@@ -29119,7 +29119,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...runtimeSummaries, ...summaries].sort callback",
-      "identity": "OpenShellBackend/listSessions/[...runtimeSummaries, ...summaries].sort callback#1",
+      "identity": "VelaBackend/listSessions/[...runtimeSummaries, ...summaries].sort callback#1",
       "line": 1921,
       "endLine": 1921,
       "physicalLines": 1,
@@ -29130,7 +29130,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "num",
-      "identity": "OpenShellBackend/openSessionById/anonymous/num#1",
+      "identity": "VelaBackend/openSessionById/anonymous/num#1",
       "line": 2069,
       "endLine": 2069,
       "physicalLines": 1,
@@ -29141,7 +29141,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.session.get({ sessionID }).catch callback",
-      "identity": "OpenShellBackend/sessionUsage/this.client.session.get({ sessionID }).catch callback#1",
+      "identity": "VelaBackend/sessionUsage/this.client.session.get({ sessionID }).catch callback#1",
       "line": 2106,
       "endLine": 2106,
       "physicalLines": 1,
@@ -29152,7 +29152,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "num",
-      "identity": "OpenShellBackend/sessionUsage/num#1",
+      "identity": "VelaBackend/sessionUsage/num#1",
       "line": 2114,
       "endLine": 2114,
       "physicalLines": 1,
@@ -29163,7 +29163,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "sessions",
-      "identity": "OpenShellBackend/activeSessions/sessions#1",
+      "identity": "VelaBackend/activeSessions/sessions#1",
       "line": 2132,
       "endLine": 2132,
       "physicalLines": 1,
@@ -29174,7 +29174,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "primaryIndex",
-      "identity": "OpenShellBackend/activeSessions/primaryIndex#1",
+      "identity": "VelaBackend/activeSessions/primaryIndex#1",
       "line": 2134,
       "endLine": 2134,
       "physicalLines": 1,
@@ -29185,7 +29185,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.sessionDirectory(context.sessionID, nativeRuntimeID).catch callback",
-      "identity": "OpenShellBackend/ptyDirectory/this.sessionDirectory(context.sessionID, nativeRuntimeID).catch callback#1",
+      "identity": "VelaBackend/ptyDirectory/this.sessionDirectory(context.sessionID, nativeRuntimeID).catch callback#1",
       "line": 2176,
       "endLine": 2176,
       "physicalLines": 1,
@@ -29196,7 +29196,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.session.get({ sessionID: context.sessionID }).catch callback",
-      "identity": "OpenShellBackend/sessionSelection/this.client.session.get({ sessionID: context.sessionID }).catch callback#1",
+      "identity": "VelaBackend/sessionSelection/this.client.session.get({ sessionID: context.sessionID }).catch callback#1",
       "line": 2237,
       "endLine": 2237,
       "physicalLines": 1,
@@ -29207,7 +29207,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[{\n        id: String(entry.id ?? \"\"),\n        text: String(payload?.text ?? \"\") callback",
-      "identity": "OpenShellBackend/listInbox/(arr as Array<Record<string, unknown>>).flatMap callback/[{\n        id: String(entry.id ?? \"\"),\n        text: String(payload?.text ?? \"\") callback#1",
+      "identity": "VelaBackend/listInbox/(arr as Array<Record<string, unknown>>).flatMap callback/[{\n        id: String(entry.id ?? \"\"),\n        text: String(payload?.text ?? \"\") callback#1",
       "line": 2308,
       "endLine": 2308,
       "physicalLines": 1,
@@ -29218,7 +29218,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.form.list({ location: { directory: target.directory } }).catch callback",
-      "identity": "OpenShellBackend/listForms/this.client.form.list({ location: { directory: target.directory } }).catch callback#1",
+      "identity": "VelaBackend/listForms/this.client.form.list({ location: { directory: target.directory } }).catch callback#1",
       "line": 2337,
       "endLine": 2337,
       "physicalLines": 1,
@@ -29229,7 +29229,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "normalized",
-      "identity": "OpenShellBackend/listForms/normalized#1",
+      "identity": "VelaBackend/listForms/normalized#1",
       "line": 2351,
       "endLine": 2351,
       "physicalLines": 1,
@@ -29240,7 +29240,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "normalized.map callback",
-      "identity": "OpenShellBackend/listForms/normalized.map callback#1",
+      "identity": "VelaBackend/listForms/normalized.map callback#1",
       "line": 2352,
       "endLine": 2352,
       "physicalLines": 1,
@@ -29251,7 +29251,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client?.form\n      .list({ location: { directory: target.directory } })\n    callback",
-      "identity": "OpenShellBackend/formSessionID/this.client?.form\n      .list({ location: { directory: target.directory } })\n    callback#1",
+      "identity": "VelaBackend/formSessionID/this.client?.form\n      .list({ location: { directory: target.directory } })\n    callback#1",
       "line": 2387,
       "endLine": 2387,
       "physicalLines": 1,
@@ -29262,7 +29262,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "forms.some callback",
-      "identity": "OpenShellBackend/formSessionID/forms.some callback#1",
+      "identity": "VelaBackend/formSessionID/forms.some callback#1",
       "line": 2391,
       "endLine": 2391,
       "physicalLines": 1,
@@ -29273,7 +29273,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.command.list(location).catch callback",
-      "identity": "OpenShellBackend/listCommands/this.client.command.list(location).catch callback#1",
+      "identity": "VelaBackend/listCommands/this.client.command.list(location).catch callback#1",
       "line": 2405,
       "endLine": 2405,
       "physicalLines": 1,
@@ -29284,7 +29284,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.skill.list(location).catch callback",
-      "identity": "OpenShellBackend/listCommands/this.client.skill.list(location).catch callback#1",
+      "identity": "VelaBackend/listCommands/this.client.skill.list(location).catch callback#1",
       "line": 2406,
       "endLine": 2406,
       "physicalLines": 1,
@@ -29295,7 +29295,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(commandArr as { name?: string; description?: string }[])\n      .map callback",
-      "identity": "OpenShellBackend/listCommands/(commandArr as { name?: string; description?: string }[])\n      .map callback#1",
+      "identity": "VelaBackend/listCommands/(commandArr as { name?: string; description?: string }[])\n      .map callback#1",
       "line": 2412,
       "endLine": 2412,
       "physicalLines": 1,
@@ -29306,7 +29306,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "commandItems",
-      "identity": "OpenShellBackend/listCommands/commandItems#1",
+      "identity": "VelaBackend/listCommands/commandItems#1",
       "line": 2413,
       "endLine": 2413,
       "physicalLines": 1,
@@ -29317,7 +29317,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "skillItems",
-      "identity": "OpenShellBackend/listCommands/skillItems#1",
+      "identity": "VelaBackend/listCommands/skillItems#1",
       "line": 2420,
       "endLine": 2420,
       "physicalLines": 1,
@@ -29328,7 +29328,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "builtin",
-      "identity": "OpenShellBackend/runCommand/builtin#1",
+      "identity": "VelaBackend/runCommand/builtin#1",
       "line": 2433,
       "endLine": 2433,
       "physicalLines": 1,
@@ -29339,7 +29339,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.skill\n      .list({ location: { directory: target.directory } })\n    callback",
-      "identity": "OpenShellBackend/runCommand/this.client.skill\n      .list({ location: { directory: target.directory } })\n    callback#1",
+      "identity": "VelaBackend/runCommand/this.client.skill\n      .list({ location: { directory: target.directory } })\n    callback#1",
       "line": 2441,
       "endLine": 2441,
       "physicalLines": 1,
@@ -29350,7 +29350,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "selectedSkill",
-      "identity": "OpenShellBackend/runCommand/selectedSkill#1",
+      "identity": "VelaBackend/runCommand/selectedSkill#1",
       "line": 2445,
       "endLine": 2445,
       "physicalLines": 1,
@@ -29361,7 +29361,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as { path?: string }[])\n      .filter callback",
-      "identity": "OpenShellBackend/searchFiles/(arr as { path?: string }[])\n      .filter callback#1",
+      "identity": "VelaBackend/searchFiles/(arr as { path?: string }[])\n      .filter callback#1",
       "line": 2474,
       "endLine": 2474,
       "physicalLines": 1,
@@ -29372,7 +29372,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback",
-      "identity": "OpenShellBackend/searchFiles/(arr as { path?: string }[])\n      .filter callback/[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback#1",
+      "identity": "VelaBackend/searchFiles/(arr as { path?: string }[])\n      .filter callback/[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback#1",
       "line": 2474,
       "endLine": 2474,
       "physicalLines": 1,
@@ -29383,7 +29383,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback",
-      "identity": "OpenShellBackend/listModels/(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback#1",
+      "identity": "VelaBackend/listModels/(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback#1",
       "line": 2520,
       "endLine": 2520,
       "physicalLines": 1,
@@ -29394,7 +29394,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback",
-      "identity": "OpenShellBackend/listModels/(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback#3",
+      "identity": "VelaBackend/listModels/(arr as {\n      id?: string;\n      providerID?: string;\n      name?: string;\n    callback#3",
       "line": 2530,
       "endLine": 2530,
       "physicalLines": 1,
@@ -29405,7 +29405,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "SUPPORTED_PROVIDER_IDS.flatMap callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap callback#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap callback#1",
       "line": 2552,
       "endLine": 2552,
       "physicalLines": 1,
@@ -29416,7 +29416,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "catalog.filter callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap callback/catalog.filter callback#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap callback/catalog.filter callback#1",
       "line": 2552,
       "endLine": 2552,
       "physicalLines": 1,
@@ -29427,7 +29427,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "keyMethod",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/keyMethod#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/keyMethod#1",
       "line": 2554,
       "endLine": 2554,
       "physicalLines": 1,
@@ -29438,7 +29438,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "defaultValue.every callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields/defaultValue.every callback#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields/defaultValue.every callback#1",
       "line": 2588,
       "endLine": 2588,
       "physicalLines": 1,
@@ -29449,7 +29449,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "methods.flatMap callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/methods.flatMap callback#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/methods.flatMap callback#1",
       "line": 2602,
       "endLine": 2602,
       "physicalLines": 1,
@@ -29460,7 +29460,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "connections.flatMap callback",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/connections.flatMap callback#2",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/connections.flatMap callback#2",
       "line": 2603,
       "endLine": 2603,
       "physicalLines": 1,
@@ -29471,7 +29471,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.mcp.list({ location: { directory: target.directory } }).catch callback",
-      "identity": "OpenShellBackend/listMcpServers/this.client.mcp.list({ location: { directory: target.directory } }).catch callback#1",
+      "identity": "VelaBackend/listMcpServers/this.client.mcp.list({ location: { directory: target.directory } }).catch callback#1",
       "line": 2726,
       "endLine": 2726,
       "physicalLines": 1,
@@ -29482,7 +29482,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.plugin.list({ location: { directory: target.directory } }).catch callback",
-      "identity": "OpenShellBackend/listPlugins/this.client.plugin.list({ location: { directory: target.directory } }).catch callback#1",
+      "identity": "VelaBackend/listPlugins/this.client.plugin.list({ location: { directory: target.directory } }).catch callback#1",
       "line": 2741,
       "endLine": 2741,
       "physicalLines": 1,
@@ -29493,7 +29493,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.client.skill.list({ location: { directory: target.directory } }).catch callback",
-      "identity": "OpenShellBackend/listSkills/this.client.skill.list({ location: { directory: target.directory } }).catch callback#1",
+      "identity": "VelaBackend/listSkills/this.client.skill.list({ location: { directory: target.directory } }).catch callback#1",
       "line": 2760,
       "endLine": 2760,
       "physicalLines": 1,
@@ -29504,7 +29504,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "(arr as { id?: string; name?: string; color?: string }[])\n      .map((a) => ({\n  callback",
-      "identity": "OpenShellBackend/listAgents/(arr as { id?: string; name?: string; color?: string }[])\n      .map((a) => ({\n  callback#1",
+      "identity": "VelaBackend/listAgents/(arr as { id?: string; name?: string; color?: string }[])\n      .map((a) => ({\n  callback#1",
       "line": 2816,
       "endLine": 2816,
       "physicalLines": 1,
@@ -29515,7 +29515,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "entries\n      .filter callback",
-      "identity": "OpenShellBackend/listDir/entries\n      .filter callback#1",
+      "identity": "VelaBackend/listDir/entries\n      .filter callback#1",
       "line": 2905,
       "endLine": 2905,
       "physicalLines": 1,
@@ -29526,7 +29526,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(abs).catch callback",
-      "identity": "OpenShellBackend/revealInFileManager/fsp.lstat(abs).catch callback#1",
+      "identity": "VelaBackend/revealInFileManager/fsp.lstat(abs).catch callback#1",
       "line": 2917,
       "endLine": 2917,
       "physicalLines": 1,
@@ -29537,7 +29537,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.stat(abs).catch callback",
-      "identity": "OpenShellBackend/readFile/fsp.stat(abs).catch callback#1",
+      "identity": "VelaBackend/readFile/fsp.stat(abs).catch callback#1",
       "line": 2931,
       "endLine": 2931,
       "physicalLines": 1,
@@ -29548,7 +29548,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.realpath(abs).catch callback",
-      "identity": "OpenShellBackend/statExternal/fsp.realpath(abs).catch callback#1",
+      "identity": "VelaBackend/statExternal/fsp.realpath(abs).catch callback#1",
       "line": 2953,
       "endLine": 2953,
       "physicalLines": 1,
@@ -29559,7 +29559,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.stat(real).catch callback",
-      "identity": "OpenShellBackend/statExternal/fsp.stat(real).catch callback#1",
+      "identity": "VelaBackend/statExternal/fsp.stat(real).catch callback#1",
       "line": 2955,
       "endLine": 2955,
       "physicalLines": 1,
@@ -29570,7 +29570,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.readFile(abs, \"utf8\").catch callback",
-      "identity": "OpenShellBackend/writeStandaloneFile/fsp.readFile(abs, \"utf8\").catch callback#1",
+      "identity": "VelaBackend/writeStandaloneFile/fsp.readFile(abs, \"utf8\").catch callback#1",
       "line": 2982,
       "endLine": 2982,
       "physicalLines": 1,
@@ -29581,7 +29581,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.rm(temporary, { force: true }).catch callback",
-      "identity": "OpenShellBackend/writeStandaloneFile/fsp.rm(temporary, { force: true }).catch callback#1",
+      "identity": "VelaBackend/writeStandaloneFile/fsp.rm(temporary, { force: true }).catch callback#1",
       "line": 2996,
       "endLine": 2996,
       "physicalLines": 1,
@@ -29592,7 +29592,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.realpath(source).catch callback",
-      "identity": "OpenShellBackend/importExternal/this.mutations.run callback:root/fsp.realpath(source).catch callback#1",
+      "identity": "VelaBackend/importExternal/this.mutations.run callback:root/fsp.realpath(source).catch callback#1",
       "line": 3034,
       "endLine": 3034,
       "physicalLines": 1,
@@ -29603,7 +29603,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(target).then callback",
-      "identity": "OpenShellBackend/importExternal/this.mutations.run callback:root/fsp.lstat(target).then callback#1",
+      "identity": "VelaBackend/importExternal/this.mutations.run callback:root/fsp.lstat(target).then callback#1",
       "line": 3048,
       "endLine": 3048,
       "physicalLines": 1,
@@ -29614,7 +29614,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(target).then(() => true).catch callback",
-      "identity": "OpenShellBackend/importExternal/this.mutations.run callback:root/fsp.lstat(target).then(() => true).catch callback#1",
+      "identity": "VelaBackend/importExternal/this.mutations.run callback:root/fsp.lstat(target).then(() => true).catch callback#1",
       "line": 3048,
       "endLine": 3048,
       "physicalLines": 1,
@@ -29625,7 +29625,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.readFile(abs, \"utf8\").catch callback",
-      "identity": "OpenShellBackend/importExternal/this.mutations.run callback:root/fsp.readFile(abs, \"utf8\").catch callback#1",
+      "identity": "VelaBackend/importExternal/this.mutations.run callback:root/fsp.readFile(abs, \"utf8\").catch callback#1",
       "line": 3057,
       "endLine": 3057,
       "physicalLines": 1,
@@ -29636,7 +29636,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.rm(target, { recursive: true, force: true }).catch callback",
-      "identity": "OpenShellBackend/importExternal/this.mutations.run callback:root/fsp.rm(target, { recursive: true, force: true }).catch callback#1",
+      "identity": "VelaBackend/importExternal/this.mutations.run callback:root/fsp.rm(target, { recursive: true, force: true }).catch callback#1",
       "line": 3064,
       "endLine": 3064,
       "physicalLines": 1,
@@ -29647,7 +29647,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.stat(abs).catch callback",
-      "identity": "OpenShellBackend/writeFile/this.mutations.run callback:root/fsp.stat(abs).catch callback#1",
+      "identity": "VelaBackend/writeFile/this.mutations.run callback:root/fsp.stat(abs).catch callback#1",
       "line": 3134,
       "endLine": 3134,
       "physicalLines": 1,
@@ -29658,7 +29658,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.writeRecoveryTransaction(recovery.directory, recovery.transaction).catch callback",
-      "identity": "OpenShellBackend/writeFile/this.mutations.run callback:root/this.writeRecoveryTransaction(recovery.directory, recovery.transaction).catch callback#1",
+      "identity": "VelaBackend/writeFile/this.mutations.run callback:root/this.writeRecoveryTransaction(recovery.directory, recovery.transaction).catch callback#1",
       "line": 3177,
       "endLine": 3177,
       "physicalLines": 1,
@@ -29669,7 +29669,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.readFile(abs, \"utf8\").catch callback",
-      "identity": "OpenShellBackend/writeFile/this.mutations.run callback:root/fsp.readFile(abs, \"utf8\").catch callback#1",
+      "identity": "VelaBackend/writeFile/this.mutations.run callback:root/fsp.readFile(abs, \"utf8\").catch callback#1",
       "line": 3178,
       "endLine": 3178,
       "physicalLines": 1,
@@ -29680,7 +29680,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "movePathToTrash callback",
-      "identity": "OpenShellBackend/deletePath/this.mutations.run callback:root/movePathToTrash callback#1",
+      "identity": "VelaBackend/deletePath/this.mutations.run callback:root/movePathToTrash callback#1",
       "line": 3232,
       "endLine": 3232,
       "physicalLines": 1,
@@ -29691,7 +29691,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.writeRecoveryTransaction(recovery.directory, recovery.transaction).catch callback",
-      "identity": "OpenShellBackend/renamePath/this.mutations.run callback:root/this.writeRecoveryTransaction(recovery.directory, recovery.transaction).catch callback#1",
+      "identity": "VelaBackend/renamePath/this.mutations.run callback:root/this.writeRecoveryTransaction(recovery.directory, recovery.transaction).catch callback#1",
       "line": 3325,
       "endLine": 3325,
       "physicalLines": 1,
@@ -29702,7 +29702,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback",
-      "identity": "OpenShellBackend/movePath/this.mutations.run callback:root/[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback#1",
+      "identity": "VelaBackend/movePath/this.mutations.run callback:root/[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback#1",
       "line": 3351,
       "endLine": 3351,
       "physicalLines": 1,
@@ -29713,7 +29713,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback",
-      "identity": "OpenShellBackend/movePath/this.mutations.run callback:root/[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback#2",
+      "identity": "VelaBackend/movePath/this.mutations.run callback:root/[RECOVERY_DIR, LEGACY_RECOVERY_DIR].some callback#2",
       "line": 3355,
       "endLine": 3355,
       "physicalLines": 1,
@@ -29724,7 +29724,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(parentDir).catch callback",
-      "identity": "OpenShellBackend/movePath/this.mutations.run callback:root/fsp.lstat(parentDir).catch callback#1",
+      "identity": "VelaBackend/movePath/this.mutations.run callback:root/fsp.lstat(parentDir).catch callback#1",
       "line": 3363,
       "endLine": 3363,
       "physicalLines": 1,
@@ -29735,7 +29735,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fsp.lstat(target).catch callback",
-      "identity": "OpenShellBackend/movePath/this.mutations.run callback:root/fsp.lstat(target).catch callback#1",
+      "identity": "VelaBackend/movePath/this.mutations.run callback:root/fsp.lstat(target).catch callback#1",
       "line": 3368,
       "endLine": 3368,
       "physicalLines": 1,
@@ -29746,7 +29746,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "canonicalWorkspaceRoot(directory).catch callback",
-      "identity": "OpenShellBackend/listProjects/(arr as { canonical?: string; directory?: string; name?: string }[])\n      .map callback:directory/canonicalWorkspaceRoot(directory).catch callback#1",
+      "identity": "VelaBackend/listProjects/(arr as { canonical?: string; directory?: string; name?: string }[])\n      .map callback:directory/canonicalWorkspaceRoot(directory).catch callback#1",
       "line": 3401,
       "endLine": 3401,
       "physicalLines": 1,
@@ -29757,7 +29757,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "available",
-      "identity": "OpenShellBackend/listProjects/available#1",
+      "identity": "VelaBackend/listProjects/available#1",
       "line": 3404,
       "endLine": 3404,
       "physicalLines": 1,
@@ -29768,7 +29768,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "[...available].reverse().map callback",
-      "identity": "OpenShellBackend/listProjects/[...available].reverse().map callback#1",
+      "identity": "VelaBackend/listProjects/[...available].reverse().map callback#1",
       "line": 3405,
       "endLine": 3405,
       "physicalLines": 1,
@@ -29779,7 +29779,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runtimes.map callback",
-      "identity": "OpenShellBackend/stop/runtimes.map callback#1",
+      "identity": "VelaBackend/stop/runtimes.map callback#1",
       "line": 3421,
       "endLine": 3421,
       "physicalLines": 1,
@@ -29790,7 +29790,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "runtime.stop().catch callback",
-      "identity": "OpenShellBackend/stop/runtimes.map callback/runtime.stop().catch callback#1",
+      "identity": "VelaBackend/stop/runtimes.map callback/runtime.stop().catch callback#1",
       "line": 3421,
       "endLine": 3421,
       "physicalLines": 1,
@@ -32419,7 +32419,7 @@
     {
       "file": "src/renderer/src/App.tsx",
       "name": "anonymous",
-      "identity": "Root/useEffect callback/window.openshell.onSaveAllEditorFiles callback:saved/anonymous#1",
+      "identity": "Root/useEffect callback/window.vela.onSaveAllEditorFiles callback:saved/anonymous#1",
       "line": 1190,
       "endLine": 1190,
       "physicalLines": 1,
@@ -32430,7 +32430,7 @@
     {
       "file": "src/renderer/src/App.tsx",
       "name": "requestAnimationFrame callback",
-      "identity": "Root/useEffect callback/window.openshell.onSaveAllEditorFiles callback:saved/anonymous/requestAnimationFrame callback#1",
+      "identity": "Root/useEffect callback/window.vela.onSaveAllEditorFiles callback:saved/anonymous/requestAnimationFrame callback#1",
       "line": 1190,
       "endLine": 1190,
       "physicalLines": 1,
@@ -32462,8 +32462,8 @@
     },
     {
       "file": "src/renderer/src/App.tsx",
-      "name": "window.openshell.windowView(\"session\").catch callback",
-      "identity": "Root/useEffect callback/setTimeout callback/window.openshell.windowView(\"session\").catch callback#1",
+      "name": "window.vela.windowView(\"session\").catch callback",
+      "identity": "Root/useEffect callback/setTimeout callback/window.vela.windowView(\"session\").catch callback#1",
       "line": 1212,
       "endLine": 1212,
       "physicalLines": 1,
@@ -33859,8 +33859,8 @@
     },
     {
       "file": "src/renderer/src/components/AgentTui.tsx",
-      "name": "window.openshell.agentTuiResize(workspace, id, terminal.cols, terminal.rows).cat callback",
-      "identity": "AgentTui/useEffect callback:host/resize/window.openshell.agentTuiResize(workspace, id, terminal.cols, terminal.rows).cat callback#1",
+      "name": "window.vela.agentTuiResize(workspace, id, terminal.cols, terminal.rows).cat callback",
+      "identity": "AgentTui/useEffect callback:host/resize/window.vela.agentTuiResize(workspace, id, terminal.cols, terminal.rows).cat callback#1",
       "line": 117,
       "endLine": 117,
       "physicalLines": 1,
@@ -33870,8 +33870,8 @@
     },
     {
       "file": "src/renderer/src/components/AgentTui.tsx",
-      "name": "window.openshell.agentTuiInput(workspace, id, data).catch callback",
-      "identity": "AgentTui/useEffect callback:host/terminal.onData callback/window.openshell.agentTuiInput(workspace, id, data).catch callback#1",
+      "name": "window.vela.agentTuiInput(workspace, id, data).catch callback",
+      "identity": "AgentTui/useEffect callback:host/terminal.onData callback/window.vela.agentTuiInput(workspace, id, data).catch callback#1",
       "line": 122,
       "endLine": 122,
       "physicalLines": 1,
@@ -33881,8 +33881,8 @@
     },
     {
       "file": "src/renderer/src/components/AgentTui.tsx",
-      "name": "window.openshell.agentTuiStop(workspace, id).catch callback",
-      "identity": "AgentTui/useEffect callback:host/anonymous/window.openshell.agentTuiStop(workspace, id).catch callback#1",
+      "name": "window.vela.agentTuiStop(workspace, id).catch callback",
+      "identity": "AgentTui/useEffect callback:host/anonymous/window.vela.agentTuiStop(workspace, id).catch callback#1",
       "line": 151,
       "endLine": 151,
       "physicalLines": 1,
@@ -34827,8 +34827,8 @@
     },
     {
       "file": "src/renderer/src/components/FileSidebar.tsx",
-      "name": "window.openshell.externalKind(path).catch callback",
-      "identity": "FileSidebar/onTreeDrop/external.map callback:kind/window.openshell.externalKind(path).catch callback#1",
+      "name": "window.vela.externalKind(path).catch callback",
+      "identity": "FileSidebar/onTreeDrop/external.map callback:kind/window.vela.externalKind(path).catch callback#1",
       "line": 702,
       "endLine": 702,
       "physicalLines": 1,
@@ -36466,8 +36466,8 @@
     },
     {
       "file": "src/renderer/src/components/ProviderSettings.tsx",
-      "name": "window.openshell.providerOauthCancel(workspace, provider.id, attempt.attemptID). callback",
-      "identity": "OAuthFlow/useEffect callback/anonymous/window.openshell.providerOauthCancel(workspace, provider.id, attempt.attemptID). callback#1",
+      "name": "window.vela.providerOauthCancel(workspace, provider.id, attempt.attemptID). callback",
+      "identity": "OAuthFlow/useEffect callback/anonymous/window.vela.providerOauthCancel(workspace, provider.id, attempt.attemptID). callback#1",
       "line": 122,
       "endLine": 122,
       "physicalLines": 1,
@@ -37390,8 +37390,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "window.openshell.commands(session.workspace).then(setCommands).catch callback",
-      "identity": "SettingsPage/useEffect callback/window.openshell.commands(session.workspace).then(setCommands).catch callback#1",
+      "name": "window.vela.commands(session.workspace).then(setCommands).catch callback",
+      "identity": "SettingsPage/useEffect callback/window.vela.commands(session.workspace).then(setCommands).catch callback#1",
       "line": 202,
       "endLine": 202,
       "physicalLines": 1,
@@ -37401,8 +37401,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "window.openshell.mcpList(session.workspace).then(setMcpServers).catch callback",
-      "identity": "SettingsPage/useEffect callback/window.openshell.mcpList(session.workspace).then(setMcpServers).catch callback#1",
+      "name": "window.vela.mcpList(session.workspace).then(setMcpServers).catch callback",
+      "identity": "SettingsPage/useEffect callback/window.vela.mcpList(session.workspace).then(setMcpServers).catch callback#1",
       "line": 203,
       "endLine": 203,
       "physicalLines": 1,
@@ -37412,8 +37412,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "window.openshell.pluginsList(session.workspace).then(setPlugins).catch callback",
-      "identity": "SettingsPage/useEffect callback/window.openshell.pluginsList(session.workspace).then(setPlugins).catch callback#1",
+      "name": "window.vela.pluginsList(session.workspace).then(setPlugins).catch callback",
+      "identity": "SettingsPage/useEffect callback/window.vela.pluginsList(session.workspace).then(setPlugins).catch callback#1",
       "line": 204,
       "endLine": 204,
       "physicalLines": 1,
@@ -37423,8 +37423,8 @@
     },
     {
       "file": "src/renderer/src/components/SettingsPage.tsx",
-      "name": "window.openshell.skillsList(session.workspace).then(setSkills).catch callback",
-      "identity": "SettingsPage/useEffect callback/window.openshell.skillsList(session.workspace).then(setSkills).catch callback#1",
+      "name": "window.vela.skillsList(session.workspace).then(setSkills).catch callback",
+      "identity": "SettingsPage/useEffect callback/window.vela.skillsList(session.workspace).then(setSkills).catch callback#1",
       "line": 205,
       "endLine": 205,
       "physicalLines": 1,
@@ -37665,8 +37665,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch callback",
-      "identity": "TermInstance/useEffect callback:host/anonymous/window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch callback#1",
+      "name": "window.vela.terminalResize(workspace, id, term.cols, term.rows).catch callback",
+      "identity": "TermInstance/useEffect callback:host/anonymous/window.vela.terminalResize(workspace, id, term.cols, term.rows).catch callback#1",
       "line": 109,
       "endLine": 109,
       "physicalLines": 1,
@@ -37676,8 +37676,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch callback",
-      "identity": "TermInstance/useEffect callback:host/window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch callback#1",
+      "name": "window.vela.terminalResize(workspace, id, term.cols, term.rows).catch callback",
+      "identity": "TermInstance/useEffect callback:host/window.vela.terminalResize(workspace, id, term.cols, term.rows).catch callback#1",
       "line": 113,
       "endLine": 113,
       "physicalLines": 1,
@@ -37687,8 +37687,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.terminalStop(workspace, id).catch callback",
-      "identity": "TermInstance/useEffect callback:host/anonymous/window.openshell.terminalStop(workspace, id).catch callback#1",
+      "name": "window.vela.terminalStop(workspace, id).catch callback",
+      "identity": "TermInstance/useEffect callback:host/anonymous/window.vela.terminalStop(workspace, id).catch callback#1",
       "line": 121,
       "endLine": 121,
       "physicalLines": 1,
@@ -37698,8 +37698,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch callback",
-      "identity": "TermInstance/useEffect callback/frame/window.openshell.terminalResize(workspace, id, term.cols, term.rows).catch callback#1",
+      "name": "window.vela.terminalResize(workspace, id, term.cols, term.rows).catch callback",
+      "identity": "TermInstance/useEffect callback/frame/window.vela.terminalResize(workspace, id, term.cols, term.rows).catch callback#1",
       "line": 142,
       "endLine": 142,
       "physicalLines": 1,
@@ -37775,8 +37775,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.terminalStop(workspace, id).catch callback",
-      "identity": "TerminalTray/useEffect callback:token/anonymous/window.openshell.terminalStop(workspace, id).catch callback#1",
+      "name": "window.vela.terminalStop(workspace, id).catch callback",
+      "identity": "TerminalTray/useEffect callback:token/anonymous/window.vela.terminalStop(workspace, id).catch callback#1",
       "line": 268,
       "endLine": 268,
       "physicalLines": 1,
@@ -37808,8 +37808,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.viteStop(serverID)\n      .then callback",
-      "identity": "TerminalTray/stopVite/window.openshell.viteStop(serverID)\n      .then callback#1",
+      "name": "window.vela.viteStop(serverID)\n      .then callback",
+      "identity": "TerminalTray/stopVite/window.vela.viteStop(serverID)\n      .then callback#1",
       "line": 313,
       "endLine": 313,
       "physicalLines": 1,
@@ -37819,8 +37819,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.viteStop(serverID)\n      .then(() => refreshServers())\n      .c callback",
-      "identity": "TerminalTray/stopVite/window.openshell.viteStop(serverID)\n      .then(() => refreshServers())\n      .c callback#1",
+      "name": "window.vela.viteStop(serverID)\n      .then(() => refreshServers())\n      .c callback",
+      "identity": "TerminalTray/stopVite/window.vela.viteStop(serverID)\n      .then(() => refreshServers())\n      .c callback#1",
       "line": 314,
       "endLine": 314,
       "physicalLines": 1,
@@ -37830,8 +37830,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.viteStopAll()\n      .then callback",
-      "identity": "TerminalTray/stopAllVite/window.openshell.viteStopAll()\n      .then callback#1",
+      "name": "window.vela.viteStopAll()\n      .then callback",
+      "identity": "TerminalTray/stopAllVite/window.vela.viteStopAll()\n      .then callback#1",
       "line": 319,
       "endLine": 319,
       "physicalLines": 1,
@@ -37841,8 +37841,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.viteStopAll()\n      .then(() => refreshServers())\n      .catch callback",
-      "identity": "TerminalTray/stopAllVite/window.openshell.viteStopAll()\n      .then(() => refreshServers())\n      .catch callback#1",
+      "name": "window.vela.viteStopAll()\n      .then(() => refreshServers())\n      .catch callback",
+      "identity": "TerminalTray/stopAllVite/window.vela.viteStopAll()\n      .then(() => refreshServers())\n      .catch callback#1",
       "line": 320,
       "endLine": 320,
       "physicalLines": 1,
@@ -37852,8 +37852,8 @@
     },
     {
       "file": "src/renderer/src/components/TerminalTray.tsx",
-      "name": "window.openshell.terminalStop(workspace, id).catch callback",
-      "identity": "TerminalTray/closeTerminal/window.openshell.terminalStop(workspace, id).catch callback#1",
+      "name": "window.vela.terminalStop(workspace, id).catch callback",
+      "identity": "TerminalTray/closeTerminal/window.vela.terminalStop(workspace, id).catch callback#1",
       "line": 324,
       "endLine": 324,
       "physicalLines": 1,
@@ -38963,8 +38963,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "event.miraSessionIDs.filter callback",
-      "identity": "normalizeStreamEvent/event.miraSessionIDs.filter callback#1",
+      "name": "event.velaSessionIDs.filter callback",
+      "identity": "normalizeStreamEvent/event.velaSessionIDs.filter callback#1",
       "line": 405,
       "endLine": 405,
       "physicalLines": 1,
@@ -39315,8 +39315,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.listPermissions(workspace).catch callback",
-      "identity": "StoreBody/reconcilePermissions/[...workspaces.values()].map callback:requests/window.openshell.listPermissions(workspace).catch callback#1",
+      "name": "window.vela.listPermissions(workspace).catch callback",
+      "identity": "StoreBody/reconcilePermissions/[...workspaces.values()].map callback:requests/window.vela.listPermissions(workspace).catch callback#1",
       "line": 910,
       "endLine": 910,
       "physicalLines": 1,
@@ -39557,8 +39557,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.projects().catch callback",
-      "identity": "StoreBody/useEffect callback:cancelled/storedWorkspaces\n      .then callback:projects/window.openshell.projects().catch callback#1",
+      "name": "window.vela.projects().catch callback",
+      "identity": "StoreBody/useEffect callback:cancelled/storedWorkspaces\n      .then callback:projects/window.vela.projects().catch callback#1",
       "line": 1127,
       "endLine": 1127,
       "physicalLines": 1,
@@ -39634,8 +39634,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.inboxCancel(workspace, messageID).catch callback",
-      "identity": "StoreBody/removeQueuedMessage/window.openshell.inboxCancel(workspace, messageID).catch callback#1",
+      "name": "window.vela.inboxCancel(workspace, messageID).catch callback",
+      "identity": "StoreBody/removeQueuedMessage/window.vela.inboxCancel(workspace, messageID).catch callback#1",
       "line": 1195,
       "endLine": 1195,
       "physicalLines": 1,
@@ -39667,8 +39667,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.inboxCancel(workspace, messageID).catch callback",
-      "identity": "StoreBody/popQueuedMessage/window.openshell.inboxCancel(workspace, messageID).catch callback#1",
+      "name": "window.vela.inboxCancel(workspace, messageID).catch callback",
+      "identity": "StoreBody/popQueuedMessage/window.vela.inboxCancel(workspace, messageID).catch callback#1",
       "line": 1213,
       "endLine": 1213,
       "physicalLines": 1,
@@ -39689,8 +39689,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.sessionUsage(sessionID).catch callback",
-      "identity": "StoreBody/materializeSession/window.openshell.sessionUsage(sessionID).catch callback#1",
+      "name": "window.vela.sessionUsage(sessionID).catch callback",
+      "identity": "StoreBody/materializeSession/window.vela.sessionUsage(sessionID).catch callback#1",
       "line": 1247,
       "endLine": 1247,
       "physicalLines": 1,
@@ -39755,8 +39755,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.formCancel(workspace, formID, formSessionID).catch callback",
-      "identity": "StoreBody/dismissForm/window.openshell.formCancel(workspace, formID, formSessionID).catch callback#1",
+      "name": "window.vela.formCancel(workspace, formID, formSessionID).catch callback",
+      "identity": "StoreBody/dismissForm/window.vela.formCancel(workspace, formID, formSessionID).catch callback#1",
       "line": 1308,
       "endLine": 1308,
       "physicalLines": 1,
@@ -39931,8 +39931,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(active.workspace).catch callback",
-      "identity": "StoreBody/finishClosePanel/window.openshell.closeSession(active.workspace).catch callback#1",
+      "name": "window.vela.closeSession(active.workspace).catch callback",
+      "identity": "StoreBody/finishClosePanel/window.vela.closeSession(active.workspace).catch callback#1",
       "line": 1522,
       "endLine": 1522,
       "physicalLines": 1,
@@ -39942,8 +39942,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(ejected.workspace).catch callback",
-      "identity": "StoreBody/finishClosePanel/window.openshell.closeSession(ejected.workspace).catch callback#1",
+      "name": "window.vela.closeSession(ejected.workspace).catch callback",
+      "identity": "StoreBody/finishClosePanel/window.vela.closeSession(ejected.workspace).catch callback#1",
       "line": 1540,
       "endLine": 1540,
       "physicalLines": 1,
@@ -40162,8 +40162,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(info.workspace).catch callback",
-      "identity": "StoreBody/swapPanelTo/window.openshell.closeSession(info.workspace).catch callback#1",
+      "name": "window.vela.closeSession(info.workspace).catch callback",
+      "identity": "StoreBody/swapPanelTo/window.vela.closeSession(info.workspace).catch callback#1",
       "line": 1764,
       "endLine": 1764,
       "physicalLines": 1,
@@ -40173,8 +40173,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(info.workspace).catch callback",
-      "identity": "StoreBody/openSession/window.openshell.closeSession(info.workspace).catch callback#1",
+      "name": "window.vela.closeSession(info.workspace).catch callback",
+      "identity": "StoreBody/openSession/window.vela.closeSession(info.workspace).catch callback#1",
       "line": 1783,
       "endLine": 1783,
       "physicalLines": 1,
@@ -40184,8 +40184,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(info.workspace).catch callback",
-      "identity": "StoreBody/addModelPanel/window.openshell.closeSession(info.workspace).catch callback#1",
+      "name": "window.vela.closeSession(info.workspace).catch callback",
+      "identity": "StoreBody/addModelPanel/window.vela.closeSession(info.workspace).catch callback#1",
       "line": 1816,
       "endLine": 1816,
       "physicalLines": 1,
@@ -40195,8 +40195,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(info.workspace).catch callback",
-      "identity": "StoreBody/selectAddPanel/window.openshell.closeSession(info.workspace).catch callback#1",
+      "name": "window.vela.closeSession(info.workspace).catch callback",
+      "identity": "StoreBody/selectAddPanel/window.vela.closeSession(info.workspace).catch callback#1",
       "line": 1867,
       "endLine": 1867,
       "physicalLines": 1,
@@ -40206,8 +40206,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(info.workspace).catch callback",
-      "identity": "StoreBody/swapPanelWorkspace/window.openshell.closeSession(info.workspace).catch callback#1",
+      "name": "window.vela.closeSession(info.workspace).catch callback",
+      "identity": "StoreBody/swapPanelWorkspace/window.vela.closeSession(info.workspace).catch callback#1",
       "line": 1898,
       "endLine": 1898,
       "physicalLines": 1,
@@ -40239,8 +40239,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(info.workspace).catch callback",
-      "identity": "StoreBody/selectFolder/window.openshell.closeSession(info.workspace).catch callback#1",
+      "name": "window.vela.closeSession(info.workspace).catch callback",
+      "identity": "StoreBody/selectFolder/window.vela.closeSession(info.workspace).catch callback#1",
       "line": 1930,
       "endLine": 1930,
       "physicalLines": 1,
@@ -40261,8 +40261,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(reopened.session.workspace).catch callback",
-      "identity": "StoreBody/reopenSession/window.openshell.closeSession(reopened.session.workspace).catch callback#1",
+      "name": "window.vela.closeSession(reopened.session.workspace).catch callback",
+      "identity": "StoreBody/reopenSession/window.vela.closeSession(reopened.session.workspace).catch callback#1",
       "line": 1975,
       "endLine": 1975,
       "physicalLines": 1,
@@ -40272,8 +40272,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(reopened.session.workspace).catch callback",
-      "identity": "StoreBody/reopenSession/window.openshell.closeSession(reopened.session.workspace).catch callback#2",
+      "name": "window.vela.closeSession(reopened.session.workspace).catch callback",
+      "identity": "StoreBody/reopenSession/window.vela.closeSession(reopened.session.workspace).catch callback#2",
       "line": 1982,
       "endLine": 1982,
       "physicalLines": 1,
@@ -40426,8 +40426,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.detachPath(target, path).then(() => {\n      setHiddenPathsByWor callback",
-      "identity": "StoreBody/removeFromWorkspace/window.openshell.detachPath(target, path).then(() => {\n      setHiddenPathsByWor callback#1",
+      "name": "window.vela.detachPath(target, path).then(() => {\n      setHiddenPathsByWor callback",
+      "identity": "StoreBody/removeFromWorkspace/window.vela.detachPath(target, path).then(() => {\n      setHiddenPathsByWor callback#1",
       "line": 2333,
       "endLine": 2333,
       "physicalLines": 1,
@@ -40613,8 +40613,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.closeSession(result.session.workspace).catch callback",
-      "identity": "StoreBody/attachFileWorkspace/window.openshell.closeSession(result.session.workspace).catch callback#1",
+      "name": "window.vela.closeSession(result.session.workspace).catch callback",
+      "identity": "StoreBody/attachFileWorkspace/window.vela.closeSession(result.session.workspace).catch callback#1",
       "line": 2606,
       "endLine": 2606,
       "physicalLines": 1,
@@ -40889,7 +40889,7 @@
     {
       "file": "src/renderer/src/store.tsx",
       "name": "setTreeFor callback",
-      "identity": "StoreBody/useEffect callback:processMessage/processMessage/setTimeout callback/window.openshell\n              .listDir(expected, parent)\n              .then callback/setTreeFor callback#1",
+      "identity": "StoreBody/useEffect callback:processMessage/processMessage/setTimeout callback/window.vela\n              .listDir(expected, parent)\n              .then callback/setTreeFor callback#1",
       "line": 3199,
       "endLine": 3199,
       "physicalLines": 1,
@@ -40899,8 +40899,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell\n              .listDir(expected, parent)\n              .then((e callback",
-      "identity": "StoreBody/useEffect callback:processMessage/processMessage/setTimeout callback/window.openshell\n              .listDir(expected, parent)\n              .then((e callback#1",
+      "name": "window.vela\n              .listDir(expected, parent)\n              .then((e callback",
+      "identity": "StoreBody/useEffect callback:processMessage/processMessage/setTimeout callback/window.vela\n              .listDir(expected, parent)\n              .then((e callback#1",
       "line": 3201,
       "endLine": 3201,
       "physicalLines": 1,
@@ -41152,8 +41152,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.health().catch callback",
-      "identity": "StoreBody/useEffect callback:processMessage/tryConnect/window.openshell.health().catch callback#1",
+      "name": "window.vela.health().catch callback",
+      "identity": "StoreBody/useEffect callback:processMessage/tryConnect/window.vela.health().catch callback#1",
       "line": 3699,
       "endLine": 3699,
       "physicalLines": 1,
@@ -41185,8 +41185,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.takePendingPaths().then((paths) => {\n      if (paths.length > 0 callback",
-      "identity": "StoreBody/useEffect callback:processMessage/window.openshell.takePendingPaths().then((paths) => {\n      if (paths.length > 0 callback#1",
+      "name": "window.vela.takePendingPaths().then((paths) => {\n      if (paths.length > 0 callback",
+      "identity": "StoreBody/useEffect callback:processMessage/window.vela.takePendingPaths().then((paths) => {\n      if (paths.length > 0 callback#1",
       "line": 3714,
       "endLine": 3714,
       "physicalLines": 1,
@@ -41196,8 +41196,8 @@
     },
     {
       "file": "src/renderer/src/store.tsx",
-      "name": "window.openshell.health().catch callback",
-      "identity": "StoreBody/useEffect callback:processMessage/anonymous/window.openshell.health().catch callback#1",
+      "name": "window.vela.health().catch callback",
+      "identity": "StoreBody/useEffect callback:processMessage/anonymous/window.vela.health().catch callback#1",
       "line": 3718,
       "endLine": 3718,
       "physicalLines": 1,
@@ -41284,8 +41284,8 @@
     },
     {
       "file": "src/renderer/src/theme.tsx",
-      "name": "window.openshell?.setAppearance?.(appearance.scheme)?.catch callback",
-      "identity": "ThemeProvider/useLayoutEffect callback:appearance/window.openshell?.setAppearance?.(appearance.scheme)?.catch callback#1",
+      "name": "window.vela?.setAppearance?.(appearance.scheme)?.catch callback",
+      "identity": "ThemeProvider/useLayoutEffect callback:appearance/window.vela?.setAppearance?.(appearance.scheme)?.catch callback#1",
       "line": 136,
       "endLine": 136,
       "physicalLines": 1,
@@ -41317,8 +41317,8 @@
     },
     {
       "file": "src/renderer/src/use-sass-watch.ts",
-      "name": "window.openshell.sassWatchState(captured.workspace).then callback",
-      "identity": "useSassWatch/useEffect callback/window.openshell.sassWatchState(captured.workspace).then callback#1",
+      "name": "window.vela.sassWatchState(captured.workspace).then callback",
+      "identity": "useSassWatch/useEffect callback/window.vela.sassWatchState(captured.workspace).then callback#1",
       "line": 27,
       "endLine": 27,
       "physicalLines": 1,
@@ -41328,8 +41328,8 @@
     },
     {
       "file": "src/renderer/src/use-sass-watch.ts",
-      "name": "window.openshell.sassWatchState(captured.workspace).then callback",
-      "identity": "useSassWatch/useEffect callback/window.openshell.sassWatchState(captured.workspace).then callback#2",
+      "name": "window.vela.sassWatchState(captured.workspace).then callback",
+      "identity": "useSassWatch/useEffect callback/window.vela.sassWatchState(captured.workspace).then callback#2",
       "line": 27,
       "endLine": 27,
       "physicalLines": 1,
@@ -41660,8 +41660,8 @@
     },
     {
       "file": "src/main/index.ts",
-      "name": "updateMiraApp",
-      "identity": "updateMiraApp#1",
+      "name": "updateVelaApp",
+      "identity": "updateVelaApp#1",
       "line": 695,
       "endLine": 828,
       "physicalLines": 134,
@@ -41705,7 +41705,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "writeFile",
-      "identity": "OpenShellBackend/writeFile#1",
+      "identity": "VelaBackend/writeFile#1",
       "line": 3084,
       "endLine": 3193,
       "physicalLines": 110,
@@ -41938,7 +41938,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "onFsChanged",
-      "identity": "OpenShellBackend/onFsChanged#1",
+      "identity": "VelaBackend/onFsChanged#1",
       "line": 1536,
       "endLine": 1625,
       "physicalLines": 90,
@@ -42015,7 +42015,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "openSessionById",
-      "identity": "OpenShellBackend/openSessionById#1",
+      "identity": "VelaBackend/openSessionById#1",
       "line": 1992,
       "endLine": 2093,
       "physicalLines": 102,
@@ -42103,7 +42103,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "fields",
-      "identity": "OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields#1",
+      "identity": "VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields#1",
       "line": 2555,
       "endLine": 2592,
       "physicalLines": 38,
@@ -42202,7 +42202,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "deliverEvents",
-      "identity": "OpenShellBackend/deliverEvents#1",
+      "identity": "VelaBackend/deliverEvents#1",
       "line": 994,
       "endLine": 1051,
       "physicalLines": 58,
@@ -42235,7 +42235,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "listSessions",
-      "identity": "OpenShellBackend/listSessions#1",
+      "identity": "VelaBackend/listSessions#1",
       "line": 1868,
       "endLine": 1922,
       "physicalLines": 55,
@@ -42246,7 +42246,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "openSession",
-      "identity": "OpenShellBackend/openSession#1",
+      "identity": "VelaBackend/openSession#1",
       "line": 1817,
       "endLine": 1866,
       "physicalLines": 50,
@@ -42290,7 +42290,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "this.mutations.run callback:root",
-      "identity": "OpenShellBackend/importExternal/this.mutations.run callback:root#1",
+      "identity": "VelaBackend/importExternal/this.mutations.run callback:root#1",
       "line": 3018,
       "endLine": 3081,
       "physicalLines": 64,
@@ -42334,7 +42334,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "reconcileRecovery",
-      "identity": "OpenShellBackend/reconcileRecovery#1",
+      "identity": "VelaBackend/reconcileRecovery#1",
       "line": 1270,
       "endLine": 1312,
       "physicalLines": 43,
@@ -42367,7 +42367,7 @@
     {
       "file": "src/main/opencode.ts",
       "name": "anonymous",
-      "identity": "OpenShellBackend/startRuntimeSubscription/anonymous#1",
+      "identity": "VelaBackend/startRuntimeSubscription/anonymous#1",
       "line": 876,
       "endLine": 921,
       "physicalLines": 46,
@@ -42856,7 +42856,7 @@
     },
     {
       "from": "src/renderer/src/App.tsx",
-      "to": "src/renderer/src/components/MiraMark.tsx",
+      "to": "src/renderer/src/components/VelaMark.tsx",
       "typeOnly": false
     },
     {
@@ -43011,7 +43011,7 @@
     },
     {
       "from": "src/renderer/src/components/AgentPanel.tsx",
-      "to": "src/renderer/src/components/MiraMark.tsx",
+      "to": "src/renderer/src/components/VelaMark.tsx",
       "typeOnly": false
     },
     {
@@ -43071,7 +43071,7 @@
     },
     {
       "from": "src/renderer/src/components/EditorPane.tsx",
-      "to": "src/renderer/src/components/MiraMark.tsx",
+      "to": "src/renderer/src/components/VelaMark.tsx",
       "typeOnly": false
     },
     {
@@ -43136,7 +43136,7 @@
     },
     {
       "from": "src/renderer/src/components/FileSidebar.tsx",
-      "to": "src/renderer/src/components/MiraMark.tsx",
+      "to": "src/renderer/src/components/VelaMark.tsx",
       "typeOnly": false
     },
     {
@@ -43381,7 +43381,7 @@
     },
     {
       "from": "src/renderer/src/components/SettingsPage.tsx",
-      "to": "src/renderer/src/components/MiraMark.tsx",
+      "to": "src/renderer/src/components/VelaMark.tsx",
       "typeOnly": false
     },
     {
@@ -44367,7 +44367,7 @@
       "typeOnly": false
     },
     {
-      "file": "src/renderer/src/components/MiraMark.tsx",
+      "file": "src/renderer/src/components/VelaMark.tsx",
       "specifier": "react",
       "typeOnly": true
     },
@@ -44859,7 +44859,7 @@
     },
     {
       "file": "src/main/app-updater.ts",
-      "export": "MiraAppUpdater",
+      "export": "VelaAppUpdater",
       "line": 4,
       "productionConsumers": [],
       "testOrAuxiliaryConsumers": []
@@ -44989,7 +44989,7 @@
     },
     {
       "file": "src/main/provider-usage.ts",
-      "export": "miraUsageSnapshotCandidates",
+      "export": "velaUsageSnapshotCandidates",
       "line": 868,
       "productionConsumers": [],
       "testOrAuxiliaryConsumers": []
@@ -45005,7 +45005,7 @@
     },
     {
       "file": "src/main/provider-usage.ts",
-      "export": "readMiraUsageSnapshot",
+      "export": "readVelaUsageSnapshot",
       "line": 877,
       "productionConsumers": [],
       "testOrAuxiliaryConsumers": [
@@ -46033,11 +46033,11 @@
         "bytes": 20172
       },
       {
-        "path": "out/renderer/assets/ayu-mirage-BVoH71sA.js",
+        "path": "out/renderer/assets/ayu-velage-BVoH71sA.js",
         "bytes": 20109
       },
       {
-        "path": "out/renderer/assets/ayu-mirage-CCbK8EIf.js",
+        "path": "out/renderer/assets/ayu-velage-CCbK8EIf.js",
         "bytes": 20107
       },
       {

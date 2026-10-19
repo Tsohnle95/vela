@@ -7,7 +7,7 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-describe("Mira launch handoff", () => {
+describe("Vela launch handoff", () => {
   let frames: FrameRequestCallback[];
   let decode: ReturnType<typeof deferred<void>>;
   beforeEach(() => {

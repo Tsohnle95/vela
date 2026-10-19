@@ -100,7 +100,7 @@
     "src/renderer/src/components/OpenCodeTimeline.tsx",
     "src/renderer/src/components/OpenCodeTodoDock.tsx",
     "src/renderer/src/components/OpenCodeTool.tsx",
-    "src/renderer/src/components/MiraMark.tsx",
+    "src/renderer/src/components/VelaMark.tsx",
     "src/renderer/src/components/ProviderSettings.tsx",
     "src/renderer/src/components/QueuedMessageChips.tsx",
     "src/renderer/src/components/RecoveryNotice.tsx",
@@ -404,7 +404,7 @@
       "nesting": 5,
       "reason": "Existing baseline function; no metric growth; remove allowance after cohesive refactoring."
     },
-    "src/main/opencode.ts:OpenShellBackend/openSessionById#1": {
+    "src/main/opencode.ts:VelaBackend/openSessionById#1": {
       "codeLines": 100,
       "cyclomatic": 32,
       "nesting": 5,
@@ -464,7 +464,7 @@
       "nesting": 6,
       "reason": "Existing baseline function; no metric growth; remove allowance after cohesive refactoring."
     },
-    "src/main/opencode.ts:OpenShellBackend/listSessions#1": {
+    "src/main/opencode.ts:VelaBackend/listSessions#1": {
       "codeLines": 100,
       "cyclomatic": 23,
       "nesting": 5,
@@ -482,19 +482,19 @@
       "nesting": 5,
       "reason": "Existing baseline function; no metric growth; remove allowance after cohesive refactoring."
     },
-    "src/main/opencode.ts:OpenShellBackend/openSession#1": {
+    "src/main/opencode.ts:VelaBackend/openSession#1": {
       "codeLines": 100,
       "cyclomatic": 23,
       "nesting": 5,
       "reason": "Existing baseline function; no metric growth; remove allowance after cohesive refactoring."
     },
-    "src/main/opencode.ts:OpenShellBackend/deliverEvents#1": {
+    "src/main/opencode.ts:VelaBackend/deliverEvents#1": {
       "codeLines": 100,
       "cyclomatic": 25,
       "nesting": 5,
       "reason": "Existing baseline function; no metric growth; remove allowance after cohesive refactoring."
     },
-    "src/main/opencode.ts:OpenShellBackend/startRuntimeSubscription/anonymous#1": {
+    "src/main/opencode.ts:VelaBackend/startRuntimeSubscription/anonymous#1": {
       "codeLines": 100,
       "cyclomatic": 20,
       "nesting": 7,
@@ -506,7 +506,7 @@
       "nesting": 5,
       "reason": "Existing baseline function; no metric growth; remove allowance after cohesive refactoring."
     },
-    "src/main/opencode.ts:OpenShellBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields#1": {
+    "src/main/opencode.ts:VelaBackend/listProviderIntegrations/SUPPORTED_PROVIDER_IDS.flatMap((id) => catalog.filter((row) => row.id === id)).m callback:methods/fields#1": {
       "codeLines": 100,
       "cyclomatic": 28,
       "nesting": 5,
@@ -592,7 +592,7 @@
       "codeLines": 43,
       "cyclomatic": 21,
       "nesting": 4,
-      "origin": "src/main/opencode.ts:OpenShellBackend/reconcileRecovery/anonymous#1",
+      "origin": "src/main/opencode.ts:VelaBackend/reconcileRecovery/anonymous#1",
       "reason": "Independently reviewed exact relocation of recovery reconciliation; preserve generation guards, no-replace link recovery, and every failure path. Limits do not exceed original frozen metrics."
     },
     "src/main/ipc/agent.ts:registerAgentIpc#1": {
@@ -633,8 +633,8 @@
       "codeLines": 100,
       "cyclomatic": 38,
       "nesting": 5,
-      "reason": "Moved unchanged watcher reconciliation branch tree from OpenShellBackend; retains after-await stale guards and file failure semantics. Refactor only with explicit equivalent-behavior review.",
-      "origin": "src/main/opencode.ts:OpenShellBackend/onFsChanged#1"
+      "reason": "Moved unchanged watcher reconciliation branch tree from VelaBackend; retains after-await stale guards and file failure semantics. Refactor only with explicit equivalent-behavior review.",
+      "origin": "src/main/opencode.ts:VelaBackend/onFsChanged#1"
     },
     "src/renderer/src/panel-projection.ts:projectPanelViews#1": {
       "codeLines": 86,
@@ -654,7 +654,7 @@
       "codeLines": 128,
       "cyclomatic": 20,
       "nesting": 5,
-      "origin": "src/main/index.ts:updateMiraApp#1",
+      "origin": "src/main/index.ts:updateVelaApp#1",
       "reason": "Moved release progress-window workflow byte-equivalent after receiver qualification; preserves timer, close gate, dynamic main/unsaved reads and failure cleanup. Original128-line ceiling; cannot grow."
     },
     "src/renderer/src/use-workspace-editor.ts:useWorkspaceEditor#1": {
@@ -675,7 +675,7 @@
       "codeLines": 105,
       "cyclomatic": 20,
       "nesting": 5,
-      "origin": "src/main/opencode.ts:OpenShellBackend/writeFile#1",
+      "origin": "src/main/opencode.ts:VelaBackend/writeFile#1",
       "reason": "Moved unchanged atomic-save transaction with no-replace inode validation, rollback and recovery emissions. Existing105-line ceiling retains sequencing; cannot grow."
     },
     "src/renderer/src/use-session-selection.ts:useSessionSelection#1": {
@@ -768,7 +768,7 @@
       "from": "src/renderer/src/global.d.ts",
       "to": "src/preload/index.ts",
       "typeOnly": true,
-      "reason": "Renderer window.openshell declaration derives the controlled preload interface; type-only bridge has no runtime dependency."
+      "reason": "Renderer window.vela declaration derives the controlled preload interface; type-only bridge has no runtime dependency."
     }
   ],
   "cycleExceptions": [],

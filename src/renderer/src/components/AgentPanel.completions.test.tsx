@@ -89,12 +89,12 @@ describe("composer slash and mention completions", () => {
   });
 
   it("lists slash commands including built-ins and runs the selected one", async () => {
-    window.openshell = {
+    window.vela = {
       commands: vi.fn(async () => [
         { name: "compact", description: "Summarize the session to free up context", kind: "command" },
         { name: "project-cmd", description: "Project command" }
       ])
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector("textarea")!;
     await act(async () => {
@@ -114,12 +114,12 @@ describe("composer slash and mention completions", () => {
   });
 
   it("filters slash completions as the query grows", async () => {
-    window.openshell = {
+    window.vela = {
       commands: vi.fn(async () => [
         { name: "compact", description: "Summarize the session to free up context", kind: "command" },
         { name: "project-cmd" }
       ])
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector("textarea")!;
     await act(async () => {
@@ -138,11 +138,11 @@ describe("composer slash and mention completions", () => {
   });
 
   it("runs a leading-slash command typed without picking from the menu", async () => {
-    window.openshell = {
+    window.vela = {
       commands: vi.fn(async () => [
         { name: "compact", description: "Summarize the session to free up context", kind: "command" }
       ])
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector("textarea")!;
     await act(async () => {
@@ -154,11 +154,11 @@ describe("composer slash and mention completions", () => {
   });
 
   it("sends double-slash text as a prompt instead of running `/` as a command", async () => {
-    window.openshell = {
+    window.vela = {
       commands: vi.fn(async () => [
         { name: "compact", description: "Summarize the session to free up context", kind: "command" }
       ])
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector("textarea")!;
     await act(async () => {
@@ -171,7 +171,7 @@ describe("composer slash and mention completions", () => {
   });
 
   it("clears ordinary text before the optimistic session update can rerender the composer", async () => {
-    window.openshell = {} as Window["openshell"];
+    window.vela = {} as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector<HTMLTextAreaElement>("textarea")!;
     await act(async () => {
@@ -191,7 +191,7 @@ describe("composer slash and mention completions", () => {
   });
 
   it("clears a typed command before synchronous updates and preserves its rejection notice", async () => {
-    window.openshell = {} as Window["openshell"];
+    window.vela = {} as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector<HTMLTextAreaElement>("textarea")!;
     await act(async () => type(input, "/compact please"));
@@ -211,11 +211,11 @@ describe("composer slash and mention completions", () => {
   });
 
   it("assembles a PromptFile with a mention span for a chosen file mention", async () => {
-    window.openshell = {
+    window.vela = {
       references: vi.fn(async () => [
         { name: "foo.ts", path: "/workspace-1/src/foo.ts", rel: "src/foo.ts" }
       ])
-    } as unknown as Window["openshell"];
+    } as unknown as Window["vela"];
     await act(async () => root.render(<Composer />));
     const input = container.querySelector("textarea")!;
     await act(async () => {

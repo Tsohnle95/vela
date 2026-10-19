@@ -12,8 +12,9 @@ interface Invocation {
 const root = path.resolve("fixture-root");
 const builderCli = path.join(root, "node_modules", "electron-builder", "cli.js");
 const viteBin = path.join(root, "node_modules", "electron-vite", "bin", "electron-vite.js");
-const builtApp = path.join(root, "release", "mac-arm64", "Orbit.app");
-const destination = path.join("/Applications", "Orbit.app");
+const packagerScript = path.join(root, "scripts", "package-mobile-server.mjs");
+const builtApp = path.join(root, "release", "mac-arm64", "Vela.app");
+const destination = path.join("/Applications", "Vela.app");
 
 function harness(platform: NodeJS.Platform, existing: Record<string, boolean> = {}) {
   const invocations: Invocation[] = [];
@@ -72,7 +73,7 @@ function expectedLauncherOps(): string[] {
     `mkdir ${appPayload}`,
     `copy ${path.join(root, "scripts", "live-launcher.cjs")} -> ${path.join(appPayload, "live-launcher.cjs")}`,
     `write ${path.join(appPayload, "package.json")}`,
-    `write ${path.join(appPayload, ".orbit-repo.json")}`
+    `write ${path.join(appPayload, ".vela-repo.json")}`
   ];
 }
 
@@ -81,24 +82,26 @@ describe("pack and install app script", () => {
     const { run, invocations, removed, launcherOps } = harness("darwin", { [builderCli]: true, [builtApp]: true, [destination]: true });
     const result = run();
 
-    expect(result).toEqual({ ok: true, message: `Installed Orbit to ${destination}` });
-    expect(invocations).toHaveLength(4);
+    expect(result).toEqual({ ok: true, message: `Installed Vela to ${destination}` });
+    expect(invocations).toHaveLength(5);
     expect(invocations[0].file).toBe(process.execPath);
     expect(invocations[0].args).toEqual([viteBin, "build"]);
     expect(invocations[1].file).toBe(process.execPath);
-    expect(invocations[1].args).toEqual([builderCli, "--mac", "dir", "--config", "electron-builder.yml", "--projectDir", root]);
-    expect(invocations[2].file).toBe("codesign");
-    expect(invocations[2].args).toEqual(["--force", "--deep", "--sign", "-", builtApp]);
-    expect(invocations[3].file).toBe("cp");
-    expect(invocations[3].args).toEqual(["-R", builtApp, destination]);
+    expect(invocations[1].args).toEqual([packagerScript]);
+    expect(invocations[2].file).toBe(process.execPath);
+    expect(invocations[2].args).toEqual([builderCli, "--mac", "dir", "--config", "electron-builder.yml", "--projectDir", root]);
+    expect(invocations[3].file).toBe("codesign");
+    expect(invocations[3].args).toEqual(["--force", "--deep", "--sign", "-", builtApp]);
+    expect(invocations[4].file).toBe("cp");
+    expect(invocations[4].args).toEqual(["-R", builtApp, destination]);
     expect(removed).toEqual([destination]);
     expect(launcherOps).toEqual(expectedLauncherOps());
-    for (const invocation of invocations.slice(0, 2)) {
+    for (const invocation of invocations.slice(0, 3)) {
       expect(invocation.options.cwd).toBe(root);
       expect(invocation.options.env?.ELECTRON_RUN_AS_NODE).toBe("1");
     }
-    expect(invocations[2].options).toBeUndefined();
     expect(invocations[3].options).toBeUndefined();
+    expect(invocations[4].options).toBeUndefined();
   });
 
   it("skips the copy and install when asked to only pack", () => {
@@ -106,8 +109,8 @@ describe("pack and install app script", () => {
     const result = run(true);
 
     expect(result).toEqual({ ok: true, message: `Packaged ${path.relative(root, builtApp)}` });
-    expect(invocations).toHaveLength(3);
-    expect(invocations[2].file).toBe("codesign");
+    expect(invocations).toHaveLength(4);
+    expect(invocations[3].file).toBe("codesign");
     expect(removed).toEqual([]);
     expect(launcherOps).toEqual(expectedLauncherOps());
   });
@@ -143,8 +146,8 @@ describe("pack and install app script", () => {
 
   it("reports when packaging produced no bundle and never signs or copies", () => {
     const { run, invocations } = harness("darwin", { [builderCli]: true });
-    expect(run()).toEqual({ ok: false, message: "Packaging did not produce an Orbit.app bundle under release/" });
-    expect(invocations).toHaveLength(2);
+    expect(run()).toEqual({ ok: false, message: "Packaging did not produce a Vela.app bundle under release/" });
+    expect(invocations).toHaveLength(3);
   });
 
   it("propagates build tool failures so the CLI entry reports them", () => {

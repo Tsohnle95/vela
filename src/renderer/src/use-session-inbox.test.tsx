@@ -49,7 +49,7 @@ function mount(trace: string[] = []) {
   return { close: () => { attached = false; }, append };
 }
 it("retains guarded terminal identity but clones optimistic missing removals", () => {
-  window.openshell = { inboxCancel: async () => {} } as unknown as typeof window.openshell;
+  window.vela = { inboxCancel: async () => {} } as unknown as typeof window.vela;
   mount(); const before = inbox.inboxBySession;
   act(() => inbox.removeTerminalInbox(panel.id, { inboxID: "missing" }));
   expect(inbox.inboxBySession).toBe(before);
@@ -71,13 +71,13 @@ it("prepares enqueue delivery before updater coercion and moves duplicates to th
 });
 it("starts native failure refresh before status then toast", async () => {
   const trace: string[] = [];
-  window.openshell = { inboxCancel: async () => {}, inboxSteer: async () => { throw new Error("steer failed"); }, inboxList: async () => { trace.push("refresh"); return []; } } as unknown as typeof window.openshell;
+  window.vela = { inboxCancel: async () => {}, inboxSteer: async () => { throw new Error("steer failed"); }, inboxList: async () => { trace.push("refresh"); return []; } } as unknown as typeof window.vela;
   mount(trace);
   await act(async () => inbox.sendQueuedNow(panel.workspace, "native"));
   expect(trace).toEqual(["refresh", "status", "toast"]);
 });
 it("enqueues a captured retry after detachment without validating the panel", () => {
-  window.openshell = { inboxCancel: async () => {} } as unknown as typeof window.openshell;
+  window.vela = { inboxCancel: async () => {} } as unknown as typeof window.vela;
   const { close } = mount();
   act(() => inbox.enqueueFailedPrompt(panel, { content: "existing" }));
   const before = inbox.messageQueue;

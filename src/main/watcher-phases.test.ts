@@ -2,7 +2,7 @@ import { promises as fsp } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import type { FileBaseline, WorkspaceIdentity } from "@shared/types";
 import { LatestGeneration } from "@shared/generation";
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 import type { WorkspaceObservation } from "./workspace-observation";
 
 vi.mock("@opencode/client", () => ({ OpenCode: { make: vi.fn() } }));
@@ -57,8 +57,8 @@ function sessionContext(workspace: WorkspaceIdentity, root: string): { context: 
   return { context, entry };
 }
 
-function harness(): { backend: OpenShellBackend; internals: BackendHarness; context: WatchContext; supersede: () => void } {
-  const backend = new OpenShellBackend();
+function harness(): { backend: VelaBackend; internals: BackendHarness; context: WatchContext; supersede: () => void } {
+  const backend = new VelaBackend();
   const internals = backend as unknown as BackendHarness;
   const workspace = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
   const { context, entry } = sessionContext(workspace, "/workspace-one");

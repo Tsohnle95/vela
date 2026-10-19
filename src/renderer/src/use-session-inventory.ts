@@ -12,7 +12,7 @@ export function useSessionInventory(toast: (text: string, tone?: "info" | "error
   const refreshActiveSessions = useCallback(async (): Promise<SessionInfo[]> => {
     const sequence = ++activeRefreshSequenceRef.current;
     try {
-      const list = await window.openshell.activeSessions();
+      const list = await window.vela.activeSessions();
       if (sequence === activeRefreshSequenceRef.current) {
         activeSessionsRef.current = list;
         setActiveSessions(list);
@@ -50,7 +50,7 @@ export function useSessionInventory(toast: (text: string, tone?: "info" | "error
   const loadSessions = useCallback(async () => {
     const request = ++sessionsRequestRef.current;
     try {
-      const summaries = await window.openshell.sessions();
+      const summaries = await window.vela.sessions();
       if (request === sessionsRequestRef.current) setSessions(summaries);
     } catch (err) {
       toast(err instanceof Error ? err.message : String(err), "error");

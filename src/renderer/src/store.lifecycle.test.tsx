@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenShellApi } from "../../preload";
+import type { VelaApi } from "../../preload";
 import type { BackendMessage, SessionInfo } from "@shared/types";
 import { StoreProvider, useStore } from "./store";
 
@@ -16,7 +16,7 @@ function deferred<T>() {
   const promise = new Promise<T>((done) => { resolve = done; });
   return { promise, resolve };
 }
-function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
+function api(overrides: Partial<VelaApi> = {}): VelaApi {
   return {
     platform: "darwin", onMessage: (handler) => { receive = handler; return () => {}; },
     health: async () => true, takePendingPaths: async () => [], state: async () => null,
@@ -28,7 +28,7 @@ function api(overrides: Partial<OpenShellApi> = {}): OpenShellApi {
     openSession: async (directory, request) => info(directory, request),
     openSessionById: async (id) => ({ session: info("/replay", 0, id), transcript: [], todos: [], usage: null }),
     ...overrides
-  } as OpenShellApi;
+  } as VelaApi;
 }
 
 describe("Store lifecycle acquisition authority", () => {
@@ -50,8 +50,8 @@ describe("Store lifecycle acquisition authority", () => {
     vi.unstubAllGlobals();
     container.remove();
   });
-  async function mount(overrides: Partial<OpenShellApi> = {}) {
-    window.openshell = api(overrides);
+  async function mount(overrides: Partial<VelaApi> = {}) {
+    window.vela = api(overrides);
     await act(async () => root.render(<StoreProvider><Probe /></StoreProvider>));
   }
 
@@ -117,7 +117,7 @@ describe("Store lifecycle acquisition authority", () => {
   });
 
   it("retains reopen suppression until both same-session acquisitions settle", async () => {
-    type Replay = Awaited<ReturnType<OpenShellApi["openSessionById"]>>;
+    type Replay = Awaited<ReturnType<VelaApi["openSessionById"]>>;
     const older = deferred<Replay>();
     const newer = deferred<Replay>();
     const openSessionById = vi.fn().mockImplementationOnce(() => older.promise).mockImplementationOnce(() => newer.promise);
@@ -141,7 +141,7 @@ describe("Store lifecycle acquisition authority", () => {
 
   it("captures dirty close writes before a later edit and keeps the panel when that revision cannot finish", async () => {
     const write = deferred<void>();
-    const writeFile = vi.fn<OpenShellApi["writeFile"]>(() => write.promise);
+    const writeFile = vi.fn<VelaApi["writeFile"]>(() => write.promise);
     const closeSession = vi.fn(async () => {});
     await mount({ readFile: async () => "original", writeFile, closeSession });
     await act(async () => store.addModelPanel("/dirty"));
@@ -220,7 +220,7 @@ describe("Store lifecycle acquisition authority", () => {
     await mount();
     await act(async () => store.addModelPanel("/target"));
     const target = store.session!;
-    window.openshell.openSession = async () => { throw new Error("swap failed"); };
+    window.vela.openSession = async () => { throw new Error("swap failed"); };
     await act(async () => store.changePanelDirectory(target.workspace, "/failure"));
     expect(store.toasts.at(-1)?.text).toBe("swap failed");
     expect(store.session?.id).toBe(target.id);
@@ -230,7 +230,7 @@ describe("Store lifecycle acquisition authority", () => {
   });
 
   it("silent reopen survives newer activation and attaches without taking focus", async () => {
-    type Replay = Awaited<ReturnType<OpenShellApi["openSessionById"]>>;
+    type Replay = Awaited<ReturnType<VelaApi["openSessionById"]>>;
     const replay = deferred<Replay>();
     const closeSession = vi.fn(async () => {});
     await mount({ openSessionById: (id) => id === "silent" ? replay.promise : Promise.resolve({ session: info("/hydrate", 0, id), transcript: [], todos: [], usage: null }), closeSession });
@@ -286,7 +286,7 @@ describe("Store lifecycle acquisition authority", () => {
     await act(async () => store.addModelPanel("/target"));
     const target = store.session!;
     const failure = new Promise<SessionInfo>((_resolve, reject) => { pick.promise.then(() => reject(new Error("late swap failed"))); });
-    window.openshell.openSession = () => failure;
+    window.vela.openSession = () => failure;
     let swapping!: Promise<void>;
     act(() => { swapping = store.changePanelDirectory(target.workspace, "/missing"); });
     act(() => store.closePanel(target.id));

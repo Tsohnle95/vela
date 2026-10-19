@@ -23,7 +23,7 @@ const secondTab: Tab = { ...firstTab, path: "src/two.ts", name: "two.ts", conten
 const thirdTab: Tab = { ...firstTab, path: "src/three.ts", name: "three.ts", content: "three", saved: "three" };
 const fourthTab: Tab = { ...firstTab, path: "src/four.ts", name: "four.ts", content: "four", saved: "four" };
 const jsTab: Tab = { ...firstTab, path: "src/library.js", name: "library.js", content: "document.", saved: "document." };
-const EDITOR_TAB_MIME = "application/x-mira-editor-tab";
+const EDITOR_TAB_MIME = "application/x-vela-editor-tab";
 const capturedEditorOptions = vi.hoisted(() => vi.fn());
 
 function createTabTransfer(): DataTransfer {

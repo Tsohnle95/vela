@@ -182,7 +182,7 @@ export function createStreamPipeline(options: StreamPipelineOptions): StreamPipe
 
     queue.last = Date.now();
     void Promise.resolve(onEvents(directory, events))
-      .catch((error) => onStreamError?.(formatFailure(error, "MIRA_EVENT_DELIVERY_FAILED", "Event delivery failed")))
+      .catch((error) => onStreamError?.(formatFailure(error, "VELA_EVENT_DELIVERY_FAILED", "Event delivery failed")))
       .finally(() => {
         events.length = 0;
       });
@@ -325,7 +325,7 @@ export function createStreamPipeline(options: StreamPipelineOptions): StreamPipe
       streamErrorLogged = false;
 
       const payload = resolveEventPayload((event.payload as RawStreamEvent | undefined) ?? event);
-      if (!payload) throw Object.assign(new Error("Live event stream returned an invalid event"), { code: "MIRA_STREAM_INVALID_EVENT" });
+      if (!payload) throw Object.assign(new Error("Live event stream returned an invalid event"), { code: "VELA_STREAM_INVALID_EVENT" });
       const directory = resolveEventDirectory(event, payload);
       enqueueEvent(directory, payload);
 
@@ -366,9 +366,9 @@ export function createStreamPipeline(options: StreamPipelineOptions): StreamPipe
             onStreamFailure?.(consecutiveFailures);
             if (!streamErrorLogged) {
               streamErrorLogged = true;
-              console.error("[mira] stream failed", error);
+              console.error("[vela] stream failed", error);
             }
-            const failure = normalizeFailure(error, "MIRA_STREAM_FAILED", "Live event stream failed");
+            const failure = normalizeFailure(error, "VELA_STREAM_FAILED", "Live event stream failed");
             notifyDisconnected(formatFailure(failure));
             retryDelayMs = computeRetryDelay(consecutiveFailures);
           }

@@ -1,22 +1,22 @@
 <div align="center">
-  <img src="resources/icon.png" width="88" alt="Mira">
-  <h1>Mira</h1>
+  <img src="resources/icon.png" width="88" alt="Vela">
+  <h1>Vela</h1>
   <p><strong>Agent Development Environment</strong></p>
   <p>Your repository, editor, terminal, agent, and change review—together on one desktop.</p>
 </div>
 
 <p align="center">
-  <img src="mockup-design/assets/mira-workbench-reference.png" alt="Mira workbench with a repository explorer, code editor, integrated terminal, and OpenCode agent panel." width="1375">
+  <img src="mockup-design/assets/vela-workbench-reference.png" alt="Vela workbench with a repository explorer, code editor, integrated terminal, and OpenCode agent panel." width="1375">
 </p>
 
-Mira is an open-source coding workbench built around the repository you open. Work directly in its files, bring an agent into the same workspace, and follow the work from the first prompt to the diff.
+Vela is an open-source coding workbench built around the repository you open. Work directly in its files, bring an agent into the same workspace, and follow the work from the first prompt to the diff.
 
 ## One workspace for the whole coding loop
 
 - **Explore and edit.** Browse the project, work in the Monaco editor with tabs and autosave, and open a single file or a full repository.
 - **Work with an agent.** Use the built-in OpenCode panel to follow streamed responses, reasoning, tool activity, todos, and permission requests. Choose from the models and agents available through OpenCode, attach files, reference workspace files with `@`, and queue or steer follow-ups.
-- **Run the project.** Use Mira’s integrated terminal from the active workspace, or switch an agent panel to the OpenCode TUI.
-- **Review the change.** Mira surfaces workspace file changes it observes. When it knows a file’s starting content, open a Monaco diff; when it does not, the file stays marked as observed rather than showing a guessed diff. Changes are observed, not attributed to a particular tool or person.
+- **Run the project.** Use Vela’s integrated terminal from the active workspace, or switch an agent panel to the OpenCode TUI.
+- **Review the change.** Vela surfaces workspace file changes it observes. When it knows a file’s starting content, open a Monaco diff; when it does not, the file stays marked as observed rather than showing a guessed diff. Changes are observed, not attributed to a particular tool or person.
 
 ## Agent Mode
 
@@ -24,11 +24,11 @@ Spread out when a task benefits from parallel work. Agent Mode arranges up to ei
 
 ## OpenCode V2
 
-OpenCode V2 is the only runtime enabled in Mira today. Mira connects to a compatible OpenCode service or starts one through the `opencode` CLI; its available models and agents come from that runtime. DeepSeek Harness code remains in the repository as dormant source and is not selectable in the app. Other runtimes are not available yet.
+OpenCode V2 is the only runtime enabled in Vela today. Vela connects to a compatible OpenCode service or starts one through the `opencode` CLI; its available models and agents come from that runtime. DeepSeek Harness code remains in the repository as dormant source and is not selectable in the app. Other runtimes are not available yet.
 
 ## Mobile companion
 
-Pair the optional mobile companion from **Settings → Mobile Setup**. Keep Mira Desktop open while using the phone; when the companion server is connected to the shared OpenCode service, both can access the same sessions. See [Connecting the mobile companion](docs/operations.md#connecting-the-mobile-companion).
+Pair the optional mobile companion from **Settings → Mobile Setup**. Keep Vela Desktop open while using the phone; when the companion server is connected to the shared OpenCode service, both can access the same sessions. See [Connecting the mobile companion](docs/operations.md#connecting-the-mobile-companion).
 
 ## Get started
 
@@ -45,7 +45,7 @@ npm install
 npm run dev
 ```
 
-Open a folder from Mira to create a workspace session. Mira discovers a compatible OpenCode service or starts one using the installed CLI.
+Open a folder from Vela to create a workspace session. Vela discovers a compatible OpenCode service or starts one using the installed CLI.
 
 ### Build and install
 
@@ -53,7 +53,7 @@ Open a folder from Mira to create a workspace session. Mira discovers a compatib
 npm run build          # compile and launch
 npm run build:compile  # compile only
 npm start              # launch the existing build
-npm run pack           # package Mira.app on macOS
+npm run pack           # package Vela.app on macOS
 npm run install-app    # build, package, and install to /Applications (macOS)
 ```
 

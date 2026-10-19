@@ -44,9 +44,9 @@ export function useWorkspaceEditor(host: EditorHost) {
   if (!persistenceRef.current) {
     persistenceRef.current = new EditorPersistence((snapshot, write) => {
       if (snapshot.standalone) {
-        return window.openshell.writeStandalone(snapshot.path, snapshot.content, write.expectedContent, write.overwrite ?? false);
+        return window.vela.writeStandalone(snapshot.path, snapshot.content, write.expectedContent, write.overwrite ?? false);
       }
-      return window.openshell.writeFile(snapshot.workspace, snapshot.path, snapshot.content, write);
+      return window.vela.writeFile(snapshot.workspace, snapshot.path, snapshot.content, write);
     });
   }
   const persistence = persistenceRef.current;
@@ -114,7 +114,7 @@ export function useWorkspaceEditor(host: EditorHost) {
       }
       try {
         const agentFile = target ? readAgentFile(target, path) : undefined;
-        let content = await window.openshell.readFile(target, path);
+        let content = await window.vela.readFile(target, path);
         if (!panelFor(target)) return;
         if (content === null && agentFile?.deleted) content = "";
         if (content === null) {
@@ -161,7 +161,7 @@ export function useWorkspaceEditor(host: EditorHost) {
       if (!readFocusedSession() || readFocusedSession()!.id !== panel.id) focusSession(panel.id);
       const foreground = readFocusedSession()?.workspace.id === target.id && readFocusedSession()?.workspace.generation === target.generation;
       try {
-        const result = await window.openshell.openExternal(target, absolutePath);
+        const result = await window.vela.openExternal(target, absolutePath);
         if (!panelFor(target)) return null;
         if (result.kind === "relative") {
           await openFile(result.rel, target);

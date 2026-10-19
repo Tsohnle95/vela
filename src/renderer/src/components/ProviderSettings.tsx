@@ -93,7 +93,7 @@ function OAuthFlow({
     let timer: ReturnType<typeof setInterval> | null = null;
     const tick = async (): Promise<void> => {
       try {
-        const poll = await window.openshell.providerOauthPoll(workspace, provider.id, attempt.attemptID);
+        const poll = await window.vela.providerOauthPoll(workspace, provider.id, attempt.attemptID);
         if (poll.status === "complete") {
           finishedRef.current = true;
           if (timer) clearInterval(timer);
@@ -119,7 +119,7 @@ function OAuthFlow({
 
   useEffect(() => () => {
     if (attempt && !finishedRef.current) {
-      void window.openshell.providerOauthCancel(workspace, provider.id, attempt.attemptID).catch(() => {});
+      void window.vela.providerOauthCancel(workspace, provider.id, attempt.attemptID).catch(() => {});
     }
   }, [attempt, provider.id, workspace]);
 
@@ -129,7 +129,7 @@ function OAuthFlow({
     setError(null);
     finishedRef.current = false;
     try {
-      setAttempt(await window.openshell.providerOauthStart(workspace, provider.id, method.id));
+      setAttempt(await window.vela.providerOauthStart(workspace, provider.id, method.id));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -141,7 +141,7 @@ function OAuthFlow({
     if (!attempt || !code) return;
     setBusy(true);
     try {
-      await window.openshell.providerOauthComplete(workspace, provider.id, attempt.attemptID, code);
+      await window.vela.providerOauthComplete(workspace, provider.id, attempt.attemptID, code);
       await Promise.all([refresh(), refreshModels()]);
       onFinished();
     } catch (cause) {
@@ -214,7 +214,7 @@ function ProviderCard({
     try {
       const visibleKeys = new Set(provider.keyMethod.fields.filter((field) => field.type !== "external" && fieldVisible(field, answers)).map((field) => field.key));
       const submittedAnswers = Object.fromEntries(Object.entries(answers).filter(([answerKey, value]) => visibleKeys.has(answerKey) && value !== "" && (!Array.isArray(value) || value.length > 0)));
-      await window.openshell.connectProviderKey(workspace, provider.id, key, label, submittedAnswers);
+      await window.vela.connectProviderKey(workspace, provider.id, key, label, submittedAnswers);
       setKey("");
       setLabel("");
       setOpen(false);
@@ -231,7 +231,7 @@ function ProviderCard({
     setSaving(true);
     setError(null);
     try {
-      await window.openshell.removeProviderCredential(workspace, credentialID);
+      await window.vela.removeProviderCredential(workspace, credentialID);
       await Promise.all([refresh(), refreshModels()]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -311,7 +311,7 @@ export function ProviderSettings({
     setLoading(true);
     setError(null);
     try {
-      const next = await window.openshell.providerIntegrations(workspace);
+      const next = await window.vela.providerIntegrations(workspace);
       if (request === requestRef.current) setProviders(next);
     } catch (cause) {
       if (request === requestRef.current) setError(cause instanceof Error ? cause.message : String(cause));

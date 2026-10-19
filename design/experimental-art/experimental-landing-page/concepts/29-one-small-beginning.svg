@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-label="Mira launch artwork"><defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-label="Vela launch artwork"><defs>
  <radialGradient id="halo"><stop stop-color="#a283ff" stop-opacity=".75"/><stop offset="1" stop-color="#9171ff" stop-opacity="0"/></radialGradient>
  <radialGradient id="nebula"><stop stop-color="#54328f" stop-opacity=".5"/><stop offset="1" stop-color="#090a17" stop-opacity="0"/></radialGradient>
  <linearGradient id="type" x2=".2" y2="1"><stop stop-color="#a080f5"/><stop offset=".58" stop-color="#b9a5ff"/><stop offset="1" stop-color="#f4f0ff"/></linearGradient>
  <linearGradient id="fade" x2="0" y2="1"><stop stop-color="#9970ff"/><stop offset="1" stop-color="#100e24"/></linearGradient>
  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#9b83d3" stroke-opacity=".14"/></pattern>
  <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 0H4" stroke="#05050c" stroke-opacity=".4"/></pattern>
- </defs><rect x="0" y="0" width="1440" height="900" fill="#15111c" /><rect x="712" y="352" width="16" height="16" fill="#bba5eb" /><text x="720" y="482" fill="#ddd3ec" font-size="62" font-family="Georgia,serif"  text-anchor="middle" letter-spacing="-2">mira</text><text x="720" y="826" fill="#9687a7" font-size="10" font-family="'SFMono-Regular',Consolas,monospace" letter-spacing="2" text-anchor="middle">IT STARTS WITH A LITTLE SPACE.</text></svg>
+ </defs><rect x="0" y="0" width="1440" height="900" fill="#15111c" /><rect x="712" y="352" width="16" height="16" fill="#bba5eb" /><text x="720" y="482" fill="#ddd3ec" font-size="62" font-family="Georgia,serif"  text-anchor="middle" letter-spacing="-2">vela</text><text x="720" y="826" fill="#9687a7" font-size="10" font-family="'SFMono-Regular',Consolas,monospace" letter-spacing="2" text-anchor="middle">IT STARTS WITH A LITTLE SPACE.</text></svg>

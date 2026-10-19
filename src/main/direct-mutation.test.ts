@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { RecoveryStorage } from "./recovery-storage";
+import { LEGACY_RECOVERY_DIR, RecoveryStorage } from "./recovery-storage";
 import { chmod, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rm, symlink, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
@@ -22,13 +22,13 @@ vi.mock("@opencode/client/service", () => ({
   Service: {}
 }));
 
-import { OpenShellBackend, type SessionContext } from "./opencode";
+import { VelaBackend, type SessionContext } from "./opencode";
 import type { BackendMessage, FileBaseline, WorkspaceIdentity } from "@shared/types";
 import { LatestGeneration } from "@shared/generation";
 
 const roots: string[] = [];
 const workspace: WorkspaceIdentity = { id: "11111111-1111-4111-8111-111111111111", generation: 1 };
-function observation(backend: OpenShellBackend) {
+function observation(backend: VelaBackend) {
   return (backend as unknown as { observation: import("./workspace-observation").WorkspaceObservation<SessionContext> }).observation;
 }
 
@@ -38,19 +38,19 @@ afterEach(async () => {
 
 function recoveryRootFor(root: string): string {
   const key = createHash("sha256").update(root).digest("hex").slice(0, 16);
-  return path.join(path.dirname(root), `.mira-recovery-${key}`);
+  return path.join(path.dirname(root), `.vela-recovery-${key}`);
 }
 
 async function backendFixture(
-  mutationPhase?: ConstructorParameters<typeof OpenShellBackend>[0]
+  mutationPhase?: ConstructorParameters<typeof VelaBackend>[0]
 ): Promise<{
-  backend: OpenShellBackend;
+  backend: VelaBackend;
   root: string;
   messages: BackendMessage[];
 }> {
-  const root = await realpath(await mkdtemp(path.join(tmpdir(), "openshell-mutation-")));
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "vela-mutation-")));
   roots.push(root);
-  const backend = new OpenShellBackend(mutationPhase);
+  const backend = new VelaBackend(mutationPhase);
   const context = {
     root,
     sessionID: "session",
@@ -139,7 +139,7 @@ describe("direct mutation observed changes", () => {
   });
 
   it("does not surface its own save as an external change", async () => {
-    const holder: { backend?: OpenShellBackend } = {};
+    const holder: { backend?: VelaBackend } = {};
     const { backend, root, messages } = await backendFixture(async (phase, _source, target) => {
       if (phase !== "save:source-held" || !target) return;
       const context = (holder.backend as unknown as { contexts: Map<string, SessionContext> })
@@ -151,7 +151,7 @@ describe("direct mutation observed changes", () => {
     holder.backend = backend;
     const file = path.join(root, "save.txt");
     await writeFile(file, "expected");
-    // Mira has observed the file (e.g. it is open in the editor), so a missing
+    // Vela has observed the file (e.g. it is open in the editor), so a missing
     // path during the save would otherwise surface as an external deletion.
     observation(backend).recordSnapshot(
       (backend as unknown as { contexts: Map<string, SessionContext> }).contexts.get(workspace.id)!.watchContext,
@@ -247,7 +247,7 @@ describe("direct mutation observed changes", () => {
 
     await backend.writeFile(workspace, "save.txt", "proposed", writeIdentity("original"));
 
-    expect(await readdir(path.join(root, ".git", "mira-recovery"))).toHaveLength(1);
+    expect(await readdir(path.join(root, ".git", "vela-recovery"))).toHaveLength(1);
     expect(await readdir(root)).toEqual([".git", "save.txt"]);
     expect((await backend.listRecovery(workspace)).some((record) => record.originalPath === "save.txt")).toBe(true);
   });
@@ -256,17 +256,17 @@ describe("direct mutation observed changes", () => {
     const { backend, root } = await backendFixture();
     await writeFile(path.join(root, "save.txt"), "original");
     await backend.writeFile(workspace, "save.txt", "proposed", writeIdentity("original"));
-    await rename(recoveryRootFor(root), path.join(root, ".openshell-recovery"));
+    await rename(recoveryRootFor(root), path.join(root, LEGACY_RECOVERY_DIR));
 
     const record = (await backend.listRecovery(workspace)).find((item) => item.artifact === "original")!;
-    expect(record.recoveryPath).toContain(".openshell-recovery");
+    expect(record.recoveryPath).toContain(LEGACY_RECOVERY_DIR);
     await backend.openRecovery(workspace, record.id);
     await backend.acknowledgeRecovery(workspace, record.id);
     expect((await backend.listRecovery(workspace)).find((item) => item.id === record.id)?.acknowledged).toBe(true);
     const state = backend as unknown as { client: unknown };
     state.client = { session: { create: vi.fn(async () => ({ id: "reactivated" })) } };
     const activated = await backend.openSession(root);
-    expect(await readdir(path.join(root, ".openshell-recovery")).catch(() => [])).toEqual([]);
+    expect(await readdir(path.join(root, LEGACY_RECOVERY_DIR)).catch(() => [])).toEqual([]);
     expect(await readdir(recoveryRootFor(root))).toHaveLength(1);
     expect((await backend.listRecovery(activated.workspace)).find((item) => item.id === record.id)).toBeDefined();
     await backend.stop();
@@ -290,7 +290,7 @@ describe("direct mutation observed changes", () => {
   });
 
   it("does not reject when the workspace root is gone before the purge runs", async () => {
-    await expect(purgeExpired(path.join(tmpdir(), "mira-missing-root"))).resolves.toBeUndefined();
+    await expect(purgeExpired(path.join(tmpdir(), "vela-missing-root"))).resolves.toBeUndefined();
   });
 
   it("purges settled recovery transactions older than 24 hours on activation", async () => {
@@ -446,7 +446,7 @@ describe("direct mutation observed changes", () => {
     const { backend, root } = await backendFixture(async (phase) => {
       if (phase === "save:source-held") throw new Error("simulated crash");
     });
-    const outside = await mkdtemp(path.join(tmpdir(), "openshell-recovery-outside-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "vela-recovery-outside-"));
     roots.push(outside);
     await writeFile(path.join(root, "save.txt"), "original");
     await expect(backend.writeFile(workspace, "save.txt", "proposed", writeIdentity("original"))).rejects.toThrow();
@@ -739,24 +739,18 @@ describe("direct mutation observed changes", () => {
   it("rejects the recovery directory as move source or destination", async () => {
     const { backend, root, messages } = await backendFixture();
     await mkdir(path.join(root, "docs"));
-    await mkdir(path.join(root, ".openshell-recovery"));
-    await mkdir(path.join(root, ".mira-recovery"));
+    await mkdir(path.join(root, ".vela-recovery"));
     await writeFile(path.join(root, "docs", "note.txt"), "x");
 
-    await expect(backend.movePath(workspace, ".openshell-recovery", "docs"))
-      .rejects.toThrow("cannot move the recovery directory");
-    await expect(backend.movePath(workspace, "docs/note.txt", ".openshell-recovery"))
+    await expect(backend.movePath(workspace, "docs", ".vela-recovery/archive"))
       .rejects.toThrow("cannot move into the recovery directory");
-    await expect(backend.movePath(workspace, "docs", ".openshell-recovery/archive"))
-      .rejects.toThrow("cannot move into the recovery directory");
-    await expect(backend.movePath(workspace, ".mira-recovery", "docs"))
+    await expect(backend.movePath(workspace, ".vela-recovery", "docs"))
       .rejects.toThrow("cannot move the recovery directory");
-    await expect(backend.movePath(workspace, "docs/note.txt", ".mira-recovery"))
+    await expect(backend.movePath(workspace, "docs/note.txt", ".vela-recovery"))
       .rejects.toThrow("cannot move into the recovery directory");
 
     expect(await readFile(path.join(root, "docs", "note.txt"), "utf8")).toBe("x");
-    expect(await readdir(path.join(root, ".openshell-recovery"))).toEqual([]);
-    expect(await readdir(path.join(root, ".mira-recovery"))).toEqual([]);
+    expect(await readdir(path.join(root, ".vela-recovery"))).toEqual([]);
     expect(messages).toEqual([]);
   });
 
@@ -782,7 +776,7 @@ describe("direct mutation observed changes", () => {
 
   it("routes global filesystem events only to their matching active workspace", async () => {
     const { backend, root, messages } = await backendFixture();
-    const other = await mkdtemp(path.join(tmpdir(), "openshell-other-"));
+    const other = await mkdtemp(path.join(tmpdir(), "vela-other-"));
     roots.push(other);
     await writeFile(path.join(root, "active.txt"), "active");
     await writeFile(path.join(other, "foreign.txt"), "foreign");

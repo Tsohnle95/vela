@@ -1,6 +1,6 @@
 # Codex redesign integration
 
-Source snapshot: `ee8d298` from `/Users/tdawg/.local/share/opencode/worktree/b865fa/mira-codex-redesign`.
+Source snapshot: `ee8d298` from `/Users/tdawg/.local/share/opencode/worktree/b865fa/vela-codex-redesign`.
 Target starts at completed refactor `0cf9652`; common ancestor `3e63792433ef7a6d2ff04540a7181458d953d7a5`.
 Integrated production checkpoint: `7f28dad`. Independent cumulative review approved the result; checks and explicit verification limits follow. [Source delta inventory](source-delta.json) records every changed source path and its integration disposition.
 
@@ -36,7 +36,7 @@ New modules have named canonical routes, private import boundaries and selected 
 
 ## Excluded source-workspace scaffolding
 
-The source's unconditional `mira-design-copy` development profile default was not installed into main: main retains its normal saved sessions/settings. Source task ledgers and stale architecture documentation/budgets were not copied. The source checkout is read-only throughout. No design experiment or dormant runtime source was deleted.
+The source's unconditional `vela-design-copy` development profile default was not installed into main: main retains its normal saved sessions/settings. Source task ledgers and stale architecture documentation/budgets were not copied. The source checkout is read-only throughout. No design experiment or dormant runtime source was deleted.
 
 ## Verification
 
@@ -48,7 +48,7 @@ The source's unconditional `mira-design-copy` development profile default was no
 
 ## Remaining verification limits
 
-Paid-provider prompting, physical device grants/mobile hardware, signed updates, Windows/Linux native browser behavior and full application quit/recovery dialogs are not established by these checks. Native titlebar/file-to-group/explorer drag gestures require separate direct confirmation; attempted titlebar drags produced no confirmed move event, so no successful native drag is claimed; automated transfer/drop and filesystem/platform checks cover their respective paths. The user's normal running Mira/profile and redesign workspace are not replaced or reset.
+Paid-provider prompting, physical device grants/mobile hardware, signed updates, Windows/Linux native browser behavior and full application quit/recovery dialogs are not established by these checks. Native titlebar/file-to-group/explorer drag gestures require separate direct confirmation; attempted titlebar drags produced no confirmed move event, so no successful native drag is claimed; automated transfer/drop and filesystem/platform checks cover their respective paths. The user's normal running Vela/profile and redesign workspace are not replaced or reset.
 
 ## Measurements and validation provenance
 

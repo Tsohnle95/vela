@@ -1,9 +1,9 @@
-# Mira design study
+# Vela design study
 
 Open index.html in a browser. Select a direction from the left or use **Next
 direction** to inspect each workspace at full size. The sample workspace is
 illustrative; this is a standalone visual exploration and does not change
-Mira's production UI.
+Vela's production UI.
 
 ## Directions
 

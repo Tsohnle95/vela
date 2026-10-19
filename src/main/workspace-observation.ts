@@ -2,11 +2,12 @@ import { execFile } from "node:child_process";
 import { promises as fsp, watch, type FSWatcher } from "node:fs";
 import path from "node:path";
 import type { FileBaseline, FileWriteIdentity, WorkspaceIdentity } from "@shared/types";
+import { HIDDEN_RECOVERY_DIRS } from "@shared/types";
 import { knownBaseline, observedBaseline, preserveBaseline, unknownBaseline } from "./file-baseline";
 
 export const SKIP_DIRS: ReadonlySet<string> = new Set([
   ".git", "node_modules", ".next", ".venv", "__pycache__", ".cache", ".turbo", ".nx",
-  ".svn", ".hg", ".idea", ".vscode", ".openshell-recovery", ".mira-recovery", ".orbit-recovery", "dist", "out", "build", "target", "coverage", ".pytest_cache",
+  ".svn", ".hg", ".idea", ".vscode", ...HIDDEN_RECOVERY_DIRS, "dist", "out", "build", "target", "coverage", ".pytest_cache",
   ".opencode", ".claude", ".cursor", ".aider", ".windsurf", ".codeium", ".roo", ".gemini", ".kilocode", ".continue"
 ]);
 
@@ -26,7 +27,7 @@ export interface WatchContext {
   recentMoves?: Map<string, number>;
   importing?: number;
   suppressedUntil?: Map<string, number>;
-  /** Absolute paths Mira is writing; their filesystem events are not external changes. */
+  /** Absolute paths Vela is writing; their filesystem events are not external changes. */
   mutating?: Set<string>;
 }
 
@@ -216,10 +217,10 @@ export class WorkspaceObservation<Session extends WatchSession> {
         if (this.shouldSkip(abs, context.directory)) return;
         this.scheduleWatch(context.watchContext, abs, event);
       });
-      context.watcher.on("error", (err) => console.error("[mira] watcher error:", err));
-      console.log("[mira] watching", context.directory);
+      context.watcher.on("error", (err) => console.error("[vela] watcher error:", err));
+      console.log("[vela] watching", context.directory);
     } catch (err) {
-      console.error("[mira] fs.watch unavailable, live updates disabled:", err);
+      console.error("[vela] fs.watch unavailable, live updates disabled:", err);
     }
   }
 
