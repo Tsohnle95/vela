@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from "react";
-import { IconPanelLeft, IconPanelLeftDashed, IconPanelRight, IconPanelRightDashed } from "./icons";
+import { IconPanelLeft, IconPanelLeftDashed, IconPanelRight, IconPanelRightDashed, IconSquarePlus } from "./icons";
 import observatoryWordmark from "../assets/observatory-wordmark.svg";
 
 export function Titlebar({
@@ -65,7 +65,7 @@ export function Titlebar({
           disabled={!canAddAgentPanel}
           onClick={onAddAgentPanel}
         >
-          <i className="codicon codicon-add" aria-hidden="true" />
+          <IconSquarePlus />
         </button>
         <button
           className="icon-btn"

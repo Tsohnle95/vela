@@ -177,6 +177,15 @@ export function IconAdd(props: IconProps): ReactNode {
   );
 }
 
+export function IconSquarePlus(props: IconProps): ReactNode {
+  return (
+    <Icon name="plus-square" strokeWidth={1.1} {...props}>
+      <rect x="2.5" y="2.5" width="11" height="11" rx="2.5" />
+      <path d="M8 5.5v5M5.5 8h5" />
+    </Icon>
+  );
+}
+
 export function IconArrowDown(props: IconProps): ReactNode {
   return (
     <Icon name="arrow-down" {...props}>

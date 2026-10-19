@@ -256,7 +256,8 @@
   -webkit-app-region: no-drag;
 }
 
-.titlebar .icon-btn .lucide-icon { width: 18px; height: 18px; }
+.titlebar .icon-btn .codicon { font-size: 18px; }
+.titlebar .icon-btn .os-icon { width: 18px; height: 18px; }
 
 .titlebar-leading-actions .icon-btn.on,
 .titlebar-actions .icon-btn.on {
