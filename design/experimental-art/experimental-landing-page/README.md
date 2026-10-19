@@ -1,14 +1,18 @@
-# Mira — compact loading studies and 130 earlier concepts
+# Mira — compact loading studies
 
-Twelve compact pixel-art variations (131–142), alongside the original 30
+Twelve slick vector designs (143–154), twelve compact pixel-art variations
+(131–142), alongside the original 30
 launch-screen prototypes and 100 independently composed designs.
 
 The original reference is `../ChatGPT Image Oct 13, 2026, 03_23_53 PM.png`.
 The expansion also draws on the other screenshots in `experimental-art`:
 violet light, pixel texture, habitats, cosmic paths, glass and astronomical
-space. All preview branding now uses Mira. The twelve latest studies follow
+space. All preview branding now uses Mira. The twelve pixel studies follow
 the supplied pixel-art reference closely, with stars, violet moons, textured
 orbital arcs and a pixel MIRA wordmark. Each records its source in the notes.
+The slick collection uses original vector compositions: liquid metal, glass,
+spectral curves, modernist type, obsidian, mint folds, blue optics, rose silk,
+champagne contours, a luminous filament, ceramic and a signal surface.
 
 ## Preview
 
@@ -18,10 +22,10 @@ From this folder:
 npm start
 ```
 
-Open <http://127.0.0.1:8147/>. The gallery defaults to **Compact Mira**, showing
-the twelve latest studies at 300–420 pixels wide. Click a card to inspect its
-actual splash dimensions against a desktop background. There are 142 designs
-in total. Filter to **All 142**, **Original 30** or **New 100**, search a number/name/art direction, or
+Open <http://127.0.0.1:8147/>. The gallery defaults to **Slick Mira**, showing
+twelve smooth vector studies at 360–400 pixels wide. Click a card to inspect its
+actual splash dimensions against a desktop background. There are 154 designs
+in total. Filter to **Pixel Mira**, **All 154**, **Original 30** or **New 100**, search a number/name/art direction, or
 use **All treatments** to narrow by light/dark artwork.
 Click a card to run its launch experience. Each page paints its local artwork,
 holds it for three seconds after image decode and first paint, then shows an
@@ -39,11 +43,14 @@ Space to hold/resume, R to replay. `?still=1` holds the art on initial load;
 ## Files
 
 - `index.html`, `gallery.css`, `gallery.js`: responsive gallery and filters.
-- `concepts/`: 142 separate HTML previews and 142 SVG artworks.
+- `concepts/`: 154 separate HTML previews and 154 SVG artworks.
 - `preview.css`, `preview.js`: shared three-second lifecycle and empty shell.
 - `concepts.json`: titles, descriptions, and links.
 - `build.mjs`: reproducibly generates the gallery, pages, and SVG compositions.
   Run `npm run build` after changing the artwork definitions.
+- `slick-mira.mjs`: smooth vector studies 143–154, with subtle CSS motion and
+  reduced-motion support. Each uses continuous curves and typography rather
+  than pixel glyphs or dither.
 - `compact-mira.mjs`: compact reference variations 131–142 and their native sizes.
 - `expansion/legacy-slugs.json`: stable URLs for the earlier 130 concepts.
 - `expansion/environments.mjs`: agent-created concepts 31–64.

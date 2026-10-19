@@ -12,11 +12,12 @@ ROOT = Path(__file__).resolve().parent
 manifest = json.loads((ROOT / "concepts.json").read_text())
 baseline = json.loads((ROOT / "expansion/original-art-baseline.json").read_text())
 reservations = json.loads((ROOT / "expansion/registry.json").read_text())
-assert len(manifest) == 142, "Deliver all 142 concepts"
-assert [int(c["id"]) for c in manifest] == list(range(1, 143)), "IDs must be complete and ordered"
+assert len(manifest) == 154, "Deliver all 154 concepts"
+assert [int(c["id"]) for c in manifest] == list(range(1, 155)), "IDs must be complete and ordered"
 assert sum(c["batch"] == "new" for c in manifest) == 100
 assert sum(c["batch"] == "compact" for c in manifest) == 12
-assert len({c["slug"] for c in manifest}) == 142
+assert sum(c["batch"] == "slick" for c in manifest) == 12
+assert len({c["slug"] for c in manifest}) == 154
 
 
 class Page(HTMLParser):
@@ -83,7 +84,12 @@ for index, concept in enumerate(manifest):
     else:
         assert concept["presentation"] == "compact"
         assert concept["splashWidth"] <= 420 and concept["splashHeight"] <= 360
-        assert concept["source"] == ["ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"]
+        if concept["batch"] == "compact":
+            assert concept["source"] == ["ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"]
+        else:
+            assert concept["source"] == []
+            assert "pixelated" not in content.decode()
+            assert "prefers-reduced-motion" in content.decode()
     page = Page(ROOT / "concepts" / f"{concept['slug']}.html")
     previous = manifest[(index - 1) % len(manifest)]["slug"]
     following = manifest[(index + 1) % len(manifest)]["slug"]
@@ -91,9 +97,9 @@ for index, concept in enumerate(manifest):
     assert page.links["next"] == f"./{following}.html"
 
 gallery = Page(ROOT / "index.html")
-assert gallery.cards == 142, "Gallery must expose all 142 designs"
+assert gallery.cards == 154, "Gallery must expose all 154 designs"
 for filename in ("process.html", "contact-sheet.html", "verify.html"):
     Page(ROOT / filename)
-print("142/142 SVGs valid, distinct, self-contained, correctly linked, with no old Orbit wordmarks.")
-print("12 compact Mira studies; 130 earlier compositions corrected to Mira; branding baseline matches.")
+print("154/154 SVGs valid, distinct, self-contained, correctly linked, with no old Orbit wordmarks.")
+print("12 slick and 12 pixel Mira studies; 130 earlier compositions; branding baseline matches.")
 print("Browser decode, visual review and timing are separate checks: open verify.html.")

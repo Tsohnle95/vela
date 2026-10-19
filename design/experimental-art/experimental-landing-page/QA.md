@@ -2,24 +2,24 @@
 
 ## Scope
 
-142 numbered experiments: original 01–30, environments 31–64, graphic objects
-65–97, systems 98–130, and twelve compact Mira variations 131–142. Production app code is outside this change.
+154 numbered experiments: original 01–30, environments 31–64, graphic objects
+65–97, systems 98–130, twelve pixel Mira variations 131–142, and twelve slick vector studies 143–154. Production app code is outside this change.
 
 ## Executed checks
 
-- `node build.mjs` under Node 22.23.2: produces all 142 previews and SVGs;
+- `node build.mjs` under Node 22.23.2: produces all 154 previews and SVGs;
   refuses unapproved changes to the corrected first-thirty artwork baseline or incomplete/overlapping reservations.
-- `python3 verify-files.py`: all 142 SVGs parse, have distinct hashes and valid
+- `python3 verify-files.py`: all 154 SVGs parse, have distinct hashes and valid
   local definitions; every link resolves; navigation wraps correctly; all 100
   additions have source and differentiation metadata. The first 30 hashes
   match the baseline refreshed for the Mira branding correction. All SVG
-  wordmarks pass the old-name scan; twelve compact sizes and source references
+  wordmarks pass the old-name scan; twenty-four compact sizes and source references
   also pass.
-- `verify.html` in native Chrome: **22/22 passed**. All 142 images decoded.
+- `verify.html` in native Chrome: **23/23 passed**. All 154 images decoded.
   Observed transition: **3001 ms after artwork decode and paint**. Checks cover
-  viewport fit, an actual **360 × 360 px** compact window, Mira branding,
+  viewport fit, an actual **380 × 320 px** compact window, Mira branding,
   empty workspace destination, hold, replay, notes,
-  immersive mode, original-to-new navigation, wraparound, all three batch
+  immersive mode, original-to-new navigation, wraparound, all four batch
   filters and search.
 - Initial 30 also passed their earlier 10-check browser suite in Firefox.
 - `npm run check` under repository-supported Node 22.23.2: typecheck, unit and
@@ -27,6 +27,13 @@
   documentation checks, architecture checks, production build.
 
 ## Visual review
+
+The twelve slick studies were reviewed together in native Chrome. Their
+materials and compositions range from a centered chrome M to a cropped blue
+lens, large editorial type, a fine aperture, silk curves and a ceramic capsule.
+They use continuous vector geometry, smooth shading, clean typography and
+subtle motion with a reduced-motion override. The first slick study was also
+reviewed at its native 380 × 320 px size.
 
 The twelve compact variations were inspected in native Chrome at gallery scale,
 with concept 131 also inspected at its actual 360 × 360 px splash size. The
@@ -67,8 +74,9 @@ distinct file hashes alone were not treated as sufficient evidence.
 
 Run `npm start` in this folder, then open:
 
-- <http://127.0.0.1:8147/> — compact Mira variations (default).
-- <http://127.0.0.1:8147/concepts/131-reference-spark.html?still=1> — actual-size held splash.
+- <http://127.0.0.1:8147/> — slick Mira variations (default).
+- <http://127.0.0.1:8147/concepts/143-liquid-signature.html?still=1> — actual-size smooth splash.
+- <http://127.0.0.1:8147/index.html?group=compact> — earlier pixel variations.
 - <http://127.0.0.1:8147/index.html?group=all> — full gallery.
 - <http://127.0.0.1:8147/contact-sheet.html?group=new> — compare the new 100.
 - <http://127.0.0.1:8147/verify.html> — rerun the browser checks.

@@ -2,8 +2,8 @@ const filters = [...document.querySelectorAll('[data-group]')].filter(item => it
 const cards = [...document.querySelectorAll('.card')];
 const search = document.querySelector('#search');
 const tone = document.querySelector('#tone');
-let group = new URLSearchParams(location.search).get('group') || 'compact';
-if (!['all', 'original', 'new', 'compact'].includes(group)) group = 'compact';
+let group = new URLSearchParams(location.search).get('group') || 'slick';
+if (!['all', 'original', 'new', 'compact', 'slick'].includes(group)) group = 'slick';
 
 function filterCards() {
   const query = search.value.trim().toLowerCase();
@@ -22,8 +22,7 @@ function filterCards() {
   document.querySelector('#result-count').textContent = `Showing ${shown} of ${cards.length} concepts`;
   document.querySelector('#no-results').hidden = shown > 0;
   const url = new URL(location.href);
-  if (group === 'all') url.searchParams.delete('group');
-  else url.searchParams.set('group', group);
+  url.searchParams.set('group', group);
   history.replaceState(null, '', url);
 }
 filters.forEach(button => button.addEventListener('click', () => {
