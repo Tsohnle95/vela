@@ -58,14 +58,14 @@ describe("FileSidebar empty workspace state", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows only a New Workspace action when no workspace is open", () => {
+  it("shows only an Open Workspace action when no workspace is open", () => {
     act(() => root.render(<FileSidebar collapsed={false} onCollapse={() => {}} onDrag={() => {}} />));
 
     const cta = container.querySelector<HTMLButtonElement>(".sessions-new");
     expect(container.querySelector(".explorer-trigger")).toBeNull();
     expect(container.querySelector(".tree-empty-workspace")).toBeNull();
-    expect(cta?.textContent?.trim()).toBe("New Workspace");
-    expect(cta?.title).toBe("Choose a folder for a new workspace");
+    expect(cta?.textContent?.trim()).toBe("Open Workspace");
+    expect(cta?.title).toBe("Choose a folder to open as a workspace");
 
     act(() => {
       cta!.click();

@@ -1434,7 +1434,7 @@ describe("Layout panel sizing", () => {
     expect(agentLefts()).toEqual([0, 740]);
   });
 
-  it("stays in the IDE with a New Workspace action after closing the last session", async () => {
+  it("stays in the IDE with an Open Workspace action after closing the last session", async () => {
     await act(async () => root.render(<App />));
     // Let the startup restore populate the open-session list before switching
     // away from the default Files tab.
@@ -1462,7 +1462,7 @@ describe("Layout panel sizing", () => {
     });
 
     const cta = container.querySelector<HTMLButtonElement>(".sessions-new");
-    expect(cta?.textContent?.trim()).toBe("New Workspace");
+    expect(cta?.textContent?.trim()).toBe("Open Workspace");
 
     const selectFolder = vi.spyOn(window.openshell, "selectFolder");
     await act(async () => {
@@ -1489,7 +1489,7 @@ describe("Layout panel sizing", () => {
     expect(windowView).toHaveBeenCalledExactlyOnceWith("session");
     expect(container.querySelector(".welcome")).toBeNull();
     expect(container.querySelector(".app")).not.toBeNull();
-    expect(container.querySelector<HTMLButtonElement>(".sessions-new")?.textContent?.trim()).toBe("New Workspace");
+    expect(container.querySelector<HTMLButtonElement>(".sessions-new")?.textContent?.trim()).toBe("Open Workspace");
     expect(container.querySelector(".agent-col .agent-panel")).not.toBeNull();
     expect(container.querySelector(".welcome .rowlink")).toBeNull();
   });

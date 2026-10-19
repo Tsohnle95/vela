@@ -124,7 +124,7 @@ describe("FileSidebar drag-and-drop moves", () => {
       store.expanded = new Set();
       root.render(<FileSidebar collapsed={false} onCollapse={() => {}} onDrag={() => {}} />);
     });
-    expect(container.querySelector<HTMLButtonElement>(".sessions-new")?.textContent?.trim()).toBe("New Workspace");
+    expect(container.querySelector<HTMLButtonElement>(".sessions-new")?.textContent?.trim()).toBe("Open Workspace");
 
     act(() => {
       store.session = {

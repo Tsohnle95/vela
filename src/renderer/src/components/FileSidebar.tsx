@@ -476,10 +476,10 @@ export function FileSidebar({
                     type="button"
                     className="sessions-new"
                     onClick={() => void store.selectFolder()}
-                    title="Choose a folder for a new workspace"
+                    title="Choose a folder to open as a workspace"
                   >
                     <IconSquarePen />
-                    New Workspace
+                    Open Workspace
                   </button>
                 </div>
               )
