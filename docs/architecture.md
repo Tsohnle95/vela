@@ -150,16 +150,14 @@ custom schemes, malformed targets, and insecure HTTP targets are rejected.
    closed.
 7. `window-all-closed` quits on every platform. `before-quit` aborts the active
    SDK SSE subscription, stops every context watcher, and tears down terminals.
-   A renderer reload does not close the backend process; the renderer merges
-   its versioned `mira.sessionLayout` restart hints with `activeSessions()`,
-   reopens panels silently through the existing session-by-id path, and focuses
-   the saved panel when it remains valid and the user has not acted. A full
-   process restart has no live backend contexts, so the renderer uses the same
-   hints to reopen persisted session IDs in order, carrying an optional runtime
-   ID while main re-resolves the session directory and mints fresh workspace
-   identity. Malformed, stale, moved, or runtime-unavailable entries are
-   independently discardable and never block launch; transient editor,
-   terminal, permission, queue, prompt, and capability state is not recreated.
+   A renderer reload does not close the backend process; the renderer reattaches
+   `activeSessions()` through the existing session-by-id path and focuses the
+   last valid context only if the user has not acted. A full process restart
+   has no live backend contexts: after the launch splash, the IDE waits for an
+   explicit workspace or file open. Stale `mira.sessionLayout` restart hints are
+   removed rather than replayed. Missing, moved or runtime-unavailable live
+   entries are skipped independently; transient editor, terminal, permission,
+   queue, prompt and capability state is not recreated.
    Dock `activate` can re-create a window only while the process is still alive
    (for example after programmatic window destruction), not after the
    last-window quit path.
@@ -392,6 +390,7 @@ of application state.
 | Browser tab state and presentation | `src/renderer/src/browser-tabs-context.tsx`, state in `src/renderer/src/use-browser-tabs.ts`, integration `src/renderer/src/browser-store-provider.tsx`, pane `src/renderer/src/components/BrowserPane.tsx`, guest lifecycle `src/renderer/src/use-browser-guest.ts`, skin `src/renderer/src/styles/_browser.scss` | Stable actions enter shell/Editor composition; changing URL/title/loading reaches only tab and guest consumers. Renderer never configures Electron session authority. |
 | Editor strip and status | `src/renderer/src/components/EditorPane.tsx`; private `src/renderer/src/components/EditorTabs.tsx`, `src/renderer/src/components/editor-groups.ts`, `src/renderer/src/components/EditorStatusMenu.tsx`, `src/renderer/src/editor-activity.ts`, skin `src/renderer/src/styles/_status-menu.scss` | Editor owns split presentation and resource cleanup. Group-local tab identity drives metadata/validation; file content/persistence remains the existing Editor state owner. |
 | Changes review view | `src/renderer/src/components/ChangesView.tsx`, model `src/renderer/src/changes-view-model.ts`, skin `src/renderer/src/styles/_changes.scss` | Renderer-only review surface for observed workspace changes; reads the file-observation owner through the store and renders Pierre diffs. Owns no persistence, filesystem or runtime authority. |
+| Launch presentation and IDE handoff | `src/renderer/src/main.tsx`, coordinator `src/renderer/src/launch.ts`, React entry `src/renderer/src/mount-app.tsx` | Static local artwork paints before IDE loading. The renderer owns the three-second visible-paint hold and handoff; main owns compact landing and workspace window dimensions. No session is selected by launch presentation. |
 | Window chrome and agent empty state | `src/renderer/src/App.tsx`, private titlebar `src/renderer/src/components/Titlebar.tsx`; AgentPanel composes the empty-state station artwork in the renderer assets directory | Presentation and user gestures only; no session, runtime or privileged authority. The empty-state artwork is decorative and never receives pointer events. |
 | File tree glyph palette | `src/renderer/src/components/FileIcons.tsx`, private mapping `src/renderer/src/components/file-glyphs.ts` | Pure filename-to-glyph/color projection; tree loading and filesystem authority remain separate. |
 | Embedded browser isolation | `src/main/browser-guards.ts`, policy in `src/main/browser-policy.ts` | Main attaches guest guards before renderer load; external content has no application preload, Node or IPC authority. Dedicated nonpersistent session denies permission checks, requests and devices. |

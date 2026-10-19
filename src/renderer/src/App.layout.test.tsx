@@ -1472,16 +1472,25 @@ describe("Layout panel sizing", () => {
     expect(selectFolder).toHaveBeenCalled();
   });
 
-  it("shows the welcome screen on cold start with no sessions", async () => {
+  it("opens an empty IDE without a welcome picker or automatic session on cold start", async () => {
     window.openshell = {
       ...api(),
       state: async () => null,
       activeSessions: async () => []
     };
+    const selectFolder = vi.spyOn(window.openshell, "selectFolder");
+    const openSession = vi.spyOn(window.openshell, "openSession");
+    const windowView = vi.spyOn(window.openshell, "windowView");
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
 
-    expect(container.querySelector(".welcome")).not.toBeNull();
-    expect(container.querySelector(".app")).toBeNull();
+    expect(selectFolder).not.toHaveBeenCalled();
+    expect(openSession).not.toHaveBeenCalled();
+    expect(windowView).toHaveBeenCalledExactlyOnceWith("session");
+    expect(container.querySelector(".welcome")).toBeNull();
+    expect(container.querySelector(".app")).not.toBeNull();
+    expect(container.querySelector(".tree-empty-workspace")?.textContent).toContain("Open a workspace");
+    expect(container.querySelector(".agent-col .agent-panel")).not.toBeNull();
+    expect(container.querySelector(".welcome .rowlink")).toBeNull();
   });
 });

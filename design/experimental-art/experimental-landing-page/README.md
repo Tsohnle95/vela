@@ -77,6 +77,8 @@ Everything is self-contained, with system fonts and no external dependencies,
 fonts, analytics, image-generation service, or CDN. `inspiration.png` is a copy
 of the supplied reference, so the gallery's reference link works locally.
 
-These are isolated design experiments. The installed app and its production
-startup behavior are not changed. The desktop shell is a browser prototype of
-the requested destination; it does not connect to Electron or OpenCode.
+Folded light (148) is the selected production launch design, with the caption
+“integrated development environment.” Its production asset is
+`src/renderer/src/assets/folded-light.svg` at the repository root. The other
+concepts remain review experiments. The gallery's desktop shell is still a
+browser prototype and does not connect to Electron or OpenCode.

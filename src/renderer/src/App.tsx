@@ -4,7 +4,6 @@ import { useStore } from "./store";
 import { IconChevronDown } from "./components/icons";
 import type { SessionInfo } from "@shared/types";
 import type { ValidationReport } from "./validation-report";
-import { Welcome } from "./components/Welcome";
 import { FileSidebar, type SidebarTab } from "./components/FileSidebar";
 import { EditorPane } from "./components/EditorPane";
 import { AgentPanel } from "./components/AgentPanel";
@@ -771,10 +770,7 @@ export default function App(): ReactNode {
 
 function Root(): ReactNode {
   useAppStyles();
-  const { session, unsavedEditorFileCount, unsavedEditorFiles, saveAllEditorFiles } = useStore();
-  const wasOpen = useRef(false);
-  const [enteredIde, setEnteredIde] = useState(false);
-  const pendingView = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { unsavedEditorFileCount, unsavedEditorFiles, saveAllEditorFiles } = useStore();
 
   useEffect(() => {
     if (unsavedEditorFileCount === 0) return;
@@ -802,23 +798,8 @@ function Root(): ReactNode {
   }, [unsavedFilePathsKey]);
 
   useEffect(() => {
-    if (session && !enteredIde) setEnteredIde(true);
-  }, [session, enteredIde]);
+    void window.openshell.windowView("session").catch(() => {});
+  }, []);
 
-  useEffect(() => {
-    if (pendingView.current) clearTimeout(pendingView.current);
-    const isOpen = Boolean(session);
-    if (isOpen === wasOpen.current) return;
-    pendingView.current = setTimeout(() => {
-      pendingView.current = null;
-      if (isOpen && !wasOpen.current) void window.openshell.windowView("session").catch(() => {});
-      wasOpen.current = isOpen;
-    }, 120);
-    return () => {
-      if (pendingView.current) clearTimeout(pendingView.current);
-    };
-  }, [session]);
-
-  if (!session && !enteredIde) return <Welcome />;
   return <Layout />;
 }

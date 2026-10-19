@@ -1,12 +1,9 @@
-import ReactDOM from "react-dom/client";
-import "@vscode/codicons/dist/codicon.css";
-import "@fontsource/cormorant-garamond/500.css";
-import App from "./App";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import "./styles/main.scss";
+import { launchApplication } from "./launch";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
-);
+void launchApplication(() => import("./mount-app")).catch(() => {
+  const launch = document.querySelector("#launch-screen");
+  if (launch) {
+    launch.setAttribute("role", "alert");
+    launch.textContent = "Mira could not start. Please reopen the app.";
+  }
+});

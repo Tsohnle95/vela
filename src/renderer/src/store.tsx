@@ -963,7 +963,7 @@ const StoreBody = memo(function StoreBody({ children, closeCtxMenu, onFileActiva
         try {
           [STALE_SESSION_LAYOUT_KEY, LEGACY_STALE_SESSION_LAYOUT_KEY].forEach((key) => window.localStorage.removeItem(key));
         } catch {}
-        // Fresh launches start on the Welcome screen: only live backend
+        // Fresh launches start in an empty IDE: only live backend
         // contexts (e.g. after a renderer reload) are re-attached. Sessions
         // from a previous process stay reachable via recents and Open now.
         const liveSessions = await refreshActiveSessions();

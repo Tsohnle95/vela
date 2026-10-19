@@ -451,8 +451,9 @@ shim next to `opencode`; older clients that still spawn
 - Directory entries from `GET /api/fs/list` come with trailing slashes
   (`"src/"`); the backend normalizes them in `listDir` — the renderer
   must never receive raw entries.
-- The renderer shows the Welcome screen on app launch (no session until a
-  folder is opened); most agent-panel UI is session-gated.
+- The renderer paints the compact Folded light splash immediately, holds it
+  for three visible seconds while loading the IDE, then opens an empty workspace
+  without selecting a session. Workspace selection stays in the sidebar.
 - `session.tool.called` events carry NO tool name — names come from
   `session.tool.input.started` (see `docs/events.md`).
 

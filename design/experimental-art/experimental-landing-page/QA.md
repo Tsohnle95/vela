@@ -3,7 +3,10 @@
 ## Scope
 
 154 numbered experiments: original 01–30, environments 31–64, graphic objects
-65–97, systems 98–130, twelve pixel Mira variations 131–142, and twelve slick vector studies 143–154. Production app code is outside this change.
+65–97, systems 98–130, twelve pixel Mira variations 131–142, and twelve slick vector studies 143–154. The checks below describe the gallery. Folded light (148) was subsequently
+adopted as the production splash with only Mira and the small green caption
+“integrated development environment”; production launch timing is covered by
+`src/renderer/src/launch.test.ts` and the cold-start layout test.
 
 ## Executed checks
 
@@ -83,3 +86,20 @@ Run `npm start` in this folder, then open:
 
 The desktop destination and folder selection are prototypes. They do not start
 an Electron/OpenCode session or alter the installed app's startup behavior.
+
+## Folded light production selection
+
+Concept 148 now shows only Mira and the small green caption
+“integrated development environment.” The matching production SVG is
+`src/renderer/src/assets/folded-light.svg` at the repository root.
+
+The installed `/Applications/Mira.app` was launched against the compiled
+checkout. Native inspection showed the 380 × 320 splash with the requested
+caption, followed by an expanded empty IDE with **Open a workspace** in the
+sidebar and no automatic session selection. Launch unit tests cover image
+decode, visible paint, the three-second hold, slow IDE loading and background
+visibility; the layout test covers the empty cold-start destination.
+
+The production change passed `npm run check` under Node 22.23.2: 174 test
+files / 1,436 tests, documentation and architecture checks, and the production
+build (2 files / 4 tests skipped).

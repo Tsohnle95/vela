@@ -70,7 +70,7 @@ Exposed state:
 
 | Slice | Shape | Notes |
 |---|---|---|
-| `session` | `SessionInfo \| null` | the focused session (derived from `panels` + `activeSessionID`); null → Welcome screen on first launch, otherwise an empty IDE whose explorer offers an open-workspace CTA |
+| `session` | `SessionInfo \| null` | the focused session (derived from `panels` + `activeSessionID`); null → an empty IDE whose explorer offers an open-workspace CTA after the launch splash |
 | `panels` | `SessionInfo[]` | all attached/live sessions in panel order; each panel continues streaming even when normal coding mode renders only the focused coding session |
 | `activeSessions` | `SessionInfo[]` | backend-owned open contexts, reconciled every second independently of visible panels; drives the complete **Open now** inventory |
 | `savedWorkspaces` | `ProjectInfo[]` | Mira-owned workspace bookmarks stored in the main process under Electron user data with an atomic backup; startup imports `mira.savedWorkspaces` (falling back to `orbit.savedWorkspaces`) only when app storage is uninitialized, or OpenCode's validated project catalog on first use without that value; initialized app storage is authoritative. User additions/removals during hydration are replayed over that snapshot; a failed read never overwrites it with an empty value |
@@ -380,8 +380,8 @@ continuation captures its workspace identity and mutates only that workspace's
 records, so a slow operation from panel A can never populate panel B's editor
 or tree. Focus has a monotonic version: a late activation completion never
 steals focus from a newer user action. Startup never reopens sessions from a
-previous process: a fresh launch always shows the Welcome screen until the
-user opens a folder, file, or recent session, and any stale
+previous process: a fresh launch shows the compact Folded light splash, then an empty IDE
+until the user opens a workspace or file, and any stale
 `mira.sessionLayout` record left by an older build is deleted on startup.
 Only live backend contexts are re-attached at startup (which covers a
 renderer reload while the main process is still running). They reopen
@@ -667,7 +667,7 @@ Key mechanisms:
    remains the destructive filesystem action. Dropping files and folders into
    the **editor pane** opens them via `openPaths` (folders become panels, files
    become tabs); outside files save back to their absolute path via
-   `shell:fs-write-standalone`. Dragging files onto the Welcome screen (no
+   `shell:fs-write-standalone`. Dragging files into the empty IDE (no
   session yet) opens them via `openPaths`.
 - **Split editor tabs** — each open tab can be dragged to the other editor
   group. The drop moves its group membership, activates it in the destination,
@@ -689,7 +689,7 @@ express a cross-component invariant or non-obvious state contract.
 |---|---|---|
 | `App` | `App.tsx` | Workspace shell and activity rail; panel geometry and focus routing; the rail hosts Sessions/Files views, Terminal, the Changes review view, and browser creation with Settings pinned at the bottom and stays visible in Agent Mode; Settings overlays the mounted workspace so editor group state survives |
 | `Titlebar` | `Titlebar.tsx` | Left-panel toggle beside the traffic lights, a slot the focused editor group's tab strip portals into, and the titlebar actions (Agent Mode, add-agent panel, and the right-panel toggle in the corner); the leading block is sized so the strip starts exactly where the left app panel ends, and never narrower than its controls so a collapsed panel cannot clip the toggle; empty strip surface is part of the window drag region while tabs and controls set `no-drag`; both panel toggles are the same mirrored panel glyph pair (dashed while its panel is hidden) and flip with panel state without accent highlighting |
-| `Welcome` | `Welcome.tsx` | Landing view, recent sessions/workspaces, initial folder/file open |
+| Launch bootstrap | `launch.ts`, `mount-app.tsx`, `src/renderer/index.html` | Static Folded light art paints before the IDE modules load; three visible seconds precede mounting the IDE, which opens at workspace size without selecting a session |
 | `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (Files when a workspace opens), Mira header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |
 | `ChangesView` | `ChangesView.tsx`, `changes-view-model.ts` | Editor-area review surface activated by the rail: a directory tree of observed file changes beside stacked Pierre diffs with per-file status and +/- counts; omits paths hidden for the focused workspace (detached paths and nested-workspace roots, matching the Explorer), and defers both per-file diff statistics and the Pierre diff until a section nears the viewport (one shared observer) so a large change set never diffs every file on mount |
 | `SettingsSidebar` | `SettingsSidebar.tsx` | Settings navigation |
@@ -961,8 +961,21 @@ released at that collapsed position.
 
 ## Entry
 
-`main.tsx` mounts `<App/>`; `App` renders its own `StoreProvider`. `index.html` is the
-Vite entry. `global.d.ts` types `window.openshell` from the preload API.
+`src/renderer/index.html` owns the initial static splash and critical styles;
+`src/renderer/src/assets/folded-light.svg` is the production artwork. It shows
+only the folded mint mark, Mira, and the small green caption
+“integrated development environment.” The 380 × 320 native landing window
+appears before React, Monaco or backend readiness. `launch.ts` waits for image
+decode and a visible paint, loads the IDE modules in parallel with a three-second
+hold, and hands off only when both finish. `mount-app.tsx` removes the static
+splash when React commits. `App.tsx` always mounts the IDE, requesting workspace
+window sizing even when no session is active; the explorer retains workspace
+selection. Live-context recovery on renderer reload and explicit Finder/Dock
+open requests keep their existing store ownership.
+
+`main.tsx` starts the launch coordinator and dynamically imports `mount-app.tsx`.
+`App` owns the theme/browser providers, with `BrowserStoreProvider` mounting the
+renderer store. `global.d.ts` types `window.openshell` from the preload API.
 
 Agent Mode is a temporary panel view. Normal coding mode renders only the
 focused coding session. Entering Agent Mode seeds its panel set with that one

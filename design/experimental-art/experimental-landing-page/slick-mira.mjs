@@ -44,7 +44,7 @@ add(148,'Folded light',380,320,'#edf5ee','light',linear('mint',[[0,'#e7fff7'],[.
   path('M114 178L156 79L192 145L228 79L266 178L229 194L192 145L153 194Z','url(#mint)')+
   path('M156 79L165 161L192 145Z','url(#shade)')+path('M228 79L220 161L192 145Z','#1c736c')+
   path('M114 178L156 79L192 145L228 79','none','#fff','stroke-width="1.3" opacity=".9"')+`</g>`+
-  word(190,267,39,'#254e46','text-anchor="middle"')+label('MAKE SPACE',190,291,'#6b9387','text-anchor="middle"'),
+  word(190,267,39,'#254e46','text-anchor="middle"')+label('integrated development environment',190,291,'#6b9387','text-anchor="middle"'),
   'Two folded mint planes meet as a sculptural M, floating above an airy pale-green surface.','Satin planes, clean folds, soft shadows and mint-to-emerald shading.');
 
 add(149,'Blue lens',400,300,'#101b3d','dark',radial('lens','#86c6ff')+linear('blue',[[0,'#172b60'],[.5,'#4176ce'],[1,'#8cd3ff']])+blur,

@@ -136,8 +136,8 @@ function attachAppInspection(wc: WebContents): void {
 }
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const LANDING_WIDTH = 760;
-const LANDING_HEIGHT = 522;
+const LANDING_WIDTH = 380;
+const LANDING_HEIGHT = 320;
 
 function windowBoundsPath(): string {
   return path.join(app.getPath("userData"), "window-bounds.json");
