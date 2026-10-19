@@ -192,7 +192,8 @@ describe("SettingsPage", () => {
   it("keeps editor wrapping enabled without a wrap control", () => {
     act(() => root.render(<ThemeProvider><SettingsPage section="appearance" onClose={() => {}} /></ThemeProvider>));
     expect(container.textContent).not.toContain("Word wrap");
-    expect(container.querySelector('[role="switch"]')).toBeNull();
+    expect(container.querySelector('[role="switch"][aria-label="Experimental art"]')).not.toBeNull();
+    expect(container.querySelector('[role="switch"][aria-label="Word wrap"]')).toBeNull();
   });
 
   it("provides dedicated settings navigation with About as the final tab", () => {

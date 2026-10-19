@@ -15,10 +15,13 @@ interface ThemeContextValue {
   setTheme: (theme: ThemeId) => void;
   uiShell: UiShell;
   setUiShell: (shell: UiShell) => void;
+  experimentalArt: boolean;
+  setExperimentalArt: (enabled: boolean) => void;
 }
 
 const THEME_KEY = "mira.theme";
 const SHELL_KEY = "mira.ui";
+const EXPERIMENTAL_ART_KEY = "mira.experimentalArt";
 const LEGACY_THEME_KEY = "orbit.theme";
 const LEGACY_SHELL_KEY = "orbit.ui";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -201,6 +204,7 @@ function applyAppearance(theme: ThemeId, uiShell: UiShell): void {
 export function ThemeProvider({ children }: { children: ReactNode }): ReactNode {
   const [theme, setTheme] = useState<ThemeId>(storedTheme);
   const [uiShell, setUiShell] = useState<UiShell>(storedShell);
+  const [experimentalArt, setExperimentalArt] = useState(() => window.localStorage.getItem(EXPERIMENTAL_ART_KEY) !== "false");
 
   useLayoutEffect(() => {
     const appearance = appearanceForId(theme);
@@ -214,9 +218,14 @@ export function ThemeProvider({ children }: { children: ReactNode }): ReactNode 
     void window.openshell?.setAppearance?.(appearance.scheme)?.catch(() => {});
   }, [theme, uiShell]);
 
+  useLayoutEffect(() => {
+    document.documentElement.dataset.experimentalArt = String(experimentalArt);
+    window.localStorage.setItem(EXPERIMENTAL_ART_KEY, String(experimentalArt));
+  }, [experimentalArt]);
+
   const value = useMemo<ThemeContextValue>(
-    () => ({ theme, setTheme, uiShell, setUiShell }),
-    [theme, uiShell]
+    () => ({ theme, setTheme, uiShell, setUiShell, experimentalArt, setExperimentalArt }),
+    [theme, uiShell, experimentalArt]
   );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

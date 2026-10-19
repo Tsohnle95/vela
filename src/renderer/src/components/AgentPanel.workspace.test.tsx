@@ -64,7 +64,9 @@ vi.mock("../store", () => ({
 
 import { AgentPanel } from "./AgentPanel";
 import { Composer } from "./Composer";
+import { AppearanceSettings } from "./AppearanceSettings";
 import { clearAgentScrollMemoryForTests } from "./agent-scroll";
+import { ThemeProvider } from "../theme";
 
 function session(id: string, generation: number): SessionInfo {
   return {
@@ -140,6 +142,23 @@ describe("composer workspace continuations", () => {
     await act(async () => root.render(<AgentPanel />));
     expect(container.querySelector(".agent-empty-art")).toBeNull();
     expect(container.textContent).not.toContain("Tell the agent what to work on.");
+  });
+
+  it("removes the empty-panel art and centers its prompt when experimental art is disabled", async () => {
+    panelTranscript = [];
+    await act(async () => root.render(<ThemeProvider><><AppearanceSettings /><AgentPanel /></></ThemeProvider>));
+
+    const toggle = container.querySelector<HTMLButtonElement>('[role="switch"][aria-label="Experimental art"]')!;
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    expect(container.querySelector(".agent-empty-art")).not.toBeNull();
+
+    await act(async () => toggle.click());
+
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect(window.localStorage.getItem("mira.experimentalArt")).toBe("false");
+    expect(document.documentElement.dataset.experimentalArt).toBe("false");
+    expect(container.querySelector(".agent-empty-art")).toBeNull();
+    expect(container.querySelector(".agent-empty p")?.textContent).toBe("Tell the agent what to work on.");
   });
 
   it("closes the panel from its options menu", async () => {

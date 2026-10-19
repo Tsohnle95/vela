@@ -693,14 +693,14 @@ express a cross-component invariant or non-obvious state contract.
 | `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (Files when a workspace opens), Mira header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |
 | `ChangesView` | `ChangesView.tsx`, `changes-view-model.ts` | Editor-area review surface activated by the rail: a directory tree of observed file changes beside stacked Pierre diffs with per-file status and +/- counts; omits paths hidden for the focused workspace (detached paths and nested-workspace roots, matching the Explorer), and defers both per-file diff statistics and the Pierre diff until a section nears the viewport (one shared observer) so a large change set never diffs every file on mount |
 | `SettingsSidebar` | `SettingsSidebar.tsx` | Settings navigation |
-| `SettingsPage` | `SettingsPage.tsx` | The independent Codex/Classic interface chooser and all appearance palettes, including Codex, Codex Dark, Kitty Glass and Original Dark, plugins, providers, safety, voice, default model and OpenCode sync, mobile, and About with a direct GitHub update action, separate status check, and clickable unsaved-file list |
+| `SettingsPage` | `SettingsPage.tsx` | The independent Codex/Classic interface chooser and all appearance palettes, including the persisted Experimental art toggle, plugins, providers, safety, voice, default model and OpenCode sync, mobile, and About with a direct GitHub update action, separate status check, and clickable unsaved-file list |
 | `ProviderSettings` | `ProviderSettings.tsx` | Runtime-neutral provider connection/status UI; never owns provider secrets |
 | `SessionsPane` | `SessionsPane.tsx` | Mira header with session filter, Pinned/Projects/Recents inventory, saved workspaces, session open/close navigation |
 | `EditorPane` | `EditorPane.tsx` | Monaco edit views (files always open in the edit surface; diff review lives in the rail's Changes view) with a Codex-style breadcrumb trail (text segments, chevron separators, ghost ancestors, current file emphasized) and unconditional line wrapping, manual save/conflict UI, editor validation entry points, and up to four groups with independent tab membership, selection, and drag transfer; every group's file tabs share the titlebar strip (group blocks in panel order, separated by a hairline) so a split panel never grows a second strip inside itself, and selecting a tab there focuses its group; each group's split/close controls sit at the right end of its breadcrumb row beside the editor status menu (empty groups keep that row so they can still be split); new tabs route to the focused group ; browser tabs share that strip (chips after the file tabs, with their `+` immediately after the last visible browser chip; file-only strips omit it and the rail opens the first browser) and while one is showing the editor keeps its mount behind a concealed wrapper |
 | `BrowserPane` | `BrowserPane.tsx`, `use-browser-guest.ts`, `use-browser-tabs.ts` | Browser tab surface: a navigation row (back / forward / reload-or-stop, "Search or enter a URL" field that turns bare hosts into `https:` and everything else into a search) over a `<webview>` guest in the `mira-browser` partition. Guests are created lazily — a new tab is pure state with no guest at all — so opening one costs nothing, and a loading veil covers the frame until the page stops loading; `use-browser-guest` folds guest events into the browser slice |
 | `BrowserTabsProvider` | `browser-tabs-context.tsx`, `browser-store-provider.tsx` | Browser tab state lives outside the app store, split into a *state* context (tab list + active tab, consumed by the strip and panes) and a stable *actions* context (consumed by the rail, the editor and the store). That split is a responsiveness contract, not a detail: when the slices lived in the app store, opening or closing a tab re-rendered every store consumer (measured 644ms with nine editors open; 2ms after the split)
 | `EditorTabs` | `EditorTabs.tsx`, `editor-groups.ts` | Tab strip for the editor groups: tabs share the strip width (90px floor, 240px ceiling) and overflow past the floor moves into an "all open tabs" menu button; a preview tab (`preview: true`, italic) marks a single Explorer click as transient so the next preview replaces it, while reopening the file, editing it, or pinning it removes that marker; each tab resolves its owning group (drag source and selection target) through the strip's group lookup; owns the tab drag MIME and the editor-group identity helpers |
-| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (session/mode/close) behind a horizontal-dots control; the empty GUI view centers the station mark (`agent-station.png`) with a single "Tell the agent what to work on." line, and both disappear once the first user/assistant turn lands; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
+| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (session/mode/close) behind a horizontal-dots control; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
 | `Composer` | `Composer.tsx` | Authoritative local prompt draft, attachments, keyboard dispatch and agent controls; takes `controls` (extra control-row slot, used for the session usage ring) and `overlay` (popover anchored to the input); completion and model-menu behavior have the owners below; in the agent panel the control row collapses to icons at the panel's minimum width (mode keeps its glyph, reasoning keeps a chevron, the variant chip hides) |
 | `AgentTui` | `AgentTui.tsx` | xterm view for the active runtime's PTY-backed TUI |
 | `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning |
@@ -708,6 +708,10 @@ express a cross-component invariant or non-obvious state contract.
 | `AgentTray` | `AgentTray.tsx` | Collapsed agent-panel affordance and session activity indication |
 | `TerminalTray` | `TerminalTray.tsx` | Integrated terminal tabs backed by main-process `node-pty` |
 | `ServerSettings` | `ServerSettings.tsx` | Settings inventory of active Vite preview servers with per-server and stop-all controls |
+
+`ThemeProvider` owns the app-wide appearance state, including the persisted
+Experimental art preference. `AppearanceSettings` changes the preference and
+the agent panel consumes it immediately.
 
 `AgentPanel.tsx` composes the session surface and owns GUI/TUI selection and
 prompt-dock placement. `Composer.tsx` owns the sole input/files/mentions draft;
@@ -775,9 +779,10 @@ Key cross-component invariants:
 partials and Mira's transcript overrides. Prompt, permission/form/revert,
 todo and compact composer presentation lives in `_agent-prompt-dock.scss`;
 the transcript owner includes its mixin at the existing cascade position.
-`_agent.scss` owns the empty-state station mark with its prompt line. Light
-transcript surfaces use the supplied white-background `agent-station-light.png`;
-dark surfaces use `agent-station.png`, with no color filters on either asset.
+`_agent.scss` owns the optional empty-state station mark and its prompt line.
+Light transcript surfaces use `agent-station-light.png`; dark surfaces use
+`agent-station.png`. Disabling Experimental art removes both marks, leaving the
+prompt centered, and suppresses Observatory scene art in the agent panel.
 Keep `main.scss` ordering explicit. Move related rules together rather than
 creating per-selector partials; inherited palette overrides are intentional.
 

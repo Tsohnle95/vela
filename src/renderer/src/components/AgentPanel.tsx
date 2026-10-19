@@ -7,6 +7,7 @@ import type { SessionInfo, TranscriptItem } from "@shared/types";
 import { IconArrowLeft, IconMoreHorizontal } from "./icons";
 import { AgentTui } from "./AgentTui";
 import { MAX_AGENT_PANELS } from "../agent-panels";
+import { useOptionalTheme } from "../theme";
 import { Composer } from "./Composer";
 import { TurnTimer, useAgentUsage } from "./AgentUsage";
 import stationMark from "../assets/agent-station.png";
@@ -73,6 +74,7 @@ export function AgentPanel({
   onPanelDrag?: (delta: number) => void;
   onPanelDragEnd?: () => void;
 }): ReactNode {
+  const experimentalArt = useOptionalTheme()?.experimentalArt ?? true;
   const {
     session: storeSession,
     sessions,
@@ -248,22 +250,24 @@ export function AgentPanel({
             {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
             {!conversationStarted && (
               <div className="agent-empty">
-                <img
-                  className="agent-empty-art agent-empty-art-dark"
-                  src={stationMark}
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  decoding="async"
-                />
-                <img
-                  className="agent-empty-art agent-empty-art-light"
-                  src={lightStationMark}
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  decoding="async"
-                />
+                {experimentalArt && <>
+                  <img
+                    className="agent-empty-art agent-empty-art-dark"
+                    src={stationMark}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    decoding="async"
+                  />
+                  <img
+                    className="agent-empty-art agent-empty-art-light"
+                    src={lightStationMark}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    decoding="async"
+                  />
+                </>}
                 <p>Tell the agent what to work on.</p>
               </div>
             )}

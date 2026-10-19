@@ -9,7 +9,7 @@ const UI_SHELLS: { id: UiShell; name: string; description: string }[] = [
 // Interface and colour are independent choices: the shell decides the chrome,
 // the appearance only supplies colours, and either shell runs every appearance.
 export function AppearanceSettings(): ReactNode {
-  const { theme, setTheme, uiShell, setUiShell } = useTheme();
+  const { theme, setTheme, uiShell, setUiShell, experimentalArt, setExperimentalArt } = useTheme();
 
   return (
     <section className="settings-section appearance-settings" aria-label="Appearance settings">
@@ -74,6 +74,25 @@ export function AppearanceSettings(): ReactNode {
             </span>
           </button>
         ))}
+      </div>
+      <div className="settings-list">
+        <div className="settings-list-row">
+          <div>
+            <strong>Experimental art</strong>
+            <small>Show optional artwork in the empty agent panel.</small>
+          </div>
+          <button
+            type="button"
+            className={`settings-switch ${experimentalArt ? "on" : ""}`}
+            role="switch"
+            aria-label="Experimental art"
+            aria-checked={experimentalArt}
+            title={`${experimentalArt ? "Disable" : "Enable"} experimental art`}
+            onClick={() => setExperimentalArt(!experimentalArt)}
+          >
+            <span />
+          </button>
+        </div>
       </div>
     </section>
   );

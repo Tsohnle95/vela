@@ -29,6 +29,7 @@ describe("theme and UI shell", () => {
     container.remove();
     document.documentElement.removeAttribute("data-theme");
     document.documentElement.removeAttribute("data-shell");
+    document.documentElement.removeAttribute("data-experimental-art");
     document.documentElement.removeAttribute("style");
     vi.unstubAllGlobals();
   });
@@ -55,6 +56,22 @@ describe("theme and UI shell", () => {
     await render();
     expect(ctx.theme).toBe("prism");
     expect(ctx.uiShell).toBe("classic");
+  });
+
+  it("defaults experimental art on and persists its setting across remounts", async () => {
+    await render();
+    expect(ctx.experimentalArt).toBe(true);
+    expect(document.documentElement.dataset.experimentalArt).toBe("true");
+
+    await act(async () => { ctx.setExperimentalArt(false); });
+    expect(document.documentElement.dataset.experimentalArt).toBe("false");
+    expect(window.localStorage.getItem("mira.experimentalArt")).toBe("false");
+
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await render();
+    expect(ctx.experimentalArt).toBe(false);
+    expect(document.documentElement.dataset.experimentalArt).toBe("false");
   });
 
   it("layers the shell's tokens over any palette", async () => {

@@ -85,6 +85,11 @@
 
 }
 
+:root[data-theme="observatory"][data-experimental-art="false"] {
+  .observatory-scene { display: none; }
+  .agent-empty { display: flex; }
+}
+
 @container (min-width: 760px) {
   :root[data-theme="observatory"] .observatory-scene { background-position: center; }
 }
