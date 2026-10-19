@@ -380,7 +380,7 @@ continuation captures its workspace identity and mutates only that workspace's
 records, so a slow operation from panel A can never populate panel B's editor
 or tree. Focus has a monotonic version: a late activation completion never
 steals focus from a newer user action. Startup never reopens sessions from a
-previous process: a fresh launch shows the compact app-icon splash, then an empty IDE
+previous process: a fresh launch shows the compact Folded light splash, then an empty IDE
 until the user opens a workspace or file, and any stale
 `mira.sessionLayout` record left by an older build is deleted on startup.
 Only live backend contexts are re-attached at startup (which covers a
@@ -967,11 +967,10 @@ released at that collapsed position.
 ## Entry
 
 `src/renderer/index.html` owns the initial static splash and critical styles;
-the current frame uses the same `resources/icon.png` as the installed app, with
-Mira and the small caption “integrated development environment” on midnight.
-The prior `src/renderer/src/assets/folded-light.svg` is preserved intact for
-comparison/restoration; the local `design/experimental-art/experimental-landing-page/launch-comparison.html`
-shows both frames at their native size. The 380 × 320 native landing window
+the current frame uses `src/renderer/src/assets/folded-light.svg`, with the mint
+folded mark, Vela wordmark, and small “integrated development environment” caption.
+The local `design/experimental-art/experimental-landing-page/launch-comparison.html`
+preserves the earlier Mira Folded light and app-icon comparison frames. The 380 × 320 native landing window
 appears before React, Monaco or backend readiness. `launch.ts` waits for image
 decode and a visible paint, loads the IDE modules in parallel with a three-second
 hold, and hands off only when both finish. `mount-app.tsx` removes the static
