@@ -179,10 +179,19 @@ export function IconAdd(props: IconProps): ReactNode {
 
 export function IconSquarePlus(props: IconProps): ReactNode {
   return (
-    <Icon name="plus-square" strokeWidth={1.1} {...props}>
-      <rect x="2.5" y="2.5" width="11" height="11" rx="2.5" />
-      <path d="M8 5.5v5M5.5 8h5" />
-    </Icon>
+    <LucideIcon name="plus-square" {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="4" />
+      <path d="M12 8v8M8 12h8" />
+    </LucideIcon>
+  );
+}
+
+export function IconAgentMode(props: IconProps): ReactNode {
+  return (
+    <LucideIcon name="bot" {...props}>
+      <rect x="5" y="7" width="14" height="14" rx="3" />
+      <path d="M12 7V3H9M3 11v6M21 11v6M9 12v3M15 12v3" />
+    </LucideIcon>
   );
 }
 

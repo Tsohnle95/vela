@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from "react";
-import { IconPanelLeft, IconPanelLeftDashed, IconPanelRight, IconPanelRightDashed, IconSquarePlus } from "./icons";
+import { IconAgentMode, IconPanelLeft, IconPanelLeftDashed, IconPanelRight, IconPanelRightDashed, IconSquarePlus } from "./icons";
 import observatoryWordmark from "../assets/observatory-wordmark.svg";
 
 export function Titlebar({
@@ -55,7 +55,7 @@ export function Titlebar({
             onToggleAgentMode();
           }}
         >
-          <i className="codicon codicon-robot" aria-hidden="true" />
+          <IconAgentMode />
         </button>
         <button
           className="icon-btn"

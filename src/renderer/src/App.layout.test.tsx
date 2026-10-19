@@ -832,7 +832,7 @@ describe("Layout panel sizing", () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
     await act(async () => {
-      container.querySelector<HTMLButtonElement>(".codicon-robot")!.closest("button")!.click();
+      container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-model-mode"]')!.click();
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
     const add = container.querySelector<HTMLButtonElement>('button[aria-label="Add model panel"]')!;
@@ -844,7 +844,7 @@ describe("Layout panel sizing", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
     await act(async () => {
-      container.querySelector<HTMLButtonElement>(".codicon-robot")!.closest("button")!.click();
+      container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-model-mode"]')!.click();
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
 
@@ -1096,7 +1096,7 @@ describe("Layout panel sizing", () => {
     });
 
     const modeButton = (): HTMLButtonElement =>
-      container.querySelector<HTMLButtonElement>(".codicon-robot")!.closest("button")!;
+      container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-model-mode"]')!;
 
     await enterAgentMode("two");
 
@@ -1136,7 +1136,7 @@ describe("Layout panel sizing", () => {
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
 
     const modeButton = (): HTMLButtonElement =>
-      container.querySelector<HTMLButtonElement>(".codicon-robot")!.closest("button")!;
+      container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-model-mode"]')!;
 
     await act(async () => {
       modeButton().click();
@@ -1209,7 +1209,7 @@ describe("Layout panel sizing", () => {
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
 
     const modeButton = (): HTMLButtonElement =>
-      container.querySelector<HTMLButtonElement>(".codicon-robot")!.closest("button")!;
+      container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-model-mode"]')!;
 
     await act(async () => {
       modeButton().click();
