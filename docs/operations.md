@@ -440,6 +440,11 @@ user's running daemon. The V2 install also keeps an `opencode2` compatibility
 shim next to `opencode`; older clients that still spawn
 `opencode2 serve --service` reach the same daemon through it.
 
+The app icon is the Folded light mark on a mint rounded tile. Its editable vector
+is `resources/icon.svg`; `resources/icon.png` is the 1024px raster used by the
+app, and `npm run generate-icons` produces `resources/icon.icns` for packaged
+and development macOS bundles. Keep both raster outputs aligned with the vector.
+
 ## Known quirks worth remembering
 
 - `model.list` / `model.default` accept an optional `location`; the app
