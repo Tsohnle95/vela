@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira motion verification</title>
+<style>body{margin:30px;background:#15111b;color:#d5c5e4;font:12px/1.8 monospace}a{color:#c9a7e8}h1{font:26px Arial}li[data-pass=false]{color:#ff9b9b}li[data-pass=true]{color:#b6dbb4}iframe{border:1px solid #594066;width:1100px;height:850px;max-width:100%}</style>
+<h1>Mira / motion verification</h1><a href="index.html">← Motion gallery</a><h2 id="summary">Running…</h2><ul id="results"></ul><iframe title="Motion review under test" src="index.html"></iframe>
+<script type="module">
+const checks=[];const report=(name,pass,detail='')=>{checks.push(pass);const li=document.createElement('li');li.dataset.pass=String(pass);li.textContent=`${pass?'PASS':'FAIL'} — ${name}${detail?' / '+detail:''}`;document.querySelector('#results').append(li);};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));const frame=document.querySelector('iframe');
+const until=async(fn,ms=8000)=>{const start=performance.now();while(!fn()){if(performance.now()-start>ms)throw Error('Timed out');await sleep(30);}};
+try{
+await until(()=>frame.contentWindow.miraMotionReview?.cards.length===25);
+const win=frame.contentWindow,doc=frame.contentDocument,review=win.miraMotionReview;
+report('Twenty-five complete, numbered animation studies',review.concepts.length===25&&review.concepts.every((c,i)=>Number(c.id)===i+1)&&new Set(review.concepts.map(c=>c.name)).size===25);
+report('Each study explains its own motion rule',review.concepts.every(c=>c.description.length>50&&c.rule.length>35));
+if(review.playing)doc.querySelector('#play-all').click();
+await sleep(100);
+report('Pause all freezes the gallery',!review.playing);
+const img=new Image();img.src='../mira-app-icon.png';await img.decode();report('The exact shared app icon decodes',img.naturalWidth===1024&&img.naturalHeight===1024);
+let animated=0,valid=0;
+for(const card of review.cards){let states=new Set();let finite=true;for(const p of [0,.25,.5,.75,.99]){card.stage.draw(p);states.add(card.stage.svg.innerHTML);for(const n of card.stage.svg.querySelectorAll('*'))for(const attr of n.attributes){if(/NaN|Infinity|undefined/.test(attr.value))finite=false;if(attr.name==='stroke-width'&&!Number.isFinite(Number(attr.value)))finite=false;}}if(states.size>=3)animated++;if(finite)valid++;}
+report('Every study changes real geometry or surface attributes',animated===25,`${animated}/25 across five timeline samples`);
+report('No invalid numeric animation geometry',valid===25,`${valid}/25`);
+const ids=[...doc.querySelectorAll('svg [id]')].map(n=>n.id);report('All SVG masks and gradients have unique IDs',ids.length===new Set(ids).size);
+const missing=[...doc.querySelectorAll('svg *')].flatMap(n=>[...n.attributes]).flatMap(a=>[...a.value.matchAll(/url\(#([^\)]+)\)/g)].map(m=>m[1])).filter(id=>!doc.getElementById(id));report('All artwork definitions resolve',missing.length===0);
+doc.querySelector('[data-filter="Physics"]').click();report('Family filter narrows the gallery correctly',review.cards.filter(c=>!c.card.hidden).length===review.concepts.filter(c=>c.family==='Physics').length);
+doc.querySelector('[data-filter="all"]').click();
+const target=review.cards[4],wasSaved=target.save.getAttribute('aria-pressed')==='true';target.save.click();report('A study can be saved or unsaved',target.save.getAttribute('aria-pressed')===String(!wasSaved));target.save.click();
+doc.querySelectorAll('.stage-button')[4].click();report('Inspector opens the requested study',doc.querySelector('dialog').open&&review.focus.info.id==='05');
+report('Inspector preserves the actual compact splash size',Math.abs(doc.querySelector('#focus-stage').getBoundingClientRect().width-380)<1);
+const scrub=doc.querySelector('#scrub');scrub.value=1500;scrub.dispatchEvent(new win.Event('input',{bubbles:true}));const frozen=review.focus.stage.svg.innerHTML;await sleep(150);report('Frame scrubbing pauses at the requested position',doc.querySelector('#time').textContent.startsWith('1.50')&&review.focus.stage.svg.innerHTML===frozen);
+doc.querySelector('#next').click();report('Next navigates to a distinct study',review.focus.info.id==='06');doc.querySelector('#previous').click();report('Previous returns to the prior study',review.focus.info.id==='05');
+const start=performance.now();doc.querySelector('#launch-preview').click();await sleep(2500);report('Launch preview retains artwork before three seconds',!review.launchDone&&!doc.querySelector('#focus-stage').hidden);await until(()=>review.launchDone,2500);const elapsed=performance.now()-start;report('Launch preview completes a three-second handoff',elapsed>=2980&&elapsed<3600,`${Math.round(elapsed)} ms`);
+report('Destination is an empty workspace preview',!doc.querySelector('#empty-workspace').hidden&&doc.querySelector('#focus-stage').hidden&&doc.querySelector('#empty-workspace').textContent.includes('Open a workspace'));
+doc.querySelector('#focus-restart').click();report('Replay restores the artwork',!review.launchDone&&!doc.querySelector('#focus-stage').hidden);
+doc.querySelector('#close').click();report('Closing the inspector cleans up its animation',!doc.querySelector('dialog').open&&review.focus===null&&doc.querySelector('#focus-stage').children.length===0);
+frame.scrollIntoView({block:'start'});await sleep(100);doc.querySelector('#play-all').click();const before=Number(review.cards[0].stage.svg.dataset.progress);await sleep(150);report('Play all resumes visible artwork',review.playing&&Number(review.cards[0].stage.svg.dataset.progress)!==before);doc.querySelector('#play-all').click();
+doc.querySelector('#restart-all').click();report('Restart synchronizes every study to frame zero',review.cards.every(c=>Number(c.stage.svg.dataset.progress)===0));
+}catch(error){report('Verification completed',false,error.message);}
+document.querySelector('#summary').textContent=`${checks.filter(Boolean).length}/${checks.length} checks passed`;
+</script></html>

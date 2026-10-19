@@ -14,6 +14,13 @@ The slick collection uses original vector compositions: liquid metal, glass,
 spectral curves, modernist type, obsidian, mint folds, blue optics, rose silk,
 champagne contours, a luminous filament, ceramic and a signal surface.
 
+## Motion studies
+
+[25 distinct animation concepts](http://127.0.0.1:8147/animations/) explore
+orbiting objects and cube surfaces using the current app icon. Each has a
+separate motion rule, plus pause, speed, scrubbing, saved studies and a
+three-second launch preview. See `animations/README.md` and `animations/QA.md`.
+
 ## Preview
 
 From this folder:
