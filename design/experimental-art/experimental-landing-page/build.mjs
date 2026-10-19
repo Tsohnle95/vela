@@ -33,7 +33,7 @@ function planet(x,y,r=90,color=V){
   const id=`planet-${x}-${y}-${r}`;
   return `<defs><clipPath id="${id}">${circle(x,y,r,'white','none')}</clipPath></defs><g clip-path="url(#${id})">${circle(x,y,r,color,'none')}${circle(x+r*.5,y-r*.25,r*.95,'#080a18','none', 'opacity=".82"')}${bits}</g>`;
 }
-const letters={M:['10001','11011','10101','10101','10001','10001','10001'],I:['01110','01110','01110','01110','01110','01110','01110'],R:['11110','11011','11011','11110','11100','11010','11011'],A:['01110','11011','11011','11111','11011','11011','11011']};
+const letters={V:['10001','10001','10001','01010','01010','00100','00100'],E:['11111','10000','10000','11110','10000','10000','11111'],L:['10000','10000','10000','10000','10000','10000','11111'],A:['01110','11011','11011','11111','11011','11011','11011']};
 function pixelWord(x,y,scale=20,color='url(#type)') {
   let s='';'VELA'.split('').forEach((c,k)=>letters[c].forEach((row,j)=>[...row].forEach((v,i)=>{if(v==='1')s+=rect(x+3*scale+(k*6+i)*scale,y+j*scale,scale+.2,scale+.2,color);})));return s;
 }

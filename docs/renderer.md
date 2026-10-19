@@ -965,9 +965,14 @@ released at that collapsed position.
 
 ## Entry
 
-`src/renderer/index.html` owns the initial static splash and critical styles;
+`src/renderer/index.html` owns the initial splash and critical styles;
 the current frame uses `src/renderer/src/assets/folded-light.svg`, with the mint
 folded mark, Vela wordmark, and small “integrated development environment” caption.
+The mark stays still while the clipped Dawn Terminator light sweep (motion study
+23) plays once. `launch.ts` starts that sweep after image decode and visible paint,
+alongside the existing three-second hold; it settles before handoff and is skipped
+for reduced-motion preferences. The sweep is an inline SVG overlay, so the local
+image remains immediately paintable before the launch module runs.
 The local `design/experimental-art/experimental-landing-page/launch-comparison.html`
 preserves the earlier Vela Folded light and app-icon comparison frames. The 380 × 320 native landing window
 appears before React, Monaco or backend readiness. `launch.ts` waits for image

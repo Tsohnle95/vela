@@ -244,7 +244,7 @@ function add(id,name,family,description,bg,tone,source,composition,silhouette,ty
 
 // 80. Orthogonal letter labyrinth is compact and left-heavy, serif lies on open field.
 {
-  const glyphs={M:['10001','11011','10101','10001','10001'],A:['01110','10001','11111','10001','10001'],O:['11111','10001','10101','10001','11111'],R:['11110','10001','11110','10100','10011'],B:['11110','10001','11110','10001','11110'],I:['11111','00100','00100','00100','11111'],T:['11111','00100','00100','00100','00100']};
+  const glyphs={V:['10001','10001','01010','01010','00100'],E:['11111','10000','11110','10000','11111'],L:['10000','10000','10000','10000','11111'],A:['01110','10001','11111','10001','10001']};
   let maze='';'VELA'.split('').forEach((char,k)=>{const ox=[87,380,87,380,673][k],oy=[96,96,390,390,390][k];for(let j=0;j<5;j++)for(let i=0;i<5;i++)if(glyphs[char][j][i]==='1'){maze+=r(ox+i*45,oy+j*45,38,38,'#3d3d34')+p(`M${ox+i*45+7} ${oy+j*45+7}h24v24h-12v-12`,'none','#dbd9c0','stroke-width="2"');}});
   add(80,'Letters to get lost in','Typographic labyrinth','Orthogonal maze strokes assemble four block letters in a compact offset cluster, while a wide italic Vela stretches through the clear right-hand field.','#e1dfc9','light',['city'],
     'Frontal flat print: block maze letters form a left-heavy 2-over-2 cluster; oversized serif begins in the open top-right and trails off the edge.','Unequal stepped mass of square letter labyrinths.','Small modular VELA reads through construction; an opposing long italic serif word supplies a different rhythm.','Dense olive ink walls with ivory hairline passages, rough print tooth and controlled square breaks.',

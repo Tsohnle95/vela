@@ -9,7 +9,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "01-first-light",
-    "version": "730f062912"
+    "version": "e043b1fe1e"
   },
   {
     "id": "02",
@@ -21,7 +21,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "02-type-in-space",
-    "version": "3d534be3bf"
+    "version": "e3f1383ba8"
   },
   {
     "id": "03",
@@ -33,7 +33,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "03-lunar-rise",
-    "version": "f2b61a33b2"
+    "version": "0889b9d630"
   },
   {
     "id": "04",
@@ -45,7 +45,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "04-acquisition",
-    "version": "4ac5b5d5a6"
+    "version": "2fb025a206"
   },
   {
     "id": "05",
@@ -57,7 +57,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "05-the-field-guide",
-    "version": "693fe6b066"
+    "version": "3516dd7dbf"
   },
   {
     "id": "06",
@@ -69,7 +69,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "06-night-garden",
-    "version": "d0ba3622bc"
+    "version": "b06ab8fbbc"
   },
   {
     "id": "07",
@@ -81,7 +81,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "07-boot-poetry",
-    "version": "0258671ada"
+    "version": "462df21d09"
   },
   {
     "id": "08",
@@ -93,7 +93,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "08-observatory",
-    "version": "c50a6ecbd2"
+    "version": "ec8fed4b2e"
   },
   {
     "id": "09",
@@ -105,7 +105,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "09-celestial-mechanics",
-    "version": "001948e63a"
+    "version": "f48e6b8ab1"
   },
   {
     "id": "10",
@@ -117,7 +117,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "10-totality",
-    "version": "a8dc29e886"
+    "version": "5b5eaebe05"
   },
   {
     "id": "11",
@@ -129,7 +129,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "11-special-delivery",
-    "version": "97fd0716a2"
+    "version": "92b1ded757"
   },
   {
     "id": "12",
@@ -141,7 +141,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "12-long-play",
-    "version": "267cb50ad2"
+    "version": "7175be1214"
   },
   {
     "id": "13",
@@ -153,7 +153,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "13-memory-card",
-    "version": "dda1dc7dbb"
+    "version": "5d380a7dec"
   },
   {
     "id": "14",
@@ -165,7 +165,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "14-connected-dots",
-    "version": "d664529a86"
+    "version": "8a7c2e119c"
   },
   {
     "id": "15",
@@ -177,7 +177,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "15-three-bodies",
-    "version": "06cce61398"
+    "version": "d62af75eb5"
   },
   {
     "id": "16",
@@ -189,7 +189,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "16-soft-geometry",
-    "version": "46595204b6"
+    "version": "a04210073c"
   },
   {
     "id": "17",
@@ -201,7 +201,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "17-departure",
-    "version": "38919f25b1"
+    "version": "01c9cf3316"
   },
   {
     "id": "18",
@@ -213,7 +213,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "18-uncharted",
-    "version": "7e22558467"
+    "version": "bcd0081e65"
   },
   {
     "id": "19",
@@ -225,7 +225,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "19-event-horizon",
-    "version": "03259a0bff"
+    "version": "5fc94a965a"
   },
   {
     "id": "20",
@@ -237,7 +237,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "20-the-monolith",
-    "version": "a182811a1d"
+    "version": "e55182c14e"
   },
   {
     "id": "21",
@@ -249,7 +249,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "21-resonance",
-    "version": "5bbba6de3c"
+    "version": "343997e95a"
   },
   {
     "id": "22",
@@ -261,7 +261,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "22-layer-by-layer",
-    "version": "18ee353542"
+    "version": "66ad7bb280"
   },
   {
     "id": "23",
@@ -273,7 +273,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "23-moon-bulletin",
-    "version": "d1364d9b0f"
+    "version": "2f7128689a"
   },
   {
     "id": "24",
@@ -285,7 +285,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "24-continuum",
-    "version": "c51290b6d0"
+    "version": "5034b1176a"
   },
   {
     "id": "25",
@@ -297,7 +297,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "25-around-the-idea",
-    "version": "97082cc5c0"
+    "version": "f13a0d4e78"
   },
   {
     "id": "26",
@@ -309,7 +309,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "26-unknown-terrain",
-    "version": "4ab4842c99"
+    "version": "8d3e23777d"
   },
   {
     "id": "27",
@@ -321,7 +321,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "27-launch-structure",
-    "version": "fcab8bcef7"
+    "version": "e4956f2ee0"
   },
   {
     "id": "28",
@@ -333,7 +333,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "28-source-of-light",
-    "version": "e02ecfc3ca"
+    "version": "f4bdaa36c9"
   },
   {
     "id": "29",
@@ -345,7 +345,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "29-one-small-beginning",
-    "version": "784869b3b3"
+    "version": "a57405683e"
   },
   {
     "id": "30",
@@ -357,7 +357,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "30-the-star-atlas",
-    "version": "901db36174"
+    "version": "143519b2ad"
   },
   {
     "id": "31",
@@ -378,7 +378,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "31-dome-of-tomorrow",
-    "version": "f3237ac1b1"
+    "version": "02d54a03fc"
   },
   {
     "id": "32",
@@ -398,7 +398,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "32-below-the-surface",
-    "version": "f8b8a0ee15"
+    "version": "2bb695399e"
   },
   {
     "id": "33",
@@ -418,7 +418,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "33-coastlight",
-    "version": "6ee64517c1"
+    "version": "24f81e442b"
   },
   {
     "id": "34",
@@ -439,7 +439,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "34-between-worlds",
-    "version": "5a24a57f6d"
+    "version": "7e7f72ef01"
   },
   {
     "id": "35",
@@ -459,7 +459,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "35-quiet-harbor",
-    "version": "974dd181ce"
+    "version": "a5a5c76282"
   },
   {
     "id": "36",
@@ -479,7 +479,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "36-cabin-window",
-    "version": "9b144173a6"
+    "version": "d523a3db44"
   },
   {
     "id": "37",
@@ -499,7 +499,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "37-polar-curtain",
-    "version": "37ccdca4ca"
+    "version": "c91d55388a"
   },
   {
     "id": "38",
@@ -519,7 +519,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "38-under-the-canopy",
-    "version": "5a55666e8c"
+    "version": "54a6a48dcf"
   },
   {
     "id": "39",
@@ -539,7 +539,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "39-last-departure",
-    "version": "5d6b753cc2"
+    "version": "ca8c181eed"
   },
   {
     "id": "40",
@@ -580,7 +580,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "41-cloud-forge",
-    "version": "c29a768d64"
+    "version": "c71ab74b2d"
   },
   {
     "id": "42",
@@ -620,7 +620,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "43-dust-caravan",
-    "version": "4f58e5fcf7"
+    "version": "27b8fa5b37"
   },
   {
     "id": "44",
@@ -641,7 +641,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "44-roofline-commons",
-    "version": "0aeb850c0c"
+    "version": "1c350b2bdc"
   },
   {
     "id": "45",
@@ -681,7 +681,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "46-glow-beneath",
-    "version": "fe3b5d2417"
+    "version": "a46b7d9734"
   },
   {
     "id": "47",
@@ -701,7 +701,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "47-moon-allotments",
-    "version": "49fe85e55a"
+    "version": "491854a087"
   },
   {
     "id": "48",
@@ -721,7 +721,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "48-night-counter",
-    "version": "f0e5ef3159"
+    "version": "f658b9a0f5"
   },
   {
     "id": "49",
@@ -741,7 +741,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "49-bamboo-receiver",
-    "version": "763d3bd487"
+    "version": "9f3ef8c30e"
   },
   {
     "id": "50",
@@ -761,7 +761,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "50-the-listening-bowl",
-    "version": "602cc21d90"
+    "version": "38df17e000"
   },
   {
     "id": "51",
@@ -781,7 +781,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "51-specimen-bench",
-    "version": "2d17b07d77"
+    "version": "39b71dedb9"
   },
   {
     "id": "52",
@@ -802,7 +802,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "52-caldera",
-    "version": "f87dc40867"
+    "version": "5a367003f1"
   },
   {
     "id": "53",
@@ -822,7 +822,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "53-paper-flight",
-    "version": "bb7c027793"
+    "version": "c86e35301b"
   },
   {
     "id": "54",
@@ -842,7 +842,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "54-one-room-universe",
-    "version": "b47b6a1b0e"
+    "version": "81f0a2c957"
   },
   {
     "id": "55",
@@ -862,7 +862,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "55-a-night-outside",
-    "version": "2511448b7e"
+    "version": "395c0d6dc2"
   },
   {
     "id": "56",
@@ -882,7 +882,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "56-soft-shelter",
-    "version": "2e74f42585"
+    "version": "10757583bc"
   },
   {
     "id": "57",
@@ -902,7 +902,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "57-rain-passage",
-    "version": "0931fae656"
+    "version": "2a6474d4b8"
   },
   {
     "id": "58",
@@ -922,7 +922,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "58-messages-aloft",
-    "version": "29a15d31af"
+    "version": "f5e76faeae"
   },
   {
     "id": "59",
@@ -942,7 +942,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "59-asteroid-works",
-    "version": "bc7c714904"
+    "version": "698d11cd9d"
   },
   {
     "id": "60",
@@ -962,7 +962,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "60-the-sailing-room",
-    "version": "98e6704cac"
+    "version": "777fa85550"
   },
   {
     "id": "61",
@@ -982,7 +982,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "61-cable-to-the-clouds",
-    "version": "fad01a3434"
+    "version": "8509578076"
   },
   {
     "id": "62",
@@ -1002,7 +1002,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "62-pocket-cosmos",
-    "version": "f3adabe644"
+    "version": "3b151f3137"
   },
   {
     "id": "63",
@@ -1022,7 +1022,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "63-starlight-bakery",
-    "version": "c98b8f9dd6"
+    "version": "707190629f"
   },
   {
     "id": "64",
@@ -1042,7 +1042,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "64-terraces-of-water",
-    "version": "521e8ef120"
+    "version": "ecd8dd1079"
   },
   {
     "id": "65",
@@ -1062,7 +1062,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "65-chromatic-crossing",
-    "version": "8ca43bf1b7"
+    "version": "fe43c42614"
   },
   {
     "id": "66",
@@ -1082,7 +1082,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "66-pressure-of-words",
-    "version": "849e208892"
+    "version": "66beec35fd"
   },
   {
     "id": "67",
@@ -1122,7 +1122,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "68-hard-line",
-    "version": "d043fab2fe"
+    "version": "13343ce779"
   },
   {
     "id": "69",
@@ -1142,7 +1142,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "69-ribbon-memory",
-    "version": "18b8ecbcf1"
+    "version": "40af0ba43d"
   },
   {
     "id": "70",
@@ -1162,7 +1162,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "70-balanced-thought",
-    "version": "fd4cdb54c8"
+    "version": "461b1945bb"
   },
   {
     "id": "71",
@@ -1182,7 +1182,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "71-departure-board",
-    "version": "1bf15b7f83"
+    "version": "126ed27f12"
   },
   {
     "id": "72",
@@ -1202,7 +1202,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "72-between-the-stripes",
-    "version": "d5d4cc19cb"
+    "version": "6a68fe26b1"
   },
   {
     "id": "73",
@@ -1223,7 +1223,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "73-frames-in-motion",
-    "version": "86feb9c87a"
+    "version": "d09f7f9ad5"
   },
   {
     "id": "74",
@@ -1243,7 +1243,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "74-made-of-metal",
-    "version": "30bd72558a"
+    "version": "15fa0296b2"
   },
   {
     "id": "75",
@@ -1263,7 +1263,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "75-through-the-tear",
-    "version": "57a3c8b884"
+    "version": "e434e4c40d"
   },
   {
     "id": "76",
@@ -1283,7 +1283,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "76-flat-to-form",
-    "version": "57f5ef1e88"
+    "version": "382430809c"
   },
   {
     "id": "77",
@@ -1303,7 +1303,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "77-open-fan",
-    "version": "68c3a76e1c"
+    "version": "0d842f63e3"
   },
   {
     "id": "78",
@@ -1323,7 +1323,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "78-flight-in-pieces",
-    "version": "b39aafa28d"
+    "version": "1756935ae5"
   },
   {
     "id": "79",
@@ -1343,7 +1343,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "79-a-place-held",
-    "version": "aa6b4e4d85"
+    "version": "94a98c2928"
   },
   {
     "id": "80",
@@ -1363,7 +1363,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "80-letters-to-get-lost-in",
-    "version": "ef75fc627f"
+    "version": "95a3710aad"
   },
   {
     "id": "81",
@@ -1383,7 +1383,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "81-ticker-thought",
-    "version": "3a4c998215"
+    "version": "aa39624949"
   },
   {
     "id": "82",
@@ -1423,7 +1423,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "83-the-spines",
-    "version": "9dd293f388"
+    "version": "70cc017581"
   },
   {
     "id": "84",
@@ -1443,7 +1443,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "84-woven-alphabet",
-    "version": "d116f58ab2"
+    "version": "272ac48029"
   },
   {
     "id": "85",
@@ -1463,7 +1463,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "85-afterglow-sign",
-    "version": "513f0f3357"
+    "version": "9455cc2372"
   },
   {
     "id": "86",
@@ -1483,7 +1483,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "86-notes-from-vela",
-    "version": "f6512c0eda"
+    "version": "d8833268b4"
   },
   {
     "id": "87",
@@ -1503,7 +1503,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "87-word-gravity",
-    "version": "294763b320"
+    "version": "8b77a1a5b5"
   },
   {
     "id": "88",
@@ -1523,7 +1523,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "88-blueprint-botany",
-    "version": "3346907727"
+    "version": "e251a2f0a5"
   },
   {
     "id": "89",
@@ -1543,7 +1543,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "89-paper-currents",
-    "version": "d326da1945"
+    "version": "bcee4364ce"
   },
   {
     "id": "90",
@@ -1563,7 +1563,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "90-built-with-letters",
-    "version": "5dc86ffe12"
+    "version": "3d23dfe3ef"
   },
   {
     "id": "91",
@@ -1583,7 +1583,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "91-the-next-move",
-    "version": "396e5aa27e"
+    "version": "5d5f355f1e"
   },
   {
     "id": "92",
@@ -1603,7 +1603,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "92-time-in-grains",
-    "version": "ed36a1b2d5"
+    "version": "a97fb203c6"
   },
   {
     "id": "93",
@@ -1643,7 +1643,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "94-impossible-step",
-    "version": "0297402ea1"
+    "version": "3de17a7a09"
   },
   {
     "id": "95",
@@ -1663,7 +1663,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "95-crease-study",
-    "version": "719a7987c1"
+    "version": "1f218fe1d5"
   },
   {
     "id": "96",
@@ -1683,7 +1683,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "96-crossing-words",
-    "version": "02cce521e2"
+    "version": "0b5b32ae0d"
   },
   {
     "id": "97",
@@ -1703,7 +1703,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "97-liquid-language",
-    "version": "8f5eb91fe5"
+    "version": "5d937e4920"
   },
   {
     "id": "98",
@@ -1723,7 +1723,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "98-crystal-fault",
-    "version": "0574a5aa17"
+    "version": "8ad309f290"
   },
   {
     "id": "99",
@@ -1763,7 +1763,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "100-simple-rules",
-    "version": "749fab3c49"
+    "version": "e06f2c6acb"
   },
   {
     "id": "101",
@@ -1783,7 +1783,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "101-pendulum-choir",
-    "version": "438ee8b380"
+    "version": "470155b672"
   },
   {
     "id": "102",
@@ -1803,7 +1803,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "102-white-light",
-    "version": "ab62c4ed07"
+    "version": "f7d3c2daee"
   },
   {
     "id": "103",
@@ -1823,7 +1823,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "103-misalignment",
-    "version": "5d1ff48773"
+    "version": "b832d014be"
   },
   {
     "id": "104",
@@ -1843,7 +1843,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "104-sorting-thoughts",
-    "version": "08c4440fa1"
+    "version": "bd33e88d73"
   },
   {
     "id": "105",
@@ -1863,7 +1863,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "105-chain-reaction",
-    "version": "fd11eca834"
+    "version": "43847ac697"
   },
   {
     "id": "106",
@@ -1883,7 +1883,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "106-invisible-pull",
-    "version": "6b961b1478"
+    "version": "bee1d5f417"
   },
   {
     "id": "107",
@@ -1903,7 +1903,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "107-particle-weather",
-    "version": "7e6b3897d4"
+    "version": "0a8382f9d8"
   },
   {
     "id": "108",
@@ -1923,7 +1923,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "108-a-mountain-of-facets",
-    "version": "ed999afbb3"
+    "version": "61dafa6b9d"
   },
   {
     "id": "109",
@@ -1943,7 +1943,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "109-small-building-blocks",
-    "version": "d0a6ba8cd6"
+    "version": "020a093b12"
   },
   {
     "id": "110",
@@ -1963,7 +1963,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "110-branch-logic",
-    "version": "ea465807af"
+    "version": "003385e0d4"
   },
   {
     "id": "111",
@@ -1983,7 +1983,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "111-one-continuous-line",
-    "version": "8c6dbdd836"
+    "version": "e979c908c6"
   },
   {
     "id": "112",
@@ -2003,7 +2003,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "112-cultures-of-thought",
-    "version": "d54f6e20ea"
+    "version": "ec8c181ebd"
   },
   {
     "id": "113",
@@ -2023,7 +2023,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "113-two-paths",
-    "version": "e9391319e0"
+    "version": "7d8c25d2ca"
   },
   {
     "id": "114",
@@ -2063,7 +2063,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "115-printed-circuit",
-    "version": "061e27922c"
+    "version": "e83402b1f7"
   },
   {
     "id": "116",
@@ -2083,7 +2083,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "116-order-from-grains",
-    "version": "1e9455fd36"
+    "version": "240f1c7177"
   },
   {
     "id": "117",
@@ -2103,7 +2103,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "117-escapement",
-    "version": "0cd22c1cb7"
+    "version": "8f9b53f596"
   },
   {
     "id": "118",
@@ -2123,7 +2123,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "118-surface-tension",
-    "version": "ff1e3a0ba8"
+    "version": "9ce20df0c0"
   },
   {
     "id": "119",
@@ -2143,7 +2143,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "119-keys-to-somewhere",
-    "version": "15260a811e"
+    "version": "6cc874c6fc"
   },
   {
     "id": "120",
@@ -2163,7 +2163,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "120-the-weight-of-an-idea",
-    "version": "dc5ad53022"
+    "version": "f29c830f6c"
   },
   {
     "id": "121",
@@ -2183,7 +2183,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "121-aperture",
-    "version": "13a5f5e239"
+    "version": "fc14f4551a"
   },
   {
     "id": "122",
@@ -2203,7 +2203,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "122-shared-sky",
-    "version": "d2b9f631a6"
+    "version": "a7c93dc5fb"
   },
   {
     "id": "123",
@@ -2223,7 +2223,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "123-signal-waterfall",
-    "version": "732c3f5803"
+    "version": "e7500a7355"
   },
   {
     "id": "124",
@@ -2243,7 +2243,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "124-beyond-three",
-    "version": "f73dcc74fc"
+    "version": "af67985da6"
   },
   {
     "id": "125",
@@ -2263,7 +2263,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "125-flock",
-    "version": "8ac57d1f54"
+    "version": "0c2f7682ee"
   },
   {
     "id": "126",
@@ -2283,7 +2283,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "126-living-pattern",
-    "version": "a489535f75"
+    "version": "2a376b785e"
   },
   {
     "id": "127",
@@ -2303,7 +2303,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "127-paper-computation",
-    "version": "90eeb124f5"
+    "version": "f77100c4ea"
   },
   {
     "id": "128",
@@ -2323,7 +2323,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "128-measure-the-spark",
-    "version": "5d6e567fb3"
+    "version": "863cca8b98"
   },
   {
     "id": "129",
@@ -2343,7 +2343,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "129-punched-possibilities",
-    "version": "782aea538e"
+    "version": "d5bd679ea6"
   },
   {
     "id": "130",
@@ -2363,7 +2363,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "130-the-long-now",
-    "version": "99788e02c5"
+    "version": "81d82c025d"
   },
   {
     "id": "131",
@@ -2388,7 +2388,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "131-reference-spark",
-    "version": "aa40eae2a2"
+    "version": "6ec64f373a"
   },
   {
     "id": "132",
@@ -2413,7 +2413,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "132-quiet-core",
-    "version": "a9d1bf7ae9"
+    "version": "7bd8e8a24a"
   },
   {
     "id": "133",
@@ -2438,7 +2438,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "133-violet-wake",
-    "version": "741693ee8a"
+    "version": "cc417da238"
   },
   {
     "id": "134",
@@ -2463,7 +2463,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "134-moon-passage",
-    "version": "cf614137fa"
+    "version": "ea0e3f6ad3"
   },
   {
     "id": "135",
@@ -2488,7 +2488,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "135-side-by-side",
-    "version": "a016dd2e36"
+    "version": "2e51b7a15d"
   },
   {
     "id": "136",
@@ -2513,7 +2513,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "136-celestial-seal",
-    "version": "1816df8d4d"
+    "version": "f3eb701a71"
   },
   {
     "id": "137",
@@ -2538,7 +2538,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "137-twin-glimmer",
-    "version": "000972ee7c"
+    "version": "8660ac4585"
   },
   {
     "id": "138",
@@ -2563,7 +2563,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "138-midnight-coordinates",
-    "version": "15eb8084a4"
+    "version": "6df9f22c28"
   },
   {
     "id": "139",
@@ -2588,7 +2588,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "139-stardust-wordmark",
-    "version": "3867ba7200"
+    "version": "fd641dfa4d"
   },
   {
     "id": "140",
@@ -2613,7 +2613,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "140-close-approach",
-    "version": "bbfa9d86f6"
+    "version": "6b400b5c0a"
   },
   {
     "id": "141",
@@ -2638,7 +2638,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "141-silver-vela",
-    "version": "050bc52c84"
+    "version": "d521b1e941"
   },
   {
     "id": "142",
@@ -2663,7 +2663,7 @@
     "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
     "nearest": "The supplied Vela reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
     "slug": "142-a-small-beginning",
-    "version": "458cbea170"
+    "version": "82c7e321c6"
   },
   {
     "id": "143",
@@ -2686,7 +2686,7 @@
     "material": "Continuous metallic strokes, sharp silver highlights and a diffused violet spotlight.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "143-liquid-signature",
-    "version": "4161e83531"
+    "version": "a10f539631"
   },
   {
     "id": "144",
@@ -2709,7 +2709,7 @@
     "material": "Smooth translucent glass tubing with cyan edges, violet refraction and restrained glow.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "144-glass-loop",
-    "version": "96debc4dbd"
+    "version": "d86b002a06"
   },
   {
     "id": "145",
@@ -2732,7 +2732,7 @@
     "material": "Precision continuous curves and overlapping spectral light; no texture or particle field.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "145-spectral-aperture",
-    "version": "ea617a960f"
+    "version": "879e2c59d5"
   },
   {
     "id": "146",
@@ -2755,7 +2755,7 @@
     "material": "Crisp editorial typography, flat ivory and one glossy blue geometric accent.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "146-modernist",
-    "version": "8ec8f167ec"
+    "version": "07537e8a54"
   },
   {
     "id": "147",
@@ -2778,7 +2778,7 @@
     "material": "Obsidian, edge light and soft atmosphere with smooth tonal transitions.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "147-obsidian-dawn",
-    "version": "374b53edc6"
+    "version": "c6b45eb425"
   },
   {
     "id": "148",
@@ -2801,7 +2801,7 @@
     "material": "Satin planes, clean folds, soft shadows and mint-to-emerald shading.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "148-folded-light",
-    "version": "522a734db6"
+    "version": "38fa878e72"
   },
   {
     "id": "149",
@@ -2824,7 +2824,7 @@
     "material": "Polished blue glass, elliptical refraction and a broad smooth highlight.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "149-blue-lens",
-    "version": "d365a77cc3"
+    "version": "19a74df607"
   },
   {
     "id": "150",
@@ -2847,7 +2847,7 @@
     "material": "Fine silk-like lines, warm specular bands and a dark mulberry ground.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "150-silk-current",
-    "version": "ff48caf77c"
+    "version": "cad7e7d9df"
   },
   {
     "id": "151",
@@ -2870,7 +2870,7 @@
     "material": "Fine metallic linework and a smooth paper-colored surface; an understated editorial direction.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "151-quiet-luxury",
-    "version": "e52f76274e"
+    "version": "c8ed32fa41"
   },
   {
     "id": "152",
@@ -2893,7 +2893,7 @@
     "material": "An unbroken rounded filament with smooth green highlights against deep charcoal.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "152-one-continuous-thought",
-    "version": "c2a90584b0"
+    "version": "2bc1aa2427"
   },
   {
     "id": "153",
@@ -2916,7 +2916,7 @@
     "material": "Soft ceramic housing, a recessed glass center and gently diffused physical shadows.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "153-soft-instrument",
-    "version": "5a864ec436"
+    "version": "d8f021b9a4"
   },
   {
     "id": "154",
@@ -2939,6 +2939,6 @@
     "material": "Smooth topology lines, continuous cubic curves and measured violet light on graphite.",
     "nearest": "The earlier compact pixel collection shares only the Vela name and compact launch behavior. This composition uses continuous curves and smooth surfaces.",
     "slug": "154-signal-surface",
-    "version": "a8a17564e4"
+    "version": "1e64231931"
   }
 ]

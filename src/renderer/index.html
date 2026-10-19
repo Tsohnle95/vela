@@ -11,12 +11,31 @@
     <style>
       html, body { height: 100%; margin: 0; overflow: hidden; }
       #launch-screen { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: #edf5ee; color: #254e46; font: 12px Arial, sans-serif; -webkit-app-region: drag; }
-      #launch-artwork { display: block; width: min(380px, 100vw); height: min(320px, 100vh); object-fit: contain; }
+      #launch-frame { position: relative; width: min(380px, 100vw); aspect-ratio: 380 / 320; max-height: 100vh; }
+      #launch-artwork { display: block; width: 100%; height: 100%; object-fit: contain; }
+      #launch-light { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     </style>
   </head>
   <body>
     <div id="launch-screen" role="status" aria-label="Starting Vela">
-      <img id="launch-artwork" src="./src/assets/folded-light.svg" width="380" height="320" alt="Vela — integrated development environment" fetchpriority="high" />
+      <div id="launch-frame">
+        <img id="launch-artwork" src="./src/assets/folded-light.svg" width="380" height="320" alt="Vela — integrated development environment" fetchpriority="high" />
+        <svg id="launch-light" viewBox="0 0 380 320" aria-hidden="true">
+          <defs>
+            <clipPath id="launch-folds"><path d="M114 178L156 79L192 145L228 79L266 178L229 194L192 145L153 194Z" /></clipPath>
+            <linearGradient id="launch-dawn-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="180" y2="70">
+              <stop offset="0" stop-color="#15483d" stop-opacity=".4" />
+              <stop offset=".43" stop-color="#15483d" stop-opacity=".08" />
+              <stop offset=".5" stop-color="#fff" stop-opacity=".55" />
+              <stop offset=".64" stop-color="#fff" stop-opacity=".04" />
+              <stop offset="1" stop-color="#fff" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <g clip-path="url(#launch-folds)">
+            <rect id="launch-dawn" x="-180" y="50" width="500" height="170" fill="url(#launch-dawn-gradient)" opacity="0" />
+          </g>
+        </svg>
+      </div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
