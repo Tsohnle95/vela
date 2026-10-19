@@ -1,13 +1,14 @@
-# Orbit — 130 ways to arrive
+# Mira — compact loading studies and 130 earlier concepts
 
-The original 30 launch-screen prototypes, plus 100 independently composed
-designs created by three agents under a shared non-overlap contract.
+Twelve compact pixel-art variations (131–142), alongside the original 30
+launch-screen prototypes and 100 independently composed designs.
 
 The original reference is `../ChatGPT Image Oct 13, 2026, 03_23_53 PM.png`.
 The expansion also draws on the other screenshots in `experimental-art`:
 violet light, pixel texture, habitats, cosmic paths, glass and astronomical
-space. The requested Orbit name is used throughout, although those references
-say Mira. Each addition records the inspected source filenames in its notes.
+space. All preview branding now uses Mira. The twelve latest studies follow
+the supplied pixel-art reference closely, with stars, violet moons, textured
+orbital arcs and a pixel MIRA wordmark. Each records its source in the notes.
 
 ## Preview
 
@@ -17,8 +18,10 @@ From this folder:
 npm start
 ```
 
-Open <http://127.0.0.1:8147/>. The gallery contains all 130 numbered designs.
-Filter to **Original 30** or **New 100**, search a number/name/art direction, or
+Open <http://127.0.0.1:8147/>. The gallery defaults to **Compact Mira**, showing
+the twelve latest studies at 300–420 pixels wide. Click a card to inspect its
+actual splash dimensions against a desktop background. There are 142 designs
+in total. Filter to **All 142**, **Original 30** or **New 100**, search a number/name/art direction, or
 use **All treatments** to narrow by light/dark artwork.
 Click a card to run its launch experience. Each page paints its local artwork,
 holds it for three seconds after image decode and first paint, then shows an
@@ -36,25 +39,28 @@ Space to hold/resume, R to replay. `?still=1` holds the art on initial load;
 ## Files
 
 - `index.html`, `gallery.css`, `gallery.js`: responsive gallery and filters.
-- `concepts/`: 130 separate HTML previews and 130 original SVG artworks.
+- `concepts/`: 142 separate HTML previews and 142 SVG artworks.
 - `preview.css`, `preview.js`: shared three-second lifecycle and empty shell.
 - `concepts.json`: titles, descriptions, and links.
 - `build.mjs`: reproducibly generates the gallery, pages, and SVG compositions.
   Run `npm run build` after changing the artwork definitions.
+- `compact-mira.mjs`: compact reference variations 131–142 and their native sizes.
+- `expansion/legacy-slugs.json`: stable URLs for the earlier 130 concepts.
 - `expansion/environments.mjs`: agent-created concepts 31–64.
 - `expansion/graphic-objects.mjs`: agent-created concepts 65–97.
 - `expansion/systems.mjs`: agent-created concepts 98–130.
-- `expansion/AGENT-PROMPT.md`: the actual shared prompt; prohibits template,
+- `expansion/AGENT-PROMPT.md`: the archived prompt for the earlier 100; prohibits template,
   recolor, seed, font and crop swaps from counting as new concepts.
 - `expansion/registry.json`: 100 reserved subjects/compositions, shared by all
   designers before implementation.
-- `expansion/original-art-baseline.json`: original 30 artwork hashes. Build
-  refuses to alter their artwork while integrating additions.
+- `expansion/original-art-baseline.json`: first 30 artwork hashes, refreshed for the authorized
+  Mira branding correction. Normal builds protect that corrected baseline.
+  `node build.mjs --update-brand-baseline` explicitly refreshes it for a branding change.
 - `process.html`: readable prompt and all 100 briefs.
 - `contact-sheet.html`: compact art-only comparison view; click to hold a design.
 - `QA.md`: completed checks and the closest visual comparisons reviewed.
 
-Run `npm run verify:files` to check all SVGs, links, source filenames, original
+Run `npm run verify:files` to check all SVGs, links, source filenames, baseline
 hashes, navigation, counts and required design metadata.
 Open `verify.html` on the preview server to run the browser checks for artwork
 decode, three-second timing, the empty destination, holding, replay, navigation,

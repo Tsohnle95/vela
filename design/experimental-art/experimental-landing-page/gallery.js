@@ -2,8 +2,8 @@ const filters = [...document.querySelectorAll('[data-group]')].filter(item => it
 const cards = [...document.querySelectorAll('.card')];
 const search = document.querySelector('#search');
 const tone = document.querySelector('#tone');
-let group = new URLSearchParams(location.search).get('group') || 'all';
-if (!['all', 'original', 'new'].includes(group)) group = 'all';
+let group = new URLSearchParams(location.search).get('group') || 'compact';
+if (!['all', 'original', 'new', 'compact'].includes(group)) group = 'compact';
 
 function filterCards() {
   const query = search.value.trim().toLowerCase();

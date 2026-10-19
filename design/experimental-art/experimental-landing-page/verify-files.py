@@ -12,10 +12,11 @@ ROOT = Path(__file__).resolve().parent
 manifest = json.loads((ROOT / "concepts.json").read_text())
 baseline = json.loads((ROOT / "expansion/original-art-baseline.json").read_text())
 reservations = json.loads((ROOT / "expansion/registry.json").read_text())
-assert len(manifest) == 130, "Deliver all 130 concepts"
-assert [int(c["id"]) for c in manifest] == list(range(1, 131)), "IDs must be complete and ordered"
+assert len(manifest) == 142, "Deliver all 142 concepts"
+assert [int(c["id"]) for c in manifest] == list(range(1, 143)), "IDs must be complete and ordered"
 assert sum(c["batch"] == "new" for c in manifest) == 100
-assert len({c["slug"] for c in manifest}) == 130
+assert sum(c["batch"] == "compact" for c in manifest) == 12
+assert len({c["slug"] for c in manifest}) == 142
 
 
 class Page(HTMLParser):
@@ -58,7 +59,8 @@ for index, concept in enumerate(manifest):
     assert digest[:10] == concept["version"], f"Stale asset version: {concept['id']}"
     tree = ET.fromstring(content)
     assert tree.tag == svg_ns + "svg"
-    assert tree.attrib["viewBox"] == "0 0 1440 900"
+    assert tree.attrib["viewBox"] == f"0 0 {concept.get('width', 1440)} {concept.get('height', 900)}"
+    assert not re.search(r"\borbit\b", " ".join(tree.itertext()), re.I), f"Old brand in artwork: {concept['id']}"
     ids = [node.attrib["id"] for node in tree.iter() if "id" in node.attrib]
     assert len(ids) == len(set(ids)), f"Duplicate SVG IDs: {concept['id']}"
     references = re.findall(r"url\(#([^\)]+)\)", content.decode())
@@ -70,7 +72,7 @@ for index, concept in enumerate(manifest):
             assert not value or value.startswith(("#", "data:")), f"Non-embedded SVG dependency: {concept['id']}"
     if concept["batch"] == "original":
         assert baseline[concept["id"]] == digest[:10], "Original artwork changed"
-    else:
+    elif concept["batch"] == "new":
         reserved = next(r for r in reservations if r["id"] == concept["id"])
         assert concept["name"] == reserved["name"]
         assert concept["tone"] in ("light", "dark")
@@ -78,6 +80,10 @@ for index, concept in enumerate(manifest):
             assert len(concept[key]) > 15, f"Missing design reasoning: {concept['id']}/{key}"
         for source in concept["source"]:
             assert (ROOT.parent / source).is_file(), f"Missing source: {source}"
+    else:
+        assert concept["presentation"] == "compact"
+        assert concept["splashWidth"] <= 420 and concept["splashHeight"] <= 360
+        assert concept["source"] == ["ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"]
     page = Page(ROOT / "concepts" / f"{concept['slug']}.html")
     previous = manifest[(index - 1) % len(manifest)]["slug"]
     following = manifest[(index + 1) % len(manifest)]["slug"]
@@ -85,9 +91,9 @@ for index, concept in enumerate(manifest):
     assert page.links["next"] == f"./{following}.html"
 
 gallery = Page(ROOT / "index.html")
-assert gallery.cards == 130, "Gallery must expose all 130 designs"
+assert gallery.cards == 142, "Gallery must expose all 142 designs"
 for filename in ("process.html", "contact-sheet.html", "verify.html"):
     Page(ROOT / filename)
-print("130/130 SVGs valid, distinct, self-contained, and correctly linked.")
-print("30 original artworks preserved; 100 reservations, source references and design notes complete.")
+print("142/142 SVGs valid, distinct, self-contained, correctly linked, with no old Orbit wordmarks.")
+print("12 compact Mira studies; 130 earlier compositions corrected to Mira; branding baseline matches.")
 print("Browser decode, visual review and timing are separate checks: open verify.html.")

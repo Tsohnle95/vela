@@ -2,11 +2,11 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Orbit launch verification</title>
+<title>Mira launch verification</title>
 <style>
 body{background:#15111c;color:#d9cce9;font:14px/1.7 monospace;margin:30px}a{color:#c9a6ff}h1{font:28px sans-serif}#stage{width:864px;height:520px;max-width:100%;overflow:hidden;border:1px solid #534361}iframe{width:1440px;height:850px;border:0;transform:scale(.6);transform-origin:top left}li{padding:3px}li[data-pass=false]{color:#ff9b9b}li[data-pass=true]{color:#aad5ac}
 </style>
-<h1>Orbit / launch verification</h1>
+<h1>Mira / launch verification</h1>
 <p><a href="index.html">← Gallery</a> · Checks run in this browser against the actual preview pages.</p>
 <h2 id="summary">Running…</h2>
 <ul id="results"></ul><div id="stage"><iframe title="Launch under test"></iframe></div>
@@ -22,45 +22,51 @@ const frame=document.querySelector('iframe');
 const load=async(url)=>{await new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject;frame.src=url;});};
 try{
   const concepts=await fetch('concepts.json',{cache:'no-store'}).then(r=>r.json());
-  report('Original thirty plus one hundred additions',concepts.length===130&&concepts.filter(c=>c.batch==='new').length===100);
+  report('130 earlier concepts plus twelve compact Mira studies',concepts.length===142&&concepts.filter(c=>c.batch==='compact').length===12);
   let decoded=0;
   for(let start=0;start<concepts.length;start+=6){
-    await Promise.all(concepts.slice(start,start+6).map(async c=>{const img=new Image();img.src=`concepts/${c.slug}.svg?v=${c.version}`;await img.decode();if(img.naturalWidth===1440&&img.naturalHeight===900)decoded++;}));
+    await Promise.all(concepts.slice(start,start+6).map(async c=>{const img=new Image();img.src=`concepts/${c.slug}.svg?v=${c.version}`;try{await img.decode();}catch{throw new Error(`Artwork ${c.id} (${c.slug}) cannot be decoded`);}if(img.naturalWidth===(c.width??1440)&&img.naturalHeight===(c.height??900))decoded++;}));
   }
-  report('Every artwork decodes',decoded===130,`${decoded}/130`);
-  await load(`concepts/${concepts[97].slug}.html`);
+  report('Every artwork decodes',decoded===142,`${decoded}/142`);
+  const chosen=concepts[130];
+  await load(`concepts/${chosen.slug}.html`);
   const doc=()=>frame.contentDocument;
   await until(()=>doc().body.dataset.artworkAt);
   report('Initial launch has art and no workspace picker',!doc().querySelector('#splash').hidden&&doc().querySelector('#workspace').hidden);
   const outer=doc().querySelector('#splash').getBoundingClientRect();
   const art=doc().querySelector('#artwork').getBoundingClientRect();
   report('Artwork fits within the available launch viewport',art.left>=outer.left-1&&art.top>=outer.top-1&&art.right<=outer.right+1&&art.bottom<=outer.bottom+1);
+  const card=doc().querySelector('.compact-window').getBoundingClientRect();
+  report('Loading artwork uses the compact native-size window',Math.abs(card.width-chosen.splashWidth)<1&&Math.abs(card.height-chosen.splashHeight)<1,`${Math.round(card.width)} × ${Math.round(card.height)} px`);
   await sleep(2500);
   report('Artwork remains before three seconds',doc().body.dataset.phase==='artwork');
   await until(()=>doc().body.dataset.phase==='workspace');
   const elapsed=Number(doc().body.dataset.workspaceAt)-Number(doc().body.dataset.artworkAt);
   report('Transition occurs three seconds after artwork paint',elapsed>=2990&&elapsed<3500,`${Math.round(elapsed)} ms`);
   report('Destination is empty and waits for workspace selection',doc().querySelector('#workspace-choice').textContent===''&&doc().querySelectorAll('[data-choose]').length===2&&!doc().querySelector('#workspace').hidden);
+  report('Preview and workspace use the Mira name',doc().title.endsWith('/ Mira')&&doc().querySelector('.titlebar strong').textContent.includes('Mira')&&!doc().querySelector('#workspace').textContent.includes('Orbit'));
   doc().querySelector('#hold').click();
   await sleep(3250);
   report('Hold prevents automatic transition',doc().body.dataset.phase==='artwork'&&doc().querySelector('#hold').getAttribute('aria-pressed')==='true');
   doc().querySelector('#notes-toggle').click();
-  report('Design notes expose the composition and keep artwork held',!doc().querySelector('#design-notes').hidden&&doc().querySelector('#hold').getAttribute('aria-pressed')==='true'&&doc().querySelector('#design-notes').textContent.includes(concepts[97].composition));
+  report('Design notes expose the composition and keep artwork held',!doc().querySelector('#design-notes').hidden&&doc().querySelector('#hold').getAttribute('aria-pressed')==='true'&&doc().querySelector('#design-notes').textContent.includes(chosen.composition));
   doc().querySelector('#replay').click();
   await until(()=>doc().body.dataset.phase==='workspace');
   report('Replay completes a new three-second launch',Number(doc().body.dataset.workspaceAt)-Number(doc().body.dataset.artworkAt)>=2990);
   report('Replay closes review notes',doc().querySelector('#design-notes').hidden);
   await load(`concepts/${concepts[29].slug}.html?still=1`);
   report('Original thirty continue directly into new one hundred',doc().querySelector('#next').href.includes(concepts[30].slug));
-  await load(`concepts/${concepts[129].slug}.html?still=1&immersive=1`);
-  report('Concept 130 wraps to concept 01',doc().querySelector('#next').href.includes(concepts[0].slug));
+  await load(`concepts/${concepts[141].slug}.html?still=1&immersive=1`);
+  report('Concept 142 wraps to concept 01',doc().querySelector('#next').href.includes(concepts[0].slug));
   report('Immersive view hides review controls',getComputedStyle(doc().querySelector('.review-bar')).display==='none');
   await until(()=>doc().querySelector('#hold').getAttribute('aria-pressed')==='true');
   report('Still URL holds artwork on arrival',doc().body.dataset.phase==='artwork');
   await load('index.html?group=new');
-  await until(()=>doc().querySelector('#result-count').textContent.includes('of 130'));
+  await until(()=>doc().querySelector('#result-count').textContent.includes('of 142'));
   const visible=()=>[...doc().querySelectorAll('.card')].filter(card=>!card.hidden);
   report('New-design gallery filter shows exactly one hundred',visible().length===100);
+  doc().querySelector('[data-group="compact"]').click();
+  report('Compact Mira filter shows the twelve new variations',visible().length===12);
   doc().querySelector('[data-group="original"]').click();
   report('Original-design filter shows exactly thirty',visible().length===30);
   doc().querySelector('[data-group="all"]').click();

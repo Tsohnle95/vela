@@ -9,7 +9,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "01-first-light",
-    "version": "82bc3af3ea"
+    "version": "730f062912"
   },
   {
     "id": "02",
@@ -21,7 +21,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "02-type-in-space",
-    "version": "dcdd9140f7"
+    "version": "3d534be3bf"
   },
   {
     "id": "03",
@@ -33,7 +33,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "03-lunar-rise",
-    "version": "40a6caf337"
+    "version": "f2b61a33b2"
   },
   {
     "id": "04",
@@ -45,7 +45,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "04-acquisition",
-    "version": "ceb73d4772"
+    "version": "4ac5b5d5a6"
   },
   {
     "id": "05",
@@ -57,7 +57,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "05-the-field-guide",
-    "version": "4a41c7d3b3"
+    "version": "693fe6b066"
   },
   {
     "id": "06",
@@ -69,7 +69,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "06-night-garden",
-    "version": "bba632d46d"
+    "version": "d0ba3622bc"
   },
   {
     "id": "07",
@@ -81,7 +81,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "07-boot-poetry",
-    "version": "4554ee5f12"
+    "version": "0258671ada"
   },
   {
     "id": "08",
@@ -93,7 +93,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "08-observatory",
-    "version": "29c6f766fe"
+    "version": "c50a6ecbd2"
   },
   {
     "id": "09",
@@ -105,7 +105,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "09-orbital-mechanics",
-    "version": "dbb6ec6081"
+    "version": "001948e63a"
   },
   {
     "id": "10",
@@ -117,7 +117,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "10-totality",
-    "version": "2c02f46439"
+    "version": "a8dc29e886"
   },
   {
     "id": "11",
@@ -129,7 +129,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "11-special-delivery",
-    "version": "c1f875b75f"
+    "version": "97fd0716a2"
   },
   {
     "id": "12",
@@ -141,7 +141,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "12-long-play",
-    "version": "252fcafc70"
+    "version": "267cb50ad2"
   },
   {
     "id": "13",
@@ -153,7 +153,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "13-memory-card",
-    "version": "e92b2f449c"
+    "version": "dda1dc7dbb"
   },
   {
     "id": "14",
@@ -165,7 +165,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "14-connected-dots",
-    "version": "32d20862f9"
+    "version": "d664529a86"
   },
   {
     "id": "15",
@@ -177,7 +177,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "15-three-bodies",
-    "version": "86afb25d99"
+    "version": "06cce61398"
   },
   {
     "id": "16",
@@ -189,7 +189,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "16-soft-geometry",
-    "version": "4ab56f3983"
+    "version": "46595204b6"
   },
   {
     "id": "17",
@@ -201,7 +201,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "17-departure",
-    "version": "74d0f2c192"
+    "version": "38919f25b1"
   },
   {
     "id": "18",
@@ -213,7 +213,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "18-uncharted",
-    "version": "0992ceb517"
+    "version": "7e22558467"
   },
   {
     "id": "19",
@@ -225,7 +225,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "19-event-horizon",
-    "version": "39351086ca"
+    "version": "03259a0bff"
   },
   {
     "id": "20",
@@ -237,7 +237,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "20-the-monolith",
-    "version": "b8aad6da48"
+    "version": "a182811a1d"
   },
   {
     "id": "21",
@@ -249,7 +249,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "21-resonance",
-    "version": "79819cda92"
+    "version": "5bbba6de3c"
   },
   {
     "id": "22",
@@ -261,7 +261,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "22-layer-by-layer",
-    "version": "80f2104a79"
+    "version": "18ee353542"
   },
   {
     "id": "23",
@@ -273,7 +273,7 @@
     "domain": "Original 30",
     "tone": "light",
     "slug": "23-moon-bulletin",
-    "version": "c04087946d"
+    "version": "d1364d9b0f"
   },
   {
     "id": "24",
@@ -285,7 +285,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "24-continuum",
-    "version": "0d459d1a24"
+    "version": "c51290b6d0"
   },
   {
     "id": "25",
@@ -297,7 +297,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "25-around-the-idea",
-    "version": "54f8a6ff5f"
+    "version": "97082cc5c0"
   },
   {
     "id": "26",
@@ -309,7 +309,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "26-unknown-terrain",
-    "version": "a198d8898e"
+    "version": "4ab4842c99"
   },
   {
     "id": "27",
@@ -321,7 +321,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "27-launch-structure",
-    "version": "50eca9303f"
+    "version": "fcab8bcef7"
   },
   {
     "id": "28",
@@ -333,7 +333,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "28-source-of-light",
-    "version": "943dc2e3a0"
+    "version": "e02ecfc3ca"
   },
   {
     "id": "29",
@@ -345,7 +345,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "29-one-small-beginning",
-    "version": "fa5696f264"
+    "version": "784869b3b3"
   },
   {
     "id": "30",
@@ -357,7 +357,7 @@
     "domain": "Original 30",
     "tone": "dark",
     "slug": "30-the-star-atlas",
-    "version": "6d9d0faf0a"
+    "version": "901db36174"
   },
   {
     "id": "31",
@@ -378,7 +378,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "31-dome-of-tomorrow",
-    "version": "1978ea2c3d"
+    "version": "f3237ac1b1"
   },
   {
     "id": "32",
@@ -398,7 +398,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "32-below-the-surface",
-    "version": "f593d58d37"
+    "version": "f8b8a0ee15"
   },
   {
     "id": "33",
@@ -418,7 +418,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "33-coastlight",
-    "version": "c3cc9a9448"
+    "version": "6ee64517c1"
   },
   {
     "id": "34",
@@ -439,7 +439,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "34-between-worlds",
-    "version": "02a992621f"
+    "version": "5a24a57f6d"
   },
   {
     "id": "35",
@@ -459,7 +459,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "35-quiet-harbor",
-    "version": "b9eca32b56"
+    "version": "974dd181ce"
   },
   {
     "id": "36",
@@ -479,7 +479,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "36-cabin-window",
-    "version": "647a32974f"
+    "version": "9b144173a6"
   },
   {
     "id": "37",
@@ -499,7 +499,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "37-polar-curtain",
-    "version": "1cbd1f0729"
+    "version": "37ccdca4ca"
   },
   {
     "id": "38",
@@ -519,7 +519,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "38-under-the-canopy",
-    "version": "c43dd58dbf"
+    "version": "5a55666e8c"
   },
   {
     "id": "39",
@@ -539,7 +539,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "39-last-departure",
-    "version": "177a79df49"
+    "version": "5d6b753cc2"
   },
   {
     "id": "40",
@@ -560,7 +560,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "40-tidal-intelligence",
-    "version": "911b0f9bec"
+    "version": "0bc47119a9"
   },
   {
     "id": "41",
@@ -580,7 +580,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "41-cloud-forge",
-    "version": "1a7ef231bb"
+    "version": "c29a768d64"
   },
   {
     "id": "42",
@@ -592,7 +592,7 @@
     "source": [
       "ChatGPT Image Oct 14, 2026, 05_22_16 PM-2.png"
     ],
-    "composition": "Thin full-height central landscape separates two unequal blank fields; close frontal drop; OR and BIT stagger on opposite sides.",
+    "composition": "Thin full-height central landscape separates two unequal blank fields; close frontal drop; MI and RA stagger on opposite sides.",
     "silhouette": "Narrow vertical cascade interrupted by three jagged ledges.",
     "typography": "Very large split wordmark with different weights and baselines; small labels keep the split legible.",
     "material": "Flat print fields around finely ruled falling water and chiseled muted rock.",
@@ -600,13 +600,13 @@
     "batch": "new",
     "domain": "environments",
     "slug": "42-falling-upward",
-    "version": "ff69c64bbf"
+    "version": "224fe4e8aa"
   },
   {
     "id": "43",
     "name": "Dust caravan",
     "family": "Sand aerial",
-    "description": "A curved procession of tiny pale rovers traces its way through broad peach dunes and an etched Orbit wordmark.",
+    "description": "A curved procession of tiny pale rovers traces its way through broad peach dunes and an etched Mira wordmark.",
     "bg": "#d7ae86",
     "tone": "light",
     "source": [
@@ -620,13 +620,13 @@
     "batch": "new",
     "domain": "environments",
     "slug": "43-dust-caravan",
-    "version": "0fe095346a"
+    "version": "4f58e5fcf7"
   },
   {
     "id": "44",
     "name": "Roofline commons",
     "family": "Occupied skyline",
-    "description": "A dense stepped town of lit studios, rooftop planters and ladders obscures the lower half of a huge pale Orbit title.",
+    "description": "A dense stepped town of lit studios, rooftop planters and ladders obscures the lower half of a huge pale Mira title.",
     "bg": "#191b30",
     "tone": "dark",
     "source": [
@@ -641,7 +641,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "44-roofline-commons",
-    "version": "ed00b19e86"
+    "version": "0aeb850c0c"
   },
   {
     "id": "45",
@@ -661,7 +661,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "45-elevator-to-elsewhere",
-    "version": "12743a55f9"
+    "version": "b92ee0c2f9"
   },
   {
     "id": "46",
@@ -681,7 +681,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "46-glow-beneath",
-    "version": "b74521d247"
+    "version": "fe3b5d2417"
   },
   {
     "id": "47",
@@ -701,7 +701,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "47-moon-allotments",
-    "version": "e7b22685ba"
+    "version": "49fe85e55a"
   },
   {
     "id": "48",
@@ -721,7 +721,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "48-night-counter",
-    "version": "7d5c8c29d6"
+    "version": "f0e5ef3159"
   },
   {
     "id": "49",
@@ -741,7 +741,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "49-bamboo-receiver",
-    "version": "620b25a8a5"
+    "version": "763d3bd487"
   },
   {
     "id": "50",
@@ -761,7 +761,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "50-the-listening-bowl",
-    "version": "97ae5217f1"
+    "version": "602cc21d90"
   },
   {
     "id": "51",
@@ -781,7 +781,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "51-specimen-bench",
-    "version": "14d2664aa7"
+    "version": "2d17b07d77"
   },
   {
     "id": "52",
@@ -802,7 +802,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "52-caldera",
-    "version": "89ef366a74"
+    "version": "f87dc40867"
   },
   {
     "id": "53",
@@ -822,7 +822,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "53-paper-flight",
-    "version": "e4b0eb2111"
+    "version": "bb7c027793"
   },
   {
     "id": "54",
@@ -842,13 +842,13 @@
     "batch": "new",
     "domain": "environments",
     "slug": "54-one-room-universe",
-    "version": "5494ca07a3"
+    "version": "b47b6a1b0e"
   },
   {
     "id": "55",
     "name": "A night outside",
     "family": "Foreground shelter",
-    "description": "A large amber triangular tent fills the near-left foreground beneath an arcing Orbit title and a distant serrated mountain line.",
+    "description": "A large amber triangular tent fills the near-left foreground beneath an arcing Mira title and a distant serrated mountain line.",
     "bg": "#191e33",
     "tone": "dark",
     "source": [
@@ -862,7 +862,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "55-a-night-outside",
-    "version": "cdbf93860e"
+    "version": "2511448b7e"
   },
   {
     "id": "56",
@@ -882,7 +882,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "56-soft-shelter",
-    "version": "271c14a0b1"
+    "version": "2e74f42585"
   },
   {
     "id": "57",
@@ -902,7 +902,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "57-rain-passage",
-    "version": "ce8e16bbe1"
+    "version": "0931fae656"
   },
   {
     "id": "58",
@@ -922,7 +922,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "58-messages-aloft",
-    "version": "90e01112e1"
+    "version": "29a15d31af"
   },
   {
     "id": "59",
@@ -942,7 +942,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "59-asteroid-works",
-    "version": "d3a7c7b15d"
+    "version": "bc7c714904"
   },
   {
     "id": "60",
@@ -962,13 +962,13 @@
     "batch": "new",
     "domain": "environments",
     "slug": "60-the-sailing-room",
-    "version": "e475611aa3"
+    "version": "98e6704cac"
   },
   {
     "id": "61",
     "name": "Cable to the clouds",
     "family": "Suspended journey",
-    "description": "A single lilac cable car hangs over pale cloud layers between two cropped mountain faces, with Orbit following its cable.",
+    "description": "A single lilac cable car hangs over pale cloud layers between two cropped mountain faces, with Mira following its cable.",
     "bg": "#cbd4d5",
     "tone": "light",
     "source": [
@@ -982,7 +982,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "61-cable-to-the-clouds",
-    "version": "17dcd865a0"
+    "version": "fad01a3434"
   },
   {
     "id": "62",
@@ -1002,13 +1002,13 @@
     "batch": "new",
     "domain": "environments",
     "slug": "62-pocket-cosmos",
-    "version": "980b19d4a8"
+    "version": "f3adabe644"
   },
   {
     "id": "63",
     "name": "Starlight bakery",
     "family": "Cosmic shopfront",
-    "description": "A small peach storefront shelters an arched glowing bread oven and a window of pale loaves under an Orbit awning.",
+    "description": "A small peach storefront shelters an arched glowing bread oven and a window of pale loaves under an Mira awning.",
     "bg": "#e2ccb6",
     "tone": "light",
     "source": [
@@ -1022,7 +1022,7 @@
     "batch": "new",
     "domain": "environments",
     "slug": "63-starlight-bakery",
-    "version": "49792fd656"
+    "version": "c98b8f9dd6"
   },
   {
     "id": "64",
@@ -1042,13 +1042,13 @@
     "batch": "new",
     "domain": "environments",
     "slug": "64-terraces-of-water",
-    "version": "278a22115c"
+    "version": "521e8ef120"
   },
   {
     "id": "65",
     "name": "Chromatic crossing",
     "family": "Ink collision",
-    "description": "Scarlet, teal, ochre and violet ink planes collide across an interrupted black Orbit heading.",
+    "description": "Scarlet, teal, ochre and violet ink planes collide across an interrupted black Mira heading.",
     "bg": "#f5f1e4",
     "tone": "light",
     "source": [
@@ -1062,13 +1062,13 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "65-chromatic-crossing",
-    "version": "0f3f9079dc"
+    "version": "8ca43bf1b7"
   },
   {
     "id": "66",
     "name": "Pressure of words",
     "family": "Blind impression",
-    "description": "A giant blind-embossed Orbit sits almost below the edge of warm ivory paper under a diagonal rake of light.",
+    "description": "A giant blind-embossed Mira sits almost below the edge of warm ivory paper under a diagonal rake of light.",
     "bg": "#e5dfcf",
     "tone": "light",
     "source": [
@@ -1082,7 +1082,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "66-pressure-of-words",
-    "version": "85dc757109"
+    "version": "849e208892"
   },
   {
     "id": "67",
@@ -1096,13 +1096,13 @@
     ],
     "composition": "Side-on close view of an accordion ribbon entering and leaving both edges, rising from left to right.",
     "silhouette": "Six alternating open zigzag paper planes.",
-    "typography": "Individual ORBIT letters occupy separate faces and skew with the folds; no detached heading.",
+    "typography": "Individual MIRA letters occupy separate faces and skew with the folds; no detached heading.",
     "material": "Cream cut paper, shaded alternating facets, long soft-edged polygon shadow and sharp illuminated creases.",
     "nearest": "81 Ticker thought: a single unperforated accordion with large isolated letters and open ends, versus many thin interwoven zigzags of repeated small text viewed from above.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "67-unfold",
-    "version": "8151e3227c"
+    "version": "f5362cf96f"
   },
   {
     "id": "68",
@@ -1116,19 +1116,19 @@
     ],
     "composition": "Flat frontal composition with three unequal full-height columns, a heavy horizontal band interrupts all three near the bottom.",
     "silhouette": "Tall compressed stencil blocks ending at hard screen edges.",
-    "typography": "OR stacked in the wide black column, BI across a narrow violet column, one enormous T in chalk; type is the architecture.",
+    "typography": "MI stacked in the wide black column, R across a narrow violet column, one enormous A in chalk; type is the architecture.",
     "material": "Industrial stencil cutouts, abrasive edge marks and chalky overprint.",
     "nearest": "02 Type in space: segmented multi-axis columns, punched stencil gaps, edge-to-edge material and stacked reading replace one horizontal word with orbital decoration.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "68-hard-line",
-    "version": "eff0124653"
+    "version": "d043fab2fe"
   },
   {
     "id": "69",
     "name": "Ribbon memory",
     "family": "Mechanical close-up",
-    "description": "A cropped typewriter fills the very bottom; its violet ink ribbon passes across a nearly empty ivory sheet carrying the Orbit name.",
+    "description": "A cropped typewriter fills the very bottom; its violet ink ribbon passes across a nearly empty ivory sheet carrying the Mira name.",
     "bg": "#ede5d2",
     "tone": "light",
     "source": [
@@ -1136,19 +1136,19 @@
     ],
     "composition": "Frontal macro of carriage at the bottom edge; white paper fills the upper two thirds, ribbon is a taut horizontal foreground line.",
     "silhouette": "Low layered bank of round keys, two dark ribbon hubs, dense converging typebars.",
-    "typography": "A tiny monospaced Orbit is typed onto the actual ink ribbon; a ghost ink impression rests on the page.",
+    "typography": "A tiny monospaced Mira is typed onto the actual ink ribbon; a ghost ink impression rests on the page.",
     "material": "Mechanical steel strokes, rubber platen, worn circular key caps and dyed fabric ribbon.",
     "nearest": "71 Departure board: irregular round mechanics cropped low with vast blank paper, versus a high stepped field of rectangular hinged character tiles on charcoal.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "69-ribbon-memory",
-    "version": "f27fb08721"
+    "version": "18b8ecbcf1"
   },
   {
     "id": "70",
     "name": "Balanced thought",
     "family": "Suspended geometry",
-    "description": "A delicate black mobile holds an ochre triangle, scarlet bar and violet disc beside a tall narrow Orbit heading.",
+    "description": "A delicate black mobile holds an ochre triangle, scarlet bar and violet disc beside a tall narrow Mira heading.",
     "bg": "#e9e4d8",
     "tone": "light",
     "source": [
@@ -1156,13 +1156,13 @@
     ],
     "composition": "Looking slightly upward at a suspended asymmetric mobile in the top-right; typography climbs the far-left margin.",
     "silhouette": "Sparse hanging angled rods with an off-balance triangle, thin rectangle and displaced disc.",
-    "typography": "Tall stacked O R B I T down the left with a single small horizontal caption beneath.",
+    "typography": "Tall stacked M I R A down the left with a single small horizontal caption beneath.",
     "material": "Matte painted metal shapes, taut black string and fine offset paper shadows.",
     "nearest": "101 Pendulum choir: branching rods and three different flat geometric weights, left vertical lettering and warm poster stock replace parallel hanging spheres and arc traces.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "70-balanced-thought",
-    "version": "54d5811dc8"
+    "version": "fd4cdb54c8"
   },
   {
     "id": "71",
@@ -1182,7 +1182,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "71-departure-board",
-    "version": "f23d9e9541"
+    "version": "1bf15b7f83"
   },
   {
     "id": "72",
@@ -1196,13 +1196,13 @@
     ],
     "composition": "Flat optical screen across the right three quarters; a quiet unprinted vertical gutter at left holds a small heading.",
     "silhouette": "Negative jagged skyline punched out of a vertical striped field.",
-    "typography": "Small stacked left gutter text with a compact serif Orbit near eye level; illustration bears the visual weight.",
+    "typography": "Small stacked left gutter text with a compact serif Mira near eye level; illustration bears the visual weight.",
     "material": "Lenticular black ink stripes and ivory knockouts, with tiny violet misregistration slivers.",
     "nearest": "44 Roofline commons: abstract negative cutout, vertical optical line material, flat frontal framing and small gutter typography replace spatial terraced roofs and giant obscured letters.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "72-between-the-stripes",
-    "version": "94e9571b00"
+    "version": "d5d4cc19cb"
   },
   {
     "id": "73",
@@ -1217,19 +1217,19 @@
     ],
     "composition": "Oblique tabletop macro; film enters cropped lower-left, bows across the middle and exits top-right; title splits between open corners.",
     "silhouette": "Long curling perforated S-band at steep diagonal.",
-    "typography": "Large Orbit serif at top-left and tiny spaced caption in lower-right; frame numbers remain purely photographic.",
+    "typography": "Large Mira serif at top-left and tiny spaced caption in lower-right; frame numbers remain purely photographic.",
     "material": "Translucent brown celluloid edges, violet grain, dark contact-print frames and punched sprocket holes.",
     "nearest": "15 Three bodies: one continuous bent photographic object with oblique exposures and punched edges, asymmetric corner type and warm table replace equal upright triptych panels.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "73-frames-in-motion",
-    "version": "2df7304d64"
+    "version": "86feb9c87a"
   },
   {
     "id": "74",
     "name": "Made of metal",
     "family": "Brushed alloy",
-    "description": "A flush engraved Orbit plate sits inside a vast brushed alloy surface crossed by one dramatic diagonal reflection.",
+    "description": "A flush engraved Mira plate sits inside a vast brushed alloy surface crossed by one dramatic diagonal reflection.",
     "bg": "#868895",
     "tone": "light",
     "source": [
@@ -1243,13 +1243,13 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "74-made-of-metal",
-    "version": "fced61a9ca"
+    "version": "30bd72558a"
   },
   {
     "id": "75",
     "name": "Through the tear",
     "family": "Paper rupture",
-    "description": "An enormous ragged diagonal tear opens warm paper to a deep violet star field, splitting the black Orbit lettering into two distant pieces.",
+    "description": "An enormous ragged diagonal tear opens warm paper to a deep violet star field, splitting the black Mira lettering into two distant pieces.",
     "bg": "#e6d8bd",
     "tone": "light",
     "source": [
@@ -1257,13 +1257,13 @@
     ],
     "composition": "Macro overhead sheet split by a wide descending diagonal fissure from upper-left to lower-right; two unequal paper banks hold separate type.",
     "silhouette": "Ragged lightning-shaped opening with thick torn fibers.",
-    "typography": "OR sits high-right and BIT low-left, both heavy cropped fragments; the missing line is the subject.",
+    "typography": "MI sits high-right and RA low-left, both heavy cropped fragments; the missing line is the subject.",
     "material": "Layered torn-stock edges, violet ink depth, sparse pinprick light and warm rough fibers.",
     "nearest": "34 Between worlds: flat ragged paper material, interrupted oversize type, overhead macro and violet stars replace a deep canyon with a bridge and spatial rock walls.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "75-through-the-tear",
-    "version": "6c2461b190"
+    "version": "57a3c8b884"
   },
   {
     "id": "76",
@@ -1277,19 +1277,19 @@
     ],
     "composition": "Overhead tabletop view of a large asymmetrical cross slightly right of center, lifted top flap is the only depth cue.",
     "silhouette": "Wide carton cross with notched tabs and one diagonal raised corner.",
-    "typography": "Restrained black Orbit printed in the broad center panel, tiny crop notes at the left without a separate headline.",
+    "typography": "Restrained black Mira printed in the broad center panel, tiny crop notes at the left without a separate headline.",
     "material": "Cut card, dashed score lines, knife notches, flat olive ink and one violet folded plane.",
     "nearest": "127 Paper computation: a single solid packaging net with broad blank panels, orthographic view, printed center and one lifted tab rather than a repeating cut lattice in perspective.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "76-flat-to-form",
-    "version": "5c97c88652"
+    "version": "57f5ef1e88"
   },
   {
     "id": "77",
     "name": "Open fan",
     "family": "Pleated light",
-    "description": "A vast ochre paper fan spreads from a low-right hinge, its violet brush marks stretching across pleats above a small serif Orbit.",
+    "description": "A vast ochre paper fan spreads from a low-right hinge, its violet brush marks stretching across pleats above a small serif Mira.",
     "bg": "#534351",
     "tone": "dark",
     "source": [
@@ -1303,7 +1303,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "77-open-fan",
-    "version": "5b53a32a3e"
+    "version": "68c3a76e1c"
   },
   {
     "id": "78",
@@ -1323,7 +1323,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "78-flight-in-pieces",
-    "version": "55561e3dab"
+    "version": "b39aafa28d"
   },
   {
     "id": "79",
@@ -1337,33 +1337,33 @@
     ],
     "composition": "Extreme overhead crop of an open book page entering from top-left and filling the screen; long bookmark descends near left edge.",
     "silhouette": "A vertical notched textile ribbon with a folded upper hook and diagonal book corner.",
-    "typography": "Small vertical Orbit printed along the ribbon; a widely spaced marginal sentence rests at far-right bottom.",
+    "typography": "Small vertical Mira printed along the ribbon; a widely spaced marginal sentence rests at far-right bottom.",
     "material": "Deckled layered page edges, cream rag paper, woven plum ribbon and a shallow cloth shadow.",
     "nearest": "83 The spines: one near-blank open page with a long single ribbon, overhead macro and marginal text replace dense frontal multicolored book spines and a bright vertical gap.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "79-a-place-held",
-    "version": "5c2ccfe873"
+    "version": "aa6b4e4d85"
   },
   {
     "id": "80",
     "name": "Letters to get lost in",
     "family": "Typographic labyrinth",
-    "description": "Orthogonal maze strokes assemble five block letters in a compact offset cluster, while a wide italic Orbit stretches through the clear right-hand field.",
+    "description": "Orthogonal maze strokes assemble four block letters in a compact offset cluster, while a wide italic Mira stretches through the clear right-hand field.",
     "bg": "#e1dfc9",
     "tone": "light",
     "source": [
       "Untitled.png"
     ],
-    "composition": "Frontal flat print: block maze letters form a left-heavy 2-over-3 cluster; oversized serif begins in the open top-right and trails off the edge.",
+    "composition": "Frontal flat print: block maze letters form a left-heavy 2-over-2 cluster; oversized serif begins in the open top-right and trails off the edge.",
     "silhouette": "Unequal stepped mass of square letter labyrinths.",
-    "typography": "Small modular ORBIT reads through construction; an opposing long italic serif word supplies a different rhythm.",
+    "typography": "Small modular MIRA reads through construction; an opposing long italic serif word supplies a different rhythm.",
     "material": "Dense olive ink walls with ivory hairline passages, rough print tooth and controlled square breaks.",
-    "nearest": "111 One continuous line: five visibly letter-shaped disconnected maze masses, modular wall blocks, olive paper and opposing wide serif replace one dense Hilbert square and escape route.",
+    "nearest": "111 One continuous line: four visibly letter-shaped disconnected maze masses, modular wall blocks, olive paper and opposing wide serif replace one dense Hilbert square and escape route.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "80-letters-to-get-lost-in",
-    "version": "6f96a586f0"
+    "version": "ef75fc627f"
   },
   {
     "id": "81",
@@ -1377,13 +1377,13 @@
     ],
     "composition": "Overhead view of three interwoven narrow zigzags across the lower two thirds, with a wide empty blush upper margin.",
     "silhouette": "Repeated thin zigzag ribbons crossing at unequal points.",
-    "typography": "Small repeated monospaced Orbit appears on the strips; a light uppercase heading is aligned high at right.",
+    "typography": "Small repeated monospaced Mira appears on the strips; a light uppercase heading is aligned high at right.",
     "material": "Perforated paper strip edges, alternating cream facets, ink type and cross-over shadows.",
     "nearest": "67 Unfold: many narrow patterned strips viewed from above, dense weaving low on the page and a quiet high caption replace one broad side-on accordion with one huge letter per panel.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "81-ticker-thought",
-    "version": "1b626d67d1"
+    "version": "3a4c998215"
   },
   {
     "id": "82",
@@ -1417,13 +1417,13 @@
     ],
     "composition": "Extreme straight-on shelf crop, books taller than screen and of wildly different widths; almost no neutral background.",
     "silhouette": "Dense vertical material bars interrupted by one thin dark luminous slit.",
-    "typography": "Rotated stamped Orbit words use several scales along different spines, with no detached heading.",
+    "typography": "Rotated stamped Mira words use several scales along different spines, with no detached heading.",
     "material": "Scuffed cloth, foil rules, discolored cream boards and cosmic pinpricks in the gap.",
     "nearest": "72 Between the stripes: unequal solid textured book bodies and rotated spine lettering at macro scale replace regular optical hairlines, ivory skyline knockout and an empty left gutter.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "83-the-spines",
-    "version": "827a6a2c00"
+    "version": "9dd293f388"
   },
   {
     "id": "84",
@@ -1437,19 +1437,19 @@
     ],
     "composition": "Overhead macro textile crosses diagonally between top-left and bottom-right; one pale smooth island cuts into the weave low-right.",
     "silhouette": "Warped checker mass of interlaced letter squares with scalloped diagonal edges.",
-    "typography": "Repeated single letters become the weave; one unwarped italic Orbit in a plain light island.",
+    "typography": "Repeated single letters become the weave; one unwarped italic Mira in a plain light island.",
     "material": "Jacquard-like alternating over-under fields, hairline warp threads and peach-plum woven ink.",
     "nearest": "120 The weight of an idea: a letter-bearing diagonal fabric mass with an unwarped caption island and alternating block fills, versus a gravitationally sunken line grid and tiny upper title.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "84-woven-alphabet",
-    "version": "982666a182"
+    "version": "d116f58ab2"
   },
   {
     "id": "85",
     "name": "Afterglow sign",
     "family": "Hand-bent light",
-    "description": "A freehand lavender neon Orbit glows against dark brick, with an exposed black cable winding far into the right-hand emptiness.",
+    "description": "A freehand lavender neon Mira glows against dark brick, with an exposed black cable winding far into the right-hand emptiness.",
     "bg": "#201c27",
     "tone": "dark",
     "source": [
@@ -1463,11 +1463,11 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "85-afterglow-sign",
-    "version": "9e0c8df656"
+    "version": "513f0f3357"
   },
   {
     "id": "86",
-    "name": "Notes from orbit",
+    "name": "Notes from Mira",
     "family": "Pocket sketchbook",
     "description": "A tilted spiral notebook carries a loose pencil celestial sketch and a lifted corner, resting on a dusty green field.",
     "bg": "#6a786f",
@@ -1477,19 +1477,19 @@
     ],
     "composition": "Overhead notebook turned twenty degrees and cropped at the bottom; a small unbound caption sits high-right in open green table space.",
     "silhouette": "Oblique rectangle with protruding spiral loops and a triangular lifted corner.",
-    "typography": "Orbit masthead is printed directly on the page; casual monospaced handwritten notes stay within the drawing.",
+    "typography": "Mira masthead is printed directly on the page; casual monospaced handwritten notes stay within the drawing.",
     "material": "Cream ruled paper, steel spiral, rough graphite-like ink and a hard angular page shadow.",
     "nearest": "18 Uncharted: an intimate single ruled notebook with spiral binding, casual mark-making, oblique crop and curled corner replaces a wide unfolded map with measured grids and coordinates.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "86-notes-from-orbit",
-    "version": "d1aa3c3678"
+    "version": "f6512c0eda"
   },
   {
     "id": "87",
     "name": "Word gravity",
     "family": "Concrete poetry",
-    "description": "Tiny words gather into a large open crescent on the left, facing an enormous narrow vertical Orbit at the opposite edge.",
+    "description": "Tiny words gather into a large open crescent on the left, facing an enormous narrow vertical Mira at the opposite edge.",
     "bg": "#26232d",
     "tone": "dark",
     "source": [
@@ -1503,7 +1503,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "87-word-gravity",
-    "version": "a03c428d25"
+    "version": "294763b320"
   },
   {
     "id": "88",
@@ -1517,19 +1517,19 @@
     ],
     "composition": "Overhead sun-print specimen sheet; the largest leaf is clipped at the upper-right, a smaller leaf turns diagonally low-left and the title sits tightly in their lower gap.",
     "silhouette": "Fine elongated leaf skeletons with branching veins, not enclosed plates.",
-    "typography": "Compact white Orbit and two tiny botanical-print notes form one low central block.",
+    "typography": "Compact white Mira and two tiny botanical-print notes form one low central block.",
     "material": "Cyanotype blue mottling, ghost leaf silhouettes and dense pale vein-line impressions.",
     "nearest": "51 Specimen bench: flat overlapping leaf imprints, no glassware or grounded workbench, close macro framing and tight low title replace a horizontal laboratory scene.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "88-blueprint-botany",
-    "version": "5bbd9b8520"
+    "version": "3346907727"
   },
   {
     "id": "89",
     "name": "Paper currents",
     "family": "Quilled macro",
-    "description": "Broad cream paper strips curl into an open current, their deep shadows forming channels above a low debossed Orbit strip.",
+    "description": "Broad cream paper strips curl into an open current, their deep shadows forming channels above a low debossed Mira strip.",
     "bg": "#d9d3c1",
     "tone": "light",
     "source": [
@@ -1543,7 +1543,7 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "89-paper-currents",
-    "version": "509ae783a4"
+    "version": "d326da1945"
   },
   {
     "id": "90",
@@ -1557,13 +1557,13 @@
     ],
     "composition": "High oblique camera looking down at a massive diagonal line of extruded letter buildings; nearest feet are cropped along the bottom edge.",
     "silhouette": "Thick orthogonal word as a single staggered architectural mass.",
-    "typography": "The physical letters themselves say Orbit; a very small upper note supplies scale.",
+    "typography": "The physical letters themselves say Mira; a very small upper note supplies scale.",
     "material": "Cream concrete top planes, layered gray extrusion sides, chiseled edges and long violet cast shadows.",
     "nearest": "44 Roofline commons: the architecture is literally extruded letterforms, with no rooftop rooms, orthographic city detail or separate giant lettering behind the scene; material and framing are architectural macro.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "90-built-with-letters",
-    "version": "19627b79c7"
+    "version": "5dc86ffe12"
   },
   {
     "id": "91",
@@ -1577,19 +1577,19 @@
     ],
     "composition": "Low oblique floor view with two opposed chess pieces in near-left and far-right corners; blank horizontal title sits between them near the horizon.",
     "silhouette": "Angular horse profile balanced against a distant round-headed pawn.",
-    "typography": "Small dark serif Orbit sits low and off-center at the board horizon, no notation or game state.",
+    "typography": "Small dark serif Mira sits low and off-center at the board horizon, no notation or game state.",
     "material": "Matte carved pieces, pale checker floor and long soft polygon shadows.",
     "nearest": "70 Balanced thought: grounded volumetric figurines in opposing depth corners with a low serif horizon, versus a suspended flat geometric mobile and tall left vertical type.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "91-the-next-move",
-    "version": "7c062e47a9"
+    "version": "396e5aa27e"
   },
   {
     "id": "92",
     "name": "Time in grains",
     "family": "Faceted glass",
-    "description": "Two polygonal glass cones meet at a narrow waist, with pixel sand falling toward an uneven violet pile between opposing vertical Orbit labels.",
+    "description": "Two polygonal glass cones meet at a narrow waist, with pixel sand falling toward an uneven violet pile between opposing vertical Mira labels.",
     "bg": "#191c28",
     "tone": "dark",
     "source": [
@@ -1597,13 +1597,13 @@
     ],
     "composition": "Close frontal hourglass offset to the right; very narrow vertical words anchor opposite page sides at unequal heights.",
     "silhouette": "Two clear triangular cones meeting tip-to-tip, resting between broad thin plates.",
-    "typography": "Orbit rises vertically on the left in large thin sans; a smaller vertical phrase descends at right.",
+    "typography": "Mira rises vertically on the left in large thin sans; a smaller vertical phrase descends at right.",
     "material": "Faceted transparent glass, silver lip highlights and individual square sand grains.",
     "nearest": "92 differs from 130 The long now: upright transparent double-cone object and falling grains, frontal camera and vertical opposing type replace a grounded wedge casting a diagonal sundial shadow.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "92-time-in-grains",
-    "version": "6bae73adec"
+    "version": "ed36a1b2d5"
   },
   {
     "id": "93",
@@ -1617,19 +1617,19 @@
     ],
     "composition": "Extreme close oblique view into an incomplete bowl, its bottom and right side cropped away; spare fragment lies high-left and small title high-center.",
     "silhouette": "Wide irregular open vessel rim with a missing bite and sharp shard outlines.",
-    "typography": "Small letterspaced white Orbit above the bowl; gold seams carry the visual focus.",
+    "typography": "Small letterspaced white Mira above the bowl; gold seams carry the visual focus.",
     "material": "Matte speckled ceramic, dark interior glaze, uneven gold joins and three-dimensional shard shadows.",
     "nearest": "98 Crystal fault: a recognizable opaque hollow ceramic vessel with gold repair joins, low oblique camera and incomplete rim replace translucent polygonal crystal wedges on an airy field.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "93-beautiful-repair",
-    "version": "6ee9cd81e2"
+    "version": "e5c723f949"
   },
   {
     "id": "94",
     "name": "Impossible step",
     "family": "Spatial paradox",
-    "description": "An ivory Penrose staircase climbs around a triangular void on pale peach, with a single violet step and ultrathin Orbit behind it.",
+    "description": "An ivory Penrose staircase climbs around a triangular void on pale peach, with a single violet step and ultrathin Mira behind it.",
     "bg": "#e8c6b8",
     "tone": "light",
     "source": [
@@ -1643,13 +1643,13 @@
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "94-impossible-step",
-    "version": "b4b97c8a4d"
+    "version": "0297402ea1"
   },
   {
     "id": "95",
     "name": "Crease study",
     "family": "Fold sequence",
-    "description": "Four unequal origami stages rise from a flat diamond to an elongated crane, ending beside a tall vertical Orbit at the right.",
+    "description": "Four unequal origami stages rise from a flat diamond to an elongated crane, ending beside a tall vertical Mira at the right.",
     "bg": "#867f6c",
     "tone": "dark",
     "source": [
@@ -1657,39 +1657,39 @@
     ],
     "composition": "Orthographic overhead sequence ascends from bottom-left to top-right in four unequal sizes, finishing at a vertical title at the outer edge.",
     "silhouette": "Four disconnected silhouettes: flat diamond, peaked triangle, folded kite and long-necked crane.",
-    "typography": "Tall narrow Orbit runs down the right edge; tiny crease labels sit directly beside each paper stage.",
+    "typography": "Tall narrow Mira runs down the right edge; tiny crease labels sit directly beside each paper stage.",
     "material": "Matte folded paper, alternating face tones, dashed crease marks and short offset shadows.",
     "nearest": "78 Flight in pieces: a physical four-stage transformation and rising sequence of unequal folded volumes, narrow edge title and muted table replace one flat seven-piece tangram bird and low heavy word.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "95-crease-study",
-    "version": "316de5b4e3"
+    "version": "719a7987c1"
   },
   {
     "id": "96",
     "name": "Crossing words",
     "family": "Letter crossword",
-    "description": "Two giant Orbit words share their opening O to form a strongly asymmetrical L across warm gridded paper.",
+    "description": "Two giant Mira words share their opening M to form a strongly asymmetrical L across warm gridded paper.",
     "bg": "#d7c9ae",
     "tone": "light",
     "source": [
       "ChatGPT Image Oct 13, 2026, 03_24_00 PM.png"
     ],
-    "composition": "Flat desk-paper view: five large letter cells stretch across the high-left, while another five descend down the left edge; the open lower-right is almost empty.",
-    "silhouette": "Giant thick L made from nine square letter blocks.",
+    "composition": "Flat desk-paper view: four large letter cells stretch across the high-left, while another four descend down the left edge; the open lower-right is almost empty.",
+    "silhouette": "Giant thick L made from seven square letter blocks.",
     "typography": "Bold shared-letter crossword and a tiny low-right dot-matrix caption; no separate masthead.",
     "material": "Soft black block printing on warm graph paper, outlined cells and subtle rubbed ink.",
-    "nearest": "80 Letters to get lost in: nine clean typographic square cells form one large open L with a shared O; no maze passages, no stepped modular cluster and no opposing serif title.",
+    "nearest": "80 Letters to get lost in: seven clean typographic square cells form one large open L with a shared M; no maze passages, no stepped modular cluster and no opposing serif title.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "96-crossing-words",
-    "version": "3e0a66dbd3"
+    "version": "02cce521e2"
   },
   {
     "id": "97",
     "name": "Liquid language",
     "family": "Chrome pool",
-    "description": "A heavy chrome Orbit pools against the bottom edge while impossibly long silver letter reflections rise into a deep quiet field.",
+    "description": "A heavy chrome Mira pools against the bottom edge while impossibly long silver letter reflections rise into a deep quiet field.",
     "bg": "#10151d",
     "tone": "dark",
     "source": [
@@ -1697,13 +1697,13 @@
     ],
     "composition": "Low macro view across a dark reflecting plane: liquid word touches the bottom edge; long attenuated mirror forms rise far into the empty upper field.",
     "silhouette": "Heavy soft-edged horizontal typographic puddle with long narrow upward reflections.",
-    "typography": "One large molten mixed-case Orbit, no secondary slogan; elongated reflected letterforms dissolve above.",
+    "typography": "One large molten mixed-case Mira, no secondary slogan; elongated reflected letterforms dissolve above.",
     "material": "Alternating silver-black chrome bands, white specular contours, pooled meniscus and dark bluish reflections.",
     "nearest": "85 Afterglow sign: heavy volumetric pooled chrome at the bottom with vertical reflections and large empty upper field replace thin hand-bent mid-wall neon script, bricks and a trailing cable.",
     "batch": "new",
     "domain": "graphic-objects",
     "slug": "97-liquid-language",
-    "version": "b8128df024"
+    "version": "8f5eb91fe5"
   },
   {
     "id": "98",
@@ -1717,13 +1717,13 @@
     ],
     "composition": "Broken crystalline wall occupies left 55 percent; right third remains bare with mid-height title.",
     "silhouette": "A serrated broken wedge with large unequal sharp facets.",
-    "typography": "One 120px serif Orbit and a short two-line micro-caption on the airy right.",
+    "typography": "One 120px serif Mira and a short two-line micro-caption on the airy right.",
     "material": "Hard translucent polygon faces, hairline specular seams and scattered chips.",
     "nearest": "108 / A mountain of facets: this is a close translucent fracture with a vertical torn silhouette, pale negative space and no mesh terrain.",
     "batch": "new",
     "domain": "systems",
     "slug": "98-crystal-fault",
-    "version": "bd716634da"
+    "version": "0574a5aa17"
   },
   {
     "id": "99",
@@ -1737,13 +1737,13 @@
     ],
     "composition": "Full-bleed rectangular mosaic; the asymmetric dark loop is offset above and right of center.",
     "silhouette": "An irregular squared loop cut from solid weighted cells.",
-    "typography": "OR appears in a broad top-left cell; BIT in a lower-left cell, embedded at mismatched scales.",
+    "typography": "MI appears in a broad top-left cell; RA in a lower-left cell, embedded at mismatched scales.",
     "material": "Flat screen-printed blocks with a few inset fine rules.",
     "nearest": "80 / Letters to get lost in: these are filled treemap masses around one open void, not letter-shaped maze paths; full bleed rather than an isolated lettering object.",
     "batch": "new",
     "domain": "systems",
     "slug": "99-negative-space-engine",
-    "version": "3ff4b7762d"
+    "version": "4b90df3304"
   },
   {
     "id": "100",
@@ -1757,13 +1757,13 @@
     ],
     "composition": "Seed high-center-right expands to a cropped jagged base; very narrow left typographic rail.",
     "silhouette": "A downward branching pixel triangle full of repeated triangular holes.",
-    "typography": "Tall vertical 94px ORBIT reads up the left edge; two minimal words at the seed.",
+    "typography": "Tall vertical 94px MIRA reads up the left edge; two minimal words at the seed.",
     "material": "Crisp monochrome cellular blocks on midnight aubergine.",
     "nearest": "107 / Particle weather: an ordered solid triangular cascade grows downward, rather than a loose horizontal tapered stream; typography is vertical and material entirely discrete.",
     "batch": "new",
     "domain": "systems",
     "slug": "100-simple-rules",
-    "version": "3025dd28b2"
+    "version": "749fab3c49"
   },
   {
     "id": "101",
@@ -1777,13 +1777,13 @@
     ],
     "composition": "Upper-right rail slants down; hanging weights make an uneven diagonal curtain above giant low-left lettering.",
     "silhouette": "Thin suspended strings ending in a descending rhythm of dense weights.",
-    "typography": "Huge lowercase serif orbit is cropped slightly by the bottom edge.",
+    "typography": "Huge lowercase serif mira is cropped slightly by the bottom edge.",
     "material": "Fine chalk swing arcs and cold metallic weights with side-lit gradients.",
     "nearest": "70 / Balanced thought: these are long strings and weighted spheres on one continuous sloped rail, not a Bauhaus mobile of flat triangles; darker, photographic and baseline-cropped.",
     "batch": "new",
     "domain": "systems",
     "slug": "101-pendulum-choir",
-    "version": "1e21a8b499"
+    "version": "438ee8b380"
   },
   {
     "id": "102",
@@ -1797,13 +1797,13 @@
     ],
     "composition": "Prism low-left of center; a thin incoming beam becomes a full-height rightward angular spectrum.",
     "silhouette": "A small triangular wedge within a giant flared spectrum.",
-    "typography": "Small widely spaced Orbit sits high above the optics, deliberately distant from the prism.",
+    "typography": "Small widely spaced Mira sits high above the optics, deliberately distant from the prism.",
     "material": "Layered translucent glass facets and overlapping flat luminous color bands.",
     "nearest": "65 / Chromatic crossing: this has one physical triangular refractor, a single incoming beam and a seven-color directional fan on dark ground; not intersecting risograph planes.",
     "batch": "new",
     "domain": "systems",
     "slug": "102-white-light",
-    "version": "6c7cdcb35e"
+    "version": "ab62c4ed07"
   },
   {
     "id": "103",
@@ -1817,13 +1817,13 @@
     ],
     "composition": "Full-bleed diagonal line field; wide heavy type runs low and a solid margin interrupt sits high-left.",
     "silhouette": "Dense angular moiré bands sliding diagonally beyond every edge.",
-    "typography": "Low 178px outlined ORBIT spans rightward; small white-on-black high-left imprint.",
+    "typography": "Low 178px outlined MIRA spans rightward; small white-on-black high-left imprint.",
     "material": "Fine black overprint grids on muted acidic stock.",
     "nearest": "72 / Between the stripes: a full-field two-angle moire creates no concealed city image, and the large outline type overlays its lower field instead of using a clean gutter.",
     "batch": "new",
     "domain": "systems",
     "slug": "103-misalignment",
-    "version": "eb26f78ec7"
+    "version": "5d1ff48773"
   },
   {
     "id": "104",
@@ -1837,13 +1837,13 @@
     ],
     "composition": "A stepped wide network fills the middle and lower right; a narrow vertical heading anchors left.",
     "silhouette": "A wide rectangular shoulder shape with stepped endpoints and rhythmic crossbars.",
-    "typography": "Vertical narrow ORBIT at left is counterbalanced by small two-line text above the last stage.",
+    "typography": "Vertical narrow MIRA at left is counterbalanced by small two-line text above the last stage.",
     "material": "Fine luminous ink traces, tiny square joints, and clean opaque navy.",
     "nearest": "115 / Printed circuit: the sorting score is an open stepped wire composition with staged crossbars and no processor or component board; narrow vertical title replaces routed horizontal type.",
     "batch": "new",
     "domain": "systems",
     "slug": "104-sorting-thoughts",
-    "version": "0aa2ee3441"
+    "version": "08c4440fa1"
   },
   {
     "id": "105",
@@ -1857,13 +1857,13 @@
     ],
     "composition": "Domino chain makes a low horizontal run then turns upward at right and bends back overhead; title inhabits the open inside corner.",
     "silhouette": "An incomplete squared spiral of standing and fallen thin blocks.",
-    "typography": "Large black serif Orbit sits left in the open interior, with tiny sentence under it.",
+    "typography": "Large black serif Mira sits left in the open interior, with tiny sentence under it.",
     "material": "Faceted tactile dominoes, indented pips and warm long shadows.",
     "nearest": "91 / The next move: this is a single bent sequential domino chain with fallen state and no checkerboard, rather than two isolated chess pieces in opposing corners.",
     "batch": "new",
     "domain": "systems",
     "slug": "105-chain-reaction",
-    "version": "ee81faf56e"
+    "version": "fd11eca834"
   },
   {
     "id": "106",
@@ -1877,13 +1877,13 @@
     ],
     "composition": "Close full-bleed material field with two modest offset poles across lower center; high-right isolated type.",
     "silhouette": "A dense asymmetric bow of aligned dashes surrounding two separated blocks.",
-    "typography": "Small bright serif Orbit floats high-right above the material, without diagram labels.",
+    "typography": "Small bright serif Mira floats high-right above the material, without diagram labels.",
     "material": "Dense short metallic dashes with variable opacity on graphite.",
     "nearest": "26 / Unknown terrain: filings are discrete oriented material marks around two offset poles, not concentric closed contour paths; full-bleed close view and tiny high-right title.",
     "batch": "new",
     "domain": "systems",
     "slug": "106-invisible-pull",
-    "version": "8a7946fbb4"
+    "version": "6b961b1478"
   },
   {
     "id": "107",
@@ -1903,7 +1903,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "107-particle-weather",
-    "version": "d6f966b12f"
+    "version": "7e6b3897d4"
   },
   {
     "id": "108",
@@ -1917,13 +1917,13 @@
     ],
     "composition": "Right-hand mountain peak and folded mass taper down-left into flat outlined triangles; serif title is high-left.",
     "silhouette": "One steep sawtooth mountain followed by a flattened triangular tail.",
-    "typography": "112px serif Orbit sits in the spacious upper-left, with one modest line beneath.",
+    "typography": "112px serif Mira sits in the spacious upper-left, with one modest line beneath.",
     "material": "Opaque orange face shading, dark fine edges and small vertex letters.",
     "nearest": "98 / Crystal fault: an opaque warm mountain stands in oblique terrain and unfolds into a flat net; crystal fault is a cropped translucent vertical shard wall.",
     "batch": "new",
     "domain": "systems",
     "slug": "108-a-mountain-of-facets",
-    "version": "3fb4817e6e"
+    "version": "ed999afbb3"
   },
   {
     "id": "109",
@@ -1937,13 +1937,13 @@
     ],
     "composition": "A clipped dense cube block fills upper-right, dismantling only toward the lower-left and leaving an irregular title gap.",
     "silhouette": "Heavy stepped cuboid corner with a loose descending fringe of unequal cubes.",
-    "typography": "Pale italic serif Orbit is threaded low between the mass and the last separate voxel.",
+    "typography": "Pale italic serif Mira is threaded low between the mass and the last separate voxel.",
     "material": "Isometric solid shaded faces with fine negative seams.",
     "nearest": "22 / Layer by layer: a dense volume of opaque small cubes disassembles at one corner, rather than separated translucent floating planes around a star; close crop and type in a cutout gap.",
     "batch": "new",
     "domain": "systems",
     "slug": "109-small-building-blocks",
-    "version": "8c7f8d15bb"
+    "version": "d0a6ba8cd6"
   },
   {
     "id": "110",
@@ -1957,13 +1957,13 @@
     ],
     "composition": "Root enters at right-center and grows laterally left, filling an irregular middle strip; expansive untouched upper and lower margins.",
     "silhouette": "An organic fan of tapering dendritic branches with no dots or closed loops.",
-    "typography": "One small bold Orbit appears at the root, aligned directly with the heavy trunk.",
+    "typography": "One small bold Mira appears at the root, aligned directly with the heavy trunk.",
     "material": "Unequal tapered ink strokes and slightly curling branch junctions.",
     "nearest": "88 / Blueprint botany: these are generative rooted branches with no leaf membranes or specimen silhouettes, drawn as dark ink on pale stock, with the name rooted at the far edge.",
     "batch": "new",
     "domain": "systems",
     "slug": "110-branch-logic",
-    "version": "22ab5477f6"
+    "version": "ea465807af"
   },
   {
     "id": "111",
@@ -1977,13 +1977,13 @@
     ],
     "composition": "Dense square in lower-left is connected by one long right-angled escape path to high-right type.",
     "silhouette": "A tightly packed square serpentine path with a very long open tail.",
-    "typography": "Small serif Orbit is right-aligned at the end of the line; almost no auxiliary text.",
+    "typography": "Small serif Mira is right-aligned at the end of the line; almost no auxiliary text.",
     "material": "Single continuous pale etched stroke on deep green-blue.",
     "nearest": "80 / Letters to get lost in: the maze is a genuine square Hilbert curve without letterforms, with one explicit long escape route and a small detached endpoint wordmark.",
     "batch": "new",
     "domain": "systems",
     "slug": "111-one-continuous-line",
-    "version": "55e7b1838d"
+    "version": "8c6dbdd836"
   },
   {
     "id": "112",
@@ -1997,13 +1997,13 @@
     ],
     "composition": "Organic cropped colonies surround a broad curved diagonal negative channel from lower-left to upper-right.",
     "silhouette": "Soft asymmetric membrane islands with dense granular interiors.",
-    "typography": "One large lightweight Orbit follows the open channel on a gentle diagonal.",
+    "typography": "One large lightweight Mira follows the open channel on a gentle diagonal.",
     "material": "Translucent membranes, granular nucleation specks and pale side-lit curves.",
     "nearest": "126 / Living pattern: separate translucent colonies have granular interiors and a large dark curved channel; Living pattern is one continuous opaque coral maze on pale purple with a hard blank label.",
     "batch": "new",
     "domain": "systems",
     "slug": "112-cultures-of-thought",
-    "version": "e5bfccd78a"
+    "version": "d54f6e20ea"
   },
   {
     "id": "113",
@@ -2017,13 +2017,13 @@
     ],
     "composition": "Hard vertical barrier slightly left of center separates incoming broad curves from rightward two-source wave fans.",
     "silhouette": "A tall divider with two tiny apertures and overlapping open semicircle fields.",
-    "typography": "Tall rotated serif Orbit is set within the barrier itself.",
+    "typography": "Tall rotated serif Mira is set within the barrier itself.",
     "material": "Thin cool and violet interference arcs with a single opaque ivory divider.",
     "nearest": "21 / Resonance: these are two-dimensional propagating arcs divided by a physical slit wall, with vertical embedded type and no horizontal amplitude bars.",
     "batch": "new",
     "domain": "systems",
     "slug": "113-two-paths",
-    "version": "970615d48c"
+    "version": "e9391319e0"
   },
   {
     "id": "114",
@@ -2037,13 +2037,13 @@
     ],
     "composition": "Thick lower-center cable bends right then opens to a fine high-left fan; high-right typography balances it.",
     "silhouette": "A backward bent J-shaped bundle ending in many fine uneven hairs.",
-    "typography": "Large silver sans OR over BIT sits high-right in a compact right-aligned stack.",
+    "typography": "Large silver sans MI over RA sits high-right in a compact right-aligned stack.",
     "material": "Hundreds of fine luminous glass strands with discrete bright end points.",
     "nearest": "24 / Continuum: an open directional fiber bundle has a thick cropped stem and separating tips, not a closed woven torus; type is high-right and oversized.",
     "batch": "new",
     "domain": "systems",
     "slug": "114-light-carried",
-    "version": "0d8688d71b"
+    "version": "b1388257b1"
   },
   {
     "id": "115",
@@ -2057,13 +2057,13 @@
     ],
     "composition": "Dense flat board fills the viewport; processor low-left and an open mid-right routing cavity carry two different text scales.",
     "silhouette": "Angular copper routes enclose a dark off-center rectangular processor.",
-    "typography": "Thin 76px Orbit sits in the large right cavity; a smaller chip marking lives in the processor.",
+    "typography": "Thin 76px Mira sits in the large right cavity; a smaller chip marking lives in the processor.",
     "material": "Flat copper etching, pale ceramic contacts and dark solder mask.",
     "nearest": "104 / Sorting thoughts: filled processor, right-angle routing and surface components form a dense physical board; sorting is a sparse open stepped wire score with comparator columns.",
     "batch": "new",
     "domain": "systems",
     "slug": "115-printed-circuit",
-    "version": "dc4c33cd4d"
+    "version": "061e27922c"
   },
   {
     "id": "116",
@@ -2077,13 +2077,13 @@
     ],
     "composition": "Tilted granular macro field extends from left to lower middle; missing upper-right corner opens into the title field.",
     "silhouette": "A ragged oblique tiled slab with an exact missing rectangular corner.",
-    "typography": "Large italic serif Orbit sits low-right across the removed corner; very small aligned descriptor above.",
+    "typography": "Large italic serif Mira sits low-right across the removed corner; very small aligned descriptor above.",
     "material": "Thousands of small sand-colored flat cells form nested diagonal grain patterns.",
     "nearest": "100 / Simple rules: a broad oblique warm cellular field has dense diamond motifs and an absent corner, rather than a downward violet triangular cascade; title is low italic horizontal.",
     "batch": "new",
     "domain": "systems",
     "slug": "116-order-from-grains",
-    "version": "6cf4880d0f"
+    "version": "1e9455fd36"
   },
   {
     "id": "117",
@@ -2097,13 +2097,13 @@
     ],
     "composition": "Gears enter top-left, top-right and bottom-right; the central-left gap holds one tiny lever and nearby type.",
     "silhouette": "Three toothed circular masses intersect the frame around a small angular needle.",
-    "typography": "Compact condensed Orbit is positioned inside the middle-left gear gap.",
+    "typography": "Compact condensed Mira is positioned inside the middle-left gear gap.",
     "material": "Brass face gradients, fine hatch marks, inset hubs and dark open spokes.",
     "nearest": "04 / Acquisition: physical unequal cropped toothed gears replace a single fine radar disc; warm metal material and irregular middle gap rather than right schematic circle.",
     "batch": "new",
     "domain": "systems",
     "slug": "117-escapement",
-    "version": "453902c138"
+    "version": "0cd22c1cb7"
   },
   {
     "id": "118",
@@ -2117,13 +2117,13 @@
     ],
     "composition": "Extreme low liquid macro at bottom-right, with broad blank upper field and a high delicate wordmark.",
     "silhouette": "An irregular many-pointed splash crown on a very flat elongated oval.",
-    "typography": "Very thin widely spaced uppercase ORBIT stretches high across the blank air.",
+    "typography": "Very thin widely spaced uppercase MIRA stretches high across the blank air.",
     "material": "Smooth translucent liquid gradient, precise wet highlights and separate suspended droplets.",
     "nearest": "92 / Time in grains: this is a low wide open splash with airborne droplets and no paired cones or enclosed hourglass; pale near-empty upper field and widely spaced horizontal type.",
     "batch": "new",
     "domain": "systems",
     "slug": "118-surface-tension",
-    "version": "aa64a9839f"
+    "version": "ff1e3a0ba8"
   },
   {
     "id": "119",
@@ -2143,7 +2143,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "119-keys-to-somewhere",
-    "version": "4ba068f04f"
+    "version": "15260a811e"
   },
   {
     "id": "120",
@@ -2157,13 +2157,13 @@
     ],
     "composition": "Full-bleed warped fabric; deep sink offset upper-left with text placed on the comparatively straight top edge.",
     "silhouette": "A deep asymmetric funnel impressed into a continuous checker field.",
-    "typography": "One tiny white ORBIT rides the upper straight boundary, with no secondary labels.",
+    "typography": "One tiny white MIRA rides the upper straight boundary, with no secondary labels.",
     "material": "Flat alternating cloth cells warped continuously into a dark soft central depression.",
     "nearest": "84 / Woven alphabet: there are no woven letters, interlacing glyphs or caption island; a continuous physical checker sinks into one deep displaced well and uses a tiny upper-edge wordmark.",
     "batch": "new",
     "domain": "systems",
     "slug": "120-the-weight-of-an-idea",
-    "version": "08347bf1c2"
+    "version": "dc5ad53022"
   },
   {
     "id": "121",
@@ -2177,13 +2177,13 @@
     ],
     "composition": "Blade surfaces crop at all four edges; tiny pentagonal light is high-right, small narrow title low-left.",
     "silhouette": "Five giant folded blade faces converge on a displaced pentagonal aperture.",
-    "typography": "Narrow low-left 72px ORBIT is widely spaced with a single hairline below.",
+    "typography": "Narrow low-left 72px MIRA is widely spaced with a single hairline below.",
     "material": "Opaque graphite blade facets, sharp machined seams and one white-violet light opening.",
     "nearest": "10 / Totality: no dark disc or luminous circular corona; angular overlapping mechanical faces cover the entire screen around an off-center five-sided light, with small offset type.",
     "batch": "new",
     "domain": "systems",
     "slug": "121-aperture",
-    "version": "e5e22e1e62"
+    "version": "13a5f5e239"
   },
   {
     "id": "122",
@@ -2197,13 +2197,13 @@
     ],
     "composition": "Rectangular tessellation block occupies lower-left; interrupted diagonal edge releases three larger birds toward high-right; type inhabits the new lower-right void.",
     "silhouette": "An interlocked serrated bird carpet dissolving into a single angular winged silhouette.",
-    "typography": "One broad medium-weight Orbit occupies the newly emptied lower-right wedge.",
+    "typography": "One broad medium-weight Mira occupies the newly emptied lower-right wedge.",
     "material": "Two-color flat negative-positive bird tiling on matte pale sage.",
     "nearest": "78 / Flight in pieces: the birds are repeated interlocking tessellation silhouettes that separate across a field, rather than one seven-piece tangram bird; the mass is lower-left and the title is lower-right.",
     "batch": "new",
     "domain": "systems",
     "slug": "122-shared-sky",
-    "version": "651579d0d6"
+    "version": "d2b9f631a6"
   },
   {
     "id": "123",
@@ -2217,13 +2217,13 @@
     ],
     "composition": "Tall off-left heatmap panel is top-cropped with a jagged hem; long horizontal contrast strip below and large type offset bottom-right.",
     "silhouette": "A hanging broad textile-like rectangular mass with an irregular ragged bottom.",
-    "typography": "Low-right condensed 92px ORBIT extends beyond the heatmap edge; one short high-right caption balances the panel.",
+    "typography": "Low-right condensed 92px MIRA extends beyond the heatmap edge; one short high-right caption balances the panel.",
     "material": "Small contiguous heatmap cells with layered banding and warm spectral highlights.",
     "nearest": "21 / Resonance: a two-dimensional color-density panel drops from the ceiling with a ragged edge, not mirrored vertical amplitude bars about a baseline; type sits low-right and the material is textile-like.",
     "batch": "new",
     "domain": "systems",
     "slug": "123-signal-waterfall",
-    "version": "ecee09d207"
+    "version": "732c3f5803"
   },
   {
     "id": "124",
@@ -2237,13 +2237,13 @@
     ],
     "composition": "Open angular scaffold occupies left two-thirds, with long projection links toward upper-right; low horizontal wordmark balances the base.",
     "silhouette": "Two offset unequal cube cages connected vertex-to-vertex in a slanted four-dimensional projection.",
-    "typography": "Low wide letter-spaced Orbit runs across the right base; tiny axis letters stay beside a few vertices.",
+    "typography": "Low wide letter-spaced Mira runs across the right base; tiny axis letters stay beside a few vertices.",
     "material": "Fine violet and steel wire lines, dotted projection links and discrete corner points.",
     "nearest": "09 / Orbital mechanics: this uses only angular cube edges and long projection links, with no ellipse or central star, and low wide type instead of engineering-sheet axes.",
     "batch": "new",
     "domain": "systems",
     "slug": "124-beyond-three",
-    "version": "ba15237e09"
+    "version": "f73dcc74fc"
   },
   {
     "id": "125",
@@ -2257,13 +2257,13 @@
     ],
     "composition": "Murmuration curls across the upper middle into a thin leftward tail; title inhabits the open lower-right.",
     "silhouette": "A large asymmetric comma with a packed head and tapered curling tail.",
-    "typography": "Small black serif Orbit rests low-right with generous sky around it.",
+    "typography": "Small black serif Mira rests low-right with generous sky around it.",
     "material": "Thousands of fine v-shaped birds varying in scale and density, with no connecting lines.",
     "nearest": "107 / Particle weather: a curved dense comma is made from bird strokes on a light sky, rather than a straight converging violet pixel funnel on dark; title is small serif and the flow curls back.",
     "batch": "new",
     "domain": "systems",
     "slug": "125-flock",
-    "version": "81414f5b25"
+    "version": "8ac57d1f54"
   },
   {
     "id": "126",
@@ -2277,13 +2277,13 @@
     ],
     "composition": "Full-bleed continuous organic cellular field with one exact rectangular blank label cut from upper-left.",
     "silhouette": "Thick looping coral branches with irregular rounded holes, cropped at every edge.",
-    "typography": "One 88px unadorned Orbit occupies the high-left yellow cutout.",
+    "typography": "One 88px unadorned Mira occupies the high-left yellow cutout.",
     "material": "Filled Gray-Scott reaction-diffusion contours form dense matte purple branching channels.",
     "nearest": "112 / Cultures of thought: one continuous opaque maze has rounded internal holes and a sharp rectangular label; separate membrane colonies use translucence, granular interiors and a curved channel.",
     "batch": "new",
     "domain": "systems",
     "slug": "126-living-pattern",
-    "version": "8df30b21a8"
+    "version": "a489535f75"
   },
   {
     "id": "127",
@@ -2297,13 +2297,13 @@
     ],
     "composition": "Oblique trapezoidal lattice runs lower-left to upper-right; lifted lower edge shelters the upper serif of a fully legible low-right wordmark.",
     "silhouette": "A dense uneven stepped paper plane with regular slits and a lifted diagonal edge.",
-    "typography": "Large muted serif Orbit remains fully legible low-right; one lifted tab overlaps only its upper serif.",
+    "typography": "Large muted serif Mira remains fully legible low-right; one lifted tab overlaps only its upper serif.",
     "material": "Warm white folded paper faces, lavender cut shadows and sharp open slots.",
     "nearest": "94 / Impossible step: many laser-cut repeated slots rise from one paper sheet, with no closed Penrose triangle or stair loop; dense oblique plane and partially covered serif title.",
     "batch": "new",
     "domain": "systems",
     "slug": "127-paper-computation",
-    "version": "5b1d0f73cb"
+    "version": "90eeb124f5"
   },
   {
     "id": "128",
@@ -2323,7 +2323,7 @@
     "batch": "new",
     "domain": "systems",
     "slug": "128-measure-the-spark",
-    "version": "5edd6f4635"
+    "version": "5d6e567fb3"
   },
   {
     "id": "129",
@@ -2337,13 +2337,13 @@
     ],
     "composition": "Broad physical card stack runs diagonally across the center, leaving wide bare margins; heading is printed on the top card itself.",
     "silhouette": "Three clipped-corner rectangles with differently angled long shadows and dense narrow punched slots.",
-    "typography": "One bold 54px Orbit is printed into the top card heading, with fine machine-like line text opposite.",
+    "typography": "One bold 54px Mira is printed into the top card heading, with fine machine-like line text opposite.",
     "material": "Warm cardstock, punched dark apertures, angled edge shadows and registration rules.",
     "nearest": "13 / Memory card: these are thin overlapping punched paper cards seen from above with an interrupted slot matrix, not a chunky electronic cartridge object; typography is printed on the card and the composition is diagonal.",
     "batch": "new",
     "domain": "systems",
     "slug": "129-punched-possibilities",
-    "version": "7609913229"
+    "version": "782aea538e"
   },
   {
     "id": "130",
@@ -2357,12 +2357,312 @@
     ],
     "composition": "Low-left wedge anchors a vast bare field; one thin long shadow slices toward upper-right marks, leaving type in the low-left margin.",
     "silhouette": "A modest triangular gnomon with a very long tapering diagonal shadow.",
-    "typography": "Small restrained serif Orbit sits in the low-left margin below the instrument.",
+    "typography": "Small restrained serif Mira sits in the low-left margin below the instrument.",
     "material": "Warm matte stone, bronze facets, softly transparent hard shadow and sparse engraved Roman marks.",
     "nearest": "94 / Impossible step: a single small grounded wedge is defined by its very long diagonal shadow and open irregular time scale; no Penrose loop, large stair object or background giant title.",
     "batch": "new",
     "domain": "systems",
     "slug": "130-the-long-now",
-    "version": "a1bf78f9c7"
+    "version": "99788e02c5"
+  },
+  {
+    "id": "131",
+    "name": "Reference spark",
+    "family": "Compact pixel Mira",
+    "description": "The closest study: a bright pixel star and two granular orbital loops above a large violet-to-white MIRA wordmark.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 480,
+    "height": 480,
+    "splashWidth": 360,
+    "splashHeight": 360,
+    "presentation": "compact",
+    "composition": "The closest study: a bright pixel star and two granular orbital loops above a large violet-to-white MIRA wordmark.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "131-reference-spark",
+    "version": "aa40eae2a2"
+  },
+  {
+    "id": "132",
+    "name": "Quiet core",
+    "family": "Compact pixel Mira",
+    "description": "The same star-and-orbit identity with a quieter sky, more breathing room and a slightly smaller mark.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 480,
+    "height": 480,
+    "splashWidth": 320,
+    "splashHeight": 320,
+    "presentation": "compact",
+    "composition": "The same star-and-orbit identity with a quieter sky, more breathing room and a slightly smaller mark.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "132-quiet-core",
+    "version": "a9d1bf7ae9"
+  },
+  {
+    "id": "133",
+    "name": "Violet wake",
+    "family": "Compact pixel Mira",
+    "description": "A broad violet dust wake crosses behind an open orbital arc, with the pixel MIRA wordmark held low.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 480,
+    "height": 480,
+    "splashWidth": 360,
+    "splashHeight": 360,
+    "presentation": "compact",
+    "composition": "A broad violet dust wake crosses behind an open orbital arc, with the pixel MIRA wordmark held low.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "133-violet-wake",
+    "version": "741693ee8a"
+  },
+  {
+    "id": "134",
+    "name": "Moon passage",
+    "family": "Compact pixel Mira",
+    "description": "A larger violet moon passes above a more upright orbit; the bright star stays left of the compact wordmark.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 480,
+    "height": 480,
+    "splashWidth": 350,
+    "splashHeight": 350,
+    "presentation": "compact",
+    "composition": "A larger violet moon passes above a more upright orbit; the bright star stays left of the compact wordmark.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "134-moon-passage",
+    "version": "cf614137fa"
+  },
+  {
+    "id": "135",
+    "name": "Side by side",
+    "family": "Compact pixel Mira",
+    "description": "A small horizontal splash pairs the orbital symbol on the left with a pixel MIRA wordmark on the right.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 600,
+    "height": 400,
+    "splashWidth": 420,
+    "splashHeight": 280,
+    "presentation": "compact",
+    "composition": "A small horizontal splash pairs the orbital symbol on the left with a pixel MIRA wordmark on the right.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "135-side-by-side",
+    "version": "a016dd2e36"
+  },
+  {
+    "id": "136",
+    "name": "Orbital seal",
+    "family": "Compact pixel Mira",
+    "description": "The reference becomes a restrained celestial seal, with a fine circular perimeter around the mark and name.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 480,
+    "height": 480,
+    "splashWidth": 340,
+    "splashHeight": 340,
+    "presentation": "compact",
+    "composition": "The reference becomes a restrained celestial seal, with a fine circular perimeter around the mark and name.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "136-orbital-seal",
+    "version": "1816df8d4d"
+  },
+  {
+    "id": "137",
+    "name": "Twin glimmer",
+    "family": "Compact pixel Mira",
+    "description": "Two unequal pixel stars share one wide orbital trail above the familiar gradient MIRA lettering.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 540,
+    "height": 450,
+    "splashWidth": 360,
+    "splashHeight": 300,
+    "presentation": "compact",
+    "composition": "Two unequal pixel stars share one wide orbital trail above the familiar gradient MIRA lettering.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "137-twin-glimmer",
+    "version": "000972ee7c"
+  },
+  {
+    "id": "138",
+    "name": "Midnight coordinates",
+    "family": "Compact pixel Mira",
+    "description": "A darker coordinate study with small registration crosses, a precise orbital mark and pale pixel type.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 480,
+    "height": 480,
+    "splashWidth": 360,
+    "splashHeight": 360,
+    "presentation": "compact",
+    "composition": "A darker coordinate study with small registration crosses, a precise orbital mark and pale pixel type.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "138-midnight-coordinates",
+    "version": "15eb8084a4"
+  },
+  {
+    "id": "139",
+    "name": "Stardust wordmark",
+    "family": "Compact pixel Mira",
+    "description": "The granular MIRA lettering is the hero, with a smaller star-and-orbit symbol floating close above it.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 540,
+    "height": 450,
+    "splashWidth": 360,
+    "splashHeight": 300,
+    "presentation": "compact",
+    "composition": "The granular MIRA lettering is the hero, with a smaller star-and-orbit symbol floating close above it.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "139-stardust-wordmark",
+    "version": "3867ba7200"
+  },
+  {
+    "id": "140",
+    "name": "Close approach",
+    "family": "Compact pixel Mira",
+    "description": "A narrow portrait splash holds the upright orbital trail, bright star and MIRA in a closely stacked arrangement.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 420,
+    "height": 480,
+    "splashWidth": 300,
+    "splashHeight": 343,
+    "presentation": "compact",
+    "composition": "A narrow portrait splash holds the upright orbital trail, bright star and MIRA in a closely stacked arrangement.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "140-close-approach",
+    "version": "bbfa9d86f6"
+  },
+  {
+    "id": "141",
+    "name": "Silver orbit",
+    "family": "Compact pixel Mira",
+    "description": "A long broken silver trail reaches toward the top-right; the pale pixel wordmark sits slightly left of center.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 570,
+    "height": 450,
+    "splashWidth": 380,
+    "splashHeight": 300,
+    "presentation": "compact",
+    "composition": "A long broken silver trail reaches toward the top-right; the pale pixel wordmark sits slightly left of center.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "141-silver-orbit",
+    "version": "050bc52c84"
+  },
+  {
+    "id": "142",
+    "name": "A small beginning",
+    "family": "Compact pixel Mira",
+    "description": "The most compact and quiet study: a small luminous orbital mark, pixel MIRA and a sparse midnight star field.",
+    "bg": "#080a17",
+    "tone": "dark",
+    "batch": "compact",
+    "domain": "Reference studies",
+    "source": [
+      "ChatGPT Image Oct 13, 2026, 03_23_53 PM.png"
+    ],
+    "width": 480,
+    "height": 480,
+    "splashWidth": 300,
+    "splashHeight": 300,
+    "presentation": "compact",
+    "composition": "The most compact and quiet study: a small luminous orbital mark, pixel MIRA and a sparse midnight star field.",
+    "silhouette": "Small native-size splash with a pixel star, orbital trails and a MIRA wordmark.",
+    "typography": "Reference-inspired chunky pixel MIRA lettering, kept readable at the stated splash size.",
+    "material": "Original violet and white pixel geometry with square dither, granular trails and star-field dust.",
+    "nearest": "The supplied Mira reference; this is a deliberately related loading-screen variation rather than a new landing-page composition.",
+    "slug": "142-a-small-beginning",
+    "version": "458cbea170"
   }
 ]
