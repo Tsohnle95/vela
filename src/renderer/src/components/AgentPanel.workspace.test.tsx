@@ -82,12 +82,12 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   return { promise, resolve };
 }
 
-describe("legacy composer workspace continuations", () => {
+describe.each(["old", "new"])("%s renderer with original panel and composer", (renderer) => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(() => {
-    window.history.replaceState(null, "", "/?chat-renderer=old");
+    window.history.replaceState(null, "", `/?chat-renderer=${renderer}`);
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     window.localStorage.clear();
     clearAgentScrollMemoryForTests();
@@ -115,6 +115,19 @@ describe("legacy composer workspace continuations", () => {
     window.localStorage.clear();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it("retains the original input and shell without suggested prompts", async () => {
+    await act(async () => root.render(<AgentPanel />));
+    expect(container.querySelector(".agent-panel > .agent-header")).not.toBeNull();
+    expect(container.querySelector(".agent-panel > .agent-scroll")).not.toBeNull();
+    expect(container.querySelector('[data-component="session-prompt-dock"] .composer')).not.toBeNull();
+    expect(container.querySelector('.composer-selector.agent')).not.toBeNull();
+    expect(container.querySelector('.composer-selector.model')).not.toBeNull();
+    expect(container.querySelector('[data-slot="input-group"]')).toBeNull();
+    expect(container.textContent).not.toContain("Explain this repository");
+    expect(container.textContent).not.toContain("Find a bug and add a regression test");
+    expect(container.textContent).not.toContain("Review the recent changes");
   });
 
   it("switches the composer control from stop to send when the panel becomes idle", async () => {

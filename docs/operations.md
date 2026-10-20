@@ -19,8 +19,10 @@ upstream scripts and interactions; controls that are inert in upstream examples
 remain inert. `npm run chat:compare:build` produces the comparison build.
 
 For an actual OpenCode session in Vela, append `?chat-renderer=compare` to the
-renderer document URL to display both presentations of the same live panel.
-`?chat-renderer=old` selects the original surface; the default is AI Elements.
+renderer document URL to display both response renderers inside the original
+panel. `?chat-renderer=old` selects the original response renderer; the default
+is AI Elements response content. The original composer and panel controls remain
+the same in every mode.
 The local index replay and gallery are UI validation tools, not proof that a
 provider supplies every optional structured result.
 

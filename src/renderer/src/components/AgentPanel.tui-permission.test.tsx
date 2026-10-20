@@ -161,9 +161,9 @@ describe("AgentPanel interactive prompt surface", () => {
     currentTranscript = [pendingPermission];
     await switchToGui();
 
-    const permission = container.querySelector('[data-slot="item"]');
+    const permission = dock("permission");
     expect(permission).not.toBeNull();
-    expect(permission?.textContent).toContain("Approve");
+    expect(permission?.textContent).toContain("Permission required");
     expect(permission?.textContent).toContain("bash");
     expect(permission?.textContent).toContain("rm -rf build");
   });
@@ -180,7 +180,7 @@ describe("AgentPanel interactive prompt surface", () => {
     currentTranscript = [pendingPermission];
     await switchToGui();
 
-    const allow = [...document.querySelectorAll("button")].find((button) => button.textContent === "Approve")!;
+    const allow = [...document.querySelectorAll("button")].find((button) => button.textContent === "Allow once")!;
     await act(async () => allow.click());
 
     expect(replyPermission).toHaveBeenCalledWith("req-1", "once", "one");

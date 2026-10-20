@@ -579,8 +579,7 @@
   }
 }
 
-/* Both presentations observe the same panel view in live comparison mode. */
-.chat-renderer-surfaces { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; }
-.legacy-chat-surface { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; }
-.chat-renderer-surfaces[data-renderer="compare"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.chat-renderer-surfaces[data-renderer="compare"] > .legacy-chat-surface { border-right: 1px solid var(--border); }
+/* Live comparison changes only the response region; the panel and composer stay shared. */
+.agent-response-stream[data-renderer="compare"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+
+.agent-response-stream[hidden] { display: none; }

@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePanel, useStore } from "../store";
 import { OpenCodeTimeline, PermissionPrompt } from "./OpenCodeTimeline";
+import { AiElementsTimeline } from "../ai-elements/AiElementsTimeline";
+import "../ai-elements/ai-elements.css";
 import { FormPrompt } from "./FormPrompt";
 import { OpenCodeTodoDock } from "./OpenCodeTodoDock";
 import type { SessionInfo, TranscriptItem } from "@shared/types";
+import { safeExternalUrl } from "@shared/url-policy";
 import { IconArrowLeft, IconMoreHorizontal } from "./icons";
 import { AgentTui } from "./AgentTui";
 import { MAX_AGENT_PANELS } from "../agent-panels";
 import { useOptionalTheme } from "../theme";
 import { Composer } from "./Composer";
-import { AiElementsChat } from "../ai-elements/AiElementsChat";
 import { TurnTimer, useAgentUsage } from "./AgentUsage";
 import stationMark from "../assets/agent-station.png";
 import lightStationMark from "../assets/agent-station-light.png";
@@ -192,28 +194,23 @@ export function AgentPanel({
     [transcript]
   );
 
+  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
+  const responseTranscript = useMemo(
+    () => transcript.filter((item) => item.kind !== "permission"),
+    [transcript]
+  );
+  const timelineProps = { busy, lastAssistantId, session: activeSession };
+
   // Approvals and forms are interactive: the surface the user is watching owns
   // them. The embedded TUI renders its own prompts in the terminal, so drawing
   // the panel dock there would ask the same question twice.
-  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
   const interactivePrompts = (
     <>
-      {renderer === "old" && pendingPermission && <PermissionPrompt item={pendingPermission} session={activeSession} />}
+      {pendingPermission && <PermissionPrompt item={pendingPermission} session={activeSession} />}
       {activeSession && (view.pendingForms ?? []).map((form) => (
         <FormPrompt key={form.id} form={form} workspace={activeSession.workspace} />
       ))}
     </>
-  );
-
-  const stagedRevertPrompt = view.stagedRevert && activeSession && (
-    <div data-component="dock-prompt" data-kind="revert">
-      <div data-slot="permission-header">Undo staged</div>
-      <p className="provider-note">Messages and file changes after this point will be removed.</p>
-      <div data-slot="permission-actions">
-        <button className="btn btn-danger" onClick={() => void commitStagedRevert(activeSession.workspace)}>Commit undo</button>
-        <button className="btn" onClick={() => void clearStagedRevert(activeSession.workspace)}>Discard</button>
-      </div>
-    </div>
   );
 
   return (
@@ -260,8 +257,7 @@ export function AgentPanel({
       {panelMode === "tui" && activeSession ? (
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
-        <div className="chat-renderer-surfaces" data-renderer={renderer}>
-          {(renderer === "old" || renderer === "compare") && <div className="legacy-chat-surface">
+        <>
           <div className="agent-scroll" ref={scrollRef} onScroll={onScroll}>
             {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
             {!conversationStarted && (
@@ -287,27 +283,38 @@ export function AgentPanel({
                 <p>Tell the agent what to work on.</p>
               </div>
             )}
-            <OpenCodeTimeline
-              transcript={transcript}
-              busy={busy}
-              lastAssistantId={lastAssistantId}
-              session={activeSession}
-            />
+            {renderer === "old" ? <OpenCodeTimeline {...timelineProps} transcript={transcript} /> : (
+              <div className="agent-response-stream" hidden={responseTranscript.length === 0} data-slot="session-turn-list" data-renderer={renderer}>
+                {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
+                <div className="ai-elements" onClickCapture={(event) => {
+                  const link = event.target instanceof Element ? event.target.closest("a") : null;
+                  if (!link) return;
+                  event.preventDefault();
+                  const href = safeExternalUrl(link.getAttribute("href") ?? undefined);
+                  if (href) window.open(href, "_blank", "noopener,noreferrer");
+                }}>
+                  <AiElementsTimeline {...timelineProps} transcript={responseTranscript} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div data-component="session-prompt-dock">
             {interactivePrompts}
-            {stagedRevertPrompt}
+            {view.stagedRevert && activeSession && (
+              <div data-component="dock-prompt" data-kind="revert">
+                <div data-slot="permission-header">Undo staged</div>
+                <p className="provider-note">Messages and file changes after this point will be removed.</p>
+                <div data-slot="permission-actions">
+                  <button className="btn btn-danger" onClick={() => void commitStagedRevert(activeSession.workspace)}>Commit undo</button>
+                  <button className="btn" onClick={() => void clearStagedRevert(activeSession.workspace)}>Discard</button>
+                </div>
+              </div>
+            )}
             <OpenCodeTodoDock todos={todos} />
             <Composer session={activeSession} />
           </div>
-          </div>}
-          {renderer !== "old" && <>
-            {renderer !== "compare" && tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
-            <AiElementsChat transcript={transcript} busy={busy} lastAssistantId={lastAssistantId} session={activeSession} />
-            {renderer !== "compare" && <div data-component="session-prompt-dock">{interactivePrompts}{stagedRevertPrompt}</div>}
-          </>}
-        </div>
+        </>
       )}
     </div>
   );

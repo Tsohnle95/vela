@@ -513,15 +513,17 @@ Key mechanisms:
   background panel focuses that panel first, and permission replies address
   the owning session.
 
-- **AI Elements presentation** — `ai-elements/AiElementsChat.tsx` is the default
-  GUI chat surface, composed from the supplied shadcn Base UI/Rhea primitives.
-  It reads the same per-panel transcript, execution, usage, todo and model views
-  as the legacy renderer. `AiElementsTimeline.tsx` binds ordered messages and
-  tools to the patterns; `AiElementsComposer.tsx` retains existing prompt,
-  command, attachment, completion, model, queue and stop owners. Message Scroller
-  owns follow behavior and user-turn anchors. The vendored Streamdown Markdown
-  helper uses the JavaScript Shiki engine under the existing CSP. External
-  anchors retain the shared HTTPS URL policy.
+- **AI Elements response presentation** — `AgentPanel.tsx` retains the original
+  panel layout, header, empty-state artwork, scroll owner, approval/form/revert
+  dock, todo dock and `Composer.tsx`. Only response content is rendered by
+  `ai-elements/AiElementsTimeline.tsx`, which reads the existing panel transcript
+  and execution state. Permission rows remain in the original dock. An empty
+  response region has no layout footprint. Suggested prompts and the alternative
+  input/context/todo controls in `AiElementsChat.tsx` are restricted to the
+  isolated comparison examples; the application never mounts that full shell.
+  `useAgentScroll` continues owning live-height following and reader scroll memory.
+  The vendored Streamdown Markdown helper uses the JavaScript Shiki engine under
+  the existing CSP. External anchors retain the shared HTTPS URL policy.
   `adapters.ts` accepts optional structured source, citation, suite, stack,
   plan and task metadata; it never infers those records from arbitrary prose.
   Such metadata is conditional on the runtime/tool supplying it. Permissions,
