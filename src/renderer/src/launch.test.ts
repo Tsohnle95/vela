@@ -10,15 +10,12 @@ function deferred<T>() {
 
 describe("Vela launch handoff", () => {
   let frames: FrameRequestCallback[];
-  let animate: ReturnType<typeof vi.fn>;
   let decode: ReturnType<typeof deferred<void>>;
   beforeEach(() => {
     vi.useFakeTimers();
     frames = [];
     decode = deferred<void>();
     document.body.innerHTML = '<div id="launch-screen"><img id="launch-artwork" /><svg><rect id="launch-dawn" opacity="0" /></svg></div><div id="root"></div>';
-    animate = vi.fn();
-    Object.defineProperty(document.querySelector("#launch-dawn"), "animate", { value: animate });
     vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false })));
     Object.defineProperty(document.querySelector("img"), "decode", { value: () => decode.promise });
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
@@ -75,28 +72,28 @@ describe("Vela launch handoff", () => {
     expect(page.querySelector("style")!.textContent).toContain("launch-float 4s ease-in-out infinite");
     expect(page.querySelector("style")!.textContent).toContain("prefers-reduced-motion: reduce");
     document.body.innerHTML = page.body.innerHTML;
-    Object.defineProperty(document.querySelector("#launch-dawn"), "animate", { value: animate });
     const launch = launchApplication(async () => ({ mountApp: vi.fn() }));
     await paint();
-    expect(animate).toHaveBeenCalledOnce();
     await vi.advanceTimersByTimeAsync(3000);
     await launch;
   });
 
-  it("delays study 23 by half a second after visible paint and slows its full sweep by 40%", async () => {
-    const launch = launchApplication(async () => ({ mountApp: vi.fn() }));
-    expect(animate).not.toHaveBeenCalled();
-    await paint();
-    expect(animate).toHaveBeenCalledOnce();
-    const [keyframes, options] = animate.mock.calls[0] as [Keyframe[], KeyframeAnimationOptions];
-    expect(options).toEqual({ delay: 500, duration: 5000, fill: "forwards" });
-    // The bright gradient band is already inside the folded surface when the delay ends.
-    expect(keyframes[0]).toMatchObject({ offset: 0, transform: "translate(35px, 0)", opacity: 0.35 });
-    expect(Number(keyframes[45].opacity)).toBeGreaterThan(0.5);
-    expect(keyframes[90]).toMatchObject({ offset: 1, transform: "translate(335px, 0)", opacity: 0 });
-    expect(keyframes.every((frame) => String(frame.transform).endsWith("px, 0)"))).toBe(true);
-    await vi.advanceTimersByTimeAsync(3000);
-    await launch;
+  it("starts the shimmer on a visible fold in critical CSS without waiting for the launch module", () => {
+    const page = new DOMParser().parseFromString(readFileSync("src/renderer/index.html", "utf8"), "text/html");
+    const css = page.querySelector("style")!.textContent!;
+    expect(css).toContain("launch-shimmer 5s cubic-bezier(.333, 0, .667, 1) .5s forwards");
+    expect(css).toContain("0% { transform: translateX(60px); }");
+    expect(css).toContain("0% { opacity: .6; }");
+    expect(css).toContain("#launch-fold-motion, #launch-dawn { animation: none; }");
+    const gradient = page.querySelector("#launch-dawn-gradient")!;
+    expect(gradient.getAttribute("y1")).toBe(gradient.getAttribute("y2"));
+    // The white band starts at x=150, inside the left fold at y=150 (x=126..185).
+    const whiteStop = gradient.querySelector('stop[offset=".5"]')!;
+    const bandX = 60 + Number(gradient.getAttribute("x2")) * Number(whiteStop.getAttribute("offset"));
+    expect(bandX).toBeGreaterThan(126);
+    expect(bandX).toBeLessThan(185);
+    expect(Number(whiteStop.getAttribute("stop-opacity"))).toBeGreaterThan(0.5);
+    expect(page.querySelector("#launch-dawn")!.getAttribute("opacity")).toBe("0");
   });
 
   it("uses the still logo for reduced motion while preserving the launch hold", async () => {
@@ -104,7 +101,6 @@ describe("Vela launch handoff", () => {
     const mountApp = vi.fn();
     const launch = launchApplication(async () => ({ mountApp }));
     await paint();
-    expect(animate).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(2999);
     expect(mountApp).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);
@@ -133,7 +129,6 @@ describe("Vela launch handoff", () => {
     decode.resolve();
     await vi.advanceTimersByTimeAsync(5000);
     expect(load).not.toHaveBeenCalled();
-    expect(animate).not.toHaveBeenCalled();
     visibility.mockReturnValue("visible");
     document.dispatchEvent(new Event("visibilitychange"));
     await vi.advanceTimersByTimeAsync(0);

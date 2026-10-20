@@ -972,8 +972,9 @@ styles. Its geometry and mint palette mirror `src/renderer/src/assets/folded-lig
 with the Vela wordmark and small “integrated development environment” caption.
 The original gentle four-second float carries the folded planes and the clipped
 Dawn Terminator light sweep (motion study 23) in one SVG group, keeping the light
-aligned with the moving logo. `launch.ts` starts the light sweep after visible
-paint with a half-second delay and five-second duration; the sweep begins on the folded surface so its first frame is visible.
+aligned with the moving logo. Critical inline CSS starts the light sweep with a
+half-second delay and five-second duration, independently of JavaScript loading.
+Its horizontal gradient begins on the left folded surface with visible opacity.
 The three-second launch hold is independent of the shimmer duration; handoff can interrupt the sweep. Reduced-motion preferences disable both motions. The wordmark and ground
 shadow remain still, and inline artwork paints before the launch module runs.
 The local `design/experimental-art/experimental-landing-page/launch-comparison.html`
