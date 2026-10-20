@@ -136,9 +136,10 @@ interface UsageOptions {
   providerUsageLoading: boolean;
   refreshProviderUsage: () => Promise<void>;
   panelRef: RefObject<HTMLDivElement | null>;
+  onOpen: () => void;
 }
 export function useAgentUsage({ sessionUsage, compactionBaseline, currentModel, providerUsage,
-  providerUsageLoading, refreshProviderUsage, panelRef }: UsageOptions) {
+  providerUsageLoading, refreshProviderUsage, panelRef, onOpen }: UsageOptions) {
   const [usageOpen, setUsageOpen] = useState(false);
   const [providerUsageRefreshing, setProviderUsageRefreshing] = useState(false);
   const [providerUsageRefreshKey, setProviderUsageRefreshKey] = useState(0);
@@ -183,31 +184,36 @@ export function useAgentUsage({ sessionUsage, compactionBaseline, currentModel, 
   const glyphTone = contextLimit ? contextTone(contextPercent) : null;
   const usageButton = (
     <button
-      className={`composer-selector icon-btn agent-usage-toggle ${usageOpen ? "open" : ""} ${glyphTone ?? "neutral"}`}
+      role="menuitem"
+      className={`agent-usage-toggle ${usageOpen ? "open" : ""} ${glyphTone ?? "neutral"}`}
       title="Session and provider usage"
-      aria-label={contextLimit ? `Context usage ${Math.round(contextPercent)} percent` : "Session and provider usage"}
+      aria-label={contextLimit ? `Context usage ${Math.round(contextPercent)} percent` : "Context and usage"}
       aria-expanded={usageOpen}
-      onClick={() => setUsageOpen((open) => !open)}
+      onClick={() => { onOpen(); setUsageOpen((open) => !open); }}
     >
-      <span className="agent-usage-ring" aria-hidden="true">
-        <svg viewBox="0 0 20 20">
-          <circle className="agent-usage-ring-track" cx="10" cy="10" r="8" />
-          <circle
-            className="agent-usage-ring-fill"
-            cx="10"
-            cy="10"
-            r="8"
-            style={{ strokeDashoffset: `${50.27 * (1 - (contextLimit ? contextPercent : 0) / 100)}` }}
-          />
-        </svg>
+      <span className="agent-usage-menu-label">
+        <span className="agent-usage-ring" aria-hidden="true">
+          <svg viewBox="0 0 20 20">
+            <circle className="agent-usage-ring-track" cx="10" cy="10" r="8" />
+            <circle
+              className="agent-usage-ring-fill"
+              cx="10"
+              cy="10"
+              r="8"
+              style={{ strokeDashoffset: `${50.27 * (1 - (contextLimit ? contextPercent : 0) / 100)}` }}
+            />
+          </svg>
+        </span>
+        <span>Context</span>
       </span>
+      <small>{contextLimit ? `${Math.round(contextPercent)}% used · session and provider usage` : "Session and provider usage"}</small>
     </button>
   );
 
   const usagePopup = usageOpen ? <AgentUsagePopup {...{ usage, compactionBaseline, usageTotal, cacheTotal, cachePercent,
     usageShare, contextLimit, rawContextUsed, contextUsed, contextPercent, providerUsage, providerUsageLoading,
     providerUsageRefreshing, providerUsageRefreshKey, triggerProviderUsageRefresh }} /> : null;
-  return { usageButton, usagePopup };
+  return { usageButton, usagePopup, closeUsage: () => setUsageOpen(false) };
 }
 
 function AgentUsagePopup({ usage, compactionBaseline, usageTotal, cacheTotal, cachePercent, usageShare,

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { launchApplication } from "./launch";
 
@@ -60,6 +61,26 @@ describe("Vela launch handoff", () => {
     await vi.advanceTimersByTimeAsync(1);
     await launch;
     expect(mountApp).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the original moving folds and the new light in one group while the wordmark stays still", async () => {
+    const html = readFileSync("src/renderer/index.html", "utf8");
+    const page = new DOMParser().parseFromString(html, "text/html");
+    const motion = page.querySelector("#launch-fold-motion")!;
+    expect(motion.contains(page.querySelector("#launch-dawn"))).toBe(true);
+    const source = new DOMParser().parseFromString(readFileSync("src/renderer/src/assets/folded-light.svg", "utf8"), "image/svg+xml");
+    expect([...motion.children].filter((node) => node.localName === "path").map((node) => node.getAttribute("d")))
+      .toEqual([...source.querySelectorAll("svg > g > path")].map((node) => node.getAttribute("d")));
+    expect(motion.querySelector("text")).toBeNull();
+    expect(page.querySelector("style")!.textContent).toContain("launch-float 6s ease-in-out infinite");
+    expect(page.querySelector("style")!.textContent).toContain("prefers-reduced-motion: reduce");
+    document.body.innerHTML = page.body.innerHTML;
+    Object.defineProperty(document.querySelector("#launch-dawn"), "animate", { value: animate });
+    const launch = launchApplication(async () => ({ mountApp: vi.fn() }));
+    await paint();
+    expect(animate).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(3000);
+    await launch;
   });
 
   it("starts study 23 after visible paint and settles its horizontal light sweep at handoff", async () => {

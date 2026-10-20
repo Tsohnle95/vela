@@ -104,19 +104,45 @@ describe("agent panel usage tracker", () => {
     vi.restoreAllMocks();
   });
 
-  it("places the usage toggle on the composer's control row, in the control-pill style", async () => {
+  async function renderPanel() {
     await act(async () => root.render(<AgentPanel />));
+    if (!container.querySelector('.agent-mode-menu')) {
+      await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Agent panel options"]')!.click());
+    }
+  }
 
-    const usageToggle = toggle(container);
-    expect(usageToggle.closest(".composer-chips")).not.toBeNull();
-    expect(usageToggle.closest(".agent-header")).toBeNull();
-    expect(usageToggle.classList.contains("composer-selector")).toBe(true);
-    expect(container.querySelector('button[title="Add attachments"]')).toBeNull();
+  it("places Context in the header menu instead of the composer", async () => {
+    await act(async () => root.render(<AgentPanel />));
+    expect(container.querySelector(".composer .agent-usage-toggle")).toBeNull();
+    expect(toggle(container)).toBeNull();
+    expect(refreshProviderUsage).not.toHaveBeenCalled();
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Agent panel options"]')!.click());
+    const entry = toggle(container);
+    expect(entry.closest('.agent-header .agent-mode-menu')).not.toBeNull();
+    expect(entry.getAttribute('role')).toBe('menuitem');
+    expect(entry.textContent).toContain('Context');
+    expect(entry.classList.contains('composer-selector')).toBe(false);
+    expect(refreshProviderUsage).not.toHaveBeenCalled();
+  });
+
+  it("opens context below the header and dismisses it when reopening options or pressing Escape", async () => {
+    await renderPanel();
+    await act(async () => toggle(container).click());
+    expect(container.querySelector('.agent-mode-menu')).toBeNull();
+    const popup = container.querySelector('.agent-usage-popup')!;
+    expect(popup.parentElement?.classList.contains('agent-panel')).toBe(true);
+    expect(popup.closest('.composer')).toBeNull();
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Agent panel options"]')!.click());
+    expect(container.querySelector('.agent-usage-popup')).toBeNull();
+    expect(toggle(container)).not.toBeNull();
+    await act(async () => toggle(container).click());
+    await act(async () => document.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape',bubbles:true})));
+    expect(container.querySelector('.agent-usage-popup')).toBeNull();
   });
 
   it("colors the toggle glyph green when context fill is low", async () => {
     currentUsage = usage(10_000);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
 
     expect(toggle(container).classList.contains("ok")).toBe(true);
     expect(toggle(container).classList.contains("warn")).toBe(false);
@@ -126,19 +152,19 @@ describe("agent panel usage tracker", () => {
 
   it("colors the toggle glyph amber at 60% and red at 85% fill", async () => {
     currentUsage = usage(60_000);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     expect(toggle(container).classList.contains("warn")).toBe(true);
     expect(toggle(container).classList.contains("danger")).toBe(false);
 
     currentUsage = usage(85_000);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     expect(toggle(container).classList.contains("danger")).toBe(true);
     expect(toggle(container).classList.contains("warn")).toBe(false);
   });
 
   it("shows context-window utilization with a fill bar, percent, and token counts", async () => {
     currentUsage = usage(25_000);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     await act(async () => toggle(container).click());
 
     const context = container.querySelector(".agent-usage-context")!;
@@ -153,7 +179,7 @@ describe("agent panel usage tracker", () => {
 
   it("caps the fill at 100% when input tokens exceed the context limit", async () => {
     currentUsage = usage(150_000);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     await act(async () => toggle(container).click());
 
     const context = container.querySelector(".agent-usage-context")!;
@@ -165,12 +191,12 @@ describe("agent panel usage tracker", () => {
   it("hides the context row and stays neutral when the model has no context limit", async () => {
     currentUsage = usage(10_000);
     currentModel = { id: "m", providerID: "p", name: "Model" };
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
+    const classes = toggle(container).classList;
     await act(async () => toggle(container).click());
 
     expect(container.querySelector(".agent-usage-context")).toBeNull();
     expect(container.querySelector(".agent-usage-rows")).not.toBeNull();
-    const classes = toggle(container).classList;
     expect(classes.contains("ok")).toBe(false);
     expect(classes.contains("warn")).toBe(false);
     expect(classes.contains("danger")).toBe(false);
@@ -179,7 +205,7 @@ describe("agent panel usage tracker", () => {
 
   it("shows a cache percentage for cache read plus write tokens", async () => {
     currentUsage = usageWithCache(40_000, 10_000, 0);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     await act(async () => toggle(container).click());
 
     const cache = container.querySelector(".agent-usage-cache-total")!;
@@ -190,7 +216,7 @@ describe("agent panel usage tracker", () => {
 
   it("shows the cache percentage from combined read and write tokens", async () => {
     currentUsage = usageWithCache(45_000, 10_000, 5_000);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     await act(async () => toggle(container).click());
 
     const cache = container.querySelector(".agent-usage-cache-total")!;
@@ -200,7 +226,7 @@ describe("agent panel usage tracker", () => {
 
   it("omits the percentage when there is no cached traffic", async () => {
     currentUsage = usageWithCache(40_000, 0, 0);
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     await act(async () => toggle(container).click());
 
     const cache = container.querySelector(".agent-usage-cache-total")!;
@@ -223,7 +249,7 @@ describe("agent panel usage tracker", () => {
         updatedAt: Date.now()
       }
     }];
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     await act(async () => toggle(container).click());
 
     expect([...container.querySelectorAll(".usage-window-value")].map((element) => element.textContent)).toEqual([
@@ -235,7 +261,7 @@ describe("agent panel usage tracker", () => {
   it("refetches provider usage from the control and prevents duplicate in-flight requests", async () => {
     let resolveRefresh!: () => void;
     refreshProviderUsage.mockImplementation(() => new Promise<void>((resolve) => { resolveRefresh = resolve; }));
-    await act(async () => root.render(<AgentPanel />));
+    await renderPanel();
     await act(async () => toggle(container).click());
 
     const refresh = container.querySelector<HTMLButtonElement>('[aria-label="Refresh provider usage"]')!;

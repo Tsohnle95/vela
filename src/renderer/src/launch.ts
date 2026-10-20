@@ -36,8 +36,8 @@ async function visiblePaint(): Promise<void> {
 }
 
 export async function launchApplication(load: () => Promise<{ mountApp: () => void }>): Promise<void> {
-  const artwork = document.querySelector<HTMLImageElement>("#launch-artwork");
-  if (artwork) await artwork.decode().catch(() => {});
+  const artwork = document.querySelector("#launch-artwork");
+  if (artwork instanceof HTMLImageElement) await artwork.decode().catch(() => {});
   await visiblePaint();
   startDawnTerminator();
   performance.mark("vela-launch-artwork");

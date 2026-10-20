@@ -699,7 +699,7 @@ express a cross-component invariant or non-obvious state contract.
 | `BrowserPane` | `BrowserPane.tsx`, `use-browser-guest.ts`, `use-browser-tabs.ts` | Browser tab surface: a navigation row (back / forward / reload-or-stop, "Search or enter a URL" field that turns bare hosts into `https:` and everything else into a search) over a `<webview>` guest in the `vela-browser` partition. Guests are created lazily — a new tab is pure state with no guest at all — so opening one costs nothing, and a loading veil covers the frame until the page stops loading; `use-browser-guest` folds guest events into the browser slice |
 | `BrowserTabsProvider` | `browser-tabs-context.tsx`, `browser-store-provider.tsx` | Browser tab state lives outside the app store, split into a *state* context (tab list + active tab, consumed by the strip and panes) and a stable *actions* context (consumed by the rail, the editor and the store). That split is a responsiveness contract, not a detail: when the slices lived in the app store, opening or closing a tab re-rendered every store consumer (measured 644ms with nine editors open; 2ms after the split)
 | `EditorTabs` | `EditorTabs.tsx`, `editor-groups.ts` | Tab strip for the editor groups: tabs share the strip width (90px floor, 240px ceiling) and overflow past the floor moves into an "all open tabs" menu button; a preview tab (`preview: true`, italic) marks a single Explorer click as transient so the next preview replaces it, while reopening the file, editing it, or pinning it removes that marker; each tab resolves its owning group (drag source and selection target) through the strip's group lookup; owns the tab drag MIME and the editor-group identity helpers |
-| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (session/mode/close) behind a horizontal-dots control; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
+| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
 | `Composer` | `Composer.tsx` | Authoritative local prompt draft, attachments, keyboard dispatch and agent controls; takes `controls` (extra control-row slot, used for the session usage ring) and `overlay` (popover anchored to the input); completion and model-menu behavior have the owners below; in the agent panel the control row collapses to icons at the panel's minimum width (mode keeps its glyph, reasoning keeps a chevron, the variant chip hides) |
 | `AgentTui` | `AgentTui.tsx` | xterm view for the active runtime's PTY-backed TUI |
 | `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning |
@@ -717,8 +717,10 @@ prompt-dock placement. `Composer.tsx` owns the sole input/files/mentions draft;
 `composer-completions.ts` owns candidate acquisition, insertion and captured
 workspace/sequence guards without keeping a second draft. `ComposerModelMenu.tsx`
 owns model preference persistence, filtering, response strength and menu rows;
-keyboard model cycling uses that same owner. `AgentUsage.tsx` owns the usage
-toggle/popup, quota presentation, refresh lifecycle and turn timer.
+keyboard model cycling uses that same owner. `AgentUsage.tsx` owns the Context menu entry and usage popup, quota presentation,
+refresh lifecycle and turn timer. Context lives in the panel options menu; its
+popup is anchored below the header and is available in GUI and TUI modes. The
+composer contains only its input and drafting controls.
 `agent-scroll.ts` owns remount scroll memory, reader intent and content following;
 `use-menu-dismiss.ts` owns the shared document mouse/Escape subscription.
 Related changes belong in those owners; they use renderer state and the controlled
@@ -965,18 +967,19 @@ released at that collapsed position.
 
 ## Entry
 
-`src/renderer/index.html` owns the initial splash and critical styles;
-the current frame uses `src/renderer/src/assets/folded-light.svg`, with the mint
-folded mark, Vela wordmark, and small “integrated development environment” caption.
-The mark stays still while the clipped Dawn Terminator light sweep (motion study
-23) plays once. `launch.ts` starts that sweep after image decode and visible paint,
-alongside the existing three-second hold; it settles before handoff and is skipped
-for reduced-motion preferences. The sweep is an inline SVG overlay, so the local
-image remains immediately paintable before the launch module runs.
+`src/renderer/index.html` owns the initial inline Folded light splash and critical
+styles. Its geometry and mint palette mirror `src/renderer/src/assets/folded-light.svg`,
+with the Vela wordmark and small “integrated development environment” caption.
+The original gentle six-second float carries the folded planes and the clipped
+Dawn Terminator light sweep (motion study 23) in one SVG group, keeping the light
+aligned with the moving logo. `launch.ts` starts the light sweep after visible
+paint alongside the three-second hold; the sweep plays once and settles before
+handoff. Reduced-motion preferences disable both motions. The wordmark and ground
+shadow remain still, and inline artwork paints before the launch module runs.
 The local `design/experimental-art/experimental-landing-page/launch-comparison.html`
 preserves the earlier Vela Folded light and app-icon comparison frames. The 380 × 320 native landing window
-appears before React, Monaco or backend readiness. `launch.ts` waits for image
-decode and a visible paint, loads the IDE modules in parallel with a three-second
+appears before React, Monaco or backend readiness. `launch.ts` waits for a
+visible paint, loads the IDE modules in parallel with a three-second
 hold, and hands off only when both finish. `mount-app.tsx` removes the static
 splash when React commits. `App.tsx` always mounts the IDE, requesting workspace
 window sizing even when no session is active; the explorer retains workspace

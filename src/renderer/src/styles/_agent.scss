@@ -328,6 +328,17 @@
   transition: background 120ms var(--ease), color 120ms var(--ease), border-color 120ms var(--ease), box-shadow 120ms var(--ease);
 }
 
+.agent-mode-menu .agent-usage-toggle {
+  height: auto;
+  flex: 0 0 auto;
+}
+
+.agent-usage-menu-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .agent-usage-ring {
   position: relative;
   display: grid;
@@ -383,7 +394,8 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   z-index: 80;
-  bottom: 10px;
+  bottom: auto;
+  max-height: min(440px, calc(100% - 64px));
   min-height: 120px;
   display: flex;
   flex-direction: column;

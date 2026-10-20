@@ -307,24 +307,4 @@
   .agent-panel .composer-send.stop { background: var(--red); color: #ffffff; }
 
   .agent-panel .composer-attachment { padding: 3px 4px 3px 6px; font-size: 10px; }
-
-  // Session usage rides the composer's control row, in the same pill style as
-  // the agent/model controls, and its popover opens upward out of the input.
-  .agent-panel .composer-selector.agent-usage-toggle {
-    flex: 0 0 auto;
-    width: auto;
-    padding: 2px 3px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-full);
-    background: none;
-  }
-
-  .agent-panel .composer-selector .agent-usage-ring { width: 15px; height: 15px; }
-
-  .agent-panel .composer-body .agent-usage-popup {
-    top: auto;
-    right: 0;
-    bottom: calc(100% + 8px);
-    max-height: min(440px, 52vh);
-  }
 }

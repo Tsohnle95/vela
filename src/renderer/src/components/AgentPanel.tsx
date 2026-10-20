@@ -132,8 +132,8 @@ export function AgentPanel({
     setTuiNotice("");
   }, [activeSession?.id, activeSession?.workspace.id, activeSession?.workspace.generation, tuiAvailable]);
 
-  const { usageButton, usagePopup } = useAgentUsage({ sessionUsage, compactionBaseline, currentModel,
-    providerUsage, providerUsageLoading, refreshProviderUsage, panelRef });
+  const { usageButton, usagePopup, closeUsage } = useAgentUsage({ sessionUsage, compactionBaseline, currentModel,
+    providerUsage, providerUsageLoading, refreshProviderUsage, panelRef, onOpen: () => setModeMenuOpen(false) });
 
   useMenuDismiss(modeMenuOpen, panelRef, useCallback(() => setModeMenuOpen(false), []));
 
@@ -234,7 +234,8 @@ export function AgentPanel({
           visibleSessionIDs={visibleSessionIDs}
           agentModeActive={agentModeActive}
           agentPanelLimitReached={agentPanelLimitReached}
-          onToggle={() => setModeMenuOpen((value) => !value)}
+          contextControl={usageButton}
+          onToggle={() => { closeUsage(); setModeMenuOpen((value) => !value); }}
           onDismiss={() => setModeMenuOpen(false)}
           onChoosePanelMode={choosePanelMode}
           onChooseSession={chooseSession}
@@ -242,6 +243,7 @@ export function AgentPanel({
         />
       </div>
 
+      {usagePopup}
       {panelMode === "tui" && activeSession ? (
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
@@ -292,7 +294,7 @@ export function AgentPanel({
               </div>
             )}
             <OpenCodeTodoDock todos={todos} />
-            <Composer session={activeSession} controls={usageButton} overlay={usagePopup} />
+            <Composer session={activeSession} />
           </div>
         </>
       )}
@@ -311,6 +313,7 @@ function AgentPanelOptionsMenu({
   visibleSessionIDs,
   agentModeActive,
   agentPanelLimitReached,
+  contextControl,
   onToggle,
   onDismiss,
   onChoosePanelMode,
@@ -324,6 +327,7 @@ function AgentPanelOptionsMenu({
   visibleSessionIDs?: ReadonlySet<string>;
   agentModeActive?: boolean;
   agentPanelLimitReached?: boolean;
+  contextControl: ReactNode;
   onToggle: () => void;
   onDismiss: () => void;
   onChoosePanelMode: (next: PanelMode) => void;
@@ -353,6 +357,8 @@ function AgentPanelOptionsMenu({
             <span>TUI</span>
             <small>{tuiAvailable ? "Terminal interface" : "Unavailable"}</small>
           </button>
+          <div className="agent-mode-menu-divider" />
+          {contextControl}
           {sessionChoices && sessionChoices.length > 0 && (
             <>
               <div className="agent-mode-menu-divider" />
