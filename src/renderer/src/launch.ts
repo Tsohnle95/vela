@@ -1,11 +1,13 @@
-const LAUNCH_DURATION_MS = 3000;
+const SHIMMER_DELAY_MS = 500;
+const SHIMMER_DURATION_MS = 5000;
+const LAUNCH_DURATION_MS = SHIMMER_DELAY_MS + SHIMMER_DURATION_MS;
 
 function startDawnTerminator(): void {
   const light = document.querySelector<SVGRectElement>("#launch-dawn");
   if (!light || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const segment = (p: number, start: number, end: number): number => Math.max(0, Math.min(1, (p - start) / (end - start)));
   const ease = (t: number): number => t * t * (3 - 2 * t);
-  // Sample study 23's easing and light envelope; both the sweep and launch hold start after visible paint.
+  // Sample study 23's easing and light envelope; the delayed sweep and launch hold are measured from visible paint.
   const frames: Keyframe[] = Array.from({ length: 91 }, (_, index) => {
     const p = index / 90;
     const travel = ease(segment(p, 0.04, 0.74));
@@ -17,7 +19,7 @@ function startDawnTerminator(): void {
       opacity: lightEnvelope * 0.7 * settle
     };
   });
-  light.animate(frames, { duration: LAUNCH_DURATION_MS, fill: "forwards" });
+  light.animate(frames, { delay: SHIMMER_DELAY_MS, duration: SHIMMER_DURATION_MS, fill: "forwards" });
 }
 
 async function visiblePaint(): Promise<void> {

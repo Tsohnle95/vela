@@ -13,7 +13,7 @@
       #launch-screen { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: #edf5ee; color: #254e46; font: 12px Arial, sans-serif; -webkit-app-region: drag; }
       #launch-frame { position: relative; width: min(380px, 100vw); aspect-ratio: 380 / 320; max-height: 100vh; }
       #launch-artwork { display: block; width: 100%; height: 100%; object-fit: contain; }
-      #launch-fold-motion { animation: launch-float 6s ease-in-out infinite; transform-box: view-box; transform-origin: 190px 136.5px; }
+      #launch-fold-motion { animation: launch-float 4s ease-in-out infinite; transform-box: view-box; transform-origin: 190px 136.5px; }
       @keyframes launch-float { 50% { transform: translateY(-5px) rotate(2deg); } }
       @media (prefers-reduced-motion: reduce) { #launch-fold-motion { animation: none; } }
     </style>

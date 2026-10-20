@@ -456,7 +456,7 @@ and development macOS bundles. Keep both raster outputs aligned with the vector.
   (`"src/"`); the backend normalizes them in `listDir` — the renderer
   must never receive raw entries.
 - The renderer paints the compact Folded light splash with the Vela wordmark immediately, holds it
-  for three visible seconds while loading the IDE, then opens an empty workspace
+  for 5.5 visible seconds while loading the IDE, then opens an empty workspace
   without selecting a session. Workspace selection stays in the sidebar.
 - `session.tool.called` events carry NO tool name — names come from
   `session.tool.input.started` (see `docs/events.md`).

@@ -688,7 +688,7 @@ express a cross-component invariant or non-obvious state contract.
 |---|---|---|
 | `App` | `App.tsx` | Workspace shell and activity rail; panel geometry and focus routing; the rail hosts Sessions/Files views, Terminal, the Changes review view, and browser creation with Settings pinned at the bottom and stays visible in Agent Mode; Settings overlays the mounted workspace so editor group state survives |
 | `Titlebar` | `Titlebar.tsx` | Left-panel toggle beside the traffic lights, a slot the focused editor group's tab strip portals into, and the titlebar actions (Agent Mode, add-agent panel, and the right-panel toggle in the corner); the leading block is sized so the strip starts exactly where the left app panel ends, and never narrower than its controls so a collapsed panel cannot clip the toggle; empty strip surface is part of the window drag region while tabs and controls set `no-drag`; both panel toggles are the same mirrored panel glyph pair (dashed while its panel is hidden) and flip with panel state without accent highlighting |
-| Launch bootstrap | `launch.ts`, `mount-app.tsx`, `src/renderer/index.html` | Static Folded light art paints before the IDE modules load; three visible seconds precede mounting the IDE, which opens at workspace size without selecting a session |
+| Launch bootstrap | `launch.ts`, `mount-app.tsx`, `src/renderer/index.html` | Static Folded light art paints before the IDE modules load; the delayed shimmer finishes before mounting the IDE, which opens at workspace size without selecting a session |
 | `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (Files when a workspace opens), Vela header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |
 | `ChangesView` | `ChangesView.tsx`, `changes-view-model.ts` | Editor-area review surface activated by the rail: a directory tree of observed file changes beside stacked Pierre diffs with per-file status and +/- counts; omits paths hidden for the focused workspace (detached paths and nested-workspace roots, matching the Explorer), and defers both per-file diff statistics and the Pierre diff until a section nears the viewport (one shared observer) so a large change set never diffs every file on mount |
 | `SettingsSidebar` | `SettingsSidebar.tsx` | Settings navigation |
@@ -970,16 +970,16 @@ released at that collapsed position.
 `src/renderer/index.html` owns the initial inline Folded light splash and critical
 styles. Its geometry and mint palette mirror `src/renderer/src/assets/folded-light.svg`,
 with the Vela wordmark and small “integrated development environment” caption.
-The original gentle six-second float carries the folded planes and the clipped
+The original gentle four-second float carries the folded planes and the clipped
 Dawn Terminator light sweep (motion study 23) in one SVG group, keeping the light
 aligned with the moving logo. `launch.ts` starts the light sweep after visible
-paint alongside the three-second hold; the sweep plays once and settles before
+paint with a half-second delay and five-second duration; the sweep plays once and settles before
 handoff. Reduced-motion preferences disable both motions. The wordmark and ground
 shadow remain still, and inline artwork paints before the launch module runs.
 The local `design/experimental-art/experimental-landing-page/launch-comparison.html`
 preserves the earlier Vela Folded light and app-icon comparison frames. The 380 × 320 native landing window
 appears before React, Monaco or backend readiness. `launch.ts` waits for a
-visible paint, loads the IDE modules in parallel with a three-second
+visible paint, loads the IDE modules in parallel with a 5.5-second
 hold, and hands off only when both finish. `mount-app.tsx` removes the static
 splash when React commits. `App.tsx` always mounts the IDE, requesting workspace
 window sizing even when no session is active; the explorer retains workspace
