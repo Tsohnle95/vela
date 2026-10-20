@@ -148,7 +148,7 @@
 }
 
 .agent-workspace .codicon {
-  font-size: 12px;
+  font-size: var(--icon-size);
   flex: 0 0 auto;
 }
 
@@ -622,7 +622,7 @@
 .usage-provider-refresh:hover { color: var(--text); }
 .usage-provider-refresh:disabled { cursor: wait; }
 
-.usage-provider-refresh .codicon { font-size: 12px; }
+.usage-provider-refresh .codicon { font-size: var(--icon-size); }
 
 .usage-provider-refresh .codicon.spinning {
   transform-origin: center;

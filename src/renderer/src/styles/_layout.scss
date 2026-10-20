@@ -138,9 +138,9 @@
 }
 
 .activity-tool.active { box-shadow: inset 0 0 0 1px var(--border-strong); }
-.activity-tool .os-icon { width: 17px; height: 17px; }
+.activity-tool .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
-.activity-tool .codicon { font-size: 18px; line-height: 1; }
+.activity-tool .codicon { font-size: var(--icon-size); line-height: 1; }
 .activity-tool:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -256,8 +256,8 @@
   -webkit-app-region: no-drag;
 }
 
-.titlebar .icon-btn .codicon { font-size: 18px; }
-.titlebar .icon-btn .os-icon { width: 18px; height: 18px; }
+.titlebar .icon-btn .codicon { font-size: var(--icon-size); }
+.titlebar .icon-btn .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .titlebar-leading-actions .icon-btn.on,
 .titlebar-actions .icon-btn.on {

@@ -97,7 +97,7 @@
 .changes-action:hover { background: var(--bg-hover); color: var(--text); }
 .changes-action.on { color: var(--accent); }
 .changes-action.danger:hover { color: var(--red); }
-.changes-action .os-icon { width: 13px; height: 13px; }
+.changes-action .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .changes-empty {
   display: grid;
@@ -149,7 +149,7 @@
 }
 
 .changes-tree-chevron.open { transform: rotate(90deg); }
-.changes-tree-chevron .os-icon { width: 12px; height: 12px; }
+.changes-tree-chevron .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .changes-tree-row .si-icon { flex: 0 0 auto; width: 14px; height: 14px; }
 
@@ -200,7 +200,7 @@
 }
 
 .change-section-chevron.open { transform: rotate(90deg); }
-.change-section-chevron .os-icon { width: 12px; height: 12px; }
+.change-section-chevron .os-icon { width: var(--icon-size); height: var(--icon-size); }
 .change-section-toggle .si-icon { flex: 0 0 auto; width: 15px; height: 15px; }
 
 .change-section-path {
@@ -255,7 +255,7 @@
 }
 
 .change-section-action:hover { background: var(--bg-hover); color: var(--text); }
-.change-section-action .os-icon { width: 12px; height: 12px; }
+.change-section-action .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .change-section-body { min-height: 0; }
 .change-section-pending { height: 180px; }

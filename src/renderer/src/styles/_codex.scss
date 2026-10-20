@@ -73,12 +73,12 @@ $codex: ':is([data-shell="codex"])';
 }
 
 #{$codex} .activity-tool .os-icon {
-  width: 19px;
-  height: 19px;
+  width: var(--icon-size);
+  height: var(--icon-size);
 }
 
 #{$codex} .activity-tool .codicon {
-  font-size: 20px;
+  font-size: var(--icon-size);
 }
 
 // ── Sidebar ────────────────────────────────────────────────────────────────

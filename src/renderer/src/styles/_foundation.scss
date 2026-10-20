@@ -74,6 +74,8 @@
 
   --ease: cubic-bezier(0.2, 0, 0, 1);
 
+  --icon-size: 16px;
+
   /* File-tree icon palette (light values) for the extracted per-language glyphs. */
   --trees-icon-gray: #84848a;
   --trees-icon-red: #d52c36;
@@ -288,9 +290,15 @@ button {
 }
 
 svg.os-icon {
-  width: 1em;
-  height: 1em;
+  width: var(--icon-size);
+  height: var(--icon-size);
   display: inline-block;
   flex-shrink: 0;
   vertical-align: -0.15em;
+}
+
+/* Interactive chrome opts into the same icon size; compact micro-indicators
+   (status dots, decorative previews) keep their own explicit sizing. */
+.codicon {
+  font-size: var(--icon-size);
 }

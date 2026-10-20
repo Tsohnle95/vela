@@ -84,7 +84,7 @@
   }
 
   [data-action="session-todo-toggle-button"]:hover { background: var(--v2-background-bg-layer-02); }
-  [data-action="session-todo-toggle-button"] .codicon { font-size: 12px; transition: transform 0.2s ease; }
+  [data-action="session-todo-toggle-button"] .codicon { font-size: var(--icon-size); transition: transform 0.2s ease; }
   [data-component="session-todo-dock"][data-collapsed="true"] [data-action="session-todo-toggle-button"] .codicon { transform: rotate(180deg); }
 
   [data-slot="session-todo-list"] {
@@ -126,7 +126,7 @@
     color: var(--v2-icon-icon-muted);
   }
 
-  [data-slot="todo-checkbox-control"] .codicon { font-size: 11px; }
+  [data-slot="todo-checkbox-control"] .codicon { font-size: var(--icon-size); }
   [data-slot="todo-checkbox-control"][data-in-progress="true"] { border-color: var(--accent-dim); border-top-color: var(--accent); animation: todo-ring-spin 900ms linear infinite; }
   [data-slot="todo-checkbox-control"][data-checked="true"] { border-color: var(--accent); background: var(--accent-dim); }
   [data-slot="todo-active-dot"] { width: 6px; height: 6px; border-radius: 50%; background: var(--v2-icon-icon-muted); animation: todo-active-pulse 1.2s ease-in-out infinite; }
@@ -272,7 +272,7 @@
 
   .agent-panel .composer-attach:hover { background: var(--bg-hover); color: var(--v2-text-text-base); }
   .agent-panel .composer-attach:focus-visible { outline: 2px solid var(--accent); }
-  .agent-panel .composer-attach .os-icon { width: 13px; height: 13px; }
+  .agent-panel .composer-attach .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
   .agent-panel .composer-selector {
     height: 28px;

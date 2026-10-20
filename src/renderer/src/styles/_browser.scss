@@ -59,7 +59,7 @@
 
 .browser-nav:disabled { opacity: 0.35; cursor: default; }
 
-.browser-nav .os-icon { width: 15px; height: 15px; }
+.browser-nav .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .browser-address {
   display: flex;
@@ -147,7 +147,7 @@
 
 .tab-add:hover { background: var(--bg-hover); color: var(--text); }
 
-.tab-add .os-icon { width: 15px; height: 15px; }
+.tab-add .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .tab-browser-loading {
   flex: 0 0 auto;

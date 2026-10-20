@@ -166,7 +166,7 @@
 
 .ctx-menu.above { transform: translateY(calc(-100% - 6px)); }
 
-.terminal-add .codicon { font-size: 13px; }
+.terminal-add .codicon { font-size: var(--icon-size); }
 
 .terminal-close {
   display: inline-flex;
@@ -186,7 +186,7 @@
 
 .terminal-close:hover { background: var(--bg-hover); color: var(--text); }
 
-.terminal-close .codicon { font-size: 13px; }
+.terminal-close .codicon { font-size: var(--icon-size); }
 
 .terminal-notice {
   color: var(--yellow);

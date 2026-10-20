@@ -188,7 +188,7 @@
 .theme-card-copy { min-width: 0; }
 .theme-card-copy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; }
 .theme-check { display: grid; place-items: center; width: 16px; height: 16px; color: var(--text); }
-.theme-check .codicon { font-size: 14px; }
+.theme-check .codicon { font-size: var(--icon-size); }
 
 .settings-list { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
 .theme-grid + .settings-list { margin-top: 16px; }

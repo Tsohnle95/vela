@@ -112,7 +112,7 @@
   border-radius: var(--radius-sm);
 }
 
-.settings-nav-mark .os-icon { width: 15px; height: 15px; }
+.settings-nav-mark .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .sidebar-settings {
   position: absolute;
@@ -209,7 +209,7 @@
   border: none;
   border-radius: var(--radius-md);
   color: var(--text-dim);
-  font-size: 17px;
+  font-size: var(--icon-size);
   cursor: pointer;
   transition: background 100ms var(--ease), color 100ms var(--ease);
 }
@@ -220,7 +220,7 @@
   background: none;
   border: none;
   color: var(--text-dim);
-  font-size: 15px;
+  font-size: var(--icon-size);
   cursor: pointer;
   padding: 3px 8px;
   border-radius: var(--radius-full);
@@ -302,7 +302,7 @@
 }
 
 .section-trigger.explorer-trigger .section-chevron-button .codicon {
-  font-size: 14px;
+  font-size: var(--icon-size);
   transition: transform 120ms var(--ease);
 }
 
@@ -567,7 +567,7 @@
 }
 
 .tree-chevron .codicon {
-  font-size: 14px;
+  font-size: var(--icon-size);
 }
 
 .tree-chevron.empty {

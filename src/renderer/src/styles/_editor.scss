@@ -99,7 +99,7 @@
   color: var(--text);
 }
 
-.editor-group-action .os-icon { width: 15px; height: 15px; }
+.editor-group-action .os-icon { width: var(--icon-size); height: var(--icon-size); }
 
 .editor-groups {
   position: relative;
@@ -282,7 +282,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  font-size: 14px;
+  font-size: var(--icon-size);
   color: var(--text-faint);
   padding: 0 3px;
   line-height: 1;
@@ -434,8 +434,8 @@ body > #vela-monaco-overflow {
 
 .breadcrumb-segment .os-icon {
   flex: 0 0 auto;
-  width: 13px;
-  height: 13px;
+  width: var(--icon-size);
+  height: var(--icon-size);
   color: var(--text-faint);
 }
 

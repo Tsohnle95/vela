@@ -24,7 +24,7 @@
 }
 
 .status-menu-button .codicon {
-  font-size: 16px;
+  font-size: var(--icon-size);
 }
 
 .status-menu-popover {
@@ -142,8 +142,8 @@
 }
 
 .app-settings-btn .os-icon {
-  width: 18px;
-  height: 18px;
+  width: var(--icon-size);
+  height: var(--icon-size);
 }
 
 .app-settings-btn.on {
