@@ -67,14 +67,14 @@
   .agent-panel [data-component="session-prompt-dock"] { padding: clamp(10px, 3cqw, 28px); }
   .agent-panel [data-component="session-prompt-dock"] > .composer { width: min(100%, 700px); max-width: 700px; }
   .agent-panel .composer-body {
-    min-height: 106px;
+    min-height: 104px;
     background: var(--agent-composer-background);
     border: 1px solid #8d70df;
     border-radius: 26px;
     box-shadow: var(--agent-composer-shadow);
     backdrop-filter: blur(18px);
   }
-  .agent-panel .composer-input { padding: 12px 10px 4px; color: #e0dcff; }
+  .agent-panel .composer-input { padding: 2px 3px 0; color: #e0dcff; }
   .agent-panel .composer-input::placeholder { color: #9b95b4; }
   .agent-panel .composer-selector { border: 1px solid #4b3b83; border-radius: 999px; color: #d6cdef; background: #0c0c1b80; }
   .agent-panel .composer-selector.model { max-width: 230px; }
@@ -98,9 +98,7 @@
   :root[data-theme="observatory"] .agent-panel {
     .composer-body { border-radius: 18px; }
     .composer-selector { padding-inline: 5px; }
-    .composer-selector.strength { display: none; }
     .composer-selector.agent .codicon-chevron-down,
-    .composer-selector.agent > span,
-    .composer-selector.model > span { display: none; }
+    .composer-selector.agent > span { display: none; }
   }
 }

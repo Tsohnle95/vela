@@ -195,49 +195,50 @@ $codex: ':is([data-shell="codex"])';
   border-bottom-color: transparent;
 }
 
-// ── Agent composer (the reference's input) ──────────────────────────────────
-// The reference input is a flat rounded box one step above the panel, with the
-// placeholder dimmed well below the panel's body text and the model controls
-// stepping aside once the panel reaches its minimum width.
+// ── Agent composer ─────────────────────────────────────────────────────────
+// Keep the prompt and its model controls inside one rounded input surface.
 #{$codex} [data-component="session-prompt-dock"] {
   padding: 20px;
 }
 
 #{$codex} .agent-panel .composer-body {
-  min-height: 96px;
+  min-height: 104px;
   border-width: 1px;
   border-color: color-mix(in srgb, var(--text) 6%, transparent);
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: none;
 }
 
 #{$codex} .agent-panel .composer-input {
-  min-height: 40px;
-  padding: 12px 12px 4px;
+  min-height: 44px;
+  padding: 2px 3px 0;
 }
 
 #{$codex} .agent-panel .composer-chips {
-  padding-bottom: 14px;
+  padding-bottom: 0;
 }
 
 // The reference's placeholder reads rgb(104,104,104) over the input's #363636.
 :root[data-theme="codex-dark"] .agent-panel .composer-input::placeholder { color: #686868; }
 
-// At the panel's minimum width the reference keeps only icons on the control
-// row: the mode control collapses to its glyph, the reasoning control to a
-// single chevron, and the variant control steps out of the way entirely.
+// Keep model and response strength visible at minimum width; collapse only
+// the secondary agent control to its icon.
 @container (max-width: 360px) {
+  #{$codex} .agent-panel > [data-component="session-prompt-dock"] {
+    padding: 10px;
+  }
+
+  #{$codex} .agent-panel .composer-body {
+    min-height: 96px;
+    padding: 8px;
+  }
+
   #{$codex} .agent-panel .composer-selector {
     padding-inline: 5px;
   }
 
-  #{$codex} .agent-panel .composer-selector.strength {
-    display: none;
-  }
-
   #{$codex} .agent-panel .composer-selector.agent .codicon-chevron-down,
-  #{$codex} .agent-panel .composer-selector.agent > span,
-  #{$codex} .agent-panel .composer-selector.model > span {
+  #{$codex} .agent-panel .composer-selector.agent > span {
     display: none;
   }
 }

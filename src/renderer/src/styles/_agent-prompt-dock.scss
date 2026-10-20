@@ -157,12 +157,12 @@
 
   .agent-panel .composer-body {
     position: relative;
-    min-height: 72px;
-    padding: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0;
+    min-height: 104px;
+    padding: 9px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     overflow: visible;
     border: 0.5px solid var(--v2-border-border-base);
     border-radius: 13px;
@@ -191,13 +191,14 @@
 
   .agent-panel .composer-input {
     width: 100%;
+    flex: 1 1 auto;
     min-width: 0;
-    min-height: 36px;
+    min-height: 44px;
     max-height: 120px;
-    padding: 9px 10px 4px;
+    padding: 2px 3px 0;
     color: var(--v2-text-text-base);
     font: var(--font-weight-regular) 12.5px/18px var(--font-family-sans);
-    grid-column: 1 / -1;
+    grid-column: auto;
     // Grow with the prompt (incl. a wrapping placeholder) instead of scrolling.
     field-sizing: content;
     scrollbar-width: none;
@@ -207,63 +208,63 @@
 
   .agent-panel .composer-input::placeholder { color: var(--v2-text-text-faint); font-size: 11px; }
 
+  .agent-panel .composer-toolbar {
+    width: 100%;
+    min-width: 0;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .agent-panel .composer-toolbar-start {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .agent-panel .composer-toolbar-end {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-left: auto;
+  }
+
   .agent-panel .composer-actions {
-    position: absolute;
-    bottom: 6px;
-    right: 8px;
-    z-index: 2;
+    position: static;
     width: auto;
     height: 28px;
     min-height: 28px;
     padding: 0;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
   }
 
   .agent-panel .composer-chips {
-    grid-column: 1;
-    grid-row: 2;
     width: auto;
-    padding: 0 38px 6px 8px;
+    padding: 0;
     gap: 4px;
     min-width: 0;
-    overflow: hidden;
     flex-wrap: nowrap;
     align-self: center;
-  }
-
-  @container (min-width: 440px) {
-    .agent-panel .composer-body {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .agent-panel .composer-input { grid-column: 1 / -1; }
-
-    .agent-panel .composer-actions {
-      width: auto;
-      height: 28px;
-      min-height: 28px;
-      padding: 0;
-    }
-
-    .agent-panel .composer-chips {
-      grid-column: 1;
-      grid-row: 2;
-      padding-right: 38px;
-    }
   }
 
   .agent-panel .composer-attach {
     display: grid;
     place-items: center;
-    flex: 0 0 22px;
-    width: 22px;
-    height: 22px;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
     padding: 0;
-    border: 0;
-    border-radius: 6px;
+    border: 1px solid var(--v2-border-border-base);
+    border-radius: 8px;
     background: transparent;
     color: var(--v2-text-text-muted);
     cursor: pointer;
@@ -274,22 +275,38 @@
   .agent-panel .composer-attach .os-icon { width: 13px; height: 13px; }
 
   .agent-panel .composer-selector {
-    height: 22px;
-    padding: 2px 7px;
+    height: 28px;
+    padding: 0 7px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: var(--v2-text-text-muted);
     font-size: 11px;
     gap: 4px;
   }
 
-  .agent-panel .composer-selector.model { flex: 0 1 auto; width: auto; min-width: 0; max-width: 150px; }
-  .agent-panel .composer-selector.agent { flex: 0 0 auto; width: auto; max-width: 88px; }
-  .agent-panel .composer-selector.strength { flex: 0 0 auto; width: auto; max-width: 66px; }
+  .agent-panel .composer-selector:hover,
+  .agent-panel .composer-selector.open { background: var(--bg-hover); }
+
+  .agent-panel .composer-selector.model {
+    flex: 0 1 136px;
+    width: auto;
+    min-width: 52px;
+    max-width: 170px;
+    color: var(--v2-text-text-base);
+  }
+
+  .agent-panel .composer-selector.agent { flex: 0 1 auto; width: auto; max-width: 110px; }
+  .agent-panel .composer-selector.strength { flex: 0 1 auto; width: auto; min-width: 44px; max-width: 66px; }
+  .agent-panel .composer-selector.strength span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
   .agent-panel .composer-send {
     position: relative;
-    width: 26px;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    margin-left: 0;
     cursor: pointer;
-    height: 26px;
     border: none;
     border-radius: var(--radius-full);
     background: var(--agent-send-background);
@@ -307,4 +324,21 @@
   .agent-panel .composer-send.stop { background: var(--red); color: #ffffff; }
 
   .agent-panel .composer-attachment { padding: 3px 4px 3px 6px; font-size: 10px; }
+
+  @container (max-width: 360px) {
+    .agent-panel > [data-component="session-prompt-dock"] { padding: 10px; }
+    .agent-panel .composer-body { min-height: 96px; padding: 8px; }
+    .agent-panel .composer-toolbar,
+    .agent-panel .composer-toolbar-end { gap: 3px; }
+    .agent-panel .composer-selector.agent {
+      flex: 0 0 26px;
+      width: 26px;
+      padding: 0;
+      justify-content: center;
+    }
+    .agent-panel .composer-selector.agent > span,
+    .agent-panel .composer-selector.agent .codicon-chevron-down { display: none; }
+    .agent-panel .composer-selector.model { flex-basis: 90px; max-width: 120px; }
+    .agent-panel .composer-selector.strength { min-width: 42px; max-width: 58px; padding-inline: 5px; }
+  }
 }

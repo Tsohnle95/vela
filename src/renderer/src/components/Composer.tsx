@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { usePanel, useStore } from "../store";
 import type { PromptFile, SessionInfo } from "@shared/types";
 import { droppedFilePaths, isExternalFileDrag } from "../drop";
@@ -17,6 +17,121 @@ function isImagePath(path: string): boolean {
   const dot = name.lastIndexOf(".");
   if (dot < 0) return false;
   return IMAGE_EXTENSIONS.has(name.slice(dot + 1).toLowerCase());
+}
+
+type ComposerToolbarProps = {
+  supportsAttachments: boolean;
+  attachmentInputRef: RefObject<HTMLInputElement | null>;
+  addAttachmentPaths: (paths: string[]) => void;
+  agentName?: string;
+  agentMenuOpen: boolean;
+  toggleAgentMenu: () => void;
+  modelName: string;
+  modelMenuOpen: boolean;
+  toggleModelMenu: () => void;
+  responseStrength: string;
+  showResponseStrength: boolean;
+  strengthMenuOpen: boolean;
+  toggleStrengthMenu: () => void;
+  controls?: ReactNode;
+  busy: boolean;
+  statusText?: string | null;
+  canSend: boolean;
+  onSend: () => void;
+  onStop: () => void;
+};
+
+function ComposerToolbar({
+  supportsAttachments,
+  attachmentInputRef,
+  addAttachmentPaths,
+  agentName,
+  agentMenuOpen,
+  toggleAgentMenu,
+  modelName,
+  modelMenuOpen,
+  toggleModelMenu,
+  responseStrength,
+  showResponseStrength,
+  strengthMenuOpen,
+  toggleStrengthMenu,
+  controls,
+  busy,
+  statusText,
+  canSend,
+  onSend,
+  onStop
+}: ComposerToolbarProps): ReactNode {
+  const sendTitle = busy ? statusText ?? "Stop the agent" : canSend ? "Send (Enter)" : "Type a prompt first";
+
+  return (
+    <div className="composer-toolbar">
+      <div className="composer-chips composer-toolbar-start">
+        {supportsAttachments && (
+          <>
+            <input
+              ref={attachmentInputRef}
+              className="composer-file-input"
+              type="file"
+              multiple
+              hidden
+              onChange={(event) => {
+                addAttachmentPaths([...event.currentTarget.files ?? []]
+                  .map((file) => window.vela.getPathForFile(file))
+                  .filter(Boolean));
+                event.currentTarget.value = "";
+              }}
+            />
+            <button className="composer-attach" title="Attach files" aria-label="Attach files" onClick={() => attachmentInputRef.current?.click()}>
+              <IconAdd />
+            </button>
+          </>
+        )}
+        <button
+          className={`composer-selector agent ${agentMenuOpen ? "open" : ""}`}
+          title="Change agent"
+          aria-label={`Change agent${agentName ? `: ${agentName}` : ""}`}
+          onClick={toggleAgentMenu}
+        >
+          <IconGitBranch />
+          <span>{agentName ?? "Agent"}</span>
+          <IconChevronDown />
+        </button>
+      </div>
+      <div className="composer-actions composer-toolbar-end">
+        <button
+          className={`composer-selector model ${modelMenuOpen ? "open" : ""}`}
+          title="Change model and response strength"
+          aria-label={`Change model: ${modelName}`}
+          onClick={toggleModelMenu}
+        >
+          <span>{modelName}</span>
+          <IconChevronDown />
+        </button>
+        {showResponseStrength && (
+          <button
+            className={`composer-selector strength ${strengthMenuOpen ? "open" : ""}`}
+            title="Change response strength"
+            aria-label={`Change response strength: ${responseStrength}`}
+            onClick={toggleStrengthMenu}
+          >
+            <span>{responseStrength}</span>
+            <IconChevronDown />
+          </button>
+        )}
+        {controls}
+        <button
+          className={`composer-send ${busy ? "stop" : ""}`}
+          title={sendTitle}
+          aria-label={busy ? "Stop the agent" : "Send prompt"}
+          disabled={!busy && !canSend}
+          onClick={busy ? onStop : onSend}
+        >
+          {busy ? <IconStop /> : <IconArrowUp />}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function Composer({ session, controls, overlay }: { session?: SessionInfo | null; controls?: ReactNode; overlay?: ReactNode }): ReactNode {
@@ -161,6 +276,34 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
     void switchAgent(agents[(index + 1) % agents.length].id, workspace ?? undefined);
   };
 
+  const toggleAgentMenu = (): void => {
+    if (menu === "agent") {
+      setMenu(null);
+      return;
+    }
+    setMenu("agent");
+    if (agents.length === 0) void loadAgents(workspace ?? undefined);
+  };
+
+  const toggleModelMenu = (): void => {
+    const opening = menu !== "model";
+    if (opening) {
+      reloadPreferences();
+      setModelView("list");
+      if (models.length === 0) void loadModels(workspace ?? undefined);
+    }
+    setMenu(opening ? "model" : null);
+  };
+
+  const toggleStrengthMenu = (): void => {
+    if (menu === "model" && modelView === "strength") {
+      setMenu(null);
+      return;
+    }
+    setMenu("model");
+    setModelView("strength");
+  };
+
   return (
     <div
       className="composer"
@@ -259,88 +402,28 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
             }
           }}
         />
-        <div className="composer-actions">
-          <button
-            className={`composer-send ${busy ? "stop" : ""}`}
-            title={busy ? (assistantStatus?.statusText ?? "Stop the agent") : canSend ? "Send (Enter)" : "Type a prompt first"}
-            disabled={!busy && !canSend}
-            onClick={busy ? () => void stop(workspace ?? undefined) : send}
-          >
-            {busy ? <IconStop /> : <IconArrowUp />}
-          </button>
-        </div>
         {overlay}
-        <div className="composer-chips">
-          {supportsAttachments && (
-            <>
-              <input
-                ref={attachmentInputRef}
-                className="composer-file-input"
-                type="file"
-                multiple
-                hidden
-                onChange={(event) => {
-                  addAttachmentPaths([...event.currentTarget.files ?? []]
-                    .map((file) => window.vela.getPathForFile(file))
-                    .filter(Boolean));
-                  event.currentTarget.value = "";
-                }}
-              />
-              <button className="composer-attach" title="Attach files" aria-label="Attach files" onClick={() => attachmentInputRef.current?.click()}>
-                <IconAdd />
-              </button>
-            </>
-          )}
-          <button
-            className={`composer-selector agent ${menu === "agent" ? "open" : ""}`}
-            title="Change agent"
-            onClick={() => {
-              if (menu === "agent") {
-                setMenu(null);
-                return;
-              }
-              setMenu("agent");
-              if (agents.length === 0) void loadAgents(workspace ?? undefined);
-            }}
-          >
-            <IconGitBranch />
-            <span>{currentAgent?.name ?? "Agent"}</span>
-            <IconChevronDown />
-          </button>
-          <button
-            className={`composer-selector model ${menu === "model" && modelView !== "strength" ? "open" : ""}`}
-            title="Change model and response strength"
-            onClick={() => {
-              if (menu !== "model") {
-                reloadPreferences();
-              }
-              setMenu(menu === "model" ? null : "model");
-              if (menu !== "model") setModelView("list");
-              if (menu !== "model" && models.length === 0) void loadModels(workspace ?? undefined);
-            }}
-          >
-            <span>{currentModel?.name ?? "Model"}{variantLabel ? ` ${variantLabel}` : ""}</span>
-            <IconChevronDown />
-          </button>
-          {currentModel?.variants && currentModel.variants.length > 0 && (
-            <button
-              className={`composer-selector strength ${menu === "model" && modelView === "strength" ? "open" : ""}`}
-              title="Change response strength"
-              onClick={() => {
-                if (menu === "model" && modelView === "strength") {
-                  setMenu(null);
-                  return;
-                }
-                setMenu("model");
-                setModelView("strength");
-              }}
-            >
-              <span>{variantLabel}</span>
-              <IconChevronDown />
-            </button>
-          )}
-          {controls}
-        </div>
+        <ComposerToolbar
+          supportsAttachments={supportsAttachments}
+          attachmentInputRef={attachmentInputRef}
+          addAttachmentPaths={addAttachmentPaths}
+          agentName={currentAgent?.name}
+          agentMenuOpen={menu === "agent"}
+          toggleAgentMenu={toggleAgentMenu}
+          modelName={currentModel?.name ?? "Model"}
+          modelMenuOpen={menu === "model" && modelView !== "strength"}
+          toggleModelMenu={toggleModelMenu}
+          responseStrength={variantLabel}
+          showResponseStrength={(currentModel?.variants?.length ?? 0) > 0}
+          strengthMenuOpen={menu === "model" && modelView === "strength"}
+          toggleStrengthMenu={toggleStrengthMenu}
+          controls={controls}
+          busy={busy}
+          statusText={assistantStatus?.statusText}
+          canSend={canSend}
+          onSend={send}
+          onStop={() => void stop(workspace ?? undefined)}
+        />
       </div>
 
       {notice && <div className="composer-notice">{notice}</div>}

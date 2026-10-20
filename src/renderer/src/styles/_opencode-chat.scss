@@ -827,10 +827,7 @@
   .agent-panel > [data-component="session-prompt-dock"] {
     padding: 12px;
   }
-  .agent-panel .composer-body { min-height: 72px; }
+  .agent-panel .composer-body { min-height: 96px; }
   .agent-panel .composer-input { max-height: 96px; font-size: 12px; line-height: 16px; }
   .agent-panel .composer-chips { gap: 3px; }
-  // Keep the control row single-line: drop the secondary strength chip rather
-  // than letting the row wrap when the panel is narrow.
-  .agent-panel .composer-selector.strength { display: none; }
 }
