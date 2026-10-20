@@ -4,9 +4,30 @@ import { mkdtemp, mkdir, writeFile, unlink, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import ts from "typescript";
-import { analyzeRepository, countCodeLines, dependencyCycles, duplicateGroups, functionFingerprint, functionIdentity, functionMetrics, importSpecifiers, ipcAuthorityReferences, ownershipRoutes, sourceCategory } from "./architecture-analysis.mjs";
+import { analyzeRepository, countCodeLines, dependencyCycles, duplicateGroups, functionFingerprint, functionIdentity, functionMetrics, importSpecifiers, ipcAuthorityReferences, ownershipRoutes, pinnedAiElementDrift, sourceCategory, validatePinnedAiElements } from "./architecture-analysis.mjs";
+import pinnedAiElements from "./pinned-upstream-ai-elements.json";
 
 describe("architecture measurement", () => {
+  it("excludes only the frozen AI Elements inventory while retaining authored adapters and adjacent files", () => {
+    expect(sourceCategory("src/renderer/src/components/ui/trace.tsx")).toBe("pinned-upstream-ai-elements");
+    expect(sourceCategory("src/renderer/src/ai-elements/demos/chat.tsx")).toBe("pinned-upstream-ai-elements");
+    for (const file of ["components/ui/custom.tsx", "ai-elements/demos/custom.tsx", "ai-elements/demos/index.ts", "ai-elements/demos/lib/ai.ts", "ai-elements/AiElementsTimeline.tsx", "ai-elements/ai-elements.css"]) {
+      expect(sourceCategory(`src/renderer/src/${file}`)).toBe("production");
+    }
+    const broadened = { ...pinnedAiElements, files: { "src/renderer/src/ai-elements/AiElementsTimeline.tsx": "a".repeat(64) } };
+    expect(() => validatePinnedAiElements(broadened)).toThrow("Invalid frozen AI Elements inventory");
+  });
+
+  it("reports altered and missing pinned AI Elements files instead of silently excluding drift", () => {
+    const files = { "src/renderer/src/components/ui/trace.tsx": "a".repeat(64), "src/renderer/src/components/ui/message.tsx": "b".repeat(64) };
+    const inventory = [{ path: Object.keys(files)[0], sha256: "c".repeat(64) }];
+    expect(pinnedAiElementDrift(inventory, { files })).toEqual([
+      { file: Object.keys(files)[0], expected: "a".repeat(64), actual: "c".repeat(64) },
+      { file: Object.keys(files)[1], expected: "b".repeat(64), actual: "missing" },
+    ]);
+    expect(pinnedAiElementDrift(Object.entries(files).map(([path, sha256]) => ({ path, sha256 })), { files })).toEqual([]);
+  });
+
   it("counts physical token-bearing lines without counting comments or changing string semantics", () => {
     const source = `// only a comment
 const url = "https://example.com/*text*/"; // trailing comment

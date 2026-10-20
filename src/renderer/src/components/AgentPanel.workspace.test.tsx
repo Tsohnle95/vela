@@ -82,11 +82,12 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   return { promise, resolve };
 }
 
-describe("composer workspace continuations", () => {
+describe("legacy composer workspace continuations", () => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(() => {
+    window.history.replaceState(null, "", "/?chat-renderer=old");
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     window.localStorage.clear();
     clearAgentScrollMemoryForTests();
@@ -108,6 +109,7 @@ describe("composer workspace continuations", () => {
   });
 
   afterEach(async () => {
+    window.history.replaceState(null, "", "/");
     await act(async () => root.unmount());
     container.remove();
     window.localStorage.clear();

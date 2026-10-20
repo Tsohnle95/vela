@@ -513,7 +513,30 @@ Key mechanisms:
   background panel focuses that panel first, and permission replies address
   the owning session.
 
-- **Runtime-neutral transcript presentation** — `OpenCodeTimeline.tsx` owns
+- **AI Elements presentation** — `ai-elements/AiElementsChat.tsx` is the default
+  GUI chat surface, composed from the supplied shadcn Base UI/Rhea primitives.
+  It reads the same per-panel transcript, execution, usage, todo and model views
+  as the legacy renderer. `AiElementsTimeline.tsx` binds ordered messages and
+  tools to the patterns; `AiElementsComposer.tsx` retains existing prompt,
+  command, attachment, completion, model, queue and stop owners. Message Scroller
+  owns follow behavior and user-turn anchors. The vendored Streamdown Markdown
+  helper uses the JavaScript Shiki engine under the existing CSP. External
+  anchors retain the shared HTTPS URL policy.
+  `adapters.ts` accepts optional structured source, citation, suite, stack,
+  plan and task metadata; it never infers those records from arbitrary prose.
+  Such metadata is conditional on the runtime/tool supplying it. Permissions,
+  file opening, child navigation and revert continue through the existing store
+  with their explicit session/workspace identities. Checkpoint restores stage
+  the existing runtime revert, then use the existing confirmation dock.
+  ThemeProvider mirrors the selected appearance scheme to the standard `dark`
+  class so upstream widgets and portals receive the correct neutral theme.
+  The scoped reset preserves the original renderer's appearance. Vendored
+  source/provenance lives under `ai-elements/upstream/`; runnable original
+  examples are under `ai-elements/demos/`. See the comparison procedure in
+  [operations.md](operations.md). `?chat-renderer=old` selects the original
+  implementation; `?chat-renderer=compare` displays both against the live panel
+  view. Neither presentation becomes another transcript authority.
+- **Legacy runtime-neutral transcript presentation** — `OpenCodeTimeline.tsx` owns
   chronological run/turn composition, auxiliary events and permission prompts.
   Its pure `timeline-model.ts` owns tool/path/edit metadata, task descriptors,
   delegation reconciliation, turn grouping and reasoning-heading projection;

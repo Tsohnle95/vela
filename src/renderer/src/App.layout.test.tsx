@@ -70,6 +70,7 @@ function api(): typeof window.vela {
     openSessionById: async () => ({ session: info("/repo", 1), transcript: [], todos: [], usage: null }),
     readFile: async () => "content",
     listDir: async () => [],
+    listPermissions: async () => [],
     providerUsage: async () => [],
     recoveryRecords: async () => [],
     windowView: async () => {},
@@ -1341,7 +1342,7 @@ describe("Layout panel sizing", () => {
     expect(enlarged).toBeGreaterThan(280);
 
     await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-component='task-tool-surface']")!.click();
+      container.querySelector<HTMLButtonElement>('[aria-label="Open agent"]')!.click();
       await new Promise((resolve) => setTimeout(resolve, 30));
     });
     expect(container.querySelector(".agent-session-back")).not.toBeNull();

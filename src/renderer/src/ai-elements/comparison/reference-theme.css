@@ -1,0 +1,6 @@
+/* Keep the reference preview independent of the app's configurable typography. */
+.ai-elements, .ai-elements-portal {
+  --ai-font-sans: "Geist Variable", sans-serif;
+  --ai-font-mono: "Geist Mono Variable", monospace;
+  font-family: var(--ai-font-sans);
+}

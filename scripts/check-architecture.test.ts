@@ -14,6 +14,19 @@ const checked = (value: any, config = configuration()) => architectureViolations
 }, config).map((entry: any) => entry.rule);
 
 describe("architecture fitness checks", () => {
+  it("allows frozen AI Elements dependencies but fails tampered or missing pinned content", () => {
+    const value = report() as any;
+    value.production.inventory.push({ path: "src/renderer/src/ai-elements/adapter.ts", loc: 1 });
+    value.dependencies.push({ from: "src/renderer/src/ai-elements/adapter.ts", to: "src/renderer/src/components/ui/trace.tsx", typeOnly: false });
+    expect(checked(value)).toEqual([]);
+    value.pinnedAiElementDrift = [{ file: "src/renderer/src/components/ui/trace.tsx", expected: "original", actual: "missing" }];
+    expect(checked(value)).toEqual(["pinned-ai-elements-integrity"]);
+    value.pinnedAiElementDrift[0].actual = "changed";
+    expect(checked(value)).toEqual(["pinned-ai-elements-integrity"]);
+    value.dependencies[0].to = "src/renderer/src/components/ui/unpinned.tsx";
+    expect(checked(value)).toContain("production-scope");
+  });
+
   it("fails new oversized modules and functions, nesting and complexity", () => {
     const value = report() as any;
     value.production.inventory.push({ path: "src/main/new.ts", loc: 801 });

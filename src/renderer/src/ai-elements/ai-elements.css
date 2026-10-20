@@ -1,0 +1,586 @@
+/* Theme values and radius scales: shadcn-ui/ui apps/v4/app/globals.css.
+ * Fonts: apps/v4/lib/fonts.ts. Original snapshots are in upstream/styles/.
+ * Tailwind preflight is scoped below so Vela's original renderer is preserved. */
+@layer theme, base, components, utilities;
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@source "../../../../node_modules/streamdown/dist/*.js";
+@custom-variant dark (&:is(.dark *));
+@theme inline {
+  --breakpoint-3xl: 1600px;
+  --breakpoint-4xl: 2000px;
+  --font-sans: var(--ai-font-sans);
+  --font-heading: var(--ai-font-sans);
+  --font-mono: var(--ai-font-mono);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-code-highlight: var(--code-highlight);
+  --color-code-number: var(--code-number);
+  --color-selection: var(--selection);
+  --color-selection-foreground: var(--selection-foreground);
+}
+:where(.ai-elements, .ai-elements-portal) {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0% 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0% 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0% 0 0);
+  --primary: oklch(0% 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.97 0.01 17);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: var(--color-blue-300);
+  --chart-2: var(--color-blue-500);
+  --chart-3: var(--color-blue-600);
+  --chart-4: var(--color-blue-700);
+  --chart-5: var(--color-blue-800);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0% 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --surface: oklch(0.98 0 0);
+  --surface-foreground: var(--foreground);
+  --code: var(--surface);
+  --code-foreground: var(--surface-foreground);
+  --code-highlight: oklch(0.96 0 0);
+  --code-number: oklch(0.56 0 0);
+  --selection: oklch(0% 0 0);
+  --selection-foreground: oklch(1 0 0);
+}
+
+:where(.dark .ai-elements, .ai-elements.dark, .dark .ai-elements-portal, .ai-elements-portal.dark) {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.371 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.58 0.22 27);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: var(--color-blue-300);
+  --chart-2: var(--color-blue-500);
+  --chart-3: var(--color-blue-600);
+  --chart-4: var(--color-blue-700);
+  --chart-5: var(--color-blue-800);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.439 0 0);
+  --surface: oklch(0.2 0 0);
+  --surface-foreground: oklch(0.708 0 0);
+  --code: var(--surface);
+  --code-foreground: var(--surface-foreground);
+  --code-highlight: oklch(0.27 0 0);
+  --code-number: oklch(0.72 0 0);
+  --selection: oklch(0.922 0 0);
+  --selection-foreground: oklch(0.205 0 0);
+}
+@layer base {
+:where(.ai-elements, .ai-elements-portal) {
+  --ai-font-sans: "Geist Variable", sans-serif;
+  --ai-font-mono: "Geist Mono Variable", monospace;
+  font-family: var(--ai-font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--foreground);
+  user-select: text;
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+}
+
+@layer base {
+:where(.ai-elements, .ai-elements-portal) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+}
+/*
+  1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)
+  2. Remove default margins and padding
+  3. Reset all borders.
+*/
+
+ :where(.ai-elements, .ai-elements-portal) *,
+:where(.ai-elements, .ai-elements-portal)::after,  :where(.ai-elements, .ai-elements-portal) *::after,
+:where(.ai-elements, .ai-elements-portal)::before,  :where(.ai-elements, .ai-elements-portal) *::before,
+:where(.ai-elements, .ai-elements-portal)::backdrop,  :where(.ai-elements, .ai-elements-portal) *::backdrop,
+:where(.ai-elements, .ai-elements-portal)::file-selector-button,  :where(.ai-elements, .ai-elements-portal) *::file-selector-button {
+  box-sizing: border-box; /* 1 */
+  margin: 0; /* 2 */
+  padding: 0; /* 2 */
+  border: 0 solid; /* 3 */
+}
+
+/*
+  1. Use a consistent sensible line-height in all browsers.
+  2. Prevent adjustments of font size after orientation changes in iOS.
+  3. Use a more readable tab size.
+  4. Use the user's configured `sans` font-family by default.
+  5. Use the user's configured `sans` font-feature-settings by default.
+  6. Use the user's configured `sans` font-variation-settings by default.
+  7. Disable tap highlights on iOS.
+*/
+
+:where(.ai-elements, .ai-elements-portal),
+:where(.ai-elements, .ai-elements-portal) {
+  line-height: 1.5; /* 1 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+  tab-size: 4; /* 3 */
+  font-family: --theme(
+    --default-font-family,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    'Noto Sans',
+    Arial,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'Noto Color Emoji'
+  ); /* 4 */
+  font-feature-settings: --theme(--default-font-feature-settings, normal); /* 5 */
+  font-variation-settings: --theme(--default-font-variation-settings, normal); /* 6 */
+  -webkit-tap-highlight-color: transparent; /* 7 */
+}
+
+/*
+  1. Add the correct height in Firefox.
+  2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)
+  3. Reset the default border style to a 1px solid border.
+*/
+
+:where(.ai-elements, .ai-elements-portal) hr {
+  height: 0; /* 1 */
+  color: inherit; /* 2 */
+  border-top-width: 1px; /* 3 */
+}
+
+/*
+  Add the correct text decoration in Chrome, Edge, and Safari.
+*/
+
+:where(.ai-elements, .ai-elements-portal) abbr:where([title]) {
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+}
+
+/*
+  Remove the default font size and weight for headings.
+*/
+
+:where(.ai-elements, .ai-elements-portal) h1,
+:where(.ai-elements, .ai-elements-portal) h2,
+:where(.ai-elements, .ai-elements-portal) h3,
+:where(.ai-elements, .ai-elements-portal) h4,
+:where(.ai-elements, .ai-elements-portal) h5,
+:where(.ai-elements, .ai-elements-portal) h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/*
+  Reset links to optimize for opt-in styling instead of opt-out.
+*/
+
+:where(.ai-elements, .ai-elements-portal) a {
+  color: inherit;
+  -webkit-text-decoration: inherit;
+  text-decoration: inherit;
+}
+
+/*
+  Add the correct font weight in Edge and Safari.
+*/
+
+:where(.ai-elements, .ai-elements-portal) b,
+:where(.ai-elements, .ai-elements-portal) strong {
+  font-weight: bolder;
+}
+
+/*
+  1. Use the user's configured `mono` font-family by default.
+  2. Use the user's configured `mono` font-feature-settings by default.
+  3. Use the user's configured `mono` font-variation-settings by default.
+  4. Correct the odd `em` font sizing in all browsers.
+*/
+
+:where(.ai-elements, .ai-elements-portal) code,
+:where(.ai-elements, .ai-elements-portal) kbd,
+:where(.ai-elements, .ai-elements-portal) samp,
+:where(.ai-elements, .ai-elements-portal) pre {
+  font-family: --theme(
+    --default-mono-font-family,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    'Liberation Mono',
+    'Courier New',
+    monospace
+  ); /* 1 */
+  font-feature-settings: --theme(--default-mono-font-feature-settings, normal); /* 2 */
+  font-variation-settings: --theme(--default-mono-font-variation-settings, normal); /* 3 */
+  font-size: 1em; /* 4 */
+}
+
+/*
+  Add the correct font size in all browsers.
+*/
+
+:where(.ai-elements, .ai-elements-portal) small {
+  font-size: 80%;
+}
+
+/*
+  Prevent `sub` and `sup` elements from affecting the line height in all browsers.
+*/
+
+:where(.ai-elements, .ai-elements-portal) sub,
+:where(.ai-elements, .ai-elements-portal) sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+:where(.ai-elements, .ai-elements-portal) sub {
+  bottom: -0.25em;
+}
+
+:where(.ai-elements, .ai-elements-portal) sup {
+  top: -0.5em;
+}
+
+/*
+  1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)
+  2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)
+  3. Remove gaps between table borders by default.
+*/
+
+:where(.ai-elements, .ai-elements-portal) table {
+  text-indent: 0; /* 1 */
+  border-color: inherit; /* 2 */
+  border-collapse: collapse; /* 3 */
+}
+
+/*
+  Use the modern Firefox focus style for all focusable elements.
+*/
+
+:where(.ai-elements, .ai-elements-portal) :-moz-focusring:where(:not(iframe)) {
+  outline: auto;
+}
+
+/*
+  Add the correct vertical alignment in Chrome and Firefox.
+*/
+
+:where(.ai-elements, .ai-elements-portal) progress {
+  vertical-align: baseline;
+}
+
+/*
+  Add the correct display in Chrome and Safari.
+*/
+
+:where(.ai-elements, .ai-elements-portal) summary {
+  display: list-item;
+}
+
+/*
+  Make lists unstyled by default.
+*/
+
+:where(.ai-elements, .ai-elements-portal) ol,
+:where(.ai-elements, .ai-elements-portal) ul,
+:where(.ai-elements, .ai-elements-portal) menu {
+  list-style: none;
+}
+
+/*
+  1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)
+  2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)
+      This can trigger a poorly considered lint error in some tools but is included by design.
+*/
+
+:where(.ai-elements, .ai-elements-portal) img,
+:where(.ai-elements, .ai-elements-portal) svg,
+:where(.ai-elements, .ai-elements-portal) video,
+:where(.ai-elements, .ai-elements-portal) canvas,
+:where(.ai-elements, .ai-elements-portal) audio,
+:where(.ai-elements, .ai-elements-portal) iframe,
+:where(.ai-elements, .ai-elements-portal) embed,
+:where(.ai-elements, .ai-elements-portal) object {
+  display: block; /* 1 */
+  vertical-align: middle; /* 2 */
+}
+
+/*
+  Constrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)
+*/
+
+:where(.ai-elements, .ai-elements-portal) img,
+:where(.ai-elements, .ai-elements-portal) video {
+  max-width: 100%;
+  height: auto;
+}
+
+/*
+  1. Inherit font styles in all browsers.
+  2. Remove border radius in all browsers.
+  3. Remove background color in all browsers.
+  4. Ensure consistent opacity for disabled states in all browsers.
+*/
+
+:where(.ai-elements, .ai-elements-portal) button,
+:where(.ai-elements, .ai-elements-portal) input,
+:where(.ai-elements, .ai-elements-portal) select,
+:where(.ai-elements, .ai-elements-portal) optgroup,
+:where(.ai-elements, .ai-elements-portal) textarea,
+:where(.ai-elements, .ai-elements-portal)::file-selector-button,  :where(.ai-elements, .ai-elements-portal) *::file-selector-button {
+  font: inherit; /* 1 */
+  font-feature-settings: inherit; /* 1 */
+  font-variation-settings: inherit; /* 1 */
+  letter-spacing: inherit; /* 1 */
+  color: inherit; /* 1 */
+  border-radius: 0; /* 2 */
+  background-color: transparent; /* 3 */
+  opacity: 1; /* 4 */
+}
+
+/*
+  Restore default font weight.
+*/
+
+:where(.ai-elements, .ai-elements-portal) :where(select:is([multiple], [size])) optgroup {
+  font-weight: bolder;
+}
+
+/*
+  Restore indentation.
+*/
+
+:where(.ai-elements, .ai-elements-portal) :where(select:is([multiple], [size])) optgroup option {
+  padding-inline-start: 20px;
+}
+
+/*
+  Restore space after button.
+*/
+
+:where(.ai-elements, .ai-elements-portal)::file-selector-button,  :where(.ai-elements, .ai-elements-portal) *::file-selector-button {
+  margin-inline-end: 4px;
+}
+
+/*
+  Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)
+*/
+
+:where(.ai-elements, .ai-elements-portal)::placeholder,  :where(.ai-elements, .ai-elements-portal) *::placeholder {
+  opacity: 1;
+}
+
+/*
+  Set the default placeholder color to a semi-transparent version of the current text color in browsers that do not
+  crash when using `color-mix(…)` with `currentcolor`. (https://github.com/tailwindlabs/tailwindcss/issues/17194)
+*/
+
+@supports (not (-webkit-appearance: -apple-pay-button)) /* Not Safari */ or
+  (contain-intrinsic-size: 1px) /* Safari 17+ */ {
+  :where(.ai-elements, .ai-elements-portal)::placeholder,  :where(.ai-elements, .ai-elements-portal) *::placeholder {
+    color: color-mix(in oklab, currentcolor 50%, transparent);
+  }
+}
+
+/*
+  Prevent resizing textareas horizontally by default.
+*/
+
+:where(.ai-elements, .ai-elements-portal) textarea {
+  resize: vertical;
+}
+
+/*
+  Remove the inner padding in Chrome and Safari on macOS.
+*/
+
+:where(.ai-elements, .ai-elements-portal)::-webkit-search-decoration,  :where(.ai-elements, .ai-elements-portal) *::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/*
+  1. Ensure date/time inputs have the same height when empty in iOS Safari.
+  2. Ensure text alignment can be changed on date/time inputs in iOS Safari.
+*/
+
+:where(.ai-elements, .ai-elements-portal)::-webkit-date-and-time-value,  :where(.ai-elements, .ai-elements-portal) *::-webkit-date-and-time-value {
+  min-height: 1lh; /* 1 */
+  text-align: inherit; /* 2 */
+}
+
+/*
+  Prevent height from changing on date/time inputs in macOS Safari when the input is set to `display: block`.
+*/
+
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit {
+  display: inline-flex;
+}
+
+/*
+  Remove excess padding from pseudo-elements in date/time inputs to ensure consistent height across browsers.
+*/
+
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-fields-wrapper,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-year-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-year-field,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-month-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-month-field,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-day-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-day-field,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-hour-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-hour-field,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-minute-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-minute-field,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-second-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-second-field,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-millisecond-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-millisecond-field,
+:where(.ai-elements, .ai-elements-portal)::-webkit-datetime-edit-meridiem-field,  :where(.ai-elements, .ai-elements-portal) *::-webkit-datetime-edit-meridiem-field {
+  padding-block: 0;
+}
+
+/*
+  Center dropdown marker shown on inputs with paired `<datalist>`s in Chrome. (https://github.com/tailwindlabs/tailwindcss/issues/18499)
+*/
+
+:where(.ai-elements, .ai-elements-portal)::-webkit-calendar-picker-indicator,  :where(.ai-elements, .ai-elements-portal) *::-webkit-calendar-picker-indicator {
+  line-height: 1;
+}
+
+/*
+  Remove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)
+*/
+
+:where(.ai-elements, .ai-elements-portal) :-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/*
+  Correct the inability to style the border radius in iOS Safari.
+*/
+
+:where(.ai-elements, .ai-elements-portal) button,
+:where(.ai-elements, .ai-elements-portal) input:where([type='button'], [type='reset'], [type='submit']),
+:where(.ai-elements, .ai-elements-portal)::file-selector-button,  :where(.ai-elements, .ai-elements-portal) *::file-selector-button {
+  appearance: button;
+}
+
+/*
+  Correct the cursor style of increment and decrement buttons in Safari.
+*/
+
+:where(.ai-elements, .ai-elements-portal)::-webkit-inner-spin-button,  :where(.ai-elements, .ai-elements-portal) *::-webkit-inner-spin-button,
+:where(.ai-elements, .ai-elements-portal)::-webkit-outer-spin-button,  :where(.ai-elements, .ai-elements-portal) *::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/*
+  Make elements with the HTML hidden attribute stay hidden by default.
+*/
+
+:where(.ai-elements, .ai-elements-portal) [hidden]:where(:not([hidden='until-found'])) {
+  display: none !important;
+}
+
+  :where(.ai-elements, .ai-elements-portal),
+   :where(.ai-elements, .ai-elements-portal) * {
+    @apply border-border outline-ring/50;
+  }
+  :where(.ai-elements, .ai-elements-portal) ::selection {
+    @apply bg-selection text-selection-foreground;
+  }
+}
+
+/* Both presentations observe the same panel view in live comparison mode. */
+.chat-renderer-surfaces { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; }
+.legacy-chat-surface { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; }
+.chat-renderer-surfaces[data-renderer="compare"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.chat-renderer-surfaces[data-renderer="compare"] > .legacy-chat-surface { border-right: 1px solid var(--border); }

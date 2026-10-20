@@ -209,6 +209,7 @@ export function ThemeProvider({ children }: { children: ReactNode }): ReactNode 
   useLayoutEffect(() => {
     const appearance = appearanceForId(theme);
     applyAppearance(theme, uiShell);
+    document.documentElement.classList.toggle("dark", appearance.scheme === "dark");
     window.localStorage.setItem(THEME_KEY, theme);
     window.localStorage.setItem(SHELL_KEY, uiShell);
     // Keep the native appearance (macOS window vibrancy and native chrome) on

@@ -1,0 +1,217 @@
+{
+  "upstream": "https://ui.shadcn.com/docs/ai-elements",
+  "license": "MIT",
+  "style": "base-rhea",
+  "transforms": [
+    "Resolve registry imports to local files",
+    "Resolve cn to local clsx/tailwind-merge helper",
+    "Select Lucide icons from IconPlaceholder, as the shadcn CLI does",
+    "Scope portal theme inheritance to the AI Elements surface"
+  ],
+  "sources": [
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements.md",
+      "sha256": "60009628e9a7764130da203aa8443df8dc31bd7f73b5268669891dae919a5484"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/shadcn-ui/ui/main/LICENSE.md",
+      "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/utils/shimmer.md",
+      "sha256": "b245c422e81f8e29e3889d9007698ab1c61f3f185440cf6f136e2214d0616817"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/style.json",
+      "sha256": "7f7256c6e1ddedc2b595b8f48e46f90cd163324cd49b13a34100bfcd2b390fb1"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/v4/app/globals.css",
+      "sha256": "c5e271374236f23bcfd559ce64aaf6b8641ee7276156c0f803dd9cb24277af12"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/v4/lib/fonts.ts",
+      "sha256": "1577195ee71d59c8e162b839e409430936d8a52ab061d1fee40a9ebd5f9e7998"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/v4/components/markdown.tsx",
+      "sha256": "df075fd90ee08ee8c0546971994c2a7d9e327c3d83c7c511c73acb900227ca5d"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/v4/lib/message-animations.ts",
+      "sha256": "707774ef9839da290df0533c80b43b9fc42eb5cedbc66015d4d3ed842389d205"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/chain-of-thought.md",
+      "sha256": "5f70e66b84dad33e56460b2c1abecc514166194c906f7d3f86a4edc1a7a7c7ad"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/chat.md",
+      "sha256": "e299fe266446a0e2474d8a66d2b662890975c402fcbd50ab8a21eecef5d4ea0c"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/checkpoint.md",
+      "sha256": "1aa2e9560b01b555c4d7e834849be2d8801672986a076a0d6c6c6f79015a1863"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/confirmation.md",
+      "sha256": "2b09743e1fa7e3a4861cf013e5dff68653348a8cce580b3c5e268da344cb6e6d"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/context.md",
+      "sha256": "f1d3df35bffb39136f425e17c00ac741d109e8fec1a3327d58d3660a260999be"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/file-tree.md",
+      "sha256": "afac742084b3d7db17616df052af87d4f41ed0ae25439c0448fa45cafcb58584"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/inline-citation.md",
+      "sha256": "7c251ee6b5b9a8f35dc44f102a43af35f79c6c7171889e1b76211c45206ddcf2"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/message.md",
+      "sha256": "3e34d81de495e8c035503024e875ffec1631aa52a3507b21f4dc9a9e9cebd688"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/model-selector.md",
+      "sha256": "fe785421d42b890d958f5b0ced822aa45d54ca72ac32932a3c4d67a8f059f624"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/plan.md",
+      "sha256": "5e611dc02ed37d80644eafa8f857296d54413219981470dae3a4ce3dfc928907"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/prompt-input.md",
+      "sha256": "c2cc1b735476f988b18de267c3893241af048883a3474f427953d0e046ba3b63"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/queue.md",
+      "sha256": "dc865ee2436ca1015f0364901b6beab0ac5e432435148b0ba2017a020e134904"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/reasoning.md",
+      "sha256": "bb2eb7269ec6a0ffd1d63cbdacbd8fad5d09f2a48495a03cdae04fa609e174e4"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/sources.md",
+      "sha256": "372ba7e15ae06b4839d94790035c6283eb7083ea5223eb6335a2ac1e280561a6"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/stack-trace.md",
+      "sha256": "65756d4c67a628ff3fd7b8960da62ca07c831865d3aaa928e005c41d3aa19811"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/subagent.md",
+      "sha256": "b52ecfe2b66655c5de46234899bcb6c93c8ddb8e86260510cf530934fb98d089"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/suggestion.md",
+      "sha256": "0308eb5176dba54419de0492a0aa4848b59c34265261895496772996d92fae03"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/task.md",
+      "sha256": "22410cbf7a9a4657284a2ef2bd6737e3ce1f6769d538893e87b80f5afd0be8ea"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/terminal.md",
+      "sha256": "aac4d228bf293661ca88073d0e9a3ec08db7340770ae1c195cd3f756acbd47d3"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/test-results.md",
+      "sha256": "0394822db9ef9090f6b4ab592d2689c599f697d82e494194247e86b50f974cf8"
+    },
+    {
+      "url": "https://ui.shadcn.com/docs/ai-elements/base/tool.md",
+      "sha256": "480b8a44505a7ecd953377628b25e5aea34a3127ef0610d8b5b1a57fdac2696e"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/attachment.json",
+      "sha256": "d357d3e342d2ca3029a2971cff3a146353c59f28d3fd610010f795041418f4cf"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/button.json",
+      "sha256": "96c7c8da6fb5642666bdf0a6a9e3b084bae190ba5418c8e2080a55e17d78f2ea"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/badge.json",
+      "sha256": "3dd8f684122feb0b406b09fe8ecdf36d8f18a4dba52a815f83881bd83a86e7ef"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/bubble.json",
+      "sha256": "16c63aa28bf8f6ae4a61dc485b644ec25e8f91ca176fd045d1e2665ca8504857"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/code-block.json",
+      "sha256": "e670f049ae7f4d4e6c8718fc02ccdb682dd398e1d1fb30b51223b099c81ee3d4"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/use-highlighted-code.json",
+      "sha256": "f76e8effbbe93d17a91284a79d64a0dc42aa64c8b65c476dbf74cb895889b0b0"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/collapsible.json",
+      "sha256": "d3cd0880af8dbc4774602ef113dbc151fa0dbcc7ec8e34463401ab444a0935d1"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/dropdown-menu.json",
+      "sha256": "78c1f2d28de70054a50405485b9307fe408295cbef040fd67cab6eb09ec5b152"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/empty.json",
+      "sha256": "07f554652039c9e1755fd37c684a4466ba16b9bca87226888258402c80d14301"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/hover-card.json",
+      "sha256": "e6db5200f7fd89cc2982754b533c11974f93677c3ac4e4394b5d8df5ff0687cc"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/input-group.json",
+      "sha256": "5c74eb091e15c644c5203afaf9cf0cfcb7533456143f3a5bdc9363056c19a71b"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/input.json",
+      "sha256": "6791d3a863a4590c9e6e1e10b51006a1f2a11c858240c69c06119bfed25137c3"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/textarea.json",
+      "sha256": "443a5e40cb2f70598de4807fc0fe472ed3d25bec5269a0d676897a79f82ab214"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/item.json",
+      "sha256": "758d766001fa7355e7a05b080865ad0b05bbe5635de2192de653e045d6d5d877"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/separator.json",
+      "sha256": "c0832c4921403bacd1ada4898e1feee9152805f14994c9028c55888e188da5cc"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/marker.json",
+      "sha256": "c0371c6fb6a1ce92ef7ac6e0476a043adb3fe0093892ed37c831e41c1cca8cd0"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/message.json",
+      "sha256": "727b8837899726217a1309ce132929f95e818a8f4761a6e9047931890dacc990"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/message-scroller.json",
+      "sha256": "b803a4011847e424a8e93be5ebde835765c055362251bba7bfe2fe713584e98c"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/progress.json",
+      "sha256": "1a2d1f28526076ff35a1df71abc6ec1adebd8e062836aab2cbd4a936c8ea29b5"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/sheet.json",
+      "sha256": "74a72c926dfbba65593b67f67993bd999c412ce2c34a8da628bc6c9228051f95"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/tooltip.json",
+      "sha256": "792caf7b383809d6c46ea46f65e69efdf51f95090c43ea5602f734d8e235f849"
+    },
+    {
+      "url": "https://ui.shadcn.com/r/styles/base-rhea/trace.json",
+      "sha256": "2bcc391ed529f7b4ea3e6c883263074f19d76e0494d62d7cb24012f55bdaaa42"
+    }
+  ]
+}

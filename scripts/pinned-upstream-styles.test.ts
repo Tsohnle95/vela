@@ -45,8 +45,13 @@ describe("frozen upstream stylesheet scope", () => {
       await mkdir(path.join(root, "docs"));
       await mkdir(path.dirname(path.join(root, pin)), { recursive: true });
       await symlink(path.join(repository, "node_modules"), path.join(root, "node_modules"), "junction");
-      for (const file of ["architecture-analysis.mjs", "check-architecture.mjs", "pinned-upstream-styles.json"]) {
+      for (const file of ["architecture-analysis.mjs", "check-architecture.mjs", "pinned-upstream-styles.json", "pinned-upstream-ai-elements.json"]) {
         await copyFile(path.join(repository, "scripts", file), path.join(root, "scripts", file));
+      }
+      const aiPins = JSON.parse(await readFile(path.join(repository, "scripts/pinned-upstream-ai-elements.json"), "utf8"));
+      for (const file of Object.keys(aiPins.files)) {
+        await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+        await copyFile(path.join(repository, file), path.join(root, file));
       }
       await copyFile(path.join(repository, pin), path.join(root, pin));
       await writeFile(path.join(root, "package.json"), "{}");

@@ -96,6 +96,7 @@ export function architectureViolations(report, configuration) {
   const violations = [];
   const add = (rule, subject, detail) => violations.push({ rule, subject, detail });
   for (const drift of report.pinnedStyleDrift ?? []) add("pinned-style-integrity", drift.file, `Pinned upstream content changed: expected ${drift.expected}, actual ${drift.actual}. Review upstream provenance before updating the frozen inventory.`);
+  for (const drift of report.pinnedAiElementDrift ?? []) add("pinned-ai-elements-integrity", drift.file, `Pinned AI Elements content changed: expected ${drift.expected}, actual ${drift.actual}. Review upstream provenance before updating the frozen inventory.`);
   const fileSet = new Set(report.production.inventory.map((file) => file.path));
   const routes = report.ownershipRoutes ?? [];
   const hasOwner = (file) => routes.some((route) => route.owner?.trim() && (route.path.endsWith("/") ? file.startsWith(route.path) : file === route.path));
@@ -138,7 +139,7 @@ export function architectureViolations(report, configuration) {
   for (const edge of report.dependencies) {
     const exception = configuration.edgeExceptions.find((entry) => entry.from === edge.from && entry.to === edge.to && entry.typeOnly === edge.typeOnly);
     if (exception) continue;
-    if (!fileSet.has(edge.to) && sourceCategory(edge.to) !== "pinned-upstream-styles") add("production-scope", edge.from, `Production cannot depend on excluded implementation ${edge.to}`);
+    if (!fileSet.has(edge.to) && !["pinned-upstream-styles", "pinned-upstream-ai-elements"].includes(sourceCategory(edge.to))) add("production-scope", edge.from, `Production cannot depend on excluded implementation ${edge.to}`);
     if (report.forbiddenEdges.some((forbidden) => edgeKey(forbidden) === edgeKey(edge))) add("layer-direction", edge.from, edgeKey(edge));
     for (const boundary of configuration.privateBoundaries) {
       if (!matchesPath(edge.to, boundary.targetPrefix)) continue;

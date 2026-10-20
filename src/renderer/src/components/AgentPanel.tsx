@@ -9,6 +9,7 @@ import { AgentTui } from "./AgentTui";
 import { MAX_AGENT_PANELS } from "../agent-panels";
 import { useOptionalTheme } from "../theme";
 import { Composer } from "./Composer";
+import { AiElementsChat } from "../ai-elements/AiElementsChat";
 import { TurnTimer, useAgentUsage } from "./AgentUsage";
 import stationMark from "../assets/agent-station.png";
 import lightStationMark from "../assets/agent-station-light.png";
@@ -194,13 +195,25 @@ export function AgentPanel({
   // Approvals and forms are interactive: the surface the user is watching owns
   // them. The embedded TUI renders its own prompts in the terminal, so drawing
   // the panel dock there would ask the same question twice.
+  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
   const interactivePrompts = (
     <>
-      {pendingPermission && <PermissionPrompt item={pendingPermission} session={activeSession} />}
+      {renderer === "old" && pendingPermission && <PermissionPrompt item={pendingPermission} session={activeSession} />}
       {activeSession && (view.pendingForms ?? []).map((form) => (
         <FormPrompt key={form.id} form={form} workspace={activeSession.workspace} />
       ))}
     </>
+  );
+
+  const stagedRevertPrompt = view.stagedRevert && activeSession && (
+    <div data-component="dock-prompt" data-kind="revert">
+      <div data-slot="permission-header">Undo staged</div>
+      <p className="provider-note">Messages and file changes after this point will be removed.</p>
+      <div data-slot="permission-actions">
+        <button className="btn btn-danger" onClick={() => void commitStagedRevert(activeSession.workspace)}>Commit undo</button>
+        <button className="btn" onClick={() => void clearStagedRevert(activeSession.workspace)}>Discard</button>
+      </div>
+    </div>
   );
 
   return (
@@ -247,7 +260,8 @@ export function AgentPanel({
       {panelMode === "tui" && activeSession ? (
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
-        <>
+        <div className="chat-renderer-surfaces" data-renderer={renderer}>
+          {(renderer === "old" || renderer === "compare") && <div className="legacy-chat-surface">
           <div className="agent-scroll" ref={scrollRef} onScroll={onScroll}>
             {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
             {!conversationStarted && (
@@ -283,20 +297,17 @@ export function AgentPanel({
 
           <div data-component="session-prompt-dock">
             {interactivePrompts}
-            {view.stagedRevert && activeSession && (
-              <div data-component="dock-prompt" data-kind="revert">
-                <div data-slot="permission-header">Undo staged</div>
-                <p className="provider-note">Messages and file changes after this point will be removed.</p>
-                <div data-slot="permission-actions">
-                  <button className="btn btn-danger" onClick={() => void commitStagedRevert(activeSession.workspace)}>Commit undo</button>
-                  <button className="btn" onClick={() => void clearStagedRevert(activeSession.workspace)}>Discard</button>
-                </div>
-              </div>
-            )}
+            {stagedRevertPrompt}
             <OpenCodeTodoDock todos={todos} />
             <Composer session={activeSession} />
           </div>
-        </>
+          </div>}
+          {renderer !== "old" && <>
+            {renderer !== "compare" && tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
+            <AiElementsChat transcript={transcript} busy={busy} lastAssistantId={lastAssistantId} session={activeSession} />
+            {renderer !== "compare" && <div data-component="session-prompt-dock">{interactivePrompts}{stagedRevertPrompt}</div>}
+          </>}
+        </div>
       )}
     </div>
   );

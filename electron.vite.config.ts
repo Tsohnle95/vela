@@ -1,5 +1,6 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { editableCssSourceMaps } from "./scripts/editable-css-source-maps";
 
@@ -37,6 +38,6 @@ export default defineConfig({
         "@shared": resolve(__dirname, "src/shared")
       }
     },
-    plugins: [react(), editableCssSourceMaps(resolve(__dirname, "src/renderer/src/styles/main.scss"))]
+    plugins: [react(), tailwindcss(), editableCssSourceMaps(resolve(__dirname, "src/renderer/src/styles/main.scss"))]
   }
 });

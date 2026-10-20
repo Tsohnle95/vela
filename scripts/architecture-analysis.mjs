@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import pinnedStyles from "./pinned-upstream-styles.json" with { type: "json" };
+import pinnedAiElements from "./pinned-upstream-ai-elements.json" with { type: "json" };
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const PRODUCTION_ROOTS = ["src/main", "src/preload", "src/renderer/src", "src/shared"];
@@ -29,10 +30,32 @@ export function validatePinnedStyles(manifest) {
 
 validatePinnedStyles(pinnedStyles);
 
+export function validatePinnedAiElements(manifest) {
+  const allowed = /^src\/renderer\/src\/(?:components\/ui\/[a-z0-9-]+\.tsx|ai-elements\/(?:demos\/[a-z0-9-]+\.tsx|demos\/lib\/(?:markdown\.tsx|message-animations\.ts)|upstream\/(?:hooks\/use-highlighted-code\.ts|lib\/highlighter\.tsx)))$/;
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest) ||
+    !/^https:\/\/github\.com\/shadcn-ui\/ui\/tree\/[a-f0-9]{40}$/.test(manifest.upstreamSnapshot ?? "") ||
+    manifest.sourceManifest !== "src/renderer/src/ai-elements/upstream/manifest.json" ||
+    typeof manifest.provenance !== "string" || !manifest.provenance.trim() ||
+    !manifest.files || typeof manifest.files !== "object" || Array.isArray(manifest.files) ||
+    !Object.keys(manifest.files).length || !Object.entries(manifest.files).every(([file, digest]) =>
+      allowed.test(file) && typeof digest === "string" && /^[a-f0-9]{64}$/.test(digest))) {
+    throw new Error("Invalid frozen AI Elements inventory: require explicit upstream source paths, lowercase SHA256 hashes and pinned source provenance");
+  }
+}
+
+validatePinnedAiElements(pinnedAiElements);
+
+export function pinnedAiElementDrift(inventory, manifest = pinnedAiElements) {
+  const actual = new Map(inventory.map((file) => [file.path, file.sha256]));
+  return Object.entries(manifest.files).filter(([file, expected]) => actual.get(file) !== expected)
+    .map(([file, expected]) => ({ file, expected, actual: actual.get(file) ?? "missing" }));
+}
+
 export function sourceCategory(file) {
   if (!sourceExtension.test(file)) return "other";
   if (testFile.test(file)) return "tests-and-fixtures";
   if (Object.hasOwn(pinnedStyles.files, file)) return "pinned-upstream-styles";
+  if (Object.hasOwn(pinnedAiElements.files, file)) return "pinned-upstream-ai-elements";
   if (PRODUCTION_ROOTS.some((root) => file.startsWith(`${root}/`))) return "production";
   if (file.startsWith("scripts/")) return "build-and-verification-scripts";
   if (/^(?:mockup-design|new design mock-up|design|assets)\//.test(file)) return "design-and-mockup-code";
@@ -433,7 +456,7 @@ export async function analyzeRepository(root = repository, { ref, buildSnapshot,
       primaryRoots: PRODUCTION_ROOTS, extensions: ["ts", "tsx", "js", "mjs", "cjs", "css", "scss"],
       loc: "Physical lines containing at least one non-whitespace parsed TypeScript/JavaScript token; comment trivia and blank token lines excluded. CSS/SCSS uses quote-aware comment removal; CSS block comments and SCSS block/line comments excluded. Tokens inside multiline template strings remain code, including embedded text that looks like comments.",
       inventory: "Production roots enumerated from working tree; auxiliary source from git ls-files. Identical production categories apply to baseline and final, including new production modules. Handwritten d.ts and adapted opencode-file/opencode-markdown modules conservatively included.",
-      exclusions: [{ rule: String(testFile), reason: "Tests, specs, fixtures, and explicit large-session-fixture.ts benchmark fixture." }, { files: Object.keys(pinnedStyles.files), reason: pinnedStyles.provenance, upstreamCommit: pinnedStyles.upstreamCommit }],
+      exclusions: [{ rule: String(testFile), reason: "Tests, specs, fixtures, and explicit large-session-fixture.ts benchmark fixture." }, { files: Object.keys(pinnedStyles.files), reason: pinnedStyles.provenance, upstreamCommit: pinnedStyles.upstreamCommit }, { files: Object.keys(pinnedAiElements.files), reason: pinnedAiElements.provenance, upstreamSnapshot: pinnedAiElements.upstreamSnapshot, sourceManifest: pinnedAiElements.sourceManifest }],
       thresholds: { oversizedModuleCodeLines: 800, oversizedFunctionCodeLines: 100, excessiveFunctionNesting: 5, excessiveFunctionCyclomatic: 20, duplicateFunctionMinimumLines: 20, duplicateFunctionMinimumTokens: 80, duplicateBlockMinimumLines: 20, duplicateBlockMinimumTokens: 120 },
       functions: "Every function declaration/expression, arrow, method, constructor, getter and setter with body. Length includes nested function source; nesting/complexity exclude nested function bodies. Cyclomatic is 1 plus if/loop/catch/conditional/case and logical &&, ||, ?? nodes.",
       dependencies: "TypeScript resolution with repository aliases; imports, exports, import types, import-equals, literal dynamic imports and require calls (including constant templates); computed loaders reported separately for fail-closed enforcement. CSS/SCSS @use/@forward/@import plus TS stylesheet imports. typeOnly means explicitly type-only syntax, not inferred runtime erasure. Cycle counts are strongly connected components, not every simple cycle.",
@@ -456,6 +479,7 @@ export async function analyzeRepository(root = repository, { ref, buildSnapshot,
     ipcReferences,
     pinnedStyleDrift: inventory.filter((file) => file.category === "pinned-upstream-styles" && file.sha256 !== pinnedStyles.files[file.path])
       .map((file) => ({ file: file.path, expected: pinnedStyles.files[file.path], actual: file.sha256 })),
+    pinnedAiElementDrift: ref ? [] : pinnedAiElementDrift(inventory),
     cycles: { valueImports: dependencyCycles([...primaryPaths], dependencies, false), includingTypeOnly: dependencyCycles([...primaryPaths], dependencies, true) },
     forbiddenEdges,
     duplication: { functions: duplicateGroups(duplicateFunctions), blocks: duplicateGroups(duplicateBlocks) },

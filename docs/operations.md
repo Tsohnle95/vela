@@ -6,6 +6,24 @@ Practical know-how for running the app, smoke-testing it, and debugging
 renderer/main behavior without guessing. Everything here has been used
 and verified in real sessions.
 
+## Chat renderer comparison
+
+Run `npm run chat:compare` under the supported Node toolchain. It opens
+`http://127.0.0.1:5280/chat-comparison/index.html`, with the original renderer
+and AI Elements renderer receiving identical deterministic OpenCode event
+replays. Pause, replay, step, scrub, switch scenarios, or change replay speed.
+The synchronization indicator checks both rendered transcript projections.
+This comparison makes no model requests and edits no workspace files.
+The second tab contains all original upstream pattern examples, retaining
+upstream scripts and interactions; controls that are inert in upstream examples
+remain inert. `npm run chat:compare:build` produces the comparison build.
+
+For an actual OpenCode session in Vela, append `?chat-renderer=compare` to the
+renderer document URL to display both presentations of the same live panel.
+`?chat-renderer=old` selects the original surface; the default is AI Elements.
+The local index replay and gallery are UI validation tools, not proof that a
+provider supplies every optional structured result.
+
 ## Prerequisites
 
 - Node 22.23.2 and npm. `.node-version`, `package.json` engines, and CI select
