@@ -1,6 +1,6 @@
 const SHIMMER_DELAY_MS = 500;
 const SHIMMER_DURATION_MS = 5000;
-const LAUNCH_DURATION_MS = SHIMMER_DELAY_MS + SHIMMER_DURATION_MS;
+const LAUNCH_DURATION_MS = 3000;
 
 function startDawnTerminator(): void {
   const light = document.querySelector<SVGRectElement>("#launch-dawn");
@@ -10,13 +10,13 @@ function startDawnTerminator(): void {
   // Sample study 23's easing and light envelope; the delayed sweep and launch hold are measured from visible paint.
   const frames: Keyframe[] = Array.from({ length: 91 }, (_, index) => {
     const p = index / 90;
-    const travel = ease(segment(p, 0.04, 0.74));
+    const travel = ease(segment(p, 0, 0.74));
     const lightEnvelope = Math.sin(Math.PI * segment(p, 0, 0.86));
     const settle = 1 - ease(segment(p, 0.76, 0.9));
     return {
       offset: p,
-      transform: `translate(${-100 + 300 * travel}px, 0)`,
-      opacity: lightEnvelope * 0.7 * settle
+      transform: `translate(${35 + 300 * travel}px, 0)`,
+      opacity: (0.35 + lightEnvelope * 0.35) * settle
     };
   });
   light.animate(frames, { delay: SHIMMER_DELAY_MS, duration: SHIMMER_DURATION_MS, fill: "forwards" });
