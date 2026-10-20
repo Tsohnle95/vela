@@ -468,13 +468,15 @@
 }
 
 .tree-drop-space {
-  flex: 1 0 64px;
-  margin-top: 4px;
+  flex: 0 0 0;
+  margin-top: 0;
   border: 1px solid transparent;
   border-radius: 6px;
 }
 
 .tree-drop-space.active {
+  flex-basis: 64px;
+  margin-top: 4px;
   border-color: var(--accent);
   background: var(--accent-tint);
 }
