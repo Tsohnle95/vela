@@ -78,21 +78,21 @@ describe("Vela launch handoff", () => {
     await launch;
   });
 
-  it("starts the shimmer on a visible fold in critical CSS without waiting for the launch module", () => {
+  it("sweeps the whole logo from transparent edges without popping in halfway through", () => {
     const page = new DOMParser().parseFromString(readFileSync("src/renderer/index.html", "utf8"), "text/html");
     const css = page.querySelector("style")!.textContent!;
-    expect(css).toContain("launch-shimmer 5s cubic-bezier(.333, 0, .667, 1) .5s forwards");
-    expect(css).toContain("0% { transform: translateX(60px); }");
-    expect(css).toContain("0% { opacity: .6; }");
+    expect(css).toContain("launch-shimmer 2.5s linear .5s forwards");
+    expect(css).toContain("0% { transform: translateX(87px); opacity: 0; }");
+    expect(css).toContain("100% { transform: translateX(293px); opacity: 0; }");
+    expect(css).toContain("8%, 92% { opacity: .65; }");
     expect(css).toContain("#launch-fold-motion, #launch-dawn { animation: none; }");
     const gradient = page.querySelector("#launch-dawn-gradient")!;
     expect(gradient.getAttribute("y1")).toBe(gradient.getAttribute("y2"));
-    // The white band starts at x=150, inside the left fold at y=150 (x=126..185).
-    const whiteStop = gradient.querySelector('stop[offset=".5"]')!;
-    const bandX = 60 + Number(gradient.getAttribute("x2")) * Number(whiteStop.getAttribute("offset"));
-    expect(bandX).toBeGreaterThan(126);
-    expect(bandX).toBeLessThan(185);
-    expect(Number(whiteStop.getAttribute("stop-opacity"))).toBeGreaterThan(0.5);
+    expect(87 + Number(gradient.getAttribute("x2"))).toBe(114);
+    expect(293 + Number(gradient.getAttribute("x1"))).toBe(266);
+    const stops = gradient.querySelectorAll("stop");
+    expect(stops[0].getAttribute("stop-opacity")).toBe("0");
+    expect(stops[stops.length - 1].getAttribute("stop-opacity")).toBe("0");
     expect(page.querySelector("#launch-dawn")!.getAttribute("opacity")).toBe("0");
   });
 
