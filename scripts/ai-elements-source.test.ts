@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { installAiElementRegistrySource } from "./ai-elements-registry.mjs";
 import pins from "./pinned-upstream-ai-elements.json";
 
 const root = path.resolve(__dirname, "..");
@@ -42,6 +43,19 @@ describe("AI Elements upstream source parity", () => {
     expect(await read("src/renderer/src/ai-elements/demos/lib/markdown.tsx")).toBe(markdown);
     expect(await read("src/renderer/src/ai-elements/demos/lib/message-animations.ts"))
       .toBe(await read(`${upstream}/helpers/message-animations.ts.txt`));
+  });
+
+  it("derives every installed primitive from the frozen registry using only reviewed installation transforms", async () => {
+    const { sources } = JSON.parse(await read(`${upstream}/manifest.json`));
+    for (const entry of sources.filter((entry: {url:string}) => /\/r\/styles\/base-rhea\//.test(entry.url))) {
+      const name = entry.url.split("/").at(-1).replace(".json", "");
+      const registry = JSON.parse(await read(`${upstream}/registry/${name}.json`));
+      for (const file of registry.files ?? []) {
+        const relative = file.path.replace("registry/base-rhea/", "");
+        const target = relative.startsWith("ui/") ? `src/renderer/src/components/${relative}` : `${upstream}/${relative}`;
+        expect(await read(target), name).toBe(installAiElementRegistrySource(name, file.content));
+      }
+    }
   });
 
   it("retains the original registry payloads with their upstream source hashes", async () => {

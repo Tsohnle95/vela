@@ -4,6 +4,7 @@ import { ChevronRightIcon, CheckIcon } from "lucide-react"
 
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+import { useAiElementsPortalContainer } from "@/ai-elements/portal-container"
 import { cn } from "@/ai-elements/class-names"
 
 
@@ -12,7 +13,8 @@ function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
 }
 
 function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
-  return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
+  const container = useAiElementsPortalContainer()
+  return <MenuPrimitive.Portal container={container} data-slot="dropdown-menu-portal" {...props} />
 }
 
 function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
@@ -31,8 +33,9 @@ function DropdownMenuContent({
     MenuPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
+  const container = useAiElementsPortalContainer()
   return (
-    <MenuPrimitive.Portal>
+    <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Positioner
         className="ai-elements-portal isolate z-50 outline-none"
         align={align}

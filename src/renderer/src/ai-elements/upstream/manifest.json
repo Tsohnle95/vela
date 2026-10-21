@@ -6,7 +6,8 @@
     "Resolve registry imports to local files",
     "Resolve cn to local clsx/tailwind-merge helper",
     "Select Lucide icons from IconPlaceholder, as the shadcn CLI does",
-    "Scope portal theme inheritance to the AI Elements surface"
+    "Scope portal theme inheritance to the AI Elements surface",
+    "Bind Base UI portals to the response ShadowRoot through a renderer-only context"
   ],
   "sources": [
     {

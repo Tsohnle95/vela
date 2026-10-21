@@ -1342,7 +1342,7 @@ describe("Layout panel sizing", () => {
     expect(enlarged).toBeGreaterThan(280);
 
     await act(async () => {
-      container.querySelector<HTMLButtonElement>('[aria-label="Open agent"]')!.click();
+      container.querySelector("[data-ai-elements-surface]")!.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Open agent"]')!.click();
       await new Promise((resolve) => setTimeout(resolve, 30));
     });
     expect(container.querySelector(".agent-session-back")).not.toBeNull();

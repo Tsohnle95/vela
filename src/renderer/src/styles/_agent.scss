@@ -896,3 +896,6 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.agent-response-stream[hidden] { display: none; }
+.agent-response-stream[data-renderer="compare"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }

@@ -9,5 +9,5 @@ export default defineConfig({
   resolve: { alias: { "@": resolve(__dirname, "../src/renderer/src"), "@shared": resolve(__dirname, "../src/shared") } },
   worker: { format: "es" },
   server: { host: "127.0.0.1", port: 5280, strictPort: true },
-  build: { outDir: "out/chat-comparison", rollupOptions: {input: {index:resolve(__dirname,"index.html"),frame:resolve(__dirname,"frame.html")}} }
+  build: { outDir: "out/chat-comparison", rollupOptions: {input: {index:resolve(__dirname,"index.html"),frame:resolve(__dirname,"frame.html"),styleCheck:resolve(__dirname,"style-check.html")}} }
 });

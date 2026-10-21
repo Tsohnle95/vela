@@ -1,0 +1,53 @@
+import { useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
+import { StoreProvider, useStore } from "../../store";
+import { ThemeProvider } from "../../theme";
+import { AgentPanel } from "../../components/AgentPanel";
+import { AiElementsTimeline } from "../AiElementsTimeline";
+import { demoSession, installComparisonBridge } from "./bridge";
+import { replayEvents, projectReplay } from "./replay";
+import type { TranscriptItem } from "@shared/types";
+
+const params = new URLSearchParams(location.search);
+const reference = params.get("version") === "reference";
+const dark = params.get("theme") !== "light";
+const markdown = `Here's the lay of the land:\n\n## Project: Neptune AI Chatbot\n\nA **full-stack AI chatbot** with a vanilla JS frontend and Express backend.\n\n### Directory breakdown\n\n- \`server.js\` — starts the app\n- \`src/app.js\` — configures CORS and JSON parsing\n\n\`\`\`tsx\nconst theme = \"system\";\nexport const enabled = true;\n\`\`\`\n\n| Check | Result |\n| --- | --- |\n| Typecheck | Passed |\n`;
+const events = replayEvents("coding", "Inspect this repository.");
+const fixture: TranscriptItem[] = projectReplay(events, events.length, "Inspect this repository.").transcript;
+const last = fixture.at(-1);
+if (last?.kind === "assistant") last.parts = [...last.parts, {kind:"text",id:"style-markdown",text:markdown,complete:true}];
+installComparisonBridge();
+window.localStorage.setItem("vela.theme", dark ? "codex-dark" : "codex");
+window.vela.openSessionById = async () => ({ session: demoSession, transcript: fixture, todos: [], usage: null });
+window.vela.sessionTranscript = async () => ({ transcript: fixture, todos: [] });
+
+function StyleBody() {
+  const store = useStore();
+  const started = useRef(false);
+  useEffect(() => {
+    if (!started.current) {
+      started.current = true;
+      void store.addModelPanel("/comparison");
+    }
+  }, [store.addModelPanel]);
+  return reference ? <div className="ai-elements bg-background text-foreground"><div className="flex min-w-0 flex-col gap-6 px-8 py-6" data-ai-elements-content=""><AiElementsTimeline transcript={fixture} busy={false} lastAssistantId="assistant" session={demoSession}/></div></div> : <AgentPanel session={store.session}/>;
+}
+
+async function mount() {
+  if (reference) {
+    await import("../ai-elements.css");
+    await import("./reference-theme.css");
+  } else {
+    await import("../../styles/main.scss");
+    await import("@vscode/codicons/dist/codicon.css");
+  }
+  document.body.style.cssText = "margin:0;height:100vh;overflow:hidden";
+  document.getElementById("root")!.style.cssText = reference ? "height:100vh;overflow:hidden" : "height:100vh;overflow:auto";
+  if (!reference) {
+    const style = document.createElement("style");
+    style.textContent = "#root > .agent-panel { height: 100%; }";
+    document.head.append(style);
+  }
+  createRoot(document.getElementById("root")!).render(<StoreProvider><ThemeProvider><StyleBody/></ThemeProvider></StoreProvider>);
+}
+void mount();

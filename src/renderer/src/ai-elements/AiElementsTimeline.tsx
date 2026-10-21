@@ -150,7 +150,8 @@ function AiElementsAssistantMessage({item,next,streaming,busy,session,onRetry}: 
 
 function AiElementsAssistantFooter({item,busy,onRetry}: {item:AssistantItem;busy:boolean;onRetry?:AiElementsTimelineProps["onRetry"]}) {
     const text=item.parts.flatMap(part => part.kind === "text" ? [part.text] : []).join("\n\n");
-    return <MessageFooter className="px-0"><MessageCopy text={text}/>{onRetry && <MessageAction label="Retry" disabled={busy} onClick={() => onRetry(item.messageID)}><RefreshCcwIcon/></MessageAction>}</MessageFooter>;
+    if (!text.trim() && !onRetry) return null;
+    return <MessageFooter className="px-0">{text.trim() && <MessageCopy text={text}/>}{onRetry && <MessageAction label="Retry" disabled={busy} onClick={() => onRetry(item.messageID)}><RefreshCcwIcon/></MessageAction>}</MessageFooter>;
 }
 
 function AiElementsSyntheticMessage({item,busy,session}:SessionProps & {item:Extract<TranscriptItem,{kind:"synthetic"}>}) {

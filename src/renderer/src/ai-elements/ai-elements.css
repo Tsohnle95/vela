@@ -579,7 +579,6 @@
   }
 }
 
-/* Live comparison changes only the response region; the panel and composer stay shared. */
-.agent-response-stream[data-renderer="compare"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
-
-.agent-response-stream[hidden] { display: none; }
+:where(.ai-elements, .ai-elements-portal) {
+  font-family: var(--ai-font-sans);
+}

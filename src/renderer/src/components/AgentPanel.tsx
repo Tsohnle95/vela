@@ -2,11 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { usePanel, useStore } from "../store";
 import { OpenCodeTimeline, PermissionPrompt } from "./OpenCodeTimeline";
 import { AiElementsTimeline } from "../ai-elements/AiElementsTimeline";
-import "../ai-elements/ai-elements.css";
+import { AiElementsSurface } from "../ai-elements/AiElementsSurface";
 import { FormPrompt } from "./FormPrompt";
 import { OpenCodeTodoDock } from "./OpenCodeTodoDock";
 import type { SessionInfo, TranscriptItem } from "@shared/types";
-import { safeExternalUrl } from "@shared/url-policy";
 import { IconArrowLeft, IconMoreHorizontal } from "./icons";
 import { AgentTui } from "./AgentTui";
 import { MAX_AGENT_PANELS } from "../agent-panels";
@@ -258,7 +257,7 @@ export function AgentPanel({
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
         <>
-          <div className="agent-scroll" ref={scrollRef} onScroll={onScroll}>
+          <div className="agent-scroll" ref={scrollRef} onScroll={onScroll} style={renderer !== "old" && responseTranscript.length > 0 ? { padding: 0 } : undefined}>
             {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
             {!conversationStarted && (
               <div className="agent-empty">
@@ -286,14 +285,8 @@ export function AgentPanel({
             {renderer === "old" ? <OpenCodeTimeline {...timelineProps} transcript={transcript} /> : (
               <div className="agent-response-stream" hidden={responseTranscript.length === 0} data-slot="session-turn-list" data-renderer={renderer}>
                 {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
-                <div className="ai-elements" onClickCapture={(event) => {
-                  const link = event.target instanceof Element ? event.target.closest("a") : null;
-                  if (!link) return;
-                  event.preventDefault();
-                  const href = safeExternalUrl(link.getAttribute("href") ?? undefined);
-                  if (href) window.open(href, "_blank", "noopener,noreferrer");
-                }}>
-                  <AiElementsTimeline {...timelineProps} transcript={responseTranscript} />
+                <div>
+                  <AiElementsSurface><AiElementsTimeline {...timelineProps} transcript={responseTranscript} /></AiElementsSurface>
                 </div>
               </div>
             )}

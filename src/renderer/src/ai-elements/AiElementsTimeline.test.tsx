@@ -132,3 +132,16 @@ describe("AI Elements actual event projection integration", () => {
   expect(screen.getByRole("button",{name:"react.dev"})).toBeTruthy();
  });
 });
+
+
+it("omits empty Copy controls while retaining an available retry action", () => {
+ const transcript: TranscriptItem[] = [{kind:"assistant",id:"a",messageID:"a",completed:true,parts:[],error:"Request failed"}];
+ const retry = vi.fn();
+ const view=render(<AiElementsTranscript transcript={transcript} busy={false} lastAssistantId="a" session={session}/>);
+ expect(container.querySelector('[aria-label="Copy"]')).toBeNull();
+ expect(container.querySelector('[data-slot="message-footer"]')).toBeNull();
+ view.rerender(<AiElementsTranscript transcript={transcript} busy={false} lastAssistantId="a" session={session} onRetry={retry}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Retry"}));
+ expect(retry).toHaveBeenCalledWith("a");
+ expect(container.querySelector('[aria-label="Copy"]')).toBeNull();
+});

@@ -4,6 +4,7 @@ import { XIcon } from "lucide-react"
 
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+import { useAiElementsPortalContainer } from "@/ai-elements/portal-container"
 import { cn } from "@/ai-elements/class-names"
 
 import { Button } from "@/components/ui/button"
@@ -21,7 +22,8 @@ function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
 }
 
 function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
-  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+  const container = useAiElementsPortalContainer()
+  return <SheetPrimitive.Portal container={container} data-slot="sheet-portal" {...props} />
 }
 
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {

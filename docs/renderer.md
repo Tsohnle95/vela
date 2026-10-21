@@ -532,7 +532,12 @@ Key mechanisms:
   the existing runtime revert, then use the existing confirmation dock.
   ThemeProvider mirrors the selected appearance scheme to the standard `dark`
   class so upstream widgets and portals receive the correct neutral theme.
-  The scoped reset preserves the original renderer's appearance. Vendored
+  `AiElementsSurface.tsx` isolates response CSS in a ShadowRoot so shell Sass
+  cannot override upstream typography, spacing or widgets. It owns the reference
+  response padding and mirrors the selected color scheme. Base UI portals use
+  the same shadow boundary through `portal-container.tsx`; only fonts and
+  Tailwind property registrations are document-wide. The original composer
+  remains outside that boundary. Vendored
   source/provenance lives under `ai-elements/upstream/`; runnable original
   examples are under `ai-elements/demos/`. See the comparison procedure in
   [operations.md](operations.md). `?chat-renderer=old` selects the original

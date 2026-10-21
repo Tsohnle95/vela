@@ -1,3 +1,4 @@
+import { installAiElementRegistrySource } from "./ai-elements-registry.mjs"
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -46,32 +47,7 @@ async function registry(name) {
   const entry = JSON.parse(text)
   await save(path.join(upstream, 'registry', `${name}.json`), text)
   for (const file of entry.files) {
-    let content = file.content
-    const icons = new Set()
-    content = content.replace(/<IconPlaceholder\s+([\s\S]*?)\/>/g, (_, props) => {
-      const icon = props.match(/lucide="([^"]+)"/)?.[1]
-      if (!icon) throw new Error(`Missing Lucide icon in ${name}`)
-      icons.add(icon)
-      const extra = props.replace(/(?:lucide|tabler|hugeicons|phosphor|remixicon)="[^"]+"\s*/g, '').trim()
-      return `<${icon}${extra ? ` ${extra}` : ''} />`
-    })
-    content = content.replace(/import \{ IconPlaceholder \} from "@\/app\/\(create\)\/components\/icon-placeholder"\n/g, '')
-    if (icons.size) {
-      const iconImport = `import { ${[...icons].join(', ')} } from "lucide-react"\n`
-      content = content.startsWith('"use client"\n')
-        ? content.replace('"use client"\n', `"use client"\n\n${iconImport}`)
-        : iconImport + content
-    }
-    content = content.replaceAll('from "cn"', 'from "@/ai-elements/class-names"')
-      .replaceAll('@/registry/base-rhea/ui/', '@/components/ui/')
-      .replaceAll('@/registry/base-rhea/hooks/', '@/ai-elements/upstream/hooks/')
-      .replaceAll('@/registry/base-rhea/lib/', '@/ai-elements/upstream/lib/')
-    if (['dropdown-menu', 'hover-card', 'tooltip'].includes(name)) {
-      content = content.replace('className="isolate z-50', 'className="ai-elements-portal isolate z-50')
-    }
-    if (name === 'sheet') {
-      content = content.replace(/(<SheetPrimitive.Popup[\s\S]*?className=\{cn\()/, '$1\n          "ai-elements-portal",')
-    }
+    const content = installAiElementRegistrySource(name, file.content)
     const relative = file.path.replace('registry/base-rhea/', '')
     const destination = relative.startsWith('ui/')
       ? path.join(root, 'src/renderer/src/components', relative)
@@ -85,6 +61,6 @@ await save(path.join(upstream, 'manifest.json'), JSON.stringify({
   upstream: 'https://ui.shadcn.com/docs/ai-elements',
   license: 'MIT',
   style: 'base-rhea',
-  transforms: ['Resolve registry imports to local files', 'Resolve cn to local clsx/tailwind-merge helper', 'Select Lucide icons from IconPlaceholder, as the shadcn CLI does', 'Scope portal theme inheritance to the AI Elements surface'],
+  transforms: ['Resolve registry imports to local files', 'Resolve cn to local clsx/tailwind-merge helper', 'Select Lucide icons from IconPlaceholder, as the shadcn CLI does', 'Scope portal theme inheritance to the AI Elements surface', 'Bind Base UI portals to the response ShadowRoot through a renderer-only context'],
   sources,
 }, null, 2) + '\n')

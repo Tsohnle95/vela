@@ -23,6 +23,16 @@ renderer document URL to display both response renderers inside the original
 panel. `?chat-renderer=old` selects the original response renderer; the default
 is AI Elements response content. The original composer and panel controls remain
 the same in every mode.
+
+With the comparison server running, `node scripts/ai-elements-style-smoke.mjs`
+compares the actual `AgentPanel` response with the reference at matching widths
+in Electron, in light and dark mode. It measures typography, color, spacing and
+geometry, checks shell CSS isolation, and saves screenshots plus measurements
+under `/private/tmp/vela-ai-style-verification` (override with `VELA_STYLE_REPORT`).
+The fixture is `/chat-comparison/style-check.html`; it uses a mock bridge and
+makes no runtime requests. Set `VELA_STYLE_URL` to use a separately hosted
+build of the comparison instead of the default development server.
+
 The local index replay and gallery are UI validation tools, not proof that a
 provider supplies every optional structured result.
 
