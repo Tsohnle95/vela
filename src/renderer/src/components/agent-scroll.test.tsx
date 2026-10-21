@@ -37,10 +37,10 @@ function viewport() {
  Object.defineProperties(scroll,{clientHeight:{value:100},scrollHeight:{value:1000,configurable:true},scrollTop:{value:800,writable:true}});
  return scroll;
 }
-it("follows incoming height over frames and continues through its own scroll events",()=>{
+it("follows rendered height before paint without a separate scroll recoil",()=>{
  const scroll=viewport();act(()=>resize([],{} as ResizeObserver));
- expect(scroll.scrollTop).toBe(800);
- frame();expect(scroll.scrollTop).toBeGreaterThan(800);expect(scroll.scrollTop).toBeLessThan(900);
+ expect(scroll.scrollTop).toBe(900);
+ frame();expect(scroll.scrollTop).toBe(900);
  act(()=>scroll.dispatchEvent(new Event("scroll")));
  Object.defineProperty(scroll,"scrollHeight",{value:1040});act(()=>resize([],{} as ResizeObserver));
  for(let n=0;n<30;n++)frame();
@@ -57,7 +57,7 @@ it("yields immediately when the reader scrolls away during an animated follow",(
 it("uses immediate following when reduced motion is requested",()=>{
  vi.stubGlobal("matchMedia",()=>({matches:true}));
  const scroll=viewport();act(()=>resize([],{} as ResizeObserver));
- expect(scroll.scrollTop).toBe(1000);
+ expect(scroll.scrollTop).toBe(900);
  expect(frames.size).toBe(1);
  frame();expect(scroll.scrollTop).toBe(900);
 });
@@ -65,8 +65,9 @@ it("uses immediate following when reduced motion is requested",()=>{
 it("does not lose the live edge when layout moves the viewport down",()=>{
  const scroll=viewport();act(()=>resize([],{} as ResizeObserver));frame();
  // Browser layout/scroll clamping can deliver a scroll event before ResizeObserver.
- scroll.scrollTop=860;act(()=>scroll.dispatchEvent(new Event("scroll")));
- Object.defineProperty(scroll,"scrollHeight",{value:1200});act(()=>resize([],{} as ResizeObserver));
+ Object.defineProperty(scroll,"scrollHeight",{value:1200});
+ scroll.scrollTop=920;act(()=>scroll.dispatchEvent(new Event("scroll")));
+ act(()=>resize([],{} as ResizeObserver));
  for(let n=0;n<40;n++)frame();
  expect(scroll.scrollTop).toBeCloseTo(1100,0);
 });
@@ -99,4 +100,13 @@ it("follows the final presentation buffer after the runtime finishes",()=>{
  for(let n=0;n<30;n++)frame();
  expect(scroll.scrollTop).toBe(1100);
  expect(frames.size).toBe(0);
+});
+
+it("matches each intermediate line height synchronously in the resize delivery",()=>{
+ const scroll=viewport();act(()=>resize([],{} as ResizeObserver));
+ for(let height=1001;height<=1021;height++) {
+  Object.defineProperty(scroll,"scrollHeight",{value:height});
+  act(()=>resize([],{} as ResizeObserver));
+  expect(scroll.scrollTop).toBe(height-100);
+ }
 });

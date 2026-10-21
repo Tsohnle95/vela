@@ -19,13 +19,6 @@ function scrollMemoryKey(session: SessionInfo | null | undefined): string | null
   return session?.workspace.id ?? null;
 }
 
-function advanceStreamScroll(el: HTMLDivElement, elapsed: number, busy: boolean): boolean {
-  const target = Math.max(0, el.scrollHeight - el.clientHeight);
-  const distance = target - el.scrollTop;
-  const step = 1 - Math.exp(-Math.min(64, Math.max(1, elapsed)) / 45);
-  el.scrollTop = distance <= 0.5 || !busy ? target : el.scrollTop + distance * step;
-  return target - el.scrollTop > 0.5;
-}
 
 export function useAgentScroll(activeSession: SessionInfo | null, transcript: TranscriptItem[], busy: boolean,
   queuedMessages: { id: string; content: string }[] | undefined, smooth = false) {
@@ -40,25 +33,22 @@ export function useAgentScroll(activeSession: SessionInfo | null, transcript: Tr
   const scrollToBottom = (): void => {
     const el = scrollRef.current;
     if (!el) return;
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (smooth && (busyRef.current || animationRef.current !== null)) {
-      if (reducedMotion) {
-        el.scrollTop = el.scrollHeight;
-        observedTopRef.current = el.scrollTop;
-      }
+      // Follow the rendered height before paint. Easing here separately from
+      // line growth makes the activity row jump down, then recoil upward.
+      el.scrollTop = Math.max(0, el.scrollHeight - el.clientHeight);
+      observedTopRef.current = el.scrollTop;
       if (animationRef.current === null) {
-        let previous = performance.now();
         const follow = (now: number): void => {
           animationRef.current = null;
           if (!atBottomRef.current) return;
           if (busyRef.current) followUntilRef.current = now + 350;
-          const following = advanceStreamScroll(el, now - previous, !reducedMotion && (busyRef.current || now < followUntilRef.current));
-          previous = now;
+          el.scrollTop = Math.max(0, el.scrollHeight - el.clientHeight);
           observedTopRef.current = el.scrollTop;
           if (memoryKey) agentScrollMemory.set(memoryKey, { scrollTop: el.scrollTop, atBottom: true, observedTop: el.scrollTop });
           // Keep sampling while streaming: Shadow DOM content can grow without
           // changing the observed flex item's border box.
-          if (following || busyRef.current || now < followUntilRef.current) animationRef.current = requestAnimationFrame(follow);
+          if (busyRef.current || now < followUntilRef.current) animationRef.current = requestAnimationFrame(follow);
         };
         animationRef.current = requestAnimationFrame(follow);
       }
@@ -139,7 +129,7 @@ export function useAgentScroll(activeSession: SessionInfo | null, transcript: Tr
     if (memoryKey) agentScrollMemory.set(memoryKey, { scrollTop: el.scrollTop, atBottom, observedTop: el.scrollTop });
   };
 
-  return { scrollRef, onScroll };
+  return { scrollRef, onScroll, onContentResize: () => { if (atBottomRef.current) scrollToBottom(); } };
 }
 
 function useReaderScrollIntent(

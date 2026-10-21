@@ -92,7 +92,7 @@ export function AgentPanel({
   const view = usePanel(activeSession?.workspace);
   const { busy, todos, transcript, sessionUsage, compactionBaseline, currentModel, turnStartedAt, assistantStatus } = view;
   const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
-  const { scrollRef, onScroll } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages, renderer !== "old");
+  const { scrollRef, onScroll, onContentResize } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages, renderer !== "old");
   const panelRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const panelDragRef = useRef<number | null>(null);
@@ -287,7 +287,7 @@ export function AgentPanel({
               <div className="agent-response-stream" hidden={!showResponse} data-slot="session-turn-list" data-renderer={renderer}>
                 {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
                 <div>
-                  <AiElementsSurface><AiElementsTimeline {...timelineProps} transcript={responseTranscript} /></AiElementsSurface>
+                  <AiElementsSurface><AiElementsTimeline {...timelineProps} onContentResize={onContentResize} transcript={responseTranscript} /></AiElementsSurface>
                 </div>
               </div>
             )}

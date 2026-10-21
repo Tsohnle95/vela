@@ -237,7 +237,11 @@ Before the runtime emits the first concrete item, the timeline shows one minimal
 inline working placeholder and replaces it as soon as the real item arrives. A
 frame loop follows timeline growth for the whole active turn while the reader
 remains at the floor; resize observation also covers settled content and viewport
-changes. Upward wheel, touch, keyboard, or scrollbar movement releases following;
+changes. `TranscriptGrowth` progressively reveals changes in transcript height
+and notifies the panel scroll owner in the same resize delivery before paint.
+The activity row stays outside that growth boundary. Following uses the rendered
+height directly; separately easing the scroll would make the activity row jump
+down at each new line and recoil upward afterward. Upward wheel, touch, keyboard, or scrollbar movement releases following;
 returning to the floor resumes it. Response and reasoning text use a short
 presentation buffer to spread incoming bursts over animation frames, without
 delaying authoritative transcript updates. Expanded reasoning and tool groups

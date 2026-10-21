@@ -10,6 +10,7 @@ import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions }
 import { Button } from "@/components/ui/button";
 import { CodeBlock, CodeBlockContent } from "@/components/ui/code-block";
 import { Marker, MarkerContent } from "@/components/ui/marker";
+import { TranscriptGrowth } from "./TranscriptGrowth";
 import { AiElementsActivity, type ActivityState } from "./AiElementsActivity";
 import { StreamingMarkdown as Markdown } from "./StreamingMarkdown";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ import { parseSubagentTag, parseLegacyTaskText, isInternalSystemReminder, taskCh
 import { ReasoningRow, Sources, StackTrace, TestResults, TodoQueue, FileTreeNode, PlanRow, TaskRow, Citation } from "./patterns";
 import { fileTree, structuredToolOutput, structuredActivity, visibleAiTranscript, toolOutputText, structuredCitedText } from "./adapters";
 export interface AiElementsTimelineProps {
+    onContentResize?: () => void;
     transcript: TranscriptItem[];
     busy: boolean;
     lastAssistantId: string | null;
@@ -182,7 +184,7 @@ export const AiElementsTimeline = memo(function AiElementsTimeline(props: AiElem
     const store = useStore();
     const session = props.session === undefined ? store.session : props.session;
     const transcript = useMemo(() => visibleAiTranscript(props.transcript, store.sessions, session?.id), [props.transcript, store.sessions, session?.id]);
-    return <div className="flex w-full flex-col gap-4 py-6 text-sm" data-ai-elements="timeline"><AiElementsTranscript {...props} transcript={transcript} session={session}/><AiElementsActivity busy={props.busy} transcript={transcript} activity={props.activity} startedAt={props.startedAt}/></div>;
+    return <div className="flex w-full flex-col gap-4 py-6 text-sm" data-ai-elements="timeline"><TranscriptGrowth busy={props.busy} onResize={props.onContentResize}><AiElementsTranscript {...props} transcript={transcript} session={session}/></TranscriptGrowth><AiElementsActivity busy={props.busy} transcript={transcript} activity={props.activity} startedAt={props.startedAt}/></div>;
 });
 export { TodoQueue as AiElementsTodoQueue };
 function MessageAction({ label, children, ...props }: React.ComponentProps<typeof Button> & {

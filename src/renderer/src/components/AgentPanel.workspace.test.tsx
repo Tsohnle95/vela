@@ -6,7 +6,7 @@ import type { SessionInfo, TranscriptItem } from "@shared/types";
 let currentSession: SessionInfo;
 let panelTranscript: TranscriptItem[];
 let panelQueuedMessages: { id: string; content: string; createdAt: number }[];
-let resizeCallback: ResizeObserverCallback | undefined;
+let resizeCallbacks: ResizeObserverCallback[] = [];
 const reopenSessionMock = vi.fn(async () => {});
 
 vi.mock("@xterm/xterm", () => ({
@@ -94,10 +94,10 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
     currentSession = session("one", 1);
     panelTranscript = [];
     panelQueuedMessages = [];
-    resizeCallback = undefined;
+    resizeCallbacks = [];
     vi.stubGlobal("ResizeObserver", class {
       constructor(callback: ResizeObserverCallback) {
-        resizeCallback = callback;
+        resizeCallbacks.push(callback);
       }
       observe() {}
       disconnect() {}
@@ -262,13 +262,13 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
     expect(scroll.scrollTop).toBe(500);
 
     Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 700, writable: true });
-    await act(async () => resizeCallback?.([], {} as ResizeObserver));
+    await act(async () => resizeCallbacks.forEach(callback => callback([], {} as ResizeObserver)));
     expect(scroll.scrollTop).toBe(700);
 
     scroll.scrollTop = 300;
     await act(async () => scroll.dispatchEvent(new Event("scroll")));
     Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 900, writable: true });
-    await act(async () => resizeCallback?.([], {} as ResizeObserver));
+    await act(async () => resizeCallbacks.forEach(callback => callback([], {} as ResizeObserver)));
     expect(scroll.scrollTop).toBe(300);
   });
 

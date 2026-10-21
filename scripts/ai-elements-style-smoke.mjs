@@ -157,7 +157,7 @@ const capture = async (version,theme,width,appearance) => {
      if(textLength>previousTextLength && now-lastDelivery>35) pacedFrames++;
      previousTextLength=textLength;
      const scroll=document.querySelector('.agent-scroll');
-     if(scroll && scroll.scrollTop>previousScroll && scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop>0.5) scrollFrames++;
+     if(scroll && scroll.scrollTop>previousScroll) scrollFrames++;
      previousScroll=scroll?.scrollTop??0;
      if(sampling) requestAnimationFrame(frame);
    };
@@ -204,7 +204,7 @@ const capture = async (version,theme,width,appearance) => {
  assert.equal(motion.font,motion.folderFont,"Response and folder font families must match");
  assert.equal(motion.size,motion.folderSize,"Response and folder font sizes must match");
  assert.equal(motion.weight,motion.folderWeight,"Response and folder weights must match");
- assert.ok(motion.scrollFrames>2,"Viewport following must interpolate across frames");
+ assert.ok(motion.scrollFrames>2,"Viewport must follow progressively revealed content across frames");
  assert.ok(motion.remainingScroll<=2,"Streaming must remain pinned to the bottom");
  assert.ok(motion.text.includes("The change is ready for review."),"Final streamed text must be complete");
  delete motion.text;
