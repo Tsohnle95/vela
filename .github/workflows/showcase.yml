@@ -1,0 +1,43 @@
+name: showcase
+
+# One-time setup: Settings → Pages → Build and deployment → Source: GitHub Actions.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "showcase/**"
+      - "resources/vela.png"
+      - "resources/agent-mode.png"
+      - "resources/dual-agent.png"
+      - "resources/icon.png"
+      - ".github/workflows/showcase.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: showcase-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the showcase
+        run: |
+          mkdir -p _site/showcase _site/resources
+          cp -R showcase/. _site/showcase/
+          cp resources/vela.png resources/agent-mode.png resources/dual-agent.png resources/icon.png _site/resources/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
