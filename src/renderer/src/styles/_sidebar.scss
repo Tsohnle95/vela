@@ -380,7 +380,7 @@
 
 .section-toggle .si-chevron.open { transform: rotate(180deg); }
 
-.tree {
+.sidebar .tree {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -389,7 +389,7 @@
   padding: 2px 6px 14px;
 }
 
-.tree > :not(.tree-drop-space) { flex-shrink: 0; }
+.sidebar .tree > :not(.tree-drop-space) { flex-shrink: 0; }
 
 .tree-workspace {
   display: flex;

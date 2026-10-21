@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="UTF-8"></head><body><div id="root"></div><script type="module">
+import { monaco } from '/src/renderer/src/monaco.ts';
+import '/src/renderer/src/styles/main.scss';
+import { EDITOR_OPTIONS, overflowWidgetsHost } from '/src/renderer/src/components/EditorPane.tsx';
+const host = overflowWidgetsHost();
+const container = document.getElementById('root');
+container.style.cssText = 'position:absolute;left:250px;top:100px;width:600px;height:550px;overflow:hidden';
+monaco.languages.registerCompletionItemProvider('javascript',{triggerCharacters:['.'],provideCompletionItems:()=>({suggestions:Array.from({length:60},(_,i)=>({label:'option'+String(i).padStart(2,'0'),kind:monaco.languages.CompletionItemKind.Function,insertText:'option'+i,range:new monaco.Range(1,10,1,10)}))})});
+const editor = monaco.editor.create(container, {...EDITOR_OPTIONS,theme:'vela-original',value:'document.',language:'javascript',fixedOverflowWidgets:true,overflowWidgetsDomNode:host,automaticLayout:true});
+editor.setPosition({lineNumber:1,column:10});
+editor.focus();
+
+window.testEditor=editor;
+window.testMonaco=monaco;
+const shell=document.createElement('div');
+shell.className='app changes-open';
+shell.innerHTML='<div class="titlebar-tabs-slot"><button>index.ts</button><button>Browser</button></div>';
+document.body.append(shell);
+</script></body></html>

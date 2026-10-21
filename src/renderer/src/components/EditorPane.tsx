@@ -22,7 +22,7 @@ import { useBrowserTabActions, useBrowserTabState } from "../browser-tabs-contex
 import { useScrollReveal, useStatusReporter } from "../editor-activity";
 import type { ValidationReport } from "../validation-report";
 
-const EDITOR_OPTIONS = {
+export const EDITOR_OPTIONS = {
   fontSize: 13,
   fontFamily: "ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
   minimap: { enabled: false },
@@ -31,6 +31,8 @@ const EDITOR_OPTIONS = {
   quickSuggestions: { other: true, comments: false, strings: true },
   quickSuggestionsDelay: 25,
   suggestOnTriggerCharacters: true,
+  suggestFontSize: 13,
+  suggestLineHeight: 24,
   suggest: {
     showInlineDetails: true,
     showSnippets: true,
@@ -62,7 +64,7 @@ const EDITOR_OPTIONS = {
   wordWrap: "on" as const
 };
 
-function overflowWidgetsHost(): HTMLElement {
+export function overflowWidgetsHost(): HTMLElement {
   let host = document.getElementById("vela-monaco-overflow");
   if (!host) {
     host = document.createElement("div");
@@ -552,7 +554,7 @@ function EditorEmptyState({ session }: { session: SessionInfo | null | undefined
   );
 }
 
-export function EditorPane({ onValidationComplete, tabsSlot = null }: { onValidationComplete?: (report: ValidationReport) => void; tabsSlot?: HTMLDivElement | null }): ReactNode {
+export function EditorPane({ onValidationComplete, onSelectSurface, tabsSlot = null }: { onSelectSurface?: () => void; onValidationComplete?: (report: ValidationReport) => void; tabsSlot?: HTMLDivElement | null }): ReactNode {
   const { tabs, activePath, openPaths, session, setActive, closeTab } = useStore();
   const { browserTabs, activeBrowserTabID } = useBrowserTabState();
   const { openBrowserTab, closeBrowserTab, activateBrowserTab, updateBrowserTab } = useBrowserTabActions();
@@ -728,11 +730,11 @@ export function EditorPane({ onValidationComplete, tabsSlot = null }: { onValida
     <TabBar
       tabs={stripTabs} activePath={browserActive ? null : activePath} ariaLabel="Open editor tabs"
       groupFor={(path) => groupOwningPath(groups, path)}
-      onSelect={(path) => selectPath(groupOwningPath(groups, path), path)}
+      onSelect={(path) => { selectPath(groupOwningPath(groups, path), path); onSelectSurface?.(); }}
       onClose={closeTab} onMoveTab={moveTabToGroup}
       browsers={browserTabs} activeBrowserTabID={activeBrowserTabID}
-      onSelectBrowser={activateBrowserTab} onCloseBrowser={closeBrowserTab}
-      onNewBrowser={() => openBrowserTab()}
+      onSelectBrowser={(id) => { activateBrowserTab(id); onSelectSurface?.(); }} onCloseBrowser={closeBrowserTab}
+      onNewBrowser={() => { openBrowserTab(); onSelectSurface?.(); }}
     />
   );
 

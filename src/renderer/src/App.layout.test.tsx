@@ -5,7 +5,7 @@ import type { BackendMessage, SessionInfo, TranscriptItem } from "@shared/types"
 import App from "./App";
 
 vi.mock("./components/EditorPane", () => ({
-  EditorPane: () => null
+  EditorPane: ({ onSelectSurface }: { onSelectSurface?: () => void }) => <button data-testid="editor-tab" onClick={onSelectSurface}>File tab</button>
 }));
 
 vi.mock("./components/ChangesView", () => ({
@@ -181,7 +181,7 @@ describe("Layout panel sizing", () => {
     expect(container.querySelector('[title="Open a single file"]')).toBeNull();
   });
 
-  it("lands on the Files sidebar tab and returns to it when a workspace opens", async () => {
+  it("preserves the selected sidebar when a workspace opens", async () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 30)));
 
@@ -198,8 +198,11 @@ describe("Layout panel sizing", () => {
       dispatch({ kind: "session", session: info("/fresh", 5) });
       await new Promise((resolve) => setTimeout(resolve, 30));
     });
+    expect(sideTab(container, "Sessions").className).toContain("active");
+    expect(sideTab(container, "Files").className).not.toContain("active");
+    await act(async () => sideTab(container, "Files").click());
+    await act(async () => dispatch({ kind: "session", session: info("/from-files", 6) }));
     expect(sideTab(container, "Files").className).toContain("active");
-    expect(sideTab(container, "Sessions").className).not.toContain("active");
   });
 
   it("toggles the left panel from the activity rail and keeps the editor slot", async () => {
@@ -269,6 +272,9 @@ describe("Layout panel sizing", () => {
     expect(button.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector('[data-testid="changes-view"]')).not.toBeNull();
     expect(container.querySelector(".app")?.classList.contains("changes-open")).toBe(true);
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-testid="editor-tab"]')!.click());
+    expect(container.querySelector('[data-testid="changes-view"]')).toBeNull();
+    await act(async () => button.click());
 
     await act(async () => {
       button.click();

@@ -516,3 +516,12 @@ browser policy/guards. It exercises guest/worker isolation, permission denial,
 actual guest IPC identity rejection and blocked attachment/navigation/redirects.
 Popup OS launching is mocked; device denial does not prompt physical hardware.
 Native macOS checks require an unlocked GUI outside restrictive shell sandboxes.
+
+## Editor suggestions regression
+
+With `npm run chat:compare` serving the repository, run
+`node scripts/editor-suggestions-smoke.mjs`. It mounts the production editor
+options and overflow host with real Monaco and app styles, verifies at least
+eight visible options, wheel scrolling and keyboard acceptance in dark and
+light themes, and checks titlebar visibility during Changes review.
+`VELA_EDITOR_TEST_URL` can select another fixture server.

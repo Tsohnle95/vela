@@ -122,6 +122,23 @@ describe("EditorPane split groups", () => {
     vi.unstubAllGlobals();
   });
 
+  it("requests the editor surface when selecting file and browser tabs", () => {
+    const onSelectSurface = vi.fn();
+    const slot = document.createElement("div");
+    freshBrowserSlot = slot;
+    document.body.append(slot);
+    let browserActions!: ReturnType<typeof useBrowserTabActions>;
+    function Probe(): null { browserActions = useBrowserTabActions(); return null; }
+    act(() => root.render(<ThemeProvider><BrowserTabsProvider>
+      <Probe /><EditorPane tabsSlot={slot} onSelectSurface={onSelectSurface} />
+    </BrowserTabsProvider></ThemeProvider>));
+    act(() => slot.querySelector<HTMLElement>('[role="tab"]')!.click());
+    expect(onSelectSurface).toHaveBeenCalledTimes(1);
+    act(() => { browserActions.openBrowserTab(); });
+    act(() => slot.querySelector<HTMLElement>('[role="tab"].browser')!.click());
+    expect(onSelectSurface).toHaveBeenCalledTimes(2);
+  });
+
   it("hosts closable browser chips before any workspace is opened", () => {
     store.session = null;
     store.tabs = [];
@@ -306,6 +323,8 @@ describe("EditorPane split groups", () => {
     const options = capturedEditorOptions.mock.calls.at(-1)?.[0] as {
       quickSuggestions?: { other?: boolean };
       suggestOnTriggerCharacters?: boolean;
+      suggestFontSize?: number;
+      suggestLineHeight?: number;
       suggest?: { selectionMode?: string };
       fixedOverflowWidgets?: boolean;
       overflowWidgetsDomNode?: HTMLElement;
@@ -314,6 +333,8 @@ describe("EditorPane split groups", () => {
     };
     expect(options.quickSuggestions?.other).toBe(true);
     expect(options.suggestOnTriggerCharacters).toBe(true);
+    expect(options.suggestFontSize).toBe(13);
+    expect(options.suggestLineHeight).toBe(24);
     expect(options.suggest?.selectionMode).toBe("always");
     expect(options.fixedOverflowWidgets).toBe(true);
     expect(options.overflowWidgetsDomNode?.classList.contains("monaco-editor")).toBe(true);

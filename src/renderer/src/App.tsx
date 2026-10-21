@@ -164,20 +164,6 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
     wasOpenWorkspacesRef.current = allPanels.length;
   }, [allPanels.length]);
 
-  // Opening or dropping a workspace lands the user on the file tree rather
-  // than the session switcher. Track workspace identities rather than panel
-  // count so subagent panels in an already-open workspace do not steal focus.
-  const seenWorkspacesRef = useRef<Set<string>>(new Set<string>());
-  useEffect(() => {
-    let opened = false;
-    for (const panel of allPanels) {
-      if (seenWorkspacesRef.current.has(panel.workspace.id)) continue;
-      seenWorkspacesRef.current.add(panel.workspace.id);
-      opened = true;
-    }
-    if (opened) setSideTab("files");
-  }, [allPanels]);
-
   const prevPanelsRef = useRef<SessionInfo[] | null>(null);
   const sessionSlotsRef = useRef(new Map<string, PanelSlot>());
   const rememberedSlot = (panel: SessionInfo): PanelSlot | undefined =>
@@ -647,6 +633,7 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
         >
           <EditorPane
             tabsSlot={tabsSlot}
+            onSelectSurface={() => setChangesOpen(false)}
             onValidationComplete={(report) => {
               setValidationReport(report);
               setTerminalPanel("problems");

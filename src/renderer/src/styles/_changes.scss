@@ -2,7 +2,6 @@
 // Pierre diffs, shown in the editor area when the rail's Changes view is active.
 
 .app.changes-open .workspace-area > .editor-pane { visibility: hidden; }
-.app.changes-open .titlebar-tabs-slot { display: none; }
 
 .changes-view {
   grid-column: 1;
