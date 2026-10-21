@@ -1,0 +1,287 @@
+{
+  "docked": {
+    "theme": "observatory",
+    "shell": "codex",
+    "panel": {
+      "x": 955,
+      "y": 40,
+      "width": 325,
+      "height": 860,
+      "scrollWidth": 324
+    },
+    "composer": {
+      "x": 966,
+      "y": 784,
+      "width": 304,
+      "height": 106,
+      "scrollWidth": 302
+    },
+    "input": {
+      "x": 967,
+      "y": 792,
+      "width": 302,
+      "height": 40,
+      "scrollWidth": 302
+    },
+    "scene": "url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 7,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "minimum": {
+    "theme": "observatory",
+    "shell": "codex",
+    "panel": {
+      "x": 1000,
+      "y": 40,
+      "width": 280,
+      "height": 860,
+      "scrollWidth": 279
+    },
+    "composer": {
+      "x": 1011,
+      "y": 784,
+      "width": 259,
+      "height": 106,
+      "scrollWidth": 257
+    },
+    "input": {
+      "x": 1012,
+      "y": 790,
+      "width": 257,
+      "height": 48,
+      "scrollWidth": 257
+    },
+    "scene": "url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 7,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "agentMode": {
+    "theme": "observatory",
+    "shell": "codex",
+    "panel": {
+      "x": 54,
+      "y": 40,
+      "width": 1532,
+      "height": 927,
+      "scrollWidth": 1531
+    },
+    "composer": {
+      "x": 470.5,
+      "y": 833,
+      "width": 700,
+      "height": 106,
+      "scrollWidth": 698
+    },
+    "input": {
+      "x": 471.5,
+      "y": 841,
+      "width": 698,
+      "height": 40,
+      "scrollWidth": 698
+    },
+    "scene": "url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 7,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "ultrawide": {
+    "theme": "observatory",
+    "shell": "codex",
+    "panel": {
+      "x": 54,
+      "y": 40,
+      "width": 1866,
+      "height": 927,
+      "scrollWidth": 1865
+    },
+    "composer": {
+      "x": 637.5,
+      "y": 833,
+      "width": 700,
+      "height": 106,
+      "scrollWidth": 698
+    },
+    "input": {
+      "x": 638.5,
+      "y": 841,
+      "width": 698,
+      "height": 40,
+      "scrollWidth": 698
+    },
+    "scene": "url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 7,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "compact": {
+    "theme": "observatory",
+    "shell": "codex",
+    "panel": {
+      "x": 54,
+      "y": 40,
+      "width": 926,
+      "height": 554,
+      "scrollWidth": 925
+    },
+    "composer": {
+      "x": 167.5,
+      "y": 460.25,
+      "width": 700,
+      "height": 106,
+      "scrollWidth": 698
+    },
+    "input": {
+      "x": 168.5,
+      "y": 468.25,
+      "width": 698,
+      "height": 40,
+      "scrollWidth": 698
+    },
+    "scene": "url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 7,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "persisted": {
+    "theme": "observatory",
+    "shell": "codex",
+    "panel": {
+      "x": 1261,
+      "y": 40,
+      "width": 325,
+      "height": 927,
+      "scrollWidth": 324
+    },
+    "composer": {
+      "x": 1272,
+      "y": 851,
+      "width": 304,
+      "height": 106,
+      "scrollWidth": 302
+    },
+    "input": {
+      "x": 1273,
+      "y": 859,
+      "width": 302,
+      "height": 40,
+      "scrollWidth": 302
+    },
+    "scene": "url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 7,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "classic": {
+    "theme": "observatory",
+    "shell": "classic",
+    "panel": {
+      "x": 1251.1875,
+      "y": 54,
+      "width": 325,
+      "height": 903,
+      "scrollWidth": 323
+    },
+    "composer": {
+      "x": 1262.1875,
+      "y": 840,
+      "width": 303,
+      "height": 106,
+      "scrollWidth": 301
+    },
+    "input": {
+      "x": 1263.1875,
+      "y": 851,
+      "width": 301,
+      "height": 36,
+      "scrollWidth": 301
+    },
+    "scene": "url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 9,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "conversation": {
+    "theme": "observatory",
+    "shell": "codex",
+    "panel": {
+      "x": 1261,
+      "y": 40,
+      "width": 325,
+      "height": 927,
+      "scrollWidth": 324
+    },
+    "composer": {
+      "x": 1272,
+      "y": 851,
+      "width": 304,
+      "height": 106,
+      "scrollWidth": 302
+    },
+    "input": {
+      "x": 1273,
+      "y": 859,
+      "width": 302,
+      "height": 40,
+      "scrollWidth": 302
+    },
+    "scene": "linear-gradient(rgba(5, 6, 17, 0.92), rgba(5, 6, 17, 0.92)), url(\"file:///Users/tdawg/code-repositories/vela/out/renderer/assets/observatory-BhJeOF5a.png\")",
+    "scrollBackground": "rgba(0, 0, 0, 0)",
+    "logo": {
+      "x": 80,
+      "y": 7,
+      "width": 67,
+      "height": 25,
+      "scrollWidth": 67
+    },
+    "horizontalOverflow": false
+  },
+  "switched": {
+    "theme": "prism",
+    "scene": "none",
+    "logo": "none"
+  }
+}

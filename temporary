@@ -1,0 +1,495 @@
+# TEMPORARY — Discovery: OpenChamber mobile↔desktop connection, and the route forward for a Vela/Vela mobile app
+
+> Status: DISCOVERY ONLY. No implementation performed. Not a canonical doc; delete or
+> fold into `docs/` once decisions are made. Today: 2026-10-16.
+
+---
+
+## 0. Scope, target, and how this was gathered
+
+**Question.** (a) Reverse-engineer how the **OpenChamber mobile app connects to the OpenChamber
+desktop app**; (b) assess the **current Vela mobile app**; (c) decide the **best route forward**
+for a high-quality, reliable, functional Vela/Vela mobile app.
+
+**Targets analyzed (ground truth, v2.3.3):**
+
+| Artifact | Path | Notes |
+|---|---|---|
+| OpenChamber desktop app | `/Applications/OpenChamber.app` | Electron, `dev.openchamber.desktop`, v2.3.3 |
+| OpenChamber desktop bundle | `/Applications/OpenChamber.app/Contents/Resources/app.asar` | extracted to a temp dir |
+| OpenChamber embedded server | `.../app.asar.unpacked/node_modules/@openchamber/web` | `@openchamber/web@2.3.3` (server source, plain ESM) |
+| OpenChamber mobile app | `~/Downloads/OpenChamber-2.3.3-209-android.apk` | Capacitor, `com.openchamber.app`, v2.3.3 (build 209) |
+| OpenChamber desktop DMG | `~/Downloads/OpenChamber-2.3.3-mac-arm64.dmg` | same version as the installed app |
+| Vela Mobile (fork) | `~/code-repositories/vela-mobile` | fork of OpenChamber **v1.20.0** (`packages/web`, `packages/ui`), mobile shell 1.13.2, root 0.4.0 |
+| Vela desktop mobile integration | `vela/src/main/mobile-server.ts`, `vela/src/main/index.ts` | spawns the `vela-mobile` companion |
+
+**Tools used.** `rea` (REA) is present but **not linked**; it runs from the npx cache at
+`~/.npm/_npx/af752b90495482d7/node_modules/rea-agents` (`rea@6.5.0`). `rea doctor` reports the
+JS/Electron analysis path is available but the native engines (Hopper/Ghidra/IDA/JADX) are **not**
+configured, and `adb`/`idevice` are absent. Because the desktop app ships its server as readable
+ESM and the APK ships readable Vite output, the connection protocol was recoverable by **static
+extraction** (APK unzip + `@electron/asar`), which is REA's `analyze-javascript-application`
+workflow applied manually. REA's `analyze-javascript-application`, `decode-android-resources`
+(apktool) and passive `inspect-electron-page` remain available as **deeper verification** steps
+(see §4).
+
+---
+
+## 1. Findings — how OpenChamber mobile connects to OpenChamber desktop
+
+### 1.1 Topology (the single most important fact)
+
+In OpenChamber, **the desktop app *is* the server**. The Electron main process imports and starts the
+web server **in-process**:
+
+```js
+// desktop-asar/dist-bundle/main.mjs (esbuild bundle; banner strings retained)
+const { startWebUiServer } = await import("@openchamber/web/server/index.js");
+const handle = await startWebUiServer({ port: chosenPort, host: bindHost,
+  uiPassword: desktopUiPassword || null, attachSignals: false, exitOnShutdown: false, ... });
+```
+
+- Server package: `@openchamber/web` (`main: ./server/index.js`, `startWebUiServer`).
+- The desktop UI, the browser UI, and the phone all talk to **one origin** served by that process.
+- Bind host defaults to `127.0.0.1`; a LAN/pairing URL is supplied explicitly to the pairing
+  payload (see §1.3), and workspace remotes default `0.0.0.0` only with a UI password.
+- The Electron shell is also a first-class client: it creates a local device token with
+  `clientKind: "desktop-local"` (`LOCAL_DESKTOP_CLIENT_KIND`) and treats it as the trusted operator
+  of the server. Remote desktops are `clientKind: "desktop"`.
+
+The **mobile app** is a Capacitor WebView (`com.openchamber.app`) that bundles a copy of the web UI's
+`mobile.html`/`MobileApp` entry and talks to whichever server it paired with (a desktop instance, a
+headless install, or the same server via relay). The Android shell config:
+
+```json
+// AndroidManifest-adjacent: assets/capacitor.config.json
+{ "appId": "com.openchamber.app", "appName": "OpenChamber",
+  "server": { "androidScheme": "https" }, "android": { "allowMixedContent": true }, ... }
+```
+
+Plugins registered: secure-storage (`@aparajita/capacitor-secure-storage`), MLKit barcode scanning,
+app, keyboard, push-notifications, status-bar.
+
+### 1.2 The connection model: unified "pairing v2" with transport candidates
+
+The heart of the design is that a connection is **not** a single URL. It is a set of **transport
+candidates**, and the client races/probes them and keeps working across address changes.
+
+Candidate shapes (server `core-routes.js`, mobile `Ib`/`Hf`):
+
+```
+{ type: "lan",    url: "http://<host>:<port>", priority: 10 }     // plain HTTP on LAN/Tailnet
+{ type: "tunnel", url: "https://<public-host>", priority: 10/20 } // reverse-proxy / ngrok / cloudflare
+{ type: "relay",  relayUrl: "wss://…", serverId: "<id>",
+                  hostEncPubJwk: { kty:"EC", crv:"P-256", x, y }, priority: 30 }
+```
+
+- Direct (`lan`/`tunnel`) candidates are plain HTTP(S). The mobile client normalizes both to
+  internal `kind: "direct"`; the relay candidate stays `kind: "relay"`.
+- The **relay** candidate carries **no token** — it is a transport, not a link format. The one-time
+  pairing secret is redeemed *over* the relay like over any other candidate.
+- Priority is a numeric hint (direct ~10/20, relay 30): direct is preferred, relay is the fallback
+  when the host is not directly reachable (NAT, no public URL).
+
+### 1.3 Pairing flow (desktop creates the link, phone scans it)
+
+**Server endpoints** (all in `server/lib/opencode/core-routes.js`, behind the `/api` auth guard):
+
+| Method + path | Purpose |
+|---|---|
+| `POST /api/client-auth/pairing/sessions` | Create a one-time pairing session. Body: `{ label?, allowedClientKinds?, serverUrl?, includeDirect?, includeRelay? }`. Returns `{ pairing: { id, secret, expiresAt, fingerprint, … }, server: { label, candidates } }` |
+| `GET /api/client-auth/pairing/transports` | Current direct transports for the create-device dialog → `{ local, lan, relayAvailable }` |
+| `GET /api/client-auth/pairing/sessions` | Pending (unredeemed) sessions, secrets excluded |
+| `DELETE /api/client-auth/pairing/sessions/:id` | Cancel a pending session |
+| `POST /api/client-auth/pairing/redeem` | **Unauthenticated** (rate-limited): body `{ pairingId, secret, clientLabel?, clientKind?, deviceName?, devicePlatform?, deviceModel?, appVersion?, dedupeKey? }` → `{ ok, server:{ label, url, fingerprint }, client, clientToken }` |
+| `GET /api/client-auth/connection/candidates` | **Candidate refresh for an already-paired device** (UI session or client bearer): returns the server's *current* LAN URLs (+ relay when enabled) and `serverId` |
+| `GET/POST/DELETE /api/client-auth/clients[/:id]` | List / create / revoke paired devices (token minting) |
+
+**Pairing-session internals** (`server/lib/client-auth/pairing.js`):
+
+- id prefix `pair_`, secret = 32 random bytes base64url, TTL **10 min**, stored **hashed**
+  (sha256) in `client-pairing-sessions.json`; `constantTimeEqual` on redeem; generic
+  `"Invalid or expired pairing session"` on any failure; per-IP+pairingId rate limit on redeem.
+- Operator-typed `label` wins; device self-reported name is the fallback; `dedupeKey` makes a
+  re-pair replace the same device record instead of duplicating.
+- On redeem it calls `remoteClientAuthRuntime.createClient(...)` and returns the raw token once.
+
+**Device tokens** (`server/lib/client-auth/remote-clients.js`):
+
+- Format **`oc_client_<32 random bytes base64url>`**, stored **hashed** in `remote-clients.json`.
+- **Non-expiring**, revocable; last-used timestamp written at most once/minute.
+- Conveyed as `Authorization: Bearer oc_client_…`.
+- WebSocket upgrades can't carry headers, so they authenticate with a **short-lived URL-scoped
+  token** minted beforehand (relay doc, §1.5).
+
+**The QR / deep-link payload** (the contract between desktop and phone):
+
+```
+openchamber://connect?v=2&p=<base64url(JSON)>
+JSON = {
+  v: 2,
+  pairingId: "pair_…",
+  secret: "…",
+  label?: "<server label>",
+  fingerprint?: "A1B2-C3D4",
+  expiresAt?: "<ISO>",
+  candidates: [ …the candidate list above… ]
+}
+```
+
+- Built desktop-side by the shared UI helper (`openchamber://connect?...` builder + zod schema
+  `Vc`), **not** returned by the server route — v2.3.3's `pairing/sessions` response returns
+  `server.candidates` and the UI assembles the URI. (Vela Mobile's v1.20 fork differs slightly:
+  its server *does* return a prebuilt `vela://connect?...` `connectionUrl`, see §2.2.)
+- Mobile parsing: `new URL(...)`, requires protocol `openchamber:`, host `connect`, `v=2`, then
+  base64url-decodes `p`, JSON-parses, zod-validates, drops the payload if expired. A lenient
+  fallback parser tolerates a manually-entered `openchamber://connect?...` string (QR fallback).
+- `fingerprint` is a human-checkable `XXXX-XXXX` hex shown on both ends to confirm the right host.
+
+### 1.4 Runtime connect algorithm (phone side)
+
+Recovered from the mobile bundle (`renderMobileApp-*.js`):
+
+1. **Probe direct candidates first.** For each `kind:"direct"` URL: `GET {url}/health`; if a pinned
+   `serverId` exists, read `health.serverId` and **reject a mismatch before sending the token**;
+   then `GET {url}/auth/session` with `Authorization: Bearer <clientToken>` and
+   `credentials: "omit"`; classify `ok | needs-login | auth-failed`.
+2. **Fall back to relay** when direct is unreachable: open the E2EE tunnel
+   (`Ko({ relayUrl, serverId, hostEncPubJwk })`), then run the same `/auth/session` through it.
+3. Store the winning connection. Saved connections live in **localStorage**
+   (`openchamber.mobile.connections.v1`) as `[{ id, label, candidates, hasToken|clientToken,
+   lastUsedAt }]`; the raw token is kept in **Capacitor secure storage** on native (the record only
+   stores `hasToken`), so plain localStorage never holds a secret on device.
+4. A stable `deviceId` (`openchamber.mobile.deviceId`, `crypto.randomUUID`) yields the
+   `dedupeKey` (`mobile:<deviceId>`), stabilising re-pairing.
+5. Already-paired clients periodically call `GET /api/client-auth/connection/candidates` to refresh
+   stale LAN addresses (DHCP change) and stay off the relay when direct works.
+
+### 1.5 The relay (E2EE) — "reachable from anywhere" without exposing the Mac
+
+From `server/lib/relay/` + `packages/ui/src/lib/relay/` (identical architecture in Vela Mobile's
+v1.20 fork, documented in `vela-mobile/packages/web/server/lib/relay/DOCUMENTATION.md`):
+
+- **Layer 1 — routing.** The host dials **outbound** to the relay (`wss://relay.openchamber.dev/ws`
+  by default). Nothing inbound is exposed. Host authenticates with a long-lived signing key; the
+  relay routes each client to the host by a stable `serverId`
+  (base64url sha256 of the public signing JWK).
+- **Layer 2 — E2EE.** Client↔host ECDH (P-256) + HKDF (`openchamber-relay-v1`) → AES-GCM frames
+  (`[1 byte version][12 byte IV][ciphertext+16 byte tag]`). The relay forwards **opaque ciphertext**
+  and cannot read app traffic. The host's encryption public key is the client's trust anchor,
+  distributed out-of-band in the pairing payload (`hostEncPubJwk`).
+- **Layer 3 — multiplexing.** A tunnel codec frames HTTP request/response (incl. streamed bodies),
+  **SSE** (streamed HTTP), and **WebSocket** sub-streams (`TunnelFrameType.HttpRequest/HttpBody/
+  HttpResponse/StreamEnd/WsOpen/…/Ping/Pong/DeliveryAck`), so the *entire* app works over the one
+  encrypted connection.
+- **Auth is unchanged by the relay:** the tunnel is transport only; the server authenticates every
+  tunneled request exactly as a direct remote client.
+- Relay is **opt-in, off by default**; a per-machine host claim (`relay-host.lock`) picks which
+  local process owns the single relay host slot. `serverId`/`hostEncPubJwk` persist in
+  `settings.json` (`privateRelay`) and are never rotated implicitly.
+- Two byte-compatible implementations (TS client in `packages/ui`, JS host in `@openchamber/web`)
+  are held together by a cross-compat test — this is the "do not let them drift" invariant.
+
+### 1.6 Push notifications
+
+- Native iOS = **APNs**; Android = **FCM** (upstream); registered to the *connected server*, which
+  forwards through a central push relay (`https://api.openchamber.dev/v1/push/send`) using the
+  server's own ECDSA P-256 key to bind tokens to that server. Mobile payloads carry **generic text
+  only** (scenario title + session name).
+- **Presence-aware suppression:** a device's push is skipped while an interactive (desktop/web)
+  client reports it is focused — gated on the *desktop's* visibility, never the phone's own.
+
+### 1.7 Persistence / secrets (server side)
+
+`$OPENCHAMBER_DATA_DIR` (default `~/.config/openchamber`) owns: `settings.json` (incl.
+`privateRelay`), `remote-clients.json` (hashed device tokens), `client-pairing-sessions.json`,
+signing/encryption key material, `relay-host.lock`, push token registries. Writes are atomic
+(tmp+rename) and files are `0600`.
+
+### 1.8 One-paragraph summary of the contract
+
+> Desktop runs one web server (in-process for Electron) that is the single origin for desktop UI and
+> phones. To onboard a phone, the desktop mints a 10-minute, single-use pairing session, gathers its
+> reachable transport *candidates* (LAN/Tunnel direct + optional E2EE relay), and encodes
+> `{pairingId, secret, candidates, …}` into `openchamber://connect?v=2&p=…` for a QR/deep link. The
+> phone parses it, races the direct candidates (`/health` + `/auth/session`), falls back to the E2EE
+> relay tunnel if needed, redeems the secret via `POST /api/client-auth/pairing/redeem`, and stores
+> a **non-expiring `oc_client_…` bearer token** in device secure storage. Thereafter it talks to the
+> one origin (direct or through the E2EE tunnel) with that bearer token, refreshes candidates when
+> its LAN address goes stale, and receives push through the server's push relay.
+
+---
+
+## 2. Analysis — the current Vela mobile app
+
+### 2.1 What exists today
+
+- **`vela-mobile`** is a **fork of OpenChamber v1.20.0** (`packages/web` + `packages/ui` both say
+  `1.20.0`; the mobile shell is `1.13.2`; the workspace root is `0.4.0`), rebranded to Vela
+  (`com.vela.mobile`, scheme `vela://`, env prefix `VELA_`, scopes `@vela/*`). Git remote:
+  `Tsohnle95/VelaMobile`.
+- It is **not** a thin wrapper. It is a large workspace: Capacitor shell (`packages/mobile`),
+  Vite web app + Express server (`packages/web`), shared UI (`packages/ui`). Built Android APKs
+  already exist in `dist/` (`vela-mobile-0.2.0 … 0.4.0.apk`).
+- **It already carries the OpenChamber connection stack** from v1.20: pairing-v2
+  (`vela://connect?v=2&p=…`), transport candidates (`lan`/`tunnel`/`relay`), the full E2EE relay,
+  tunnels (ngrok/cloudflare providers), the `connection/candidates` refresh endpoint, and
+  notifications/APNs push. Local additions on top: `vela-sessions`, `vela-control`, `session-*`
+  subsystems, and `scripts/desktop-service.mjs` / `scripts/service.mjs`.
+- **The mobile client logic is the same family** as upstream: `packages/ui/src/lib/connectionPayload.ts`
+  parses `vela://connect`, `mobileConnections` stores candidates + token, `runtime-*` routes traffic
+  through direct or relay transport.
+
+### 2.2 How Vela Desktop integrates it (the fragile part)
+
+`vela/src/main/mobile-server.ts` + `src/main/index.ts`:
+
+- Vela Desktop does **not** embed a server. It **spawns a child Node process** running
+  `vela-mobile/scripts/desktop-service.mjs --parent-pid <vela pid>`.
+- It **discovers an on-disk checkout**: `../vela-mobile`, `~/code-repositories/vela-mobile`,
+  `~/coding-projects/vela-mobile`, or `VELA_MOBILE_HOME`; and it needs a **system Node runtime**
+  (`~/.local/bin/node`, Homebrew, `which node`, or `VELA_NODE_BIN`). Missing either ⇒
+  `state: "setup-required"`.
+- It reads `~/Library/Application Support/VelaMobile/run/desktop-status.json` for `{port,password}`,
+  authenticates to the companion's `/auth/session`, then proxies the desktop's shared OpenCode
+  daemon into it via `VELA_EXTERNAL_BACKEND=1` + `OPENCODE_HOST/USERNAME/PASSWORD` so phone and
+  desktop **share sessions**.
+- `createPairingQr()` calls the companion's `pairing/transports` + `pairing/sessions` and returns
+  the prebuilt `connectionUrl`; only the URI crosses IPC
+  (`shell:mobile-setup-status`, `shell:mobile-pairing-qr`) — the password/token never reach the
+  renderer. That trust boundary matches the intent of `.agent/tasks/mobile-connection-onboarding.md`.
+- Vela Desktop's **mobile server lifecycle is tied to the desktop app** (parent-pid watch): "app
+  open = mobile works; app closed = it stops". Same intent as upstream, different mechanism.
+
+### 2.3 Strengths of the current state
+
+- The **protocol already exists and is mature** (pairing-v2, candidates, E2EE relay, push). This is
+  not a greenfield problem.
+- The **trust boundary is respected** (main process brokers pairing; renderer never sees secrets).
+- A **release-signed Android path exists** (`omni-release.jks`, `dist:android`), and the workspace
+  has a `verify` gate (docs/type-check/lint/test/build), even if the mobile app is not CI-built.
+- Session sharing with the desktop is already designed (`VELA_EXTERNAL_BACKEND`).
+
+### 2.4 Weaknesses / risks (in priority order)
+
+1. **Not shippable to end users.** Requires a developer checkout of `vela-mobile` *and* a system
+   Node. A packaged `Vela.app` on a normal Mac will show `setup-required`. This is the single
+   biggest reliability gap. (Options A/B/C in §3 address it.)
+2. **Separate process tree + version skew.** The desktop and its mobile server are two processes
+   from two repos at two upstream versions (Vela fork v1.20 vs upstream v2.3.3). Every upstream
+   security/connection fix must be hand-ported; drift is guaranteed.
+3. **Large fork to own.** ~40 server subsystems + a full shared UI is a lot of surface to maintain
+   and keep building as the toolchain moves.
+4. **Push is effectively off.** No committed `google-services.json` ⇒ FCM disabled on Android
+   (README states it is intentionally gated). iOS push requires a real APNs/prod setup.
+5. **No native release automation.** HANDOFF.md is explicit: no CI builds/signs/publishes Android or
+   iOS; TestFlight/Play internal and store metadata are unstarted. The CI gate is JS-only on Linux.
+6. **Verification is thin for the actual experience.** The live audit (`scripts/e2e-audit.mjs`) and
+   a device route are manual; there is no automated mobile end-to-end.
+
+---
+
+## 3. The best route forward (recommendation)
+
+### 3.1 The decision in one line
+
+Keep the **already-working OpenChamber-family connection contract**, but **stop shipping a
+developer-checkout companion**: move the mobile server into Vela's own lifecycle, and plan to track
+upstream rather than diverge. Do this in three small, independently verifiable phases.
+
+### 3.2 Options considered
+
+| Option | What it means | Pros | Cons |
+|---|---|---|---|
+| **A. Bundle the fork as a sidecar** | Keep `vela-mobile` fork; ship the companion as a **bundled single-file Node binary** inside `Vela.app`; delete checkout discovery + system-Node dependency | Smallest change; protocol untouched; fast to "shippable" | Still two processes; version skew + large-fork maintenance persist; mobile quality bounded by fork state |
+| **B. Embed the server in Vela's Electron main** | Import/port the Vela/OpenChamber web server into `src/main`, `startWebUiServer(...)` in-process like upstream; retire the external companion | One process; no external checkout/Node; single lifecycle; sessions trivially shared; matches upstream architecture | Large port; must preserve Vela trust boundaries + opencode-v2 routing; bundle size; still a fork to track |
+| **C. Rebase the mobile app onto upstream OpenChamber v2.3.x** | Re-vendor the newer upstream (which already embeds the server in Electron), rebrand to Vela/Vela, re-apply Vela deltas | Best long-term quality + least drift; inherits matured connection/relay/candidates/tunnels/push | Biggest one-time effort; must reconcile Vela-specific features (opencode-v2 compat, Vela branding, desktop integration) |
+
+### 3.3 Recommended sequence (A → B/C, not either/or)
+
+1. **Phase 1 — Make it shippable now (Option A).**
+   Stop depending on a checkout + system Node. Bundle the companion (a compiled single-file Node
+   binary, or a bundled Node runtime + the web server) inside `Vela.app`; have `mobile-server.ts`
+   launch the bundled artifact. Delete the `DEFAULT_MOBILE_HOMES` discovery and the
+   `node-runtime-missing` failure mode. **Outcome:** any user who installs Vela gets a working
+   Mobile Setup screen. Verify: fresh Mac with no `vela-mobile` checkout and no Homebrew Node can
+   generate and scan a QR and connect.
+
+2. **Phase 2 — Align the server/connection with upstream (Option C direction, incremental).**
+   Rebase the vendored `packages/web` (and `packages/ui` connection/relay modules) onto OpenChamber
+   v2.3.x, retaining Vela branding (`vela://`, `VELA_*`, `@vela/*`), the opencode-v2 compat
+   layer, and the Vela-only subsystems. Prefer **adopting upstream modules wholesale** over
+   bespoke edits so future rebases stay mechanical. Add a **contribution test that runs the existing
+   relay cross-compat suite** (`cross-compat.test.js`) so wire-format drift is caught automatically.
+   **Outcome:** the connection/candidates/relay/tunnels/push surfaces match a supported upstream.
+
+3. **Phase 3 — Embed the server in Vela's main process (Option B).**
+   Start the web server in-process in `src/main` (as upstream does), so the desktop owns the mobile
+   server lifecycle without spawning a child. Keep `mobile-server.ts`'s **IPC contract** identical
+   (`shell:mobile-setup-status`, `shell:mobile-pairing-qr`; secrets never cross to the renderer), so
+   the renderer/UI work already done is unchanged. **Outcome:** one process, no checkout, no system
+   Node, unified lifecycle.
+
+4. **Phase 4 — Release engineering + reachability.**
+   - CI: Android (Linux + SDK + JDK 21) and iOS (macOS + Xcode) build/sign/upload jobs; inject
+     `google-services.json` and keystore secrets; TestFlight + Play internal tracks.
+   - Enable Android FCM; wire real APNs (production) for iOS.
+   - Provide a **demo instance + credentials** for store review (Guideline 4.2 / App Store 2.1).
+   - Write the privacy policy + store data-safety/nutrition labels (camera + notifications).
+
+### 3.4 Why this ordering
+
+- Phase 1 removes the **only** blocker that makes the current app unreliable for real users, with
+  the least risk, and without touching the working protocol.
+- Phase 2 removes **drift/maintenance** risk and is a prerequisite to safely embed (Phase 3) — you
+  want to embed a version you intend to track, not a frozen v1.20 fork.
+- Phase 3 finishes the **single-process** reliability goal and matches the upstream architecture, so
+  future upstream work drops in rather than being ported by hand.
+- Phase 4 converts "it builds locally" into "it ships and stays shipped".
+
+If the team prefers fewer phases: **do Option C once and hard** (rebase + rebrand + embed in a
+single effort) and skip the Level-A bridge — higher upfront cost, lowest steady-state cost.
+
+### 3.5 Concrete decisions to make before coding
+
+1. **Transport default for end users:** direct-LAN only (simplest, needs Tailscale/reachable
+   network) vs. relay (works anywhere, needs Vela-hosted relay infra + a stable `serverId`
+   identity). Upstream defaults relay **off**; decide Vela's default and whether to host a relay.
+2. **Scheme + payload compatibility:** keep `vela://connect?v=2&…` (already implemented) — do **not**
+   invent a new format; keep byte-compat with the relay/candidates model.
+3. **Fork strategy:** track upstream tags (rebase) vs. copy-and-own. Rebase is strongly preferred
+   given the size of the server.
+4. **Push provider:** reuse upstream's push-relay (`api.openchamber.dev`) vs. self-host (FCM/APNs
+   directly). Licensing/branding implications for a *different* product name (Vela/Vela).
+5. **iOS scope:** ship Android first (already signed/built) and treat iOS as a follow-on, or commit
+   to both from the start.
+
+### 3.6 Verification plan for the chosen route
+
+- Targeted: `vela-mobile` `verify` gate; relay `cross-compat.test.js`; `mobile-server.test.ts`
+  and `SettingsPage.test.tsx` on the Vela side; `npm run check` on Vela.
+- Integration: `vela-mobile/scripts/e2e-audit.mjs` against a running stack (the README claims
+  17/17 passes against a v2 backend).
+- Device: real phone install → scan QR → connect → send a prompt → observe live streaming →
+  close/reopen desktop → reconnect → revoke device from desktop.
+- Reachability: direct LAN, Tailscale, and relay-only (phone on cellular, Mac behind NAT).
+- Release: signed artifacts install in place (same keystore), Play internal track upload.
+
+### 3.7 Explicit gaps in this discovery (things not yet proven)
+
+- No **live** runtime observation was performed (no `adb` device, no Electron CDP attach); findings
+  are **static** from the shipped bundles + source. A REA passive/active capture could confirm the
+  exact wire traffic.
+- The Android **manifest** was not decoded (`decode-android-resources`/apktool not run), so native
+  permission/scheme details are inferred from `assets/capacitor.*` + the Vela HANDOFF.
+- Upstream **relay service** and **push relay** are external (Cloudflare) and were not inspected.
+- Exact **v1.20 → v2.3.3** delta is a large surface; only the connection/pairing/relay/push areas
+  were compared in depth.
+
+---
+
+## 4. Suggested next REA steps (if we want harder evidence)
+
+```sh
+REA=~/.npm/_npx/af752b90495482d7/node_modules/rea-agents
+node "$REA/scripts/rea.mjs" analyze-javascript-application \
+  --help   # static graph of the mobile bundle / desktop asar, provenance-tagged
+node "$REA/scripts/rea.mjs" decode-android-resources --help  # decode AndroidManifest + resources
+# Passive (no JS execution): start OpenChamber, then
+node "$REA/scripts/rea.mjs" list-electron-targets http://127.0.0.1:<cdp-port> --json
+node "$REA/scripts/rea.mjs" inspect-electron-page  http://127.0.0.1:<cdp-port> <target> --json
+```
+
+These turn the static inferences above into tagged evidence and would also verify the native bridge
+(`assets/native-bridge.js`) and manifest surface.
+
+---
+
+## 5. Evidence index (where each claim comes from)
+
+- Desktop starts the server in-process: `app.asar` → `dist-bundle/main.mjs` (`startWebUiServer`,
+  `LOCAL_DESKTOP_CLIENT_KIND="desktop-local"`).
+- Server routes: `@openchamber/web/server/lib/opencode/core-routes.js` (`/api/client-auth/*`,
+  `pairingServerCandidates`, `resolveDirectLanUrls`, `resolvePairingTransports` in
+  `server/index.js`).
+- Pairing session internals: `@openchamber/web/server/lib/client-auth/pairing.js`.
+- Device tokens: `@openchamber/web/server/lib/client-auth/remote-clients.js` (`oc_client_`).
+- Relay: `@openchamber/web/server/lib/relay/{e2ee,tunnel-codec,host-client,service,identity}.js`;
+  client side `vela-mobile/packages/ui/src/lib/relay/*`; canonical prose
+  `vela-mobile/packages/web/server/lib/relay/DOCUMENTATION.md`.
+- Push: `@openchamber/web/server/lib/notifications/*`; `vela-mobile/.../notifications/DOCUMENTATION.md`.
+- Mobile client parsing/connect: APK `assets/public/assets/renderMobileApp-*.js` (`openchamber://connect`,
+  `pairing/redeem`, candidate probe, relay fallback) and `katex.min-*.js` (payload builder + schema).
+- Vela integration: `vela/src/main/mobile-server.ts`, `vela/src/main/index.ts`,
+  `vela/src/preload/index.ts`, `vela/.agent/tasks/mobile-connection-onboarding.md`.
+- Vela Mobile state: `vela-mobile/README.md`, `packages/mobile/HANDOFF.md`, `docs/mobile-shell.md`,
+  `docs/server.md`, `docs/operations.md`, `package.json`s.
+
+---
+
+## 6. DECISION (2026-10-16) — adopt OpenChamber v2.3.3 as the base; retire the fork
+
+**Decision.** Use upstream **OpenChamber v2.3.3** as the starting point for the Vela/Vela mobile app.
+Stop investing in the `vela-mobile` v1.20 fork as the primary base.
+
+**Reachability decision:** **Tailscale** (already installed on Mac + phone). Relay stays **off**; the
+phone reaches the Mac's tailnet address. Orthogonal to the base choice.
+
+### Why (evidence)
+- `vela-mobile` has **no upstream remote or history** (first commit = OpenChamber v1.20.0 import;
+  55 commits, one author). It can never `git rebase` upstream — every fix is hand-ported forever.
+- Upstream is **public, MIT, active** (11.7k★, ~5k commits), and **already on `@opencode/client 2.0.29`**
+  (OpenCode v2), so much of Vela's v2-compat delta may be unnecessary.
+- Upstream already solves the things the fork struggles with: **in-process Electron server**, matured
+  pairing/candidates/relay, tunnels, push, VS Code/Web surfaces, release tooling.
+- Vela's real deltas are **small and re-appliable**: branding (Vela/Vela, app id, scheme, env
+  prefix), desktop integration, and a few local subsystems.
+
+### The target architecture (what "connect to Vela Desktop" means)
+The mobile app connects to a **server**, not to a desktop app. OpenChamber Desktop is merely that
+server's host (it runs `@openchamber/web` in-process). Therefore, for Vela Mobile to pair with
+**Vela Desktop** exactly like upstream pairs with OpenChamber Desktop, **Vela Desktop must become
+the host of the same server**. Vela already hosts a server today — it spawns the `vela-mobile`
+v1.20 companion and shares its OpenCode daemon via `VELA_EXTERNAL_BACKEND`. This is an **upgrade of
+Vela Desktop's existing server role**, not a rewrite.
+
+### Base to pin
+- Repo: `github.com/openchamber/openchamber` @ tag **`v2.3.3`** (`main` is also 2.3.3).
+- **Adopt:** `packages/web` (Express server — the thing the phone pairs with), `packages/mobile`
+  (Capacitor shell), `packages/ui` (mobile UI), `packages/sdk` as needed.
+- **Do NOT adopt:** `packages/electron` (OpenChamber Desktop). Vela Desktop keeps its own UI/runtime.
+- Toolchain: **bun 1.4.3**, **Node ≥24.14**, **TypeScript ~7**, React 19, Vite 7, Express 5.
+
+### Approach
+1. **Fork upstream into a fresh repo** with `upstream` as a real remote; never mutate history.
+   Track `v2.3.3`; keep Vela deltas on top as thin, rebasable commits.
+2. **Rebrand** (mechanical, broad): app id / bundle id, display name (Vela/Vela), URL scheme
+   (`vela://` — payload stays `?v=2&p=<base64url>`), env prefix (`VELA_*`), icons/splash, and the
+   `*.openchamber.dev` endpoints (relay/push/updater) if we don't self-host.
+3. **Embed the server in Vela Desktop** — run the rebranded `@openchamber/web` **in-process inside
+   Vela's Electron main** (like OpenChamber Desktop), pointed at Vela's OpenCode daemon
+   (`OPENCODE_HOST` / external-backend). This replaces the external `vela-mobile` companion spawn in
+   `src/main/mobile-server.ts`; the pairing IPC contract (`shell:mobile-setup-status`,
+   `shell:mobile-pairing-qr`) can stay. Result: no external checkout, no system-Node dependency.
+4. **Port only what upstream lacks** (Vela branding, any vela-* subsystem still wanted). Upstream
+   already covers most (Session Goals, folders, etc.).
+5. **Tailscale reachability** + relay off.
+6. **Release** — Android build/sign; iOS later; attribution (MIT LICENSE + NOTICE preserved).
+
+### De-risk before committing (bounded spike)
+- **Rebrand map**: enumerate every OpenChamber-identifying string/id/asset in `mobile`+`ui`+`web`.
+- **Build spike**: build the rebranded mobile app + server, connect it to Vela's opencode backend.
+- **Pairing over Tailscale**: confirm the pairing candidate carries the tailnet address, or fall back
+  to entering `http://<tailnet-ip>:<port>` manually.
+- **Delta audit**: confirm which Vela-only features (vela-sessions, vela-control, Vela) upstream
+  already covers (Session Goals, session folders, etc.) before porting anything.
+
+### Risks
+- Large monorepo + newer toolchain (Node 24, bun 1.4.3, TS 7) vs the fork's.
+- Broad-but-mechanical rebrand; easy to miss an id/asset.
+- Divergence creep — the whole point is to keep deltas thin so `upstream` stays rebasable.
+- MIT attribution obligations must travel with the shipped app.
+
+### Immediate next step
+Clone `openchamber` @ `v2.3.3` into a workspace, inspect `packages/{mobile,ui,web}`, and produce the
+rebrand map + a build spike connected to Vela's backend. (Awaiting go-ahead; discovery mode so far.)

@@ -1,0 +1,856 @@
+{
+  "light": {
+    "closeOnHeaderRow": true,
+    "previewLineHeight": 3,
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "theme": "codex",
+    "shell": "codex",
+    "cards": 15,
+    "selected": 1,
+    "pageWidth": 996,
+    "scrollWidth": 996,
+    "columns": "181px 181px 181px 181px",
+    "cardBounds": [
+      {
+        "name": "Codex",
+        "x": 402,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Codex Dark",
+        "x": 595,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Quiet Habitat",
+        "x": 788,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Control Deck",
+        "x": 981,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Papertrail",
+        "x": 402,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Shell First",
+        "x": 595,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Swiss Grid",
+        "x": 788,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Prism",
+        "x": 981,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Workshop",
+        "x": 402,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Blueprint",
+        "x": 595,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Stillness",
+        "x": 788,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Bloom",
+        "x": 981,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Kitty Glass",
+        "x": 402,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Original Dark",
+        "x": 595,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Observatory",
+        "x": 788,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      }
+    ]
+  },
+  "dark": {
+    "closeOnHeaderRow": true,
+    "previewLineHeight": 3,
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "theme": "codex-dark",
+    "shell": "codex",
+    "cards": 15,
+    "selected": 1,
+    "pageWidth": 996,
+    "scrollWidth": 996,
+    "columns": "181px 181px 181px 181px",
+    "cardBounds": [
+      {
+        "name": "Codex",
+        "x": 402,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Codex Dark",
+        "x": 595,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Quiet Habitat",
+        "x": 788,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Control Deck",
+        "x": 981,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Papertrail",
+        "x": 402,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Shell First",
+        "x": 595,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Swiss Grid",
+        "x": 788,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Prism",
+        "x": 981,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Workshop",
+        "x": 402,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Blueprint",
+        "x": 595,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Stillness",
+        "x": 788,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Bloom",
+        "x": 981,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Kitty Glass",
+        "x": 402,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Original Dark",
+        "x": 595,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Observatory",
+        "x": 788,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      }
+    ]
+  },
+  "observatory": {
+    "closeOnHeaderRow": true,
+    "previewLineHeight": 3,
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "theme": "observatory",
+    "shell": "codex",
+    "cards": 15,
+    "selected": 1,
+    "pageWidth": 996,
+    "scrollWidth": 996,
+    "columns": "181px 181px 181px 181px",
+    "cardBounds": [
+      {
+        "name": "Codex",
+        "x": 402,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Codex Dark",
+        "x": 595,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Quiet Habitat",
+        "x": 788,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Control Deck",
+        "x": 981,
+        "y": 269,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Papertrail",
+        "x": 402,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Shell First",
+        "x": 595,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Swiss Grid",
+        "x": 788,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Prism",
+        "x": 981,
+        "y": 393,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Workshop",
+        "x": 402,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Blueprint",
+        "x": 595,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Stillness",
+        "x": 788,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Bloom",
+        "x": 981,
+        "y": 517,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Kitty Glass",
+        "x": 402,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Original Dark",
+        "x": 595,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Observatory",
+        "x": 788,
+        "y": 641,
+        "width": 181,
+        "height": 112
+      }
+    ]
+  },
+  "classic": {
+    "closeOnHeaderRow": true,
+    "previewLineHeight": 3,
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "theme": "observatory",
+    "shell": "classic",
+    "cards": 15,
+    "selected": 1,
+    "pageWidth": 966,
+    "scrollWidth": 966,
+    "columns": "181px 181px 181px 181px",
+    "cardBounds": [
+      {
+        "name": "Codex",
+        "x": 407.09375,
+        "y": 283,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Codex Dark",
+        "x": 600.09375,
+        "y": 283,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Quiet Habitat",
+        "x": 793.09375,
+        "y": 283,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Control Deck",
+        "x": 986.09375,
+        "y": 283,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Papertrail",
+        "x": 407.09375,
+        "y": 407,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Shell First",
+        "x": 600.09375,
+        "y": 407,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Swiss Grid",
+        "x": 793.09375,
+        "y": 407,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Prism",
+        "x": 986.09375,
+        "y": 407,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Workshop",
+        "x": 407.09375,
+        "y": 531,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Blueprint",
+        "x": 600.09375,
+        "y": 531,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Stillness",
+        "x": 793.09375,
+        "y": 531,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Bloom",
+        "x": 986.09375,
+        "y": 531,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Kitty Glass",
+        "x": 407.09375,
+        "y": 655,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Original Dark",
+        "x": 600.09375,
+        "y": 655,
+        "width": 181,
+        "height": 112
+      },
+      {
+        "name": "Observatory",
+        "x": 793.09375,
+        "y": 655,
+        "width": 181,
+        "height": 112
+      }
+    ]
+  },
+  "narrow": {
+    "closeOnHeaderRow": true,
+    "previewLineHeight": 3,
+    "viewport": {
+      "width": 780,
+      "height": 700
+    },
+    "theme": "observatory",
+    "shell": "codex",
+    "cards": 15,
+    "selected": 1,
+    "pageWidth": 488,
+    "scrollWidth": 488,
+    "columns": "206.812px 206.812px",
+    "cardBounds": [
+      {
+        "name": "Codex",
+        "x": 315.1875,
+        "y": 323,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Codex Dark",
+        "x": 534,
+        "y": 323,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Quiet Habitat",
+        "x": 315.1875,
+        "y": 447,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Control Deck",
+        "x": 534,
+        "y": 447,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Papertrail",
+        "x": 315.1875,
+        "y": 571,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Shell First",
+        "x": 534,
+        "y": 571,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Swiss Grid",
+        "x": 315.1875,
+        "y": 695,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Prism",
+        "x": 534,
+        "y": 695,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Workshop",
+        "x": 315.1875,
+        "y": 819,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Blueprint",
+        "x": 534,
+        "y": 819,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Stillness",
+        "x": 315.1875,
+        "y": 943,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Bloom",
+        "x": 534,
+        "y": 943,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Kitty Glass",
+        "x": 315.1875,
+        "y": 1067,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Original Dark",
+        "x": 534,
+        "y": 1067,
+        "width": 206.8125,
+        "height": 112
+      },
+      {
+        "name": "Observatory",
+        "x": 315.1875,
+        "y": 1191,
+        "width": 206.8125,
+        "height": 112
+      }
+    ]
+  },
+  "small": {
+    "closeOnHeaderRow": true,
+    "previewLineHeight": 3,
+    "viewport": {
+      "width": 600,
+      "height": 650
+    },
+    "theme": "observatory",
+    "shell": "codex",
+    "cards": 15,
+    "selected": 1,
+    "pageWidth": 308,
+    "scrollWidth": 308,
+    "columns": "260px",
+    "cardBounds": [
+      {
+        "name": "Codex",
+        "x": 308,
+        "y": 341,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Codex Dark",
+        "x": 308,
+        "y": 465,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Quiet Habitat",
+        "x": 308,
+        "y": 589,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Control Deck",
+        "x": 308,
+        "y": 713,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Papertrail",
+        "x": 308,
+        "y": 837,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Shell First",
+        "x": 308,
+        "y": 961,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Swiss Grid",
+        "x": 308,
+        "y": 1085,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Prism",
+        "x": 308,
+        "y": 1209,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Workshop",
+        "x": 308,
+        "y": 1333,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Blueprint",
+        "x": 308,
+        "y": 1457,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Stillness",
+        "x": 308,
+        "y": 1581,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Bloom",
+        "x": 308,
+        "y": 1705,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Kitty Glass",
+        "x": 308,
+        "y": 1829,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Original Dark",
+        "x": 308,
+        "y": 1953,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Observatory",
+        "x": 308,
+        "y": 2077,
+        "width": 260,
+        "height": 112
+      }
+    ]
+  },
+  "persisted": {
+    "closeOnHeaderRow": true,
+    "previewLineHeight": 3,
+    "viewport": {
+      "width": 600,
+      "height": 650
+    },
+    "theme": "codex-dark",
+    "shell": "codex",
+    "cards": 15,
+    "selected": 1,
+    "pageWidth": 308,
+    "scrollWidth": 308,
+    "columns": "260px",
+    "cardBounds": [
+      {
+        "name": "Codex",
+        "x": 308,
+        "y": 341,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Codex Dark",
+        "x": 308,
+        "y": 465,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Quiet Habitat",
+        "x": 308,
+        "y": 589,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Control Deck",
+        "x": 308,
+        "y": 713,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Papertrail",
+        "x": 308,
+        "y": 837,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Shell First",
+        "x": 308,
+        "y": 961,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Swiss Grid",
+        "x": 308,
+        "y": 1085,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Prism",
+        "x": 308,
+        "y": 1209,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Workshop",
+        "x": 308,
+        "y": 1333,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Blueprint",
+        "x": 308,
+        "y": 1457,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Stillness",
+        "x": 308,
+        "y": 1581,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Bloom",
+        "x": 308,
+        "y": 1705,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Kitty Glass",
+        "x": 308,
+        "y": 1829,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Original Dark",
+        "x": 308,
+        "y": 1953,
+        "width": 260,
+        "height": 112
+      },
+      {
+        "name": "Observatory",
+        "x": 308,
+        "y": 2077,
+        "width": 260,
+        "height": 112
+      }
+    ]
+  }
+}
