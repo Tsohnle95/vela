@@ -44,13 +44,48 @@ const probe = () => {
  const codeScrollers=Array.from(root.querySelectorAll('[data-slot=code-block-content]')).map(element=>({width:element.clientWidth,scrollWidth:element.scrollWidth,wrap:getComputedStyle(element).overflowWrap}));
  return {codeScrollers,checkpoints:root.querySelector("[data-ai-elements=timeline]").textContent.includes("Checkpoint"),styles,width:root.querySelector(".ai-elements").getBoundingClientRect().width,composer:!!document.querySelector(".composer"),suggestions:document.body.textContent.includes("Explain this repository")};
 };
-const capture = async (version,theme,width) => {
+const verifyWorkspaceMask = async win => {
+ const state = await win.webContents.executeJavaScript("(" + (() => {
+  const panel=document.querySelector('.agent-panel');
+  const surface=document.querySelector('[data-ai-elements-surface]');
+  const shadow=surface.shadowRoot;
+  const response=shadow.querySelector('.ai-elements');
+  const heading=shadow.querySelector('h2');
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const context=canvas.getContext('2d');
+  const color=value=>{context.clearRect(0,0,1,1);context.fillStyle=value;context.fillRect(0,0,1,1);return Array.from(context.getImageData(0,0,1,1).data).join(',')};
+  const background=color(getComputedStyle(response).backgroundColor);
+  const backgroundToken=color(getComputedStyle(response).getPropertyValue('--background').trim());
+  const panelBackground=color(getComputedStyle(panel).backgroundColor);
+  const workspace=document.createElement('div');workspace.className='workspace-area settings-suspended';workspace.style.cssText='position:absolute;inset:0';workspace.inert=true;
+  const column=document.createElement('div');column.className='agent-col';column.style.cssText='left:0;right:0';
+  panel.parentElement.append(workspace);column.append(panel);workspace.append(column);
+  const settings=document.createElement('section');settings.className='settings-page';
+  const exit=document.createElement('button');exit.textContent='Back to workspace';exit.style.cssText='position:absolute;top:80px;right:8px';settings.append(exit);workspace.parentElement.append(settings);
+  const box=exit.getBoundingClientRect();
+  const hiddenVisibility=getComputedStyle(heading).visibility;
+  const hiddenPointerEvents=getComputedStyle(heading).pointerEvents;
+  const opacity=getComputedStyle(workspace).opacity;
+  const canExit=document.elementFromPoint(box.x+box.width/2,box.y+box.height/2)===exit;
+  exit.onclick=()=>{workspace.classList.remove('settings-suspended');workspace.inert=false;settings.remove();};exit.click();
+  return {background,backgroundToken,panelBackground,hiddenVisibility,hiddenPointerEvents,opacity,canExit,restoredVisibility:getComputedStyle(heading).visibility,preserved:surface.shadowRoot===shadow && shadow.querySelector('h2')===heading};
+ }).toString()+")()");
+ console.log("Workspace mask",JSON.stringify(state));
+ assert.equal(state.background,"0,0,0,0","Response must let the panel background show through");
+ assert.equal(state.backgroundToken,state.panelBackground,"Response background token must match the selected panel palette");
+ assert.equal(state.hiddenVisibility,"hidden","Shadow response must inherit suspended visibility");
+ assert.equal(state.hiddenPointerEvents,"none","Suspended response cannot receive pointer input");
+ assert.equal(state.opacity,"0","Workspace must suppress descendant paint beneath settings");
+ assert.equal(state.canExit,true,"Settings exit must receive the hit at its visible location");
+ assert.equal(state.restoredVisibility,"visible","Closing settings restores the response");
+ assert.equal(state.preserved,true,"Settings must preserve the mounted response and DOM state");
+};
+const capture = async (version,theme,width,appearance) => {
  const win=new BrowserWindow({show:false,width,height:900,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
  windows.push(win);
  console.log("Capture",version,theme,width);
  const errors=[];
  win.webContents.on("console-message",({level,message})=>{if(level==="error") {errors.push(message); console.error(message)}});
- await win.loadURL(BASE_URL+"/chat-comparison/style-check.html?version="+version+"&theme="+theme);
+ await win.loadURL(BASE_URL+"/chat-comparison/style-check.html?version="+version+"&theme="+theme+(appearance?"&appearance="+appearance:""));
  await wait(win,version==="reference"?"!!document.querySelector('h2')":"!!document.querySelector('[data-ai-elements-surface]')?.shadowRoot?.querySelector('h2')");
  await win.webContents.executeJavaScript("document.fonts.load(" + JSON.stringify('14px "Geist Variable"') + ").then(()=>document.fonts.ready).then(()=>true)");
  await wait(win, "document.fonts.check(" + JSON.stringify('14px "Geist Variable"') + ")");
@@ -66,7 +101,7 @@ const capture = async (version,theme,width) => {
 };
 (async()=>{
  await app.whenReady();
- for(const theme of ["light","dark"]) for(const width of [320,600]) {
+ for(const theme of ["dark","light"]) for(const width of [320,600]) {
   const actual=await capture("production",theme,width);
   const reference=await capture("reference",theme,Math.round(actual.data.width));
   assert.deepEqual(actual.errors.concat(reference.errors),[],"No browser errors");
@@ -87,8 +122,12 @@ const capture = async (version,theme,width) => {
   results.push({theme,width,contentWidth:actual.data.width,differences,errors:actual.errors.concat(reference.errors)});
   await fs.writeFile(OUTPUT+"/results.json",JSON.stringify(results,null,2));
   assert.deepEqual(differences,[],"Production must match reference: "+theme+" "+width);
+  await verifyWorkspaceMask(actual.win);
   actual.win.destroy();reference.win.destroy();
  }
+ const original = await capture("production","dark",360,"original");
+ await verifyWorkspaceMask(original.win);
+ original.win.destroy();
  const live = new BrowserWindow({show:false,width:360,height:500,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
  await live.loadURL(BASE_URL+"/chat-comparison/style-check.html?stream=1&theme=light");
  await wait(live,"document.documentElement.dataset.streamReady === 'true'");

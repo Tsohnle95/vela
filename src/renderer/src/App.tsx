@@ -635,6 +635,7 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
         <div className="workspace-host" ref={workspaceHostRef}>
           <div
           ref={workspaceAreaRef}
+          inert={settingsOpen}
           className={`workspace-area ${settingsOpen ? "settings-suspended" : ""} ${ordered.some((panel) => slotShown(panel) > 0) || (panels.length === 0 && emptyAgentOpen) ? "agent-open" : ""} ${editorCovered ? "editor-covered" : ""} ${trayDragging ? "tray-dragging" : ""}`}
           style={
             {

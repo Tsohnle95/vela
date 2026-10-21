@@ -556,7 +556,9 @@ Key mechanisms:
   Base UI portals use
   the same shadow boundary through `portal-container.tsx`; only fonts and
   Tailwind property registrations are document-wide. The original composer
-  remains outside that boundary. Vendored
+  remains outside that boundary. The shadow host inherits shell visibility and
+  pointer handling, and the response background is transparent over the selected
+  panel surface. Vendored
   source/provenance lives under `ai-elements/upstream/`; runnable original
   examples are under `ai-elements/demos/`. See the comparison procedure in
   [operations.md](operations.md). `?chat-renderer=old` selects the original
@@ -735,7 +737,7 @@ express a cross-component invariant or non-obvious state contract.
 
 | Component | File | Responsibility |
 |---|---|---|
-| `App` | `App.tsx` | Workspace shell and activity rail; panel geometry and focus routing; the rail hosts Sessions/Files views, Terminal, the Changes review view, and browser creation with Settings pinned at the bottom and stays visible in Agent Mode; Settings overlays the mounted workspace so editor group state survives |
+| `App` | `App.tsx` | Workspace shell and activity rail; panel geometry and focus routing; the rail hosts Sessions/Files views, Terminal, the Changes review view, and browser creation with Settings pinned at the bottom and stays visible in Agent Mode; Settings overlays the mounted workspace and masks its paint and input with opacity, inherited visibility and inertness, so editor and response state survive |
 | `Titlebar` | `Titlebar.tsx` | Left-panel toggle beside the traffic lights, a slot the focused editor group's tab strip portals into, and the titlebar actions (Agent Mode, add-agent panel, and the right-panel toggle in the corner); the leading block is sized so the strip starts exactly where the left app panel ends, and never narrower than its controls so a collapsed panel cannot clip the toggle; empty strip surface is part of the window drag region while tabs and controls set `no-drag`; both panel toggles are the same mirrored panel glyph pair (dashed while its panel is hidden) and flip with panel state without accent highlighting |
 | Launch bootstrap | `launch.ts`, `mount-app.tsx`, `src/renderer/index.html` | Static Folded light art paints before the IDE modules load; three visible seconds precede mounting the IDE, which opens at workspace size without selecting a session |
 | `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (Files when a workspace opens), Vela header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |

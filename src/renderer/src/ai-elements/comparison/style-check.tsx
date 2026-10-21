@@ -22,7 +22,7 @@ if (last?.kind === "assistant") last.parts = [...last.parts, {kind:"text",id:"st
 fixture.push({kind:"user",id:"follow-up",text:"Show the next step."},{kind:"assistant",id:"follow-up-answer",messageID:"follow-up-answer",completed:true,parts:[{kind:"text",id:"follow-up-text",text:"Ready for the next step.",complete:true}]});
 installComparisonBridge();
 window.vela.onMessage = callback => { listeners.add(callback); return () => { listeners.delete(callback); }; };
-window.localStorage.setItem("vela.theme", dark ? "codex-dark" : "codex");
+window.localStorage.setItem("vela.theme", params.get("appearance") ?? (dark ? "codex-dark" : "codex"));
 window.vela.openSessionById = async () => ({ session: demoSession, transcript: streaming ? [] : fixture, todos: [], usage: null });
 window.vela.sessionTranscript = async () => ({ transcript: streaming ? [] : fixture, todos: [] });
 

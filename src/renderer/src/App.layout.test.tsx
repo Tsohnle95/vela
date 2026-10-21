@@ -317,6 +317,7 @@ describe("Layout panel sizing", () => {
     expect(settingsButton.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector(".settings-sidebar")).not.toBeNull();
     expect(container.querySelector(".workspace-area.settings-suspended")).not.toBeNull();
+    expect(container.querySelector(".workspace-area")?.hasAttribute("inert")).toBe(true);
 
     await act(async () => {
       settingsButton.click();
@@ -325,6 +326,7 @@ describe("Layout panel sizing", () => {
     expect(settingsButton.getAttribute("aria-pressed")).toBe("false");
     expect(container.querySelector(".settings-sidebar")).toBeNull();
     expect(container.querySelector(".workspace-area.settings-suspended")).toBeNull();
+    expect(container.querySelector(".workspace-area")?.hasAttribute("inert")).toBe(false);
 
     await act(async () => {
       toggleSidebar(container);
