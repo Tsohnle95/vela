@@ -120,7 +120,7 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
   it("retains the original input and shell without suggested prompts", async () => {
     await act(async () => root.render(<AgentPanel />));
     expect(container.querySelector(".agent-panel > .agent-header")).not.toBeNull();
-    expect(container.querySelector(".agent-panel > .agent-scroll")).not.toBeNull();
+    expect(container.querySelector(".agent-panel .agent-scroll")).not.toBeNull();
     expect(container.querySelector('[data-component="session-prompt-dock"] .composer')).not.toBeNull();
     expect(container.querySelector('.composer-selector.agent')).not.toBeNull();
     expect(container.querySelector('.composer-selector.model')).not.toBeNull();
@@ -244,10 +244,11 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
     if(renderer==="new") {
       expect(container.querySelector<HTMLElement>(".agent-response-stream")?.hidden).toBe(false);
       expect(container.querySelector(".agent-empty")).toBeNull();
-      expect(container.querySelector("[data-ai-elements-surface]")?.shadowRoot?.querySelector('[data-ai-activity]')?.textContent).toContain("Running command");
+      expect(container.querySelector("[data-agent-stream-status] [data-ai-elements-surface]")?.shadowRoot?.querySelector('[data-ai-activity]')?.textContent).toContain("Running command");
     }
   });
 
+  if (renderer === "old") {
   it("follows resized stream content only until the reader scrolls away", async () => {
     await act(async () => root.render(<AgentPanel />));
     const scroll = container.querySelector<HTMLDivElement>(".agent-scroll")!;
@@ -326,6 +327,8 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
     await act(async () => root.render(<AgentPanel />));
     expect(restored.scrollTop).toBe(200);
   });
+
+  }
 
   it("returns from a child agent session to its parent", async () => {
     currentSession = { ...session("child", 1), id: "child", parentID: "parent", title: "Review changes", agent: "review" };

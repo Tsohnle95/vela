@@ -771,6 +771,8 @@
   user-select: text;
 }
 
+.agent-scroll[data-pending-scroll] { visibility: hidden; }
+
 .agent-tui {
   flex: 1;
   min-height: 0;

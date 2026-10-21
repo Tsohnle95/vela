@@ -49,3 +49,10 @@
 /* The shell owns the panel surface, including translucent appearance layers. */
 .ai-elements, .ai-elements-portal { --background: var(--panel-float-color); }
 .ai-elements { background-color: transparent; }
+
+:host([data-ai-elements-compact]) .ai-live-activity [data-ai-activity-detail],
+.ai-fixed-activity .ai-live-activity [data-ai-activity-detail] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

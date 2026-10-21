@@ -1,6 +1,5 @@
 // Pattern compositions from ui.shadcn.com/docs/ai-elements/base; data bindings adapt Vela state.
 import * as React from "react";
-import { useStreamedText } from "./use-streamed-text";
 import { ArrowUpRightIcon, GlobeIcon, TerminalIcon, FileCodeIcon, LayersIcon, XIcon, CircleDashedIcon, CheckIcon, FlaskConicalIcon, ChevronRightIcon, FolderIcon, FileIcon, CircleCheckIcon, CircleDotIcon, CircleIcon, ListTodoIcon, ListChecksIcon, RouteIcon, LoaderCircleIcon, CircleAlertIcon } from "lucide-react";
 import { Trace, TraceCollapsible, TraceCollapsibleContent, TraceCollapsibleTrigger, TraceIcon, TraceLine, TraceTitle, TraceDescription } from "@/components/ui/trace";
 import { Button } from "@/components/ui/button";
@@ -27,8 +26,6 @@ export function ReasoningRow({
 }) {
   const [open, setOpen] = React.useState(defaultOpen ?? running)
 
-  const visibleText = useStreamedText(text, running);
-
   const line = (
     <TraceLine status={running ? "running" : undefined}>
       <TraceTitle>{running ? "Thinking" : "Thought"}</TraceTitle>
@@ -43,7 +40,7 @@ export function ReasoningRow({
     <TraceCollapsible open={open ?? running} onOpenChange={setOpen}>
       <TraceCollapsibleTrigger>{line}</TraceCollapsibleTrigger>
       <TraceCollapsibleContent className="whitespace-pre-wrap">
-        {visibleText}
+        {text}
       </TraceCollapsibleContent>
     </TraceCollapsible>
   )

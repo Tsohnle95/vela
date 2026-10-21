@@ -1,6 +1,7 @@
 import { safeExternalUrl } from "@shared/url-policy";
 import { useStore, usePanel } from "../store";
 import { AiElementsTimeline, type AiElementsTimelineProps } from "./AiElementsTimeline";
+import { AiElementsActivity } from "./AiElementsActivity";
 import { AiElementsComposer } from "./AiElementsComposer";
 import { TodoQueue, AiElementsContext } from "./patterns";
 import { MessageScroller, MessageScrollerProvider, MessageScrollerViewport, MessageScrollerContent, MessageScrollerButton } from "@/components/ui/message-scroller";
@@ -22,12 +23,15 @@ export function AiElementsChat(props: AiElementsTimelineProps & {onDemoPrompt?: 
       <MessageScroller>
         <MessageScrollerViewport>
           <MessageScrollerContent aria-busy={props.busy} className="gap-6 px-8 py-6">
-            <AiElementsTimeline {...props} session={session} scrollerItems/>
+            <AiElementsTimeline {...props} session={session} scrollerItems hideActivity/>
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton/>
       </MessageScroller>
     </MessageScrollerProvider>
+    {(props.busy || props.transcript.length > 0) && <div className="ai-fixed-activity h-12 shrink-0 overflow-hidden px-8 py-1">
+      <AiElementsActivity busy={props.busy} transcript={props.transcript} activity={props.activity} startedAt={props.startedAt}/>
+    </div>}
     <div className="flex flex-col gap-3 px-8 pb-6">
       {view.sessionUsage && (view.currentModel?.limit?.context ?? 0) > 0 && <AiElementsContext usage={view.sessionUsage} limit={view.currentModel!.limit!.context}/>}
       {(view.todos ?? []).length > 0 && <TodoQueue todos={view.todos} streaming={props.busy}/>}

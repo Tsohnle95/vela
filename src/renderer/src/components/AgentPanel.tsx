@@ -1,3 +1,4 @@
+import { AgentScrollArea, AgentStreamStatus } from "../ai-elements/AgentResponseViewport";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePanel, useStore } from "../store";
 import { OpenCodeTimeline, PermissionPrompt } from "./OpenCodeTimeline";
@@ -92,7 +93,7 @@ export function AgentPanel({
   const view = usePanel(activeSession?.workspace);
   const { busy, todos, transcript, sessionUsage, compactionBaseline, currentModel, turnStartedAt, assistantStatus } = view;
   const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
-  const { scrollRef, onScroll, onContentResize } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages, renderer !== "old");
+  const { scrollRef, onScroll } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages);
   const panelRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const panelDragRef = useRef<number | null>(null);
@@ -198,7 +199,7 @@ export function AgentPanel({
     () => transcript.filter((item) => item.kind !== "permission"),
     [transcript]
   );
-  const showResponse = responseTranscript.length > 0 || busy || assistantStatus?.isWaitingForPermission;
+  const showResponse = responseTranscript.length > 0 || busy || Boolean(assistantStatus?.isWaitingForPermission);
   const timelineProps = { busy, lastAssistantId, session: activeSession, activity: assistantStatus, startedAt: turnStartedAt };
 
   // Approvals and forms are interactive: the surface the user is watching owns
@@ -258,7 +259,7 @@ export function AgentPanel({
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
         <>
-          <div className="agent-scroll" ref={scrollRef} onScroll={onScroll} style={renderer !== "old" && showResponse ? { padding: 0 } : undefined}>
+          <AgentScrollArea legacy={renderer === "old"} legacyRef={scrollRef} onLegacyScroll={onScroll} showResponse={showResponse}>
             {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
             {!conversationStarted && !(renderer !== "old" && busy) && (
               <div className="agent-empty">
@@ -287,11 +288,12 @@ export function AgentPanel({
               <div className="agent-response-stream" hidden={!showResponse} data-slot="session-turn-list" data-renderer={renderer}>
                 {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
                 <div>
-                  <AiElementsSurface><AiElementsTimeline {...timelineProps} onContentResize={onContentResize} transcript={responseTranscript} /></AiElementsSurface>
+                  <AiElementsSurface><AiElementsTimeline {...timelineProps} hideActivity transcript={responseTranscript} /></AiElementsSurface>
                 </div>
               </div>
             )}
-          </div>
+          </AgentScrollArea>
+          <AgentStreamStatus legacy={renderer === "old"} visible={showResponse} {...timelineProps} transcript={responseTranscript}/>
 
           <div data-component="session-prompt-dock">
             {interactivePrompts}

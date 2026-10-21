@@ -7,7 +7,7 @@ import presentation from "./app-presentation.css?inline";
 import { safeExternalUrl } from "@shared/url-policy";
 import { AiElementsPortalProvider } from "./portal-container";
 
-export function AiElementsSurface({ children }: { children: ReactNode }) {
+export function AiElementsSurface({ children, compact = false }: { children: ReactNode; compact?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const [root, setRoot] = useState<ShadowRoot | null>(null);
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
@@ -31,7 +31,7 @@ export function AiElementsSurface({ children }: { children: ReactNode }) {
     return () => observer.disconnect();
   }, []);
 
-  return <div ref={host} data-ai-elements-surface="" style={{ minWidth: 0 }}>
+  return <div ref={host} data-ai-elements-surface="" data-ai-elements-compact={compact || undefined} style={{ minWidth: 0 }}>
     {root && createPortal(<>
       <style>{`:host { all: initial; display: block; min-width: 0; visibility: inherit; pointer-events: inherit; }\n${styles}\n${presentation}`}</style>
       <div onClickCapture={(event) => {
@@ -42,7 +42,7 @@ export function AiElementsSurface({ children }: { children: ReactNode }) {
         if (href) window.open(href, "_blank", "noopener,noreferrer");
       }} className={`ai-elements min-w-0 bg-background text-foreground${dark ? " dark" : ""}`} style={{ colorScheme: dark ? "dark" : "light" }}>
         <AiElementsPortalProvider container={container}>
-          <div className="flex min-w-0 flex-col gap-6 px-8 py-6" data-ai-elements-content="">{children}</div>
+          <div className={`flex min-w-0 flex-col gap-6 px-8 ${compact ? "py-1" : "py-6"}`} data-ai-elements-content="">{children}</div>
           <div ref={setContainer} data-ai-elements-portals="" />
         </AiElementsPortalProvider>
       </div>

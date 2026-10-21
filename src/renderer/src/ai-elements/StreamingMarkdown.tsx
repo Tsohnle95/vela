@@ -1,4 +1,3 @@
-import { useStreamedText } from "./use-streamed-text";
 import { Markdown } from "./demos/lib/markdown";
 import { useIsCodeFenceIncomplete, type ExtraProps } from "streamdown";
 import { CodeBlock, CodeBlockHeader, CodeBlockTitle, CodeBlockActions, CodeBlockCopyButton, CodeBlockContent, CodeBlockLine } from "@/components/ui/code-block";
@@ -22,7 +21,5 @@ function WorkerCodeBlock({code:source,language}:{code:string;language:string}) {
 }
 const components={code:StreamingCode};
 export function StreamingMarkdown(props: React.ComponentProps<typeof Markdown>) {
- const source = typeof props.children === "string" ? props.children : "";
- const visible = useStreamedText(source, Boolean(props.isAnimating));
- return <Markdown {...props} isAnimating={props.isAnimating || visible !== source} components={components} animated={false}>{visible}</Markdown>;
+ return <Markdown {...props} components={components}/>;
 }

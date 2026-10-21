@@ -138,9 +138,6 @@ const capture = async (version,theme,width,appearance) => {
    let last = performance.now();
    let previousScroll = 0;
    let scrollFrames = 0;
-   let pacedFrames = 0;
-   let previousTextLength = 0;
-   let lastDelivery = 0;
    let readerReleased = false;
    let resumedFollowing = false;
    let sampling = true;
@@ -151,11 +148,9 @@ const capture = async (version,theme,width,appearance) => {
      const shadow=document.querySelector('[data-ai-elements-surface]')?.shadowRoot;
      if(!firstParagraph) firstParagraph=shadow?.querySelector("[data-slot=markdown] p")??null;
      if(firstParagraph && !firstParagraph.isConnected) paragraphReplaced=true;
-     const status=shadow?.querySelector('[data-ai-activity]');
+     const statusRoot=document.querySelector("[data-agent-stream-status] [data-ai-elements-surface]")?.shadowRoot??shadow;
+     const status=statusRoot?.querySelector('[data-ai-activity]');
      if(status) {activityFrames++;labels.add(status.querySelector('[data-ai-activity-label]')?.textContent);}
-     const textLength=Array.from(shadow?.querySelectorAll('[data-slot=markdown]')??[]).reduce((sum,el)=>sum+el.textContent.length,0);
-     if(textLength>previousTextLength && now-lastDelivery>35) pacedFrames++;
-     previousTextLength=textLength;
      const scroll=document.querySelector('.agent-scroll');
      if(scroll && scroll.scrollTop>previousScroll) scrollFrames++;
      previousScroll=scroll?.scrollTop??0;
@@ -163,13 +158,12 @@ const capture = async (version,theme,width,appearance) => {
    };
    requestAnimationFrame(frame);
    for(let index=0;index<100;index++) {
-     lastDelivery=performance.now();
      const burst=index%3===0?3:1;
      for(let chunk=0;chunk<burst;chunk++) window.postMessage({kind:'vela-stream-step'},location.origin);
      await new Promise(resolve=>setTimeout(resolve,[32,240,80,380,48,180][index%6]));
      const viewport=document.querySelector('.agent-scroll');
      if(!readerReleased && index>15 && viewport.scrollHeight-viewport.clientHeight>100) {
-       viewport.dispatchEvent(new WheelEvent('wheel',{deltaY:-80}));
+       viewport.dispatchEvent(new WheelEvent('wheel',{deltaY:-80,bubbles:true}));
        viewport.scrollTop-=80;
        viewport.dispatchEvent(new Event('scroll'));
        const readerTop=viewport.scrollTop;
@@ -190,7 +184,7 @@ const capture = async (version,theme,width,appearance) => {
    const css=getComputedStyle(shadow.querySelector('[data-slot=markdown] p'));
    const body=getComputedStyle(document.body);
    const scroll=document.querySelector('.agent-scroll');
-   return {readerReleased,resumedFollowing,pacedFrames,activityFrames,activityLabels:[...labels],activityAfterCompletion:!!shadow.querySelector("[data-ai-activity]"),paragraphReplaced,scrollFrames,frames:samples.length,averageFrameMs:samples.reduce((a,b)=>a+b,0)/samples.length,maxFrameMs:Math.max(...samples),font:css.fontFamily,folderFont:body.fontFamily,size:css.fontSize,folderSize:body.fontSize,weight:css.fontWeight,folderWeight:body.fontWeight,remainingScroll:scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop,text:shadow.textContent};
+   return {readerReleased,resumedFollowing,activityFrames,activityLabels:[...labels],activityAfterCompletion:!!(document.querySelector("[data-agent-stream-status] [data-ai-elements-surface]")?.shadowRoot??shadow).querySelector("[data-ai-activity]"),paragraphReplaced,scrollFrames,frames:samples.length,averageFrameMs:samples.reduce((a,b)=>a+b,0)/samples.length,maxFrameMs:Math.max(...samples),font:css.fontFamily,folderFont:body.fontFamily,size:css.fontSize,folderSize:body.fontSize,weight:css.fontWeight,folderWeight:body.fontWeight,remainingScroll:scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop,text:shadow.textContent};
  }).toString() + ")()");
  await fs.writeFile(OUTPUT+"/streaming.json",JSON.stringify(motion,null,2));
  assert.ok(motion.activityFrames>20,"Activity stays visible while the agent is working");
@@ -198,13 +192,13 @@ const capture = async (version,theme,width,appearance) => {
  assert.ok(motion.activityLabels.includes("Writing response"),"Show text generation phase");
  assert.equal(motion.activityAfterCompletion,false,"Remove live activity when the turn finishes");
  assert.ok(motion.readerReleased && motion.resumedFollowing,"Reader can scroll away and return to live following");
- assert.ok(motion.pacedFrames>10,"Text must continue advancing between irregular provider bursts");
+
 
  assert.equal(motion.paragraphReplaced,false,"The paragraph must survive streaming and final animation cleanup");
  assert.equal(motion.font,motion.folderFont,"Response and folder font families must match");
  assert.equal(motion.size,motion.folderSize,"Response and folder font sizes must match");
  assert.equal(motion.weight,motion.folderWeight,"Response and folder weights must match");
- assert.ok(motion.scrollFrames>2,"Viewport must follow progressively revealed content across frames");
+ assert.ok(motion.scrollFrames>2,"Upstream viewport follows content as it arrives");
  assert.ok(motion.remainingScroll<=2,"Streaming must remain pinned to the bottom");
  assert.ok(motion.text.includes("The change is ready for review."),"Final streamed text must be complete");
  delete motion.text;

@@ -10,7 +10,6 @@ import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions }
 import { Button } from "@/components/ui/button";
 import { CodeBlock, CodeBlockContent } from "@/components/ui/code-block";
 import { Marker, MarkerContent } from "@/components/ui/marker";
-import { TranscriptGrowth } from "./TranscriptGrowth";
 import { AiElementsActivity, type ActivityState } from "./AiElementsActivity";
 import { StreamingMarkdown as Markdown } from "./StreamingMarkdown";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -19,7 +18,7 @@ import { parseSubagentTag, parseLegacyTaskText, isInternalSystemReminder, taskCh
 import { ReasoningRow, Sources, StackTrace, TestResults, TodoQueue, FileTreeNode, PlanRow, TaskRow, Citation } from "./patterns";
 import { fileTree, structuredToolOutput, structuredActivity, visibleAiTranscript, toolOutputText, structuredCitedText } from "./adapters";
 export interface AiElementsTimelineProps {
-    onContentResize?: () => void;
+    hideActivity?: boolean;
     transcript: TranscriptItem[];
     busy: boolean;
     lastAssistantId: string | null;
@@ -184,7 +183,7 @@ export const AiElementsTimeline = memo(function AiElementsTimeline(props: AiElem
     const store = useStore();
     const session = props.session === undefined ? store.session : props.session;
     const transcript = useMemo(() => visibleAiTranscript(props.transcript, store.sessions, session?.id), [props.transcript, store.sessions, session?.id]);
-    return <div className="flex w-full flex-col gap-4 py-6 text-sm" data-ai-elements="timeline"><TranscriptGrowth busy={props.busy} onResize={props.onContentResize}><AiElementsTranscript {...props} transcript={transcript} session={session}/></TranscriptGrowth><AiElementsActivity busy={props.busy} transcript={transcript} activity={props.activity} startedAt={props.startedAt}/></div>;
+    return <div className="flex w-full flex-col gap-4 py-6 text-sm" data-ai-elements="timeline"><AiElementsTranscript {...props} transcript={transcript} session={session}/>{!props.hideActivity && <AiElementsActivity busy={props.busy} transcript={transcript} activity={props.activity} startedAt={props.startedAt}/>}</div>;
 });
 export { TodoQueue as AiElementsTodoQueue };
 function MessageAction({ label, children, ...props }: React.ComponentProps<typeof Button> & {
@@ -255,23 +254,6 @@ function CitedToolText({value}: {value: NonNullable<ReturnType<typeof structured
  })}{value.text.slice(start)}</p>;
 }
 
-function AiElementsChainOfThought({tools, streaming, answering, interrupted, session}: {tools: ToolCallView[]; streaming: boolean; answering: boolean; interrupted?: boolean; session: SessionInfo | null}) {
- const running=streaming && !answering && !interrupted;
- const [open,setOpen]=useState(running);
- const failed=tools.filter(tool => tool.status === "failed").length;
- const status=running ? "running" : failed > 0 ? "error" : undefined;
- return <Trace><TraceCollapsible open={open ?? running} onOpenChange={setOpen}><TraceCollapsibleTrigger><TraceLine status={status}><TraceIcon>{status === "running" ? <LoaderCircleIcon className="animate-spin"/> : status === "error" ? <CircleAlertIcon/> : <CircleCheckIcon/>}</TraceIcon><TraceTitle>{running ? "Researching" : `Researched in ${tools.length} steps${failed > 0 ? `, ${failed} failed` : ""}`}</TraceTitle></TraceLine></TraceCollapsibleTrigger><TraceCollapsibleContent keepMounted><Trace>{tools.map(tool => <AiElementsTool key={tool.id} tool={tool} streaming={streaming} interrupted={interrupted} session={session}/>)}</Trace></TraceCollapsibleContent></TraceCollapsible></Trace>;
-}
-
 function AiElementsAssistantParts({item, streaming, session}: {item: Extract<TranscriptItem,{kind:"assistant"}>; streaming: boolean; session: SessionInfo | null}) {
- const groups: Array<{kind:"tools";id:string;tools:ToolCallView[]}|{kind:"part";part:Exclude<typeof item.parts[number],{kind:"tool"}>}> = [];
- for (const part of item.parts) {
-  if (part.kind !== "tool") groups.push({kind:"part",part});
-  else {
-   const last=groups.at(-1);
-   if (last?.kind === "tools") last.tools.push(part.tool);
-   else groups.push({kind:"tools",id:part.id,tools:[part.tool]});
-  }
- }
- return <>{groups.map((group,index) => group.kind === "tools" ? <AiElementsChainOfThought key={group.id} tools={group.tools} streaming={streaming} answering={groups.slice(index+1).some(next => next.kind === "part" && next.part.kind === "text" && Boolean(next.part.text))} interrupted={item.interrupted} session={session}/> : group.part.kind === "text" ? group.part.text && <Markdown key={group.part.id} isAnimating={streaming && !item.completed}>{group.part.text}</Markdown> : <Trace key={group.part.id}><ReasoningRow text={group.part.text} running={streaming && !group.part.complete && !item.completed}/></Trace>)}</>;
+ return <>{item.parts.map(part => part.kind === "tool" ? <Trace key={part.id} data-tool-call={part.tool.id}><AiElementsTool tool={part.tool} streaming={streaming} interrupted={item.interrupted} session={session}/></Trace> : part.kind === "text" ? part.text && <Markdown key={part.id} isAnimating={streaming && !item.completed}>{part.text}</Markdown> : <Trace key={part.id}><ReasoningRow text={part.text} running={streaming && !part.complete && !item.completed}/></Trace>)}</>;
 }

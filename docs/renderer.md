@@ -230,22 +230,19 @@ or a reopened session with a dead tail. Live stream content restores busy on a
 settled session (unless a stop is in flight), so a watchdog false-positive
 self-heals on the next delta.
 
-While a turn is active, `AgentPanel` has one chronological activity surface.
-Reasoning, tool calls, command output, progress, and final text update their own
-stable inline nodes; there is no mirrored activity footer above the composer.
-Before the runtime emits the first concrete item, the timeline shows one minimal
-inline working placeholder and replaces it as soon as the real item arrives. A
-frame loop follows timeline growth for the whole active turn while the reader
-remains at the floor; resize observation also covers settled content and viewport
-changes. `TranscriptGrowth` progressively reveals changes in transcript height
-and notifies the panel scroll owner in the same resize delivery before paint.
-The activity row stays outside that growth boundary. Following uses the rendered
-height directly; separately easing the scroll would make the activity row jump
-down at each new line and recoil upward afterward. Upward wheel, touch, keyboard, or scrollbar movement releases following;
-returning to the floor resumes it. Response and reasoning text use a short
-presentation buffer to spread incoming bursts over animation frames, without
-delaying authoritative transcript updates. Expanded reasoning and tool groups
-retain their disclosure state when the runtime advances to another phase.
+`AgentPanel` retains its original composer and panel controls. The default AI
+Elements response uses shadcn's `MessageScroller` provider, root, viewport and
+content directly; the legacy renderer retains its original scroll hook. Streamdown
+receives authoritative text immediately. There is no application character buffer,
+transcript-height animation, or competing scroll animation.
+
+Reasoning, individual tool calls, command output and response text stay in their
+chronological inline nodes. Consecutive tools are separate rows, each with its own
+output disclosure. The live working label, spinner and elapsed time occupy a
+reserved-height sibling outside the viewport, so new lines cannot push that row
+up or down. This status does not own scrolling or replace the composer. Syntax
+highlighting remains in the worker adapter and code wraps within the panel.
+
 `assistant-status.ts` derives the working summary
 every panel exposes: the active model (from the trailing assistant's
 `parentID` back to its user message), the active part (text → "composing",

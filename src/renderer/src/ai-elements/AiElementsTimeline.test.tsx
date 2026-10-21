@@ -41,16 +41,11 @@ describe("AI Elements runtime bindings", () => {
         expect(store.replyPermission).not.toHaveBeenCalled();
     });
     it("retains message-owned markdown streaming until assistant completion", () => {
-        let callback: FrameRequestCallback | undefined;
-        const now = performance.now();
-        const raf = vi.spyOn(window, "requestAnimationFrame").mockImplementation(next => { callback = next; return 1; });
         const transcript: TranscriptItem[] = [{ kind: "assistant", id: "a", messageID: "a", parts: [{ kind: "text", id: "text", text: "hello", complete: true }], completed: false }];
         const view = render(<AiElementsTranscript transcript={transcript} busy lastAssistantId="a" session={session}/>);
         expect(screen.getByTestId("markdown").dataset.streaming).toBe("true");
         view.rerender(<AiElementsTranscript transcript={[{ ...transcript[0], completed: true } as TranscriptItem]} busy={false} lastAssistantId="a" session={session}/>);
-        for (let n = 1; n <= 25; n++) act(() => callback?.(now + n * 16));
         expect(screen.getByTestId("markdown").dataset.streaming).toBe("false");
-        raf.mockRestore();
     });
     it("uses the existing runtime-backed stage-revert flow for Edit", () => {
         render(<AiElementsTranscript transcript={[{ kind: "user", id: "u", text: "change this" }]} busy={false} lastAssistantId={null} session={session}/>);
@@ -125,7 +120,8 @@ describe("AI Elements actual event projection integration", () => {
   expect(container.textContent).toContain("Running npm run test -- settings");
   expect(container.textContent).toContain("RUN v3.2.7");
   expect(container.textContent).not.toContain('{"output":');
-  expect(container.textContent).toContain("Researching");
+  expect(container.querySelectorAll("[data-tool-call]")).toHaveLength(3);
+  expect(container.textContent).not.toContain("Researching");
  });
  it("exposes changed files from actual edit metadata and opens the file in the owning workspace", () => {
   const transcript=projectedTool("edit",{filePath:"src/settings.tsx",oldString:"old",newString:"new"},{files:[{relativePath:"src/settings.tsx",before:"old",after:"new"}]});
@@ -177,4 +173,12 @@ it("keeps streamed command output expanded when the command finishes", () => {
  expect(screen.getByRole("button",{name:"Running npm test"}).getAttribute("aria-expanded")).toBe("true");
  view.rerender(<AiElementsTool tool={{...tool,status:"success",output:"Tests passed"}} streaming session={session}/>);
  expect(screen.getByRole("button",{name:"Ran npm test"}).getAttribute("aria-expanded")).toBe("true");
+});
+
+it("shows completed tool calls individually without a shared research disclosure", () => {
+ const tools = ["read", "grep", "bash"].map((title,index) => ({kind:"tool" as const,id:String(index),tool:{id:String(index),title,detail:`call ${index}`,status:"success" as const,output:`output ${index}`}}));
+ render(<AiElementsTranscript transcript={[{kind:"assistant",id:"a",messageID:"a",completed:true,parts:tools}]} busy={false} lastAssistantId="a" session={session}/>);
+ expect(container.querySelectorAll("[data-tool-call]")).toHaveLength(3);
+ for (let index=0;index<3;index++) expect(screen.getByRole("button",{name:`Ran call ${index}`})).toBeTruthy();
+ expect(container.textContent).not.toContain("Researched");
 });

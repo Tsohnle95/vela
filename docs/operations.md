@@ -27,18 +27,19 @@ the same in every mode.
 With the comparison server running, `node scripts/ai-elements-style-smoke.mjs`
 compares the actual `AgentPanel` response with the reference at matching widths
 in Electron, in light and dark mode. It measures typography, color, spacing and
-geometry, checks shell CSS isolation and live text pacing, and saves screenshots plus measurements
+geometry, checks shell CSS isolation and live response rendering, and saves screenshots plus measurements
 under `/private/tmp/vela-ai-style-verification` (override with `VELA_STYLE_REPORT`).
 The fixture is `/chat-comparison/style-check.html` (`?stream=1` accepts replay
 steps via same-origin `vela-stream-step` messages); it uses a mock bridge and
 makes no runtime requests. Set `VELA_STYLE_URL` to use a separately hosted
 build of the comparison instead of the default development server.
 
-With the same server running, `node scripts/agent-line-growth-smoke.mjs`
-checks painted-frame positions during thinking and response line wraps. It
-asserts that the activity label and spinner stay within one pixel while following,
-and that new lines reveal progressively when the reader scrolls away. Captures
-and frame traces go to `/private/tmp/vela-line-growth` (override with
+With the same server running, `node scripts/agent-stream-motion-smoke.mjs`
+checks the status label and spinner during thinking and response streaming,
+including while scrolled away. It also sends Enter through the real composer and
+store against a mock backend with an existing conversation, verifying stable
+panel/composer positions, no transcript-height animation, and individual tools.
+Captures and traces go to `/private/tmp/vela-stream-motion` (override with
 `VELA_MOTION_REPORT`). `VELA_STYLE_URL` selects a separately hosted build.
 
 The local index replay and gallery are UI validation tools, not proof that a
