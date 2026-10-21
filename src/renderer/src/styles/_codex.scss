@@ -260,3 +260,9 @@ $codex: ':is([data-shell="codex"])';
   border: 0;
   border-left: 1px solid var(--border);
 }
+
+#{$codex} .app.agent-mode .agent-col[data-grid-row="lower"] > .agent-panel {
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--border);
+}

@@ -29,9 +29,14 @@ export interface PanelProjectionSources {
   messageQueue: MessageQueueReadView;
   inboxBySession: Readonly<Record<string, readonly Readonly<SessionInboxEntry>[]>>;
   formsBySession: Readonly<Record<string, readonly FormRequestReadView[]>>;
+  restoredPrompts?: Readonly<Record<string, { text: string }>>;
   stagedReverts: Readonly<Record<string, SessionRevertStage | null>>;
   sessionAbortFlags: Readonly<Record<string, SessionAbortFlag>>;
   chatStates: ReadonlyMap<string, ChatDirectoryReadView>;
+}
+
+function projectSessionRevertView(sources: PanelProjectionSources, sessionID: string): Pick<PanelView, "restoredPrompt" | "stagedRevert"> {
+  return { restoredPrompt: sources.restoredPrompts?.[sessionID], stagedRevert: sources.stagedReverts[sessionID] ?? null };
 }
 
 export function projectPanelViews(panels: readonly SessionInfo[], sources: PanelProjectionSources): Record<string, PanelView> {
@@ -39,7 +44,7 @@ export function projectPanelViews(panels: readonly SessionInfo[], sources: Panel
     busyBySession, transcriptsBySession, todosByWorkspace, usageBySession,
     compactionBaselineBySession, modelsByWorkspace, currentModelByWorkspace,
     agentsByWorkspace, currentAgentByWorkspace, streamingStore, messageQueue,
-    inboxBySession, formsBySession, stagedReverts, sessionAbortFlags
+    inboxBySession, formsBySession, sessionAbortFlags
   } = sources;
 
   const views: Record<string, PanelView> = {};
@@ -116,7 +121,7 @@ export function projectPanelViews(panels: readonly SessionInfo[], sources: Panel
       queuedCount: queuedMessages.length,
       queuedMessages,
       pendingForms,
-      stagedRevert: stagedReverts[panel.id] ?? null
+      ...projectSessionRevertView(sources, panel.id)
     };
   }
   return views;

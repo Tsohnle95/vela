@@ -87,6 +87,18 @@ describe("theme and UI shell", () => {
     expect(document.documentElement.style.getPropertyValue("--workspace-background")).toContain("radial-gradient");
   });
 
+  it("keeps Kitty Glass transparent through both shell transitions", async () => {
+    await render();
+    await act(async () => { ctx.setTheme("kitty"); });
+    expect(document.documentElement.style.getPropertyValue("--workspace-background")).toBe("transparent");
+    await act(async () => { ctx.setUiShell("classic"); });
+    expect(document.documentElement.style.getPropertyValue("--workspace-background")).toBe("transparent");
+    await act(async () => { ctx.setUiShell("codex"); });
+    expect(document.documentElement.style.getPropertyValue("--workspace-background")).toBe("transparent");
+    await act(async () => { ctx.setTheme("codex-dark"); });
+    expect(document.documentElement.style.getPropertyValue("--workspace-background")).toBe("#181818");
+  });
+
   it("gives dark palettes the dark file-tree glyphs in the Codex shell", async () => {
     await render();
     await act(async () => { ctx.setTheme("original"); });

@@ -54,6 +54,7 @@ export function AgentPanel({
   visibleSessionIDs,
   agentPanelLimitReached,
   agentModeActive,
+  compactComposer,
   onSessionSelect,
   isAnchor: _isAnchor,
   onFocus,
@@ -68,6 +69,7 @@ export function AgentPanel({
   visibleSessionIDs?: ReadonlySet<string>;
   agentPanelLimitReached?: boolean;
   agentModeActive?: boolean;
+  compactComposer?: boolean;
   onSessionSelect?: (sessionID: string) => void | Promise<void>;
   isAnchor?: boolean;
   onFocus?: () => void;
@@ -217,6 +219,7 @@ export function AgentPanel({
   return (
     <div
       className="agent-panel"
+      data-compact={compactComposer}
       data-conversation={conversationStarted}
       data-panel-mode={panelMode}
       ref={panelRef}

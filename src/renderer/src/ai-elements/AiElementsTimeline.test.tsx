@@ -74,7 +74,7 @@ describe("AI Elements runtime bindings", () => {
     it("uses the existing runtime-backed stage-revert flow for Edit", () => {
         render(<AiElementsTranscript transcript={[{ kind: "user", id: "u", text: "change this" }]} busy={false} lastAssistantId={null} session={session}/>);
         fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-        expect(store.stageRevert).toHaveBeenCalledWith(session.workspace, "u");
+        expect(store.stageRevert).toHaveBeenCalledWith(session.workspace, "u", true);
     });
     it("keeps expanded reasoning in place when thinking finishes", () => {
         const view = render(<ReasoningRow text="Actual reasoning" running/>);

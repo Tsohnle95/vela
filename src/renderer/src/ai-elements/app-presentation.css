@@ -56,3 +56,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+[data-ai-elements-content] {
+  padding-bottom: var(--agent-response-bottom, 1.5rem);
+}

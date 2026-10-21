@@ -76,9 +76,9 @@ function accentMix(colors: AppearanceColors, amount: number): string {
 }
 
 // Tokens the Codex shell needs on top of any palette's colours.
-function codexShellVariables(colors: AppearanceColors, scheme: "dark" | "light"): Record<string, string> {
+function codexShellVariables(colors: AppearanceColors, scheme: "dark" | "light", theme: ThemeId): Record<string, string> {
   return {
-    "--workspace-background": colors.base,
+    "--workspace-background": theme === "kitty" ? "transparent" : colors.base,
     "--agent-composer-border": colors.lineStrong,
     "--agent-send-background": colors.accent,
     "--agent-send-hover": `color-mix(in srgb, ${colors.accent} 88%, ${scheme === "light" ? "black" : "white"})`,
@@ -191,7 +191,7 @@ function applyAppearance(theme: ThemeId, uiShell: UiShell): void {
     "--agent-composer-focus-shadow": "0 8px 26px rgba(0, 0, 0, 0.42), 0 0 0 3px rgba(0, 162, 206, 0.12)"
   });
   if (theme === "original") Object.assign(variables, originalVariables(colors));
-  if (uiShell === "codex") Object.assign(variables, codexShellVariables(colors, scheme));
+  if (uiShell === "codex") Object.assign(variables, codexShellVariables(colors, scheme, theme));
   if (theme === "observatory") Object.assign(variables, OBSERVATORY_VARIABLES);
   root.dataset.theme = theme;
   root.dataset.shell = uiShell;

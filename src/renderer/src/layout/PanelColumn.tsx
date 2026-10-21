@@ -113,8 +113,8 @@ export function PanelColumn({
     return null;
   }
   return (
-    <div ref={columnRef} className={`agent-col ${settling ? "settling" : ""}`} style={{ left: `${slot.left}px`, top: `${slot.top}%`, bottom: "auto", width: `${slot.width}px`, height: `${slot.height}%` }}>
-      <AgentPanel session={session} sessionChoices={sessionChoices} visibleSessionIDs={visibleSessionIDs} agentPanelLimitReached={agentPanelLimitReached} agentModeActive={agentModeActive} onSessionSelect={onSessionSelect} isAnchor={isAnchor} onFocus={onFocus} onClose={onClose} onResizeLeft={freeMove ? exitModeOnRelease : resizeLeft} onResizeRight={freeMove ? exitModeOnRelease : isAnchor ? undefined : resizeRight} onPanelDrag={freeMove || !isAnchor ? slideBy : undefined} onPanelDragEnd={freeMove || !isAnchor ? finishSlide : undefined} />
+    <div ref={columnRef} data-grid-row={agentModeActive && slot.top > 0 ? "lower" : undefined} className={`agent-col ${settling ? "settling" : ""}`} style={{ left: `${slot.left}px`, top: `${slot.top}%`, bottom: "auto", width: `${slot.width}px`, height: `${slot.height}%` }}>
+      <AgentPanel compactComposer={agentModeActive && (visibleSessionIDs?.size ?? 0) >= 3} session={session} sessionChoices={sessionChoices} visibleSessionIDs={visibleSessionIDs} agentPanelLimitReached={agentPanelLimitReached} agentModeActive={agentModeActive} onSessionSelect={onSessionSelect} isAnchor={isAnchor} onFocus={onFocus} onClose={onClose} onResizeLeft={freeMove ? exitModeOnRelease : resizeLeft} onResizeRight={freeMove ? exitModeOnRelease : isAnchor ? undefined : resizeRight} onPanelDrag={freeMove || !isAnchor ? slideBy : undefined} onPanelDragEnd={freeMove || !isAnchor ? finishSlide : undefined} />
     </div>
   );
 }

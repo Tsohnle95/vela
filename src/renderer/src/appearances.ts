@@ -74,7 +74,7 @@ export interface AppearanceProfile {
 export const APPEARANCES: AppearanceProfile[] = [
   {
     id: "codex",
-    name: "Codex",
+    name: "Daybreak",
     description: "Quiet white surfaces, hairline dividers and a blue signal.",
     scheme: "light",
     colors: {
@@ -85,7 +85,7 @@ export const APPEARANCES: AppearanceProfile[] = [
   },
   {
     id: "codex-dark",
-    name: "Codex Dark",
+    name: "Midnight",
     description: "Graphite surfaces with a night-blue signal.",
     scheme: "dark",
     colors: {
@@ -278,5 +278,19 @@ export function terminalThemeForAppearance(id: AppearanceId) {
     brightMagenta: colors.syntaxKeyword,
     brightCyan: colors.icon,
     brightWhite: colors.ink
+  };
+}
+
+export function agentTerminalThemeForAppearance(id: AppearanceId) {
+  const { colors } = appearanceForId(id);
+  return {
+    ...terminalThemeForAppearance(id),
+    background: id === "kitty" ? "rgba(2, 2, 4, 0)" : colors.agent,
+    foreground: colors.ink,
+    cursor: colors.accent,
+    cursorAccent: colors.base,
+    selectionBackground: colors.selected,
+    cyan: colors.accent,
+    brightCyan: colors.accent
   };
 }

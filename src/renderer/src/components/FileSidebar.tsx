@@ -1,3 +1,4 @@
+import { SidebarBrand } from "./SidebarBrand";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useCtxMenu, useStore } from "../store";
 import { FileIcon } from "./FileIcons";
@@ -414,7 +415,7 @@ export function FileSidebar({
       ) : (
         <>
           <div className="section-trigger files-brand-header">
-            <span className="sidebar-brand">Vela</span>
+            <SidebarBrand />
           </div>
 
        {orderedPanels.length > 0 && !multiRoot && <div

@@ -16,7 +16,6 @@ import type {
   BackendMessage,
   PermissionReply,
   PromptDelivery,
-  SessionRevertStage,
   PromptFile,
   ProviderUsageResult,
   RuntimeManifest,
@@ -38,6 +37,7 @@ import { useWorkspaceFiles } from "./use-workspace-files";
 import { useWorkspaceEditor } from "./use-workspace-editor";
 import { useSessionSelection } from "./use-session-selection";
 import { useSessionProgress } from "./use-session-progress";
+import { useSessionRevert } from "./use-session-revert";
 import { useSessionRequests } from "./use-session-requests";
 import { useSessionInbox } from "./use-session-inbox";
 import { useSessionInventory } from "./use-session-inventory";
@@ -164,7 +164,6 @@ const StoreBody = memo(function StoreBody({ children, closeCtxMenu, onFileActiva
     shouldIgnoreRuntimeWork, noteRuntimeReduction, touchDeltaStream,
     startExecution, finishExecution, applyStatusEvent
   } = execution;
-  const [stagedReverts, setStagedReverts] = useState<Record<string, SessionRevertStage | null>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toast = useCallback((text: string, tone: "info" | "error" = "info") => {
     const id = ++toastId;
@@ -321,41 +320,10 @@ const StoreBody = memo(function StoreBody({ children, closeCtxMenu, onFileActiva
     [toast, panelForSession, prepareReopenedReplay, commitReplayTranscript, reconcileStreaming, applyProjection, setTodosFor, recordUsage, abortFor, seedReplayBusy]
   );
 
-  const clearStagedRevert = useCallback(async (workspace: WorkspaceIdentity): Promise<void> => {
-    const panel = panelFor(workspace);
-    if (!panel) return;
-    try {
-      await window.vela.revertClear(workspace);
-    } catch (err) {
-      toast(err instanceof Error ? err.message : String(err), "error");
-    } finally {
-      setStagedReverts((current) => ({ ...current, [panel.id]: null }));
-    }
-  }, [panelFor, toast]);
-
-  const commitStagedRevert = useCallback(async (workspace: WorkspaceIdentity): Promise<void> => {
-    const panel = panelFor(workspace);
-    if (!panel) return;
-    try {
-      await window.vela.revertCommit(workspace);
-      setStagedReverts((current) => ({ ...current, [panel.id]: null }));
-      await hydrateTranscript(panel.id);
-    } catch (err) {
-      toast(err instanceof Error ? err.message : String(err), "error");
-    }
-  }, [panelFor, toast, hydrateTranscript]);
-
-  const stageRevert = useCallback(async (workspace: WorkspaceIdentity, messageID: string): Promise<void> => {
-    const panel = panelFor(workspace);
-    if (!panel) return;
-    try {
-      const staged = await window.vela.revertStage(workspace, messageID, true);
-      setStagedReverts((current) => ({ ...current, [panel.id]: staged }));
-    } catch (err) {
-      toast(err instanceof Error ? err.message : String(err), "error");
-    }
-  }, [panelFor, toast]);
-
+  const { stagedReverts, restoredPrompts, actions: revertActions } = useSessionRevert({
+    panelFor, notify: toast, busyFor, transcriptFor, prepareReopenedReplay,
+    commitReplayTranscript, reconcileStreaming, setSessionBusy, setTodosFor
+  });
 
   // Editor initializes before lifecycle workflows; this stable bridge is invoked only after render.
   const focusEditorSession = useCallback((sessionID: string, hydrate = true): void => {
@@ -1065,6 +1033,7 @@ const StoreBody = memo(function StoreBody({ children, closeCtxMenu, onFileActiva
     inboxBySession,
     formsBySession,
     stagedReverts,
+    restoredPrompts,
     sessionAbortFlags,
     chatStates: rawChatReadMap
   }), [
@@ -1082,6 +1051,7 @@ const StoreBody = memo(function StoreBody({ children, closeCtxMenu, onFileActiva
     messageQueue,
     formsBySession,
     stagedReverts,
+    restoredPrompts,
     sessionAbortFlags
   ]);
 
@@ -1176,9 +1146,7 @@ const StoreBody = memo(function StoreBody({ children, closeCtxMenu, onFileActiva
       reorderQueuedMessage,
       submitForm,
       dismissForm,
-      stageRevert,
-      commitStagedRevert,
-      clearStagedRevert,
+      ...revertActions,
       pendingCreate,
       pendingRename,
       startCreate,
@@ -1203,7 +1171,7 @@ const StoreBody = memo(function StoreBody({ children, closeCtxMenu, onFileActiva
       startCreate, startRename, cancelPending, commitName, deleteEntry, deleteEntries, removeFromWorkspace, moveEntry, moveEntries, openRecovery, acknowledgeRecovery,
       removeQueuedMessage, popQueuedMessage, sendQueuedNow, reorderQueuedMessage,
       submitForm, dismissForm,
-      stageRevert, commitStagedRevert, clearStagedRevert,
+      revertActions,
       pendingCreate, pendingRename
     ]
   );

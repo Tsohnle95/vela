@@ -146,7 +146,7 @@ const AiElementsEntry = memo(function AiElementsEntry({item,busy,lastAssistantId
 
 function AiElementsUserMessage({item,session,busy}:SessionProps & {item:Extract<TranscriptItem,{kind:"user"}>}) {
     const {stageRevert}=useStore();
-    return <Message align="end"><MessageContent><Bubble align="end" variant="muted"><BubbleContent>{item.text}{item.attachments?.map((attachment,index) => <span key={index} className="block text-xs text-muted-foreground">{attachment.name}</span>)}</BubbleContent></Bubble><MessageFooter><MessageCopy text={item.text}/>{session && item.kind === "user" && <MessageAction label="Edit" disabled={busy} onClick={() => void stageRevert(session.workspace,item.id)}><PencilIcon/></MessageAction>}</MessageFooter></MessageContent></Message>;
+    return <Message align="end"><MessageContent><Bubble align="end" variant="muted"><BubbleContent>{item.text}{item.attachments?.map((attachment,index) => <span key={index} className="block text-xs text-muted-foreground">{attachment.name}</span>)}</BubbleContent></Bubble><MessageFooter><MessageCopy text={item.text}/>{session && item.kind === "user" && <MessageAction label="Edit" disabled={busy} onClick={() => void stageRevert(session.workspace,item.id,true)}><PencilIcon/></MessageAction>}</MessageFooter></MessageContent></Message>;
 }
 
 function AiElementsAssistantMessage({item,streaming,busy,session,onRetry}: SessionProps & {item:AssistantItem;streaming:boolean;onRetry?:AiElementsTimelineProps["onRetry"]}) {

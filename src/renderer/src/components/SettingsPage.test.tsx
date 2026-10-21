@@ -109,8 +109,8 @@ describe("SettingsPage", () => {
 
     const cards = [...container.querySelectorAll<HTMLButtonElement>(".theme-card")];
     expect(cards.map((card) => card.textContent)).toEqual([
-      expect.stringContaining("Codex"),
-      expect.stringContaining("Codex Dark"),
+      expect.stringContaining("Daybreak"),
+      expect.stringContaining("Midnight"),
       expect.stringContaining("Quiet Habitat"),
       expect.stringContaining("Control Deck"),
       expect.stringContaining("Papertrail"),
@@ -162,12 +162,11 @@ describe("SettingsPage", () => {
     expect(container.querySelector<HTMLButtonElement>(`.theme-card[aria-checked="true"]`)?.textContent)
       .toContain(saved === "kitty" ? "Kitty Glass" : "Original Dark");
     expect(setAppearance).toHaveBeenLastCalledWith("dark");
-    // The Codex shell paints one flat workspace for every palette …
+    // Glass remains transparent in either interface.
     expect(document.documentElement.style.getPropertyValue("--workspace-background"))
-      .toBe(saved === "kitty" ? "#0e121c" : "#171412");
+      .toBe(saved === "kitty" ? "transparent" : "#171412");
 
-    // … while the palette's own treatment (Kitty's glass) belongs to the
-    // classic shell.
+    // Switching interfaces preserves that appearance.
     act(() => container.querySelectorAll<HTMLButtonElement>(".ui-choice-card")[1]!.click());
     expect(document.documentElement.dataset.shell).toBe("classic");
     expect(document.documentElement.style.getPropertyValue("--workspace-background"))
@@ -201,11 +200,27 @@ describe("SettingsPage", () => {
     act(() => root.render(<SettingsSidebar section="appearance" onSectionChange={onSectionChange} />));
 
     const labels = [...container.querySelectorAll<HTMLButtonElement>(".settings-nav-item")].map((button) => button.textContent);
-    expect(labels).toEqual(["Appearance", "Plugins", "Providers", "Safety", "Voice", "Model", "Servers", "Mobile Setup", "About"]);
+    expect(labels).toEqual(["Appearance", "Providers", "Voice", "Model", "Servers", "Mobile Setup", "About"]);
     expect(container.querySelector<HTMLButtonElement>(".settings-nav-item:last-child")?.textContent).toBe("About");
 
-    act(() => container.querySelectorAll<HTMLButtonElement>(".settings-nav-item")[5].click());
+    act(() => container.querySelectorAll<HTMLButtonElement>(".settings-nav-item")[3].click());
     expect(onSectionChange).toHaveBeenCalledWith("model");
+  });
+
+  it("keeps safety controls on the Model page", async () => {
+    await act(async () => root.render(<ThemeProvider><SettingsPage section="model" onClose={() => {}} /></ThemeProvider>));
+    expect(container.textContent).toContain("Default model");
+    expect(container.textContent).toContain("Tool permissions");
+    expect(container.textContent).toContain("Follow-up behavior");
+    act(() => [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "Steer")!.click());
+    expect(store.setFollowUpBehavior).toHaveBeenCalledWith("steer");
+  });
+
+  it("places compact experimental art controls beside the interface choices", () => {
+    act(() => root.render(<ThemeProvider><SettingsPage section="appearance" onClose={() => {}} /></ThemeProvider>));
+    const toggle = container.querySelector('[role="switch"][aria-label="Experimental art"]');
+    expect(toggle?.closest(".appearance-interface-row")).not.toBeNull();
+    expect(toggle?.closest(".settings-list")).toBeNull();
   });
 
   it("checks GitHub Releases on About and starts the popup updater from Update Vela", async () => {

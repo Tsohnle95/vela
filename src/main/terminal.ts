@@ -14,6 +14,7 @@ export interface PtyHandle {
 export interface TerminalCommand {
   command: string;
   args: string[];
+  env?: NodeJS.ProcessEnv;
 }
 
 export function defaultShell(platform: NodeJS.Platform, env: NodeJS.ProcessEnv): string {
@@ -57,7 +58,7 @@ export class TerminalManager {
       cols: initialSize.cols,
       rows: initialSize.rows,
       cwd: directory,
-      env: { ...process.env, TERM: "xterm-256color", COLORTERM: "truecolor" }
+      env: { ...process.env, ...command?.env, TERM: "xterm-256color", COLORTERM: "truecolor" }
     });
     const terminal = {
       pty,

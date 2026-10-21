@@ -550,7 +550,11 @@ Key mechanisms:
   file opening, child navigation and revert continue through the existing store
   with their explicit session/workspace identities. Production replies do not
   insert checkpoint or restore controls between turns; the original explicit
-  user-message Edit action retains its existing revert confirmation flow.
+  user-message Undo and Edit actions stage and commit the owning runtime revert,
+  then replace the local transcript and raw chat records with its authoritative
+  snapshot. Edit restores the selected prompt text into that panel's composer.
+  Failures surface a toast and retain any staged revert for retry/discard;
+  attachment names alone do not provide paths for restoring attached files.
   ThemeProvider mirrors the selected appearance scheme to the standard `dark`
   class so upstream widgets and portals receive the correct neutral theme.
   `AiElementsSurface.tsx` isolates response CSS in a ShadowRoot so shell Sass
@@ -750,7 +754,7 @@ express a cross-component invariant or non-obvious state contract.
 | `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (preserves the selected view when a workspace or session opens), Vela header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |
 | `ChangesView` | `ChangesView.tsx`, `changes-view-model.ts` | Editor-area review surface activated by the rail (the titlebar file/browser strip stays visible): a directory tree of observed file changes beside stacked Pierre diffs with per-file status and +/- counts; omits paths hidden for the focused workspace (detached paths and nested-workspace roots, matching the Explorer), and defers both per-file diff statistics and the Pierre diff until a section nears the viewport (one shared observer) so a large change set never diffs every file on mount |
 | `SettingsSidebar` | `SettingsSidebar.tsx` | Settings navigation |
-| `SettingsPage` | `SettingsPage.tsx` | The independent Codex/Classic interface chooser and all appearance palettes, including the persisted Experimental art toggle, plugins, providers, safety, voice, default model and OpenCode sync, mobile, and About with a direct GitHub update action, separate status check, and clickable unsaved-file list |
+| `SettingsPage` | `SettingsPage.tsx` | The independent Codex/Classic interface chooser and all appearance palettes, including the compact persisted Experimental art toggle beside interface choices, providers, voice, default model with safety controls and OpenCode sync, mobile, and About with a direct GitHub update action, separate status check, and clickable unsaved-file list |
 | `ProviderSettings` | `ProviderSettings.tsx` | Runtime-neutral provider connection/status UI; never owns provider secrets |
 | `SessionsPane` | `SessionsPane.tsx` | Vela header with session filter, Pinned/Projects/Recents inventory, saved workspaces, session open/close navigation |
 | `EditorPane` | `EditorPane.tsx` | Monaco edit views (files always open in the edit surface; diff review lives in the rail's Changes view) with a Codex-style breadcrumb trail (text segments, chevron separators, ghost ancestors, current file emphasized) and unconditional line wrapping, manual save/conflict UI, editor validation entry points, and up to four groups with independent tab membership, selection, and drag transfer; every group's file tabs share the titlebar strip (group blocks in panel order, separated by a hairline) so a split panel never grows a second strip inside itself, and selecting a tab there focuses its group; each group's split/close controls sit at the right end of its breadcrumb row beside the editor status menu (empty groups keep that row so they can still be split); new tabs route to the focused group ; browser tabs share that strip (chips after the file tabs, with their `+` immediately after the last visible browser chip; file-only strips omit it and the rail opens the first browser) and while one is showing the editor keeps its mount behind a concealed wrapper |
@@ -836,7 +840,8 @@ Key cross-component invariants:
 
 `_opencode-chat.scss` owns the ordered integration of the pinned upstream
 partials and Vela's transcript overrides. Prompt, permission/form/revert,
-todo and compact composer presentation lives in `_agent-prompt-dock.scss`;
+todo and default composer presentation lives in `_agent-prompt-dock.scss`;
+`_compact-agent.scss` owns the three-or-more-panel input sizing;
 the transcript owner includes its mixin at the existing cascade position.
 `_agent.scss` owns the optional empty-state station mark and its prompt line.
 Light transcript surfaces use `agent-station-light.png`; dark surfaces use
@@ -890,13 +895,22 @@ border, send colours, dark file-tree glyphs) over the palette and removes any
 token the new combination no longer sets, so switching palettes or interfaces
 cannot leave stale inline variables behind.
 The Observatory appearance also supplies a decorative pixel-art observatory
-backdrop and violet pixel wordmark. The backdrop covers the panel, frames the
+backdrop and violet pixel Vela wordmark in the Files and Sessions headers. The backdrop covers the panel, frames the
 observatory in narrow panels and reveals the galaxy in wide Agent Mode. It dims
 behind conversations and is absent in the TUI; prompts, scrolling and menus
 retain their existing owners. These decorations are scoped to the appearance
 and work in both interfaces.
 The selected appearance supplies the color palette for both embedded xterm
-surfaces. Prism uses alpha-backed violet panels; Kitty Glass restores the
+surfaces. Agent terminals use the agent surface; the terminal tray keeps its
+console surface. Embedded OpenCode selects its `system` theme through a
+child-only `OPENCODE_CLI_CONFIG_CONTENT` override, preserving other inline
+preferences and global CLI settings. Its OSC palette queries receive xterm's
+selected colors, including semantic diff colors. Changing appearances replaces
+the attached CLI view of the same session so OpenCode rereads that palette;
+it does not create a new agent session. CLI replacements wait for the previous
+launch and stop to finish; retired launch failures cannot dismiss the current
+TUI. Kitty Glass retains transparent xterm
+and workspace backgrounds in both interfaces. Prism uses alpha-backed violet panels; Kitty Glass restores the
 transparent glass surfaces and terminal backgrounds of the earlier app, and
 Original Dark restores its warm charcoal palette. All appearances retain the
 same workspace layout, with independent interface chrome. The window and native chrome
@@ -927,7 +941,7 @@ released at that collapsed position.
 
 - Workers wired for editor/json/css/html/ts (`?worker` imports).
 - Codex profiles include Pierre-style syntax slots and language-specific token overrides; other profiles retain per-slot fallbacks. Comments use plain rather than italic text.
-- Startup migrates old product-prefixed local-storage keys before persisted preferences initialize. The `vela.theme` color profile defaults to Codex when absent; saved palette IDs remain compatible. The independent `vela.ui` preference defaults to `codex`, with `classic` restoring card chrome. Shell selection publishes `data-shell`; palette selection supplies colors. Switching either removes obsolete inline tokens before applying the new combination.
+- Startup migrates old product-prefixed local-storage keys before persisted preferences initialize. The `vela.theme` color profile defaults to Daybreak (`codex`) when absent; Midnight retains the `codex-dark` ID; saved palette IDs remain compatible. The independent `vela.ui` preference defaults to `codex`, with `classic` restoring card chrome. Shell selection publishes `data-shell`; palette selection supplies colors. Switching either removes obsolete inline tokens before applying the new combination.
 - `vela-${appearanceId}` themes (diff insert/remove colors included) for all persisted color profiles. Saved `kitty` and `original` selections keep their IDs rather than mapping to Blueprint or Control Deck. Monaco
   parses theme palette colors with `Color.fromHex`, which silently maps any
   non-hex value to pure red — every palette color must be hex
@@ -1055,7 +1069,12 @@ Agent Mode is a temporary panel view. Normal coding mode renders only the
 focused coding session. Entering Agent Mode seeds its panel set with that one
 session; additional active sessions are loaded explicitly from the agent
 panel's three-dots menu, up to eight visible panels. Three or more panels use
-a two-row grid that expands from two through four columns. Exiting Agent Mode resets the temporary set to the
+a two-row grid that expands from two through four columns, with horizontal as well
+as vertical dividers. At three or more visible panels, the existing composer
+switches to a compact borderless input with a top rule; drafting, attachments,
+agent/model/effort controls, and send/stop retain the same owners. The activity
+row mounts only while busy or waiting for approval, so an idle conversation does
+not reserve space above its input. Exiting Agent Mode resets the temporary set to the
 currently focused session, while all other active sessions remain available in
 the menu and continue running in the backend. Selecting a hidden session in
 normal mode switches the single coding workspace; selecting one in Agent Mode

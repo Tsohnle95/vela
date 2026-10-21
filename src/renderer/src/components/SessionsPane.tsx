@@ -1,3 +1,4 @@
+import { SidebarBrand } from "./SidebarBrand";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useStore } from "../store";
 import type { SessionSummary } from "@shared/types";
@@ -164,7 +165,7 @@ function SessionsHeader({
   return (
     <>
       <div className="sessions-header">
-        <span className="sidebar-brand">Vela</span>
+        <SidebarBrand />
         <button
           className={`sessions-header-action ${searchOpen ? "open" : ""}`}
           aria-label={searchOpen ? "Close session filter" : "Filter sessions"}

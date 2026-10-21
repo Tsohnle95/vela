@@ -22,3 +22,8 @@ it("keeps file and browser tabs visible during Changes review", () => {
   expect(getComputedStyle(document.querySelector(".titlebar-tabs-slot")!).display).not.toBe("none");
   expect(getComputedStyle(document.querySelector(".editor-pane")!).visibility).toBe("hidden");
 });
+it("draws the missing horizontal divider in the lower row of an agent grid", () => {
+  style("_codex");
+  document.body.innerHTML = '<div data-shell="codex"><div class="app agent-mode"><div class="agent-col" data-grid-row="lower"><div class="agent-panel"></div></div></div></div>';
+  expect(getComputedStyle(document.querySelector(".agent-panel")!).borderTopWidth).toBe("1px");
+});

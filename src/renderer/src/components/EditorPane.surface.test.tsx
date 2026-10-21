@@ -112,6 +112,16 @@ describe("editor surface", () => {
     expect(actionLabels().some((label) => label.includes("Diff unavailable"))).toBe(false);
   });
 
+  it("omits save status text while retaining the dirty file save action", () => {
+    store.tabs = [{ ...tab, dirty: true }];
+    render();
+    expect(container.querySelector(".editor-dirty")).toBeNull();
+    const save = container.querySelector<HTMLButtonElement>('[aria-label="Save page.ts"]');
+    expect(save).not.toBeNull();
+    act(() => save!.click());
+    expect(store.saveTab).toHaveBeenCalledWith(tab.path);
+  });
+
   it("keeps the edit surface for a tab with a known baseline", () => {
     const knownTab: Tab = { ...tab, baseline: { kind: "known", content: "before" } };
     store.tabs = [knownTab];

@@ -52,8 +52,8 @@ export function AgentScrollArea({ legacy, legacyRef, onLegacyScroll, showRespons
 
 type StatusProps = Pick<AiElementsTimelineProps, "busy" | "transcript" | "activity" | "startedAt"> & { legacy: boolean; visible: boolean };
 export function AgentStreamStatus({ legacy, visible, ...props }: StatusProps) {
-  if (legacy || !visible) return null;
-  return <div data-agent-stream-status="" style={{ height: 48, flexShrink: 0, overflow: "hidden" }}>
+  if (legacy || !visible || (!props.busy && !props.activity?.isWaitingForPermission)) return null;
+  return <div data-agent-stream-status="" style={{ flexShrink: 0, overflow: "hidden" }}>
     <AiElementsSurface compact><AiElementsActivity {...props}/></AiElementsSurface>
   </div>;
 }

@@ -12,7 +12,8 @@
  *      endpoint.
  *   3. `OpenCode.make` produces a working client; `session.create`,
  *      `session.get`, and `session.remove` round-trip a session in a temporary
- *      workspace.
+ *      workspace. A fixture import exercises revert stage/commit and verifies
+ *      that the selected prompt disappears while earlier prompts remain.
  *   4. `event.subscribe` delivers at least one streamed event.
  *   5. `Service.stop` terminates the private service; temporary directories are
  *      removed.
@@ -93,6 +94,34 @@ try {
   if (fetchedID !== sessionID) {
     throw new Error(`session.get returned ${fetchedID ?? "no id"}, expected ${sessionID}`);
   }
+
+  step("importing two fixture prompts without calling a model");
+  const transfer = await client.session.export({ sessionID });
+  const firstMessageID = "msg_fixture_first";
+  const revertedMessageID = "msg_fixture_second";
+  transfer.messages = [
+    { id: firstMessageID, type: "user", text: "Keep this prompt", time: { created: Date.now() - 100 } },
+    { id: revertedMessageID, type: "user", text: "Undo this prompt", time: { created: Date.now() } }
+  ];
+  await client.session.remove({ sessionID });
+  const imported = await client.session.import(transfer);
+  if (imported.id !== sessionID) throw new Error("session.import changed the fixture session id");
+  const beforeRevert = await client.message.list({ sessionID });
+  if (![firstMessageID, revertedMessageID].every((id) => beforeRevert.data.some((message) => message.id === id))) {
+    throw new Error("fixture prompts were not imported");
+  }
+  step("staging and committing a runtime prompt undo");
+  const staged = await client.session.revert.stage({ sessionID, messageID: revertedMessageID, files: true });
+  if (staged.messageID !== revertedMessageID) throw new Error("session.revert.stage returned the wrong boundary");
+  await client.session.revert.commit({ sessionID });
+  const afterRevert = await client.message.list({ sessionID });
+  if (afterRevert.data.some((message) => message.id === revertedMessageID)) {
+    throw new Error("committed undo retained the reverted prompt");
+  }
+  if (!afterRevert.data.some((message) => message.id === firstMessageID)) {
+    throw new Error("committed undo unexpectedly removed the earlier prompt");
+  }
+  step("runtime undo removed only the selected prompt and its following history");
 
   step("waiting for a streamed event");
   let eventType = null;

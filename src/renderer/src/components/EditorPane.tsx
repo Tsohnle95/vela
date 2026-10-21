@@ -179,7 +179,6 @@ function BreadcrumbBar({
         ))}
       </nav>
       <div className="editor-breadcrumb-actions">
-        {tab.dirty && <span className="editor-dirty">unsaved</span>}
         {tab.dirty && !tab.conflict && (
           <button
             type="button"

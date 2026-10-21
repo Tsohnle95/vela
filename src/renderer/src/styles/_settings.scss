@@ -374,3 +374,7 @@
 .ui-choice-card strong { font-size: 12px; font-weight: 500; }
 .ui-choice-card:hover { color: var(--text); }
 .ui-choice-card.selected { background: var(--bg-panel); color: var(--text); box-shadow: 0 1px 3px #00000014; }
+
+.appearance-art-control { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.appearance-art-control strong { display: block; font-size: 12px; font-weight: 500; }
+.appearance-art-control small { display: block; margin-top: 4px; color: var(--text-dim); font-size: 11px; }

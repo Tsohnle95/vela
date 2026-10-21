@@ -45,6 +45,13 @@ Captures and traces go to `/private/tmp/vela-stream-motion` (override with
 The local index replay and gallery are UI validation tools, not proof that a
 provider supplies every optional structured result.
 
+With the installed OpenCode runtime available, `node scripts/opencode-tui-theme-smoke.mjs`
+starts its actual TUI without sending a prompt in a temporary directory and
+answers OSC palette queries with light and dark Vela colors. It verifies the
+final rendered foreground, accent, and default-background resets, and retains
+ANSI evidence in the printed temporary report directory. This checks runtime
+palette negotiation separately from component tests and makes no model requests.
+
 ## Prerequisites
 
 - Node 22.23.2 and npm. `.node-version`, `package.json` engines, and CI select
@@ -525,3 +532,13 @@ options and overflow host with real Monaco and app styles, verifies at least
 eight visible options, wheel scrolling and keyboard acceptance in dark and
 light themes, and checks titlebar visibility during Changes review.
 `VELA_EDITOR_TEST_URL` can select another fixture server.
+
+## Multi-agent workspace and compact concepts
+
+With `npm run chat:compare` serving the repository, run
+`node scripts/agent-workspace-smoke.mjs` to exercise the actual app grid through
+eight panels, compact composer geometry, idle conversation spacing, appearance
+settings and Kitty transparency. `VELA_AGENT_TEST_URL` selects another fixture
+server; screenshots and measurements default to `/private/tmp/vela-agent-workspace-report`.
+The bridge is isolated demo data; runtime undo and TUI palette checks have their
+own OpenCode integration smokes.

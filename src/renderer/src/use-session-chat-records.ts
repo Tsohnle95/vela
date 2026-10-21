@@ -60,8 +60,8 @@ export function useSessionChatRecords(protectedSessionIDs: () => Set<string>) {
     updateChangedStreamingSessions(chatStateFor(sessionID), previous, current), [chatStateFor]);
   const deriveStreaming = useCallback((sessionID: string, current: StreamingStore): StreamingStore | null =>
     updateStreamingState(chatStateFor(sessionID), current), [chatStateFor]);
-  const prepareReopenedReplay = useCallback((sessionID: string, history: TranscriptItem[], completeAborted: boolean): TranscriptItem[] => {
-    const merged = mergeChatHistory(history, transcriptsBySessionRef.current[sessionID] ?? []);
+  const prepareReopenedReplay = useCallback((sessionID: string, history: TranscriptItem[], completeAborted: boolean, authoritative = false): TranscriptItem[] => {
+    const merged = authoritative ? history : mergeChatHistory(history, transcriptsBySessionRef.current[sessionID] ?? []);
     chatStatesRef.current.delete(sessionID);
     const draft = chatStateFor(sessionID);
     hydrateChatState(draft, sessionID, merged);

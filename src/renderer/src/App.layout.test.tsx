@@ -1133,6 +1133,8 @@ describe("Layout panel sizing", () => {
 
     await enterAgentMode("two", "three");
 
+    expect(container.querySelectorAll('.agent-panel[data-compact="true"]')).toHaveLength(3);
+    expect(container.querySelectorAll('.agent-col[data-grid-row="lower"]')).toHaveLength(1);
     expect(agentWidths()).toEqual([740, 740, 740]);
     expect(agentLefts()).toEqual([0, 0, 740]);
     expect(agentCols().map((col) => col.style.top)).toEqual(["50%", "0%", "0%"]);

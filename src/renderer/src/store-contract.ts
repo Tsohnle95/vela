@@ -94,6 +94,7 @@ export interface PanelView {
   queuedMessages: QueuedMessage[];
   pendingForms: PendingFormRequest[];
   stagedRevert: SessionRevertStage | null;
+  restoredPrompt?: { text: string };
 }
 
 export interface UnsavedEditorFile {
@@ -196,7 +197,8 @@ export interface Store {
   sendQueuedNow: (workspace: WorkspaceIdentity, messageID: string) => Promise<void>;
   submitForm: (workspace: WorkspaceIdentity, formID: string, answers: FormAnswers, formSessionID?: string) => Promise<void>;
   dismissForm: (workspace: WorkspaceIdentity, formID: string, formSessionID?: string) => void;
-  stageRevert: (workspace: WorkspaceIdentity, messageID: string) => Promise<void>;
+  stageRevert: (workspace: WorkspaceIdentity, messageID: string, edit?: boolean) => Promise<void>;
+  clearRestoredPrompt: (workspace: WorkspaceIdentity) => void;
   commitStagedRevert: (workspace: WorkspaceIdentity) => Promise<void>;
   clearStagedRevert: (workspace: WorkspaceIdentity) => Promise<void>;
   reorderQueuedMessage: (workspace: WorkspaceIdentity, fromID: string, toID: string) => void;

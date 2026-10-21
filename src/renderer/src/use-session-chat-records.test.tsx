@@ -109,6 +109,20 @@ describe("session chat record authority", () => {
     expect(records.hasTranscript("session")).toBe(true);
   });
 
+  it("replaces both transcript and raw records after an authoritative runtime revert", () => {
+    act(() => {
+      records.appendTranscriptItem("session", user);
+      records.appendTranscriptItem("session", assistant);
+      records.mergeMaterializedRecords("session", [user, assistant], false);
+    });
+    const canonical = records.prepareReopenedReplay("session", [], false, true);
+    act(() => records.commitReplayTranscript("session", canonical));
+    act(() => records.projectSession("session"));
+    expect(records.transcriptFor("session")).toEqual([]);
+    expect(records.rawChatReadMap.get("session")!.message.session ?? []).toEqual([]);
+    expect(records.rawChatReadMap.get("session")!.part[assistant.id]).toBeUndefined();
+  });
+
   it("keeps queued row insertion distinct from prompt and delivered input records", () => {
     act(() => records.appendTranscriptItem("queued", user));
     expect(records.rawChatReadMap.has("queued")).toBe(false);

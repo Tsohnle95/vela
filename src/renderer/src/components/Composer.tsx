@@ -182,6 +182,17 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
     setPreviews({});
   }, [activeSession?.workspace.id, activeSession?.workspace.generation]);
 
+  useEffect(() => {
+    if (!view.restoredPrompt) return;
+    setInput(view.restoredPrompt.text);
+    setFiles([]);
+    setMentions([]);
+    setPreviews({});
+    setCompletion(null);
+    inputRef.current?.focus();
+    if (workspace) store.clearRestoredPrompt(workspace);
+  }, [view.restoredPrompt, store.clearRestoredPrompt, workspace]);
+
   const send = (): void => {
     if (!canSend) return;
     const text = input.trim();

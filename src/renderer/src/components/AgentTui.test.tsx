@@ -2,6 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BackendMessage, WorkspaceIdentity } from "@shared/types";
+import { APPEARANCES } from "../appearances";
 import { ThemeProvider, useTheme } from "../theme";
 
 const terminalWrites = vi.hoisted(() => vi.fn());
@@ -137,10 +138,25 @@ describe("AgentTui", () => {
     expect(terminalWrites).toHaveBeenLastCalledWith("glass");
 
     await act(async () => container.querySelector("button")!.click());
-    expect(options.theme.background).toBe("#121317");
-    expect(options.fontWeight).toBe(400);
+    const nextOptions = terminalOptions.mock.calls.at(-1)![0];
+    expect(nextOptions.theme.background).toBe("rgba(38,34,32,.92)");
+    expect(nextOptions.fontWeight).toBe(400);
+    expect(stop).toHaveBeenCalledTimes(1);
+    expect(start).toHaveBeenCalledTimes(2);
     await act(async () => listener({ kind: "terminal-data", terminal: { id: "term-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", data: "\u001b[48;5;0mdark" } }));
     expect(terminalWrites).toHaveBeenLastCalledWith("\u001b[48;5;0mdark");
+  });
+
+  it.each(APPEARANCES.filter(({ id }) => id !== "kitty"))("uses $name's agent surface and preserves semantic runtime backgrounds", async ({ id, colors }) => {
+    window.localStorage.setItem("vela.theme", id);
+    const { AgentTui } = await import("./AgentTui");
+    await act(async () => root.render(<ThemeProvider><AgentTui workspace={workspace} onExit={onExit} onError={onError} /></ThemeProvider>));
+    expect(terminalOptions.mock.calls[0][0].theme.background).toBe(colors.agent);
+    expect(terminalOptions.mock.calls[0][0].theme.cyan).toBe(colors.accent);
+    expect(terminalOptions.mock.calls[0][0].theme.foreground).toBe(colors.ink);
+    expect(terminalOptions.mock.calls[0][0].theme.cursor).toBe(colors.accent);
+    await act(async () => listener({ kind: "terminal-data", terminal: { id: "term-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", data: "\u001b[48;2;12;80;35mdiff\u001b[49m" } }));
+    expect(terminalWrites).toHaveBeenLastCalledWith("\u001b[48;2;12;80;35mdiff\u001b[49m");
   });
 
   it("reports natural exit and stops the PTY on unmount", async () => {
@@ -168,6 +184,43 @@ describe("AgentTui", () => {
     await act(async () => { release(); await gate; });
     expect(resize.mock.calls.length).toBeGreaterThan(beforeStart);
     expect(resize.mock.calls.at(-1)).toEqual([workspace, "term-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", 80, 24]);
+  });
+
+  it("ignores a retired launch rejection after switching appearances", async () => {
+    let rejectLaunch!: (error: Error) => void;
+    start.mockReturnValueOnce(new Promise<void>((_resolve, reject) => { rejectLaunch = reject; }));
+    const { AgentTui } = await import("./AgentTui");
+    function SwitchTheme() {
+      const { setTheme } = useTheme();
+      return <button onClick={() => setTheme("original")}>Switch</button>;
+    }
+    await act(async () => root.render(<ThemeProvider><AgentTui workspace={workspace} onExit={onExit} onError={onError} /><SwitchTheme /></ThemeProvider>));
+    await act(async () => container.querySelector("button")!.click());
+    await act(async () => rejectLaunch(new Error("retired CLI launch failed")));
+    expect(onError).not.toHaveBeenCalled();
+    expect(start).toHaveBeenCalledTimes(2);
+  });
+
+  it("finishes retiring the previous PTY before starting its replacement", async () => {
+    let finishLaunch!: () => void;
+    let finishStop!: () => void;
+    start.mockReturnValueOnce(new Promise<void>((resolve) => { finishLaunch = resolve; }));
+    stop.mockReturnValueOnce(new Promise<void>((resolve) => { finishStop = resolve; }));
+    const { AgentTui } = await import("./AgentTui");
+    function SwitchTheme() {
+      const { setTheme } = useTheme();
+      return <button onClick={() => setTheme("original")}>Switch</button>;
+    }
+    await act(async () => root.render(<ThemeProvider><AgentTui workspace={workspace} onExit={onExit} onError={onError} /><SwitchTheme /></ThemeProvider>));
+    await act(async () => container.querySelector("button")!.click());
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(stop).not.toHaveBeenCalled();
+    await act(async () => finishLaunch());
+    expect(stop).toHaveBeenCalledTimes(1);
+    expect(start).toHaveBeenCalledTimes(1);
+    await act(async () => finishStop());
+    expect(start).toHaveBeenCalledTimes(2);
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it("returns a failed TUI launch to the GUI with an error", async () => {

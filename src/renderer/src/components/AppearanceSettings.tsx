@@ -32,6 +32,23 @@ export function AppearanceSettings(): ReactNode {
             </button>
           ))}
         </div>
+        <div className="appearance-art-control">
+          <div>
+            <strong>Experimental art</strong>
+            <small>Show optional artwork in the empty agent panel.</small>
+          </div>
+          <button
+            type="button"
+            className={`settings-switch ${experimentalArt ? "on" : ""}`}
+            role="switch"
+            aria-label="Experimental art"
+            aria-checked={experimentalArt}
+            title={`${experimentalArt ? "Disable" : "Enable"} experimental art`}
+            onClick={() => setExperimentalArt(!experimentalArt)}
+          >
+            <span />
+          </button>
+        </div>
       </div>
       <div className="appearance-label appearance-theme-heading">
         <h2>Color theme</h2>
@@ -74,25 +91,6 @@ export function AppearanceSettings(): ReactNode {
             </span>
           </button>
         ))}
-      </div>
-      <div className="settings-list">
-        <div className="settings-list-row">
-          <div>
-            <strong>Experimental art</strong>
-            <small>Show optional artwork in the empty agent panel.</small>
-          </div>
-          <button
-            type="button"
-            className={`settings-switch ${experimentalArt ? "on" : ""}`}
-            role="switch"
-            aria-label="Experimental art"
-            aria-checked={experimentalArt}
-            title={`${experimentalArt ? "Disable" : "Enable"} experimental art`}
-            onClick={() => setExperimentalArt(!experimentalArt)}
-          >
-            <span />
-          </button>
-        </div>
       </div>
     </section>
   );

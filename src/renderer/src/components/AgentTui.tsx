@@ -4,7 +4,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import type { WorkspaceIdentity } from "@shared/types";
 import { useOptionalTheme } from "../theme";
-import { terminalThemeForAppearance } from "../appearances";
+import { agentTerminalThemeForAppearance } from "../appearances";
 
 type AnsiSanitizerState = { pending: string };
 
@@ -76,6 +76,7 @@ export function AgentTui({
   const theme = useOptionalTheme()?.theme ?? "prism";
   const hostRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
+  const lifecycleRef = useRef<Promise<void>>(Promise.resolve());
   const onExitRef = useRef(onExit);
   const onErrorRef = useRef(onError);
   const themeRef = useRef(theme);
@@ -97,7 +98,7 @@ export function AgentTui({
       scrollback: 5000,
       allowTransparency: true,
       fontWeight: theme === "kitty" ? 500 : 400,
-      theme: terminalThemeForAppearance(theme)
+      theme: agentTerminalThemeForAppearance(theme)
     });
     const fit = new FitAddon();
     terminal.loadAddon(fit);
@@ -131,32 +132,43 @@ export function AgentTui({
       if (message.kind === "terminal-exit" && message.terminal.id === id) onExitRef.current(message.terminal.exitCode);
     });
     resize();
-    void window.vela.agentTuiStart(workspace, id)
-      .then(() => {
+    let disposed = false;
+    const start = lifecycleRef.current.then(async () => {
+      if (disposed) return false;
+      await window.vela.agentTuiStart(workspace, id);
+      return true;
+    });
+    void start
+      .then((started) => {
         // The PTY starts at the terminal manager's default size, so the fitted
         // size has to follow the spawn. Resizing before the start lands on an
         // unregistered terminal and is dropped, which left the TUI drawing only
         // the default rows with the rest of the panel blank.
-        if (terminalRef.current === terminal) resize();
+        if (started && terminalRef.current === terminal) resize();
       })
       .catch((error: unknown) => {
-        onErrorRef.current(error instanceof Error ? error.message : "Could not start the agent TUI");
+        if (terminalRef.current === terminal) onErrorRef.current(error instanceof Error ? error.message : "Could not start the agent TUI");
       });
 
     return () => {
+      disposed = true;
       off();
       resizeObserver.disconnect();
       terminal.dispose();
       terminalRef.current = null;
-      void window.vela.agentTuiStop(workspace, id).catch(() => {});
+      // An IPC launch may still be awaiting its runtime command. Retire it
+      // after it finishes, then allow the next palette's CLI view to start.
+      lifecycleRef.current = start.catch(() => false).then(async (started) => {
+        if (started) await window.vela.agentTuiStop(workspace, id).catch(() => {});
+      });
     };
-  }, [workspace.id, workspace.generation]);
+  }, [workspace.id, workspace.generation, theme]);
 
   useEffect(() => {
     const terminal = terminalRef.current;
     if (!terminal) return;
     if (theme !== "kitty") ansiStateRef.current.pending = "";
-    terminal.options.theme = terminalThemeForAppearance(theme);
+    terminal.options.theme = agentTerminalThemeForAppearance(theme);
     terminal.options.fontWeight = theme === "kitty" ? 500 : 400;
     terminal.options.fontFamily = theme === "kitty" ? "'FiraCode Nerd Font', ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, monospace" : "ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, monospace";
   }, [theme]);

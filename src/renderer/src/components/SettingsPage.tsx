@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { CommandOption, McpServerOption, VelaAppUpdateStatus, PluginOption, SkillOption } from "@shared/types";
+import type { VelaAppUpdateStatus } from "@shared/types";
 import { useStore } from "../store";
 import type { UnsavedEditorFile } from "../store";
 import { useTheme } from "../theme";
@@ -13,9 +13,7 @@ import type { SettingsSection } from "./SettingsSidebar";
 
 const sectionCopy: Record<SettingsSection, { title: string; description: string }> = {
   appearance: { title: "Appearance", description: "Choose how Vela looks and how code is presented." },
-  plugins: { title: "Plugins", description: "Review commands and skills available in the current workspace." },
   providers: { title: "Providers", description: "Connect model services supported by OpenCode." },
-  safety: { title: "Safety", description: "Set permission and follow-up defaults for agent behavior." },
   voice: { title: "Voice", description: "Configure voice input preferences and review availability." },
   model: { title: "Model", description: "Choose the model used by the current workspace." },
   servers: { title: "Servers", description: "See and stop the Vite preview servers running in this app." },
@@ -79,10 +77,6 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
     followUpBehavior,
     setFollowUpBehavior
   } = useStore();
-  const [commands, setCommands] = useState<CommandOption[]>([]);
-  const [mcpServers, setMcpServers] = useState<McpServerOption[]>([]);
-  const [plugins, setPlugins] = useState<PluginOption[]>([]);
-  const [skills, setSkills] = useState<SkillOption[]>([]);
   const [openCodeAction, setOpenCodeAction] = useState<"sync" | "update" | null>(null);
   const [openCodeFeedback, setOpenCodeFeedback] = useState("");
   const [velaUpdateStatus, setVelaUpdateStatus] = useState<VelaAppUpdateStatus | null>(null);
@@ -202,21 +196,6 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
   }, [section, session?.workspace, refreshRuntimes, loadModels]);
 
   useEffect(() => {
-    if (section !== "plugins") return;
-    if (!session) {
-      setCommands([]);
-      setMcpServers([]);
-      setPlugins([]);
-      setSkills([]);
-      return;
-    }
-    void window.vela.commands(session.workspace).then(setCommands).catch(() => setCommands([]));
-    void window.vela.mcpList(session.workspace).then(setMcpServers).catch(() => setMcpServers([]));
-    void window.vela.pluginsList(session.workspace).then(setPlugins).catch(() => setPlugins([]));
-    void window.vela.skillsList(session.workspace).then(setSkills).catch(() => setSkills([]));
-  }, [section, session]);
-
-  useEffect(() => {
     if (section === "providers" && session) void refreshProviderUsage();
   }, [section, session?.id, refreshProviderUsage]);
 
@@ -226,51 +205,10 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
 
       {section === "appearance" && <AppearanceSettings />}
 
-      {section === "plugins" && <section className="settings-section">
-        <div className="settings-list">
-          {commands.length === 0 ? <div className="settings-empty">No workspace commands or skills were reported.</div> : commands.map((command) => (
-            <SettingRow key={`${command.kind}:${command.name}`} title={command.name} detail={command.description ?? "No description provided."} control={<span className="settings-badge">{command.kind ?? "command"}</span>} />
-          ))}
-        </div>
-        <h2 className="settings-group-title">Skills</h2>
-        <div className="settings-list">
-          {skills.length === 0 ? <div className="settings-empty">No skills are available in this workspace.</div> : skills.map((skill) => (
-            <SettingRow key={skill.id} title={skill.name} detail={skill.description ?? skill.location ?? "No description provided."} control={<span className="settings-badge">{skill.slash ? "slash" : "skill"}</span>} />
-          ))}
-        </div>
-        <h2 className="settings-group-title">Plugins</h2>
-        <div className="settings-list">
-          {plugins.length === 0 ? <div className="settings-empty">No plugins are active in this workspace.</div> : plugins.map((plugin) => (
-            <SettingRow key={plugin.id} title={plugin.id} detail={`Source: ${plugin.source}`} control={<span className="settings-badge">{plugin.status}</span>} />
-          ))}
-        </div>
-        <h2 className="settings-group-title">MCP servers</h2>
-        <div className="settings-list">
-          {mcpServers.length === 0 ? <div className="settings-empty">No MCP servers are configured for this workspace.</div> : mcpServers.map((server) => (
-            <SettingRow key={server.name} title={server.name} detail="Managed by the OpenCode runtime." control={<span className={`settings-badge ${server.status === "connected" ? "available" : ""}`}>{server.status}</span>} />
-          ))}
-        </div>
-      </section>}
-
       {section === "providers" && <section className="settings-section">
         {runtime && !runtime.capabilities.providerCredentials
           ? <div className="settings-callout"><strong>Managed by {runtime.name}</strong><p>This runtime does not expose provider credential editing through Vela. Configure credentials in the runtime, then refresh its model list here.</p></div>
           : <ProviderSettings workspace={session?.workspace ?? null} usage={providerUsage} refreshModels={() => loadModels(session?.workspace)} />}
-      </section>}
-
-      {section === "safety" && <section className="settings-section">
-        <div className="settings-list">
-          {(!runtime || runtime.capabilities.permissions) && <SettingRow
-            title="Tool permissions"
-            detail="Choose whether agent tool actions need confirmation."
-            control={<span className="settings-segmented"><button className={approvalMode !== "approve" ? "on" : ""} onClick={() => approvalMode === "approve" && toggleApprovalMode()}>Ask</button><button className={approvalMode === "approve" ? "on" : ""} onClick={() => approvalMode !== "approve" && toggleApprovalMode()}>Approve</button></span>}
-          />}
-          {(!runtime || runtime.capabilities.steering) && <SettingRow
-            title="Follow-up behavior"
-            detail="Queue new prompts or use them to steer active work."
-            control={<span className="settings-segmented"><button className={followUpBehavior !== "steer" ? "on" : ""} onClick={() => setFollowUpBehavior("queue")}>Queue</button><button className={followUpBehavior === "steer" ? "on" : ""} onClick={() => setFollowUpBehavior("steer")}>Steer</button></span>}
-          />}
-        </div>
       </section>}
 
       {section === "voice" && <section className="settings-section">
@@ -289,6 +227,19 @@ export function SettingsPage({ section, onClose }: { section: SettingsSection; o
               if (model) void switchModel(model.id, model.providerID, model.variant);
             }}><option value="">{models.length === 0 ? "No models available" : "Select a model"}</option>{models.map((model) => <option key={`${model.providerID}:${model.id}`} value={`${model.providerID}:${model.id}`}>{model.name} · {model.providerID}</option>)}</select>}
           />
+        </div>
+        <h2 className="settings-group-title">Safety</h2>
+        <div className="settings-list">
+          {(!runtime || runtime.capabilities.permissions) && <SettingRow
+            title="Tool permissions"
+            detail="Choose whether agent tool actions need confirmation."
+            control={<span className="settings-segmented"><button className={approvalMode !== "approve" ? "on" : ""} onClick={() => approvalMode === "approve" && toggleApprovalMode()}>Ask</button><button className={approvalMode === "approve" ? "on" : ""} onClick={() => approvalMode !== "approve" && toggleApprovalMode()}>Approve</button></span>}
+          />}
+          {(!runtime || runtime.capabilities.steering) && <SettingRow
+            title="Follow-up behavior"
+            detail="Queue new prompts or use them to steer active work."
+            control={<span className="settings-segmented"><button className={followUpBehavior !== "steer" ? "on" : ""} onClick={() => setFollowUpBehavior("queue")}>Queue</button><button className={followUpBehavior === "steer" ? "on" : ""} onClick={() => setFollowUpBehavior("steer")}>Steer</button></span>}
+          />}
         </div>
         <h2 className="settings-group-title">OpenCode</h2>
         <div className="settings-callout"><strong>Vela uses the global OpenCode CLI.</strong><p>Sync and update restart the shared OpenCode service. Active runs in Vela or other OpenCode apps may be interrupted.</p></div>
