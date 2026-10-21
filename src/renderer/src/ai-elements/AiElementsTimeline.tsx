@@ -10,11 +10,12 @@ import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions }
 import { Button } from "@/components/ui/button";
 import { CodeBlock, CodeBlockContent } from "@/components/ui/code-block";
 import { Marker, MarkerContent } from "@/components/ui/marker";
+import { AiElementsActivity, type ActivityState } from "./AiElementsActivity";
 import { StreamingMarkdown as Markdown } from "./StreamingMarkdown";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { writeClipboard } from "../components/TimelineProse";
 import { parseSubagentTag, parseLegacyTaskText, isInternalSystemReminder, taskChildID, taskDescriptor, toolInput, toolKey, workspaceFilePath, editFileEntries, isEditCardTool } from "../components/timeline-model";
-import { ReasoningRow, Sources, StackTrace, TestResults, TodoQueue, FileTreeNode, PlanRow, TaskRow, AiElementsCheckpoint, Citation } from "./patterns";
+import { ReasoningRow, Sources, StackTrace, TestResults, TodoQueue, FileTreeNode, PlanRow, TaskRow, Citation } from "./patterns";
 import { fileTree, structuredToolOutput, structuredActivity, visibleAiTranscript, toolOutputText, structuredCitedText } from "./adapters";
 export interface AiElementsTimelineProps {
     transcript: TranscriptItem[];
@@ -23,6 +24,8 @@ export interface AiElementsTimelineProps {
     session?: SessionInfo | null;
     onRetry?: (messageID: string) => void;
     scrollerItems?: boolean;
+    activity?: ActivityState | null;
+    startedAt?: number | null;
 }
 type ToolProps = {tool: ToolCallView; streaming: boolean; session: SessionInfo | null; interrupted?: boolean};
 type AssistantItem = Extract<TranscriptItem,{kind:"assistant"}>;
@@ -109,9 +112,9 @@ export function AiElementsFileTree({ paths, session }: {
         void openFile(target, session?.workspace); }}/>)}</div>;
 }
 export function AiElementsTranscript({transcript,busy,lastAssistantId,session=null,onRetry,scrollerItems=false}: AiElementsTimelineProps): ReactNode {
-    return <>{transcript.map((item,index) => {
+    return <>{transcript.map(item => {
         if (hiddenEntry(item)) return null;
-        const rendered=<AiElementsEntry key={item.id} item={item} next={transcript[index+1]} busy={busy} lastAssistantId={lastAssistantId} session={session} onRetry={onRetry}/>;
+        const rendered=<AiElementsEntry key={item.id} item={item} busy={busy} lastAssistantId={lastAssistantId} session={session} onRetry={onRetry}/>;
         return scrollerItems ? <MessageScrollerItem key={item.id} messageId={item.id} scrollAnchor={item.kind === "user"}>{rendered}</MessageScrollerItem> : rendered;
     })}</>;
 }
@@ -120,12 +123,12 @@ function hiddenEntry(item: TranscriptItem):boolean {
     return item.kind === "system" || item.kind === "selection" || (item.kind === "synthetic" && isInternalSystemReminder(item));
 }
 
-type EntryProps = SessionProps & {item: TranscriptItem; next?: TranscriptItem; lastAssistantId:string|null; onRetry?: AiElementsTimelineProps["onRetry"]};
-const AiElementsEntry = memo(function AiElementsEntry({item,next,busy,lastAssistantId,session,onRetry}: EntryProps): ReactNode {
+type EntryProps = SessionProps & {item: TranscriptItem; lastAssistantId:string|null; onRetry?: AiElementsTimelineProps["onRetry"]};
+const AiElementsEntry = memo(function AiElementsEntry({item,busy,lastAssistantId,session,onRetry}: EntryProps): ReactNode {
     switch (item.kind) {
         case "user":
         case "pending-input": return <AiElementsUserMessage item={item} busy={busy} session={session}/>;
-        case "assistant": return <AiElementsAssistantMessage item={item} next={next} busy={busy} streaming={busy && (item.id === lastAssistantId || !item.completed)} session={session} onRetry={onRetry}/>;
+        case "assistant": return <AiElementsAssistantMessage item={item} busy={busy} streaming={busy && (item.id === lastAssistantId || !item.completed)} session={session} onRetry={onRetry}/>;
         case "permission": return <AiElementsPermission item={item} session={session}/>;
         case "selection":
         case "system": return null;
@@ -143,9 +146,8 @@ function AiElementsUserMessage({item,session,busy}:SessionProps & {item:Extract<
     return <Message align="end"><MessageContent><Bubble align="end" variant="muted"><BubbleContent>{item.text}{item.attachments?.map((attachment,index) => <span key={index} className="block text-xs text-muted-foreground">{attachment.name}</span>)}</BubbleContent></Bubble><MessageFooter><MessageCopy text={item.text}/>{session && item.kind === "user" && <MessageAction label="Edit" disabled={busy} onClick={() => void stageRevert(session.workspace,item.id)}><PencilIcon/></MessageAction>}</MessageFooter></MessageContent></Message>;
 }
 
-function AiElementsAssistantMessage({item,next,streaming,busy,session,onRetry}: SessionProps & {item:AssistantItem;next?:TranscriptItem;streaming:boolean;onRetry?:AiElementsTimelineProps["onRetry"]}) {
-    const {stageRevert}=useStore();
-    return <Message><MessageContent className="gap-4"><AiElementsAssistantParts item={item} streaming={streaming} session={session}/>{item.retry && <Trace><TraceLine status="running"><TraceTitle>{item.retry.message} · attempt {item.retry.attempt}</TraceTitle></TraceLine></Trace>}{item.error && <Trace><TraceLine status="error"><TraceTitle>{item.error}</TraceTitle></TraceLine></Trace>}{item.completed && <AiElementsAssistantFooter item={item} busy={busy} onRetry={onRetry}/ >}{item.completed && session && next?.kind === "user" && <AiElementsCheckpoint label="Checkpoint" disabled={busy} onRestore={() => void stageRevert(session.workspace,next.id)}/>}</MessageContent></Message>;
+function AiElementsAssistantMessage({item,streaming,busy,session,onRetry}: SessionProps & {item:AssistantItem;streaming:boolean;onRetry?:AiElementsTimelineProps["onRetry"]}) {
+    return <Message><MessageContent className="gap-4"><AiElementsAssistantParts item={item} streaming={streaming} session={session}/>{item.retry && <Trace><TraceLine status="running"><TraceTitle>{item.retry.message} · attempt {item.retry.attempt}</TraceTitle></TraceLine></Trace>}{item.error && <Trace><TraceLine status="error"><TraceTitle>{item.error}</TraceTitle></TraceLine></Trace>}{item.completed && <AiElementsAssistantFooter item={item} busy={busy} onRetry={onRetry}/ >}</MessageContent></Message>;
 }
 
 function AiElementsAssistantFooter({item,busy,onRetry}: {item:AssistantItem;busy:boolean;onRetry?:AiElementsTimelineProps["onRetry"]}) {
@@ -178,7 +180,7 @@ export const AiElementsTimeline = memo(function AiElementsTimeline(props: AiElem
     const store = useStore();
     const session = props.session === undefined ? store.session : props.session;
     const transcript = useMemo(() => visibleAiTranscript(props.transcript, store.sessions, session?.id), [props.transcript, store.sessions, session?.id]);
-    return <div className="flex w-full flex-col gap-4 py-6 text-sm" data-ai-elements="timeline"><AiElementsTranscript {...props} transcript={transcript} session={session}/></div>;
+    return <div className="flex w-full flex-col gap-4 py-6 text-sm" data-ai-elements="timeline"><AiElementsTranscript {...props} transcript={transcript} session={session}/><AiElementsActivity busy={props.busy} transcript={transcript} activity={props.activity} startedAt={props.startedAt}/></div>;
 });
 export { TodoQueue as AiElementsTodoQueue };
 function MessageAction({ label, children, ...props }: React.ComponentProps<typeof Button> & {

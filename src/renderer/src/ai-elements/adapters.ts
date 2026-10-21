@@ -1,4 +1,4 @@
-import { consolidateSubagentTools, taskChildID, taskDescriptor, taskDispatchSignature, toolKey, parseSubagentTag, parseLegacyTaskText, subagentChildID, refDispatchSignature, isInternalSystemReminder } from "../components/timeline-model";
+import { toolInput, consolidateSubagentTools, taskChildID, taskDescriptor, taskDispatchSignature, toolKey, parseSubagentTag, parseLegacyTaskText, subagentChildID, refDispatchSignature, isInternalSystemReminder } from "../components/timeline-model";
 import type { ToolCallView, TranscriptItem, SessionSummary } from "@shared/types";
 import type { FileNode, SourcePart, TestSuite } from "./patterns";
 function record(value: unknown): Record<string, unknown> | null {
@@ -149,4 +149,33 @@ export function structuredCitedText(tool: ToolCallView): CitedText | null {
     return [{end: Number(citation.end), source: {url:source.url, title:typeof source.title === "string" ? source.title : new URL(source.url).hostname, description:typeof source.description === "string" ? source.description : ""}}];
   }).sort((a,b) => a.end-b.end);
   return citations.length ? {text,citations} : null;
+}
+
+
+export type ActivityState = Pick<import("../assistant-status").WorkingSummary,"statusText"|"isWaitingForPermission"|"retryInfo"|"activePartType">;
+function liveActivityLabel(last:Extract<TranscriptItem,{kind:"assistant"}>["parts"][number]|undefined,tool:ToolCallView|undefined,activity:ActivityState|null|undefined,retry:Extract<TranscriptItem,{kind:"assistant"}>["retry"]) {
+ if(activity?.isWaitingForPermission) return "Waiting for approval";
+ if(activity?.retryInfo || (!activity && retry)) return retry?.message || "Retrying request";
+ const phrase=activity?.statusText;
+ if(phrase==="composing") return "Writing response";
+ if(phrase) return phrase[0].toUpperCase()+phrase.slice(1);
+ if(tool) return `Running ${tool.title}`;
+ if(last?.kind==="reasoning" && !last.complete) return "Thinking";
+ if(last?.kind==="text" && !last.complete) return "Writing response";
+ return "Working";
+}
+export function liveActivityPresentation(transcript:TranscriptItem[],activity?:ActivityState|null) {
+ const turn:Extract<TranscriptItem,{kind:"assistant"}>[]=[];
+ for(let i=transcript.length-1;i>=0;i--) {
+  const item=transcript[i];
+  if(item.kind==="user") break;
+  if(item.kind==="assistant") turn.push(item);
+ }
+ const parts=turn.flatMap(item=>[...item.parts].reverse());
+ const canShowTool=!activity || activity.activePartType==="tool" || activity.activePartType==="editing";
+ const part=canShowTool ? parts.find(part=>part.kind==="tool" && part.tool.status==="running") : undefined;
+ const tool=part?.kind==="tool" ? part.tool : undefined;
+ const input=tool ? toolInput(tool) : {};
+ const detail=tool ? [input.command,input.filePath,input.path,input.pattern,input.query,tool.detail].find(value=>typeof value==="string" && value.trim()) as string|undefined : undefined;
+ return {label:liveActivityLabel(parts[0],tool,activity,turn[0]?.retry),detail};
 }

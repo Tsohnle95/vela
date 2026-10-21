@@ -530,13 +530,20 @@ Key mechanisms:
   latest-per-block queue, using the upstream GitHub themes and JavaScript engine
   under the existing CSP. New code remains visible while tokens are pending;
   matching highlighted prefixes are retained as more characters arrive. The
-  original Markdown helper remains frozen for the upstream demo gallery. External anchors retain the shared HTTPS URL policy.
+  original Markdown helper remains frozen for the upstream demo gallery.
+  Production code fences and tool output wrap within the available response width,
+  including unbroken tokens; horizontal scrolling is reserved for other widgets
+  such as tables. `AiElementsActivity.tsx` displays the existing panel working
+  summary, actual running tool details and elapsed time while busy, including
+  gaps before the first token and between steps. Permission waits and retries
+  have explicit labels, and the activity row clears on completion or stop. External anchors retain the shared HTTPS URL policy.
   `adapters.ts` accepts optional structured source, citation, suite, stack,
   plan and task metadata; it never infers those records from arbitrary prose.
   Such metadata is conditional on the runtime/tool supplying it. Permissions,
   file opening, child navigation and revert continue through the existing store
-  with their explicit session/workspace identities. Checkpoint restores stage
-  the existing runtime revert, then use the existing confirmation dock.
+  with their explicit session/workspace identities. Production replies do not
+  insert checkpoint or restore controls between turns; the original explicit
+  user-message Edit action retains its existing revert confirmation flow.
   ThemeProvider mirrors the selected appearance scheme to the standard `dark`
   class so upstream widgets and portals receive the correct neutral theme.
   `AiElementsSurface.tsx` isolates response CSS in a ShadowRoot so shell Sass

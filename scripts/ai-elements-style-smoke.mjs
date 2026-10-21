@@ -41,7 +41,8 @@ const probe = () => {
   const box=element.getBoundingClientRect();
   styles[name]={...Object.fromEntries(fields.map(field=>[field,field==="color"||field==="backgroundColor"?color(css[field]):css[field]])),width:box.width,height:box.height,x:box.x-rect.x,y:box.y-rect.y};
  }
- return {styles,width:root.querySelector(".ai-elements").getBoundingClientRect().width,composer:!!document.querySelector(".composer"),suggestions:document.body.textContent.includes("Explain this repository")};
+ const codeScrollers=Array.from(root.querySelectorAll('[data-slot=code-block-content]')).map(element=>({width:element.clientWidth,scrollWidth:element.scrollWidth,wrap:getComputedStyle(element).overflowWrap}));
+ return {codeScrollers,checkpoints:root.querySelector("[data-ai-elements=timeline]").textContent.includes("Checkpoint"),styles,width:root.querySelector(".ai-elements").getBoundingClientRect().width,composer:!!document.querySelector(".composer"),suggestions:document.body.textContent.includes("Explain this repository")};
 };
 const capture = async (version,theme,width) => {
  const win=new BrowserWindow({show:false,width,height:900,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
@@ -69,6 +70,9 @@ const capture = async (version,theme,width) => {
   const actual=await capture("production",theme,width);
   const reference=await capture("reference",theme,Math.round(actual.data.width));
   assert.deepEqual(actual.errors.concat(reference.errors),[],"No browser errors");
+  assert.equal(actual.data.checkpoints,false,"No automatic checkpoint or restore rows");
+  assert.ok(actual.data.codeScrollers.length>=3,"Exercise short code, long code and tool output");
+  for(const code of actual.data.codeScrollers) assert.ok(code.scrollWidth<=code.width+1,"Code must wrap without horizontal overflow: "+JSON.stringify(code));
   assert.equal(actual.data.composer,true,"Original composer must remain mounted");
   assert.equal(actual.data.suggestions,false,"No production suggested prompts");
   const differences=[];
@@ -100,6 +104,8 @@ const capture = async (version,theme,width) => {
    let previousScroll = 0;
    let scrollFrames = 0;
    let sampling = true;
+   let activityFrames=0;
+   const labels=new Set();
    const frame = now => {
      samples.push(now-last); last=now;
      const shadow=document.querySelector('[data-ai-elements-surface]')?.shadowRoot;
@@ -110,6 +116,8 @@ const capture = async (version,theme,width) => {
      }
      if(firstWord && !firstWord.isConnected) {if(Number(document.documentElement.dataset.streamCursor)<Number(document.documentElement.dataset.streamLength)) replacedDuringStreaming=true;if(!replacements.length) replacements.push({cursor:document.documentElement.dataset.streamCursor,word:firstWord.outerHTML,current:shadow?.querySelector('[data-slot=markdown] p')?.outerHTML});}
      if(firstParagraph && !firstParagraph.isConnected) paragraphReplaced=true;
+     const status=shadow?.querySelector('[data-ai-activity]');
+     if(status) {activityFrames++;labels.add(status.querySelector('[data-ai-activity-label]')?.textContent);}
      const scroll=document.querySelector('.agent-scroll');
      if(scroll && scroll.scrollTop>previousScroll && scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop>0.5) scrollFrames++;
      previousScroll=scroll?.scrollTop??0;
@@ -127,9 +135,13 @@ const capture = async (version,theme,width) => {
    const css=getComputedStyle(shadow.querySelector('[data-slot=markdown] p'));
    const body=getComputedStyle(document.body);
    const scroll=document.querySelector('.agent-scroll');
-   return {interpolated,replacedDuringStreaming,paragraphReplaced,replacements,scrollFrames,frames:samples.length,averageFrameMs:samples.reduce((a,b)=>a+b,0)/samples.length,maxFrameMs:Math.max(...samples),font:css.fontFamily,folderFont:body.fontFamily,size:css.fontSize,folderSize:body.fontSize,weight:css.fontWeight,folderWeight:body.fontWeight,remainingScroll:scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop,text:shadow.textContent};
+   return {activityFrames,activityLabels:[...labels],activityAfterCompletion:!!shadow.querySelector("[data-ai-activity]"),interpolated,replacedDuringStreaming,paragraphReplaced,replacements,scrollFrames,frames:samples.length,averageFrameMs:samples.reduce((a,b)=>a+b,0)/samples.length,maxFrameMs:Math.max(...samples),font:css.fontFamily,folderFont:body.fontFamily,size:css.fontSize,folderSize:body.fontSize,weight:css.fontWeight,folderWeight:body.fontWeight,remainingScroll:scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop,text:shadow.textContent};
  }).toString() + ")()");
  await fs.writeFile(OUTPUT+"/streaming.json",JSON.stringify(motion,null,2));
+ assert.ok(motion.activityFrames>20,"Activity stays visible while the agent is working");
+ assert.ok(motion.activityLabels.some(label=>label?.toLowerCase().includes("command")),"Show actual tool activity");
+ assert.ok(motion.activityLabels.includes("Writing response"),"Show text generation phase");
+ assert.equal(motion.activityAfterCompletion,false,"Remove live activity when the turn finishes");
  assert.ok(motion.interpolated>10,"New words must visibly interpolate across animation frames");
  assert.equal(motion.replacedDuringStreaming,false,"Previously streamed words must survive later chunks");
  assert.equal(motion.paragraphReplaced,false,"The paragraph must survive streaming and final animation cleanup");

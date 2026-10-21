@@ -237,6 +237,17 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
     expect(container.querySelector('[role="menu"]')).toBeNull();
   });
 
+  it("shows live activity before the first response token without changing the composer",async()=>{
+    currentSession=session("working",9);
+    await act(async()=>root.render(<AgentPanel/>));
+    expect(container.querySelector(".composer")).not.toBeNull();
+    if(renderer==="new") {
+      expect(container.querySelector<HTMLElement>(".agent-response-stream")?.hidden).toBe(false);
+      expect(container.querySelector(".agent-empty")).toBeNull();
+      expect(container.querySelector("[data-ai-elements-surface]")?.shadowRoot?.querySelector('[data-ai-activity]')?.textContent).toContain("Running command");
+    }
+  });
+
   it("follows resized stream content only until the reader scrolls away", async () => {
     await act(async () => root.render(<AgentPanel />));
     const scroll = container.querySelector<HTMLDivElement>(".agent-scroll")!;

@@ -154,3 +154,9 @@ it("retains an expanded tool's DOM and state when the next streamed tool arrives
  view.rerender(<AiElementsTranscript transcript={[{...item,parts:[tool,{...tool,id:"two",tool:{...tool.tool,id:"two",detail:"npm run build"}}]}]} busy lastAssistantId="a" session={session}/>);
  expect(Array.from(container.querySelectorAll('[data-slot="trace-title"]')).find(node=>node.textContent?.includes("npm test"))).toBe(original);
 });
+
+it("does not insert checkpoint or restore controls between turns",()=>{
+ render(<AiElementsTranscript transcript={[{kind:"assistant",id:"a",messageID:"a",completed:true,parts:[{kind:"text",id:"p",text:"Done",complete:true}]},{kind:"user",id:"u",text:"Next"}]} busy={false} lastAssistantId="a" session={session}/>);
+ expect(container.textContent).not.toContain("Checkpoint");
+ expect(container.querySelector('[aria-label="Restore to Checkpoint"]')).toBeNull();
+});

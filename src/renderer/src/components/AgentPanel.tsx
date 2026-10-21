@@ -198,7 +198,8 @@ export function AgentPanel({
     () => transcript.filter((item) => item.kind !== "permission"),
     [transcript]
   );
-  const timelineProps = { busy, lastAssistantId, session: activeSession };
+  const showResponse = responseTranscript.length > 0 || busy || assistantStatus?.isWaitingForPermission;
+  const timelineProps = { busy, lastAssistantId, session: activeSession, activity: assistantStatus, startedAt: turnStartedAt };
 
   // Approvals and forms are interactive: the surface the user is watching owns
   // them. The embedded TUI renders its own prompts in the terminal, so drawing
@@ -257,9 +258,9 @@ export function AgentPanel({
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
         <>
-          <div className="agent-scroll" ref={scrollRef} onScroll={onScroll} style={renderer !== "old" && responseTranscript.length > 0 ? { padding: 0 } : undefined}>
+          <div className="agent-scroll" ref={scrollRef} onScroll={onScroll} style={renderer !== "old" && showResponse ? { padding: 0 } : undefined}>
             {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
-            {!conversationStarted && (
+            {!conversationStarted && !(renderer !== "old" && busy) && (
               <div className="agent-empty">
                 {experimentalArt && <>
                   <img
@@ -283,7 +284,7 @@ export function AgentPanel({
               </div>
             )}
             {renderer === "old" ? <OpenCodeTimeline {...timelineProps} transcript={transcript} /> : (
-              <div className="agent-response-stream" hidden={responseTranscript.length === 0} data-slot="session-turn-list" data-renderer={renderer}>
+              <div className="agent-response-stream" hidden={!showResponse} data-slot="session-turn-list" data-renderer={renderer}>
                 {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
                 <div>
                   <AiElementsSurface><AiElementsTimeline {...timelineProps} transcript={responseTranscript} /></AiElementsSurface>
