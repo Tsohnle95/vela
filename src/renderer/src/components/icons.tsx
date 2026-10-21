@@ -83,27 +83,30 @@ export function IconPanelLeftClose(props: IconProps): ReactNode {
   );
 }
 
+// Titlebar chrome is drawn on the same 16-unit grid as the codicon rail.
+// Lucide's 24-unit geometry would scale by 2/3 at 16px, leaving strokes and
+// edges on fractional pixels. Half-unit coordinates keep the 1px strokes
+// crisp at 1x and 2x.
+const PANEL_FRAME = <rect x="2.5" y="2.5" width="11" height="11" rx="2" />;
+
 // The reference app's sidebar toggle is the plain panel-left glyph (its
 // `panel_left.svg`); the dashed variant (`panel_left_dashed.svg`) marks the
 // hidden state.
 export function IconPanelLeft(props: IconProps): ReactNode {
   return (
-    <LucideIcon name="panel-left" {...props}>
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <path d="M9 3v18" />
-    </LucideIcon>
+    <Icon name="panel-left" strokeWidth={1} {...props}>
+      {PANEL_FRAME}
+      <path d="M6.5 2.5v11" />
+    </Icon>
   );
 }
 
 export function IconPanelLeftDashed(props: IconProps): ReactNode {
   return (
-    <LucideIcon name="panel-left-dashed" {...props}>
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <path d="M9 14v1" />
-      <path d="M9 19v2" />
-      <path d="M9 3v2" />
-      <path d="M9 9v1" />
-    </LucideIcon>
+    <Icon name="panel-left-dashed" strokeWidth={1} {...props}>
+      {PANEL_FRAME}
+      <path d="M6.5 3.5v1M6.5 6v1M6.5 9v1M6.5 12v1" />
+    </Icon>
   );
 }
 
@@ -121,22 +124,19 @@ export function IconPanelLeftOpen(props: IconProps): ReactNode {
 // controls read as one pair.
 export function IconPanelRight(props: IconProps): ReactNode {
   return (
-    <LucideIcon name="panel-right" {...props}>
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <path d="M15 3v18" />
-    </LucideIcon>
+    <Icon name="panel-right" strokeWidth={1} {...props}>
+      {PANEL_FRAME}
+      <path d="M9.5 2.5v11" />
+    </Icon>
   );
 }
 
 export function IconPanelRightDashed(props: IconProps): ReactNode {
   return (
-    <LucideIcon name="panel-right-dashed" {...props}>
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <path d="M15 14v1" />
-      <path d="M15 19v2" />
-      <path d="M15 3v2" />
-      <path d="M15 9v1" />
-    </LucideIcon>
+    <Icon name="panel-right-dashed" strokeWidth={1} {...props}>
+      {PANEL_FRAME}
+      <path d="M9.5 3.5v1M9.5 6v1M9.5 9v1M9.5 12v1" />
+    </Icon>
   );
 }
 
@@ -179,19 +179,21 @@ export function IconAdd(props: IconProps): ReactNode {
 
 export function IconSquarePlus(props: IconProps): ReactNode {
   return (
-    <LucideIcon name="plus-square" {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="4" />
-      <path d="M12 8v8M8 12h8" />
-    </LucideIcon>
+    <Icon name="plus-square" strokeWidth={1} {...props}>
+      {PANEL_FRAME}
+      <path d="M8 5.5v5M5.5 8h5" />
+    </Icon>
   );
 }
 
 export function IconAgentMode(props: IconProps): ReactNode {
   return (
-    <LucideIcon name="bot" {...props}>
-      <rect x="5" y="7" width="14" height="14" rx="3" />
-      <path d="M12 7V3H9M3 11v6M21 11v6M9 12v3M15 12v3" />
-    </LucideIcon>
+    <Icon name="bot" strokeWidth={1} {...props}>
+      <rect x="3.5" y="5.5" width="9" height="8" rx="2" />
+      <path d="M8.5 5.5V2.5H6.5" />
+      <path d="M1.5 7.5v3M14.5 7.5v3" />
+      <path d="M6.5 8.5v2M9.5 8.5v2" />
+    </Icon>
   );
 }
 
