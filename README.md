@@ -5,6 +5,10 @@
   <p>Your repository, editor, terminal, agent, and change review—together on one desktop.</p>
 </div>
 
+<div align="center">
+  <img src="resources/vela.png" alt="Vela">
+</div>
+
 <p align="center">
   <img src="mockup-design/assets/vela-workbench-reference.png" alt="Vela workbench with a repository explorer, code editor, integrated terminal, and OpenCode agent panel." width="1375">
 </p>
