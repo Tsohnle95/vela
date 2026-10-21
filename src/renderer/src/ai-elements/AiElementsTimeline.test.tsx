@@ -41,16 +41,26 @@ describe("AI Elements runtime bindings", () => {
         expect(store.replyPermission).not.toHaveBeenCalled();
     });
     it("retains message-owned markdown streaming until assistant completion", () => {
+        let callback: FrameRequestCallback | undefined;
+        const now = performance.now();
+        const raf = vi.spyOn(window, "requestAnimationFrame").mockImplementation(next => { callback = next; return 1; });
         const transcript: TranscriptItem[] = [{ kind: "assistant", id: "a", messageID: "a", parts: [{ kind: "text", id: "text", text: "hello", complete: true }], completed: false }];
         const view = render(<AiElementsTranscript transcript={transcript} busy lastAssistantId="a" session={session}/>);
         expect(screen.getByTestId("markdown").dataset.streaming).toBe("true");
         view.rerender(<AiElementsTranscript transcript={[{ ...transcript[0], completed: true } as TranscriptItem]} busy={false} lastAssistantId="a" session={session}/>);
+        for (let n = 1; n <= 25; n++) act(() => callback?.(now + n * 16));
         expect(screen.getByTestId("markdown").dataset.streaming).toBe("false");
+        raf.mockRestore();
     });
     it("uses the existing runtime-backed stage-revert flow for Edit", () => {
         render(<AiElementsTranscript transcript={[{ kind: "user", id: "u", text: "change this" }]} busy={false} lastAssistantId={null} session={session}/>);
         fireEvent.click(screen.getByRole("button", { name: "Edit" }));
         expect(store.stageRevert).toHaveBeenCalledWith(session.workspace, "u");
+    });
+    it("keeps expanded reasoning in place when thinking finishes", () => {
+        const view = render(<ReasoningRow text="Actual reasoning" running/>);
+        view.rerender(<ReasoningRow text="Actual reasoning completed" running={false}/>);
+        expect(screen.getByRole("button", { name: "Thought" }).getAttribute("aria-expanded")).toBe("true");
     });
     it("opens reasoning during streaming and respects a manual disclosure after completion", async () => {
         const view = render(<ReasoningRow text="Actual reasoning" running/>);
@@ -159,4 +169,12 @@ it("does not insert checkpoint or restore controls between turns",()=>{
  render(<AiElementsTranscript transcript={[{kind:"assistant",id:"a",messageID:"a",completed:true,parts:[{kind:"text",id:"p",text:"Done",complete:true}]},{kind:"user",id:"u",text:"Next"}]} busy={false} lastAssistantId="a" session={session}/>);
  expect(container.textContent).not.toContain("Checkpoint");
  expect(container.querySelector('[aria-label="Restore to Checkpoint"]')).toBeNull();
+});
+
+it("keeps streamed command output expanded when the command finishes", () => {
+ const tool = {id:"terminal",title:"shell",detail:"npm test",inputValue:{command:"npm test"},output:"Tests running",status:"running" as const};
+ const view=render(<AiElementsTool tool={tool} streaming session={session}/>);
+ expect(screen.getByRole("button",{name:"Running npm test"}).getAttribute("aria-expanded")).toBe("true");
+ view.rerender(<AiElementsTool tool={{...tool,status:"success",output:"Tests passed"}} streaming session={session}/>);
+ expect(screen.getByRole("button",{name:"Ran npm test"}).getAttribute("aria-expanded")).toBe("true");
 });

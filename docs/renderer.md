@@ -235,9 +235,13 @@ Reasoning, tool calls, command output, progress, and final text update their own
 stable inline nodes; there is no mirrored activity footer above the composer.
 Before the runtime emits the first concrete item, the timeline shows one minimal
 inline working placeholder and replaces it as soon as the real item arrives. A
-resize observer follows timeline growth while the reader remains at the floor,
-so streamed content stays at the live edge without a second surface changing the
-viewport height.
+frame loop follows timeline growth for the whole active turn while the reader
+remains at the floor; resize observation also covers settled content and viewport
+changes. Upward wheel, touch, keyboard, or scrollbar movement releases following;
+returning to the floor resumes it. Response and reasoning text use a short
+presentation buffer to spread incoming bursts over animation frames, without
+delaying authoritative transcript updates. Expanded reasoning and tool groups
+retain their disclosure state when the runtime advances to another phase.
 `assistant-status.ts` derives the working summary
 every panel exposes: the active model (from the trailing assistant's
 `parentID` back to its user message), the active part (text → "composing",

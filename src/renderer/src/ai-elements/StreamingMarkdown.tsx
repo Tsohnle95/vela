@@ -1,10 +1,10 @@
+import { useStreamedText } from "./use-streamed-text";
 import { Markdown } from "./demos/lib/markdown";
 import { useIsCodeFenceIncomplete, type ExtraProps } from "streamdown";
 import { CodeBlock, CodeBlockHeader, CodeBlockTitle, CodeBlockActions, CodeBlockCopyButton, CodeBlockContent, CodeBlockLine } from "@/components/ui/code-block";
 import { cn } from "./class-names";
 import { useWorkerCode } from "./use-worker-code";
 
-const animation = { animation: "fadeIn", duration: 160, stagger: 12, maxBacklogMs: 120, sep: "word" } as const;
 function StreamingCode({node,className,children,...props}:React.ComponentProps<"code"> & ExtraProps) {
  if(!("data-block" in props)) return <code className={cn("rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.9em]",className)} {...props}>{children}</code>;
  return <WorkerCodeBlock code={typeof children === "string" ? children : ""} language={/language-(\S+)/.exec(className??"")?.[1]??""}/>;
@@ -22,5 +22,7 @@ function WorkerCodeBlock({code:source,language}:{code:string;language:string}) {
 }
 const components={code:StreamingCode};
 export function StreamingMarkdown(props: React.ComponentProps<typeof Markdown>) {
- return <Markdown {...props} components={components} animated={animation}/>;
+ const source = typeof props.children === "string" ? props.children : "";
+ const visible = useStreamedText(source, Boolean(props.isAnimating));
+ return <Markdown {...props} isAnimating={props.isAnimating || visible !== source} components={components} animated={false}>{visible}</Markdown>;
 }

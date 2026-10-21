@@ -300,6 +300,7 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
       scrollTop: { configurable: true, value: 500, writable: true }
     });
 
+    await act(async () => scroll.dispatchEvent(new WheelEvent("wheel", { deltaY: -200 })));
     scroll.scrollTop = 200;
     await act(async () => scroll.dispatchEvent(new Event("scroll")));
 

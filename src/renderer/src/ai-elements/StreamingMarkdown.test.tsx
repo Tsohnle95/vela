@@ -6,6 +6,12 @@ import type { HighlightRequest, HighlightResult } from "./highlight-protocol";
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 it("keeps every streamed code character visible while highlighting runs off-thread",async()=>{
  const requests:HighlightRequest[]=[];
+ let time=0;
+ const frames=new Map<number,FrameRequestCallback>();let id=0;
+ vi.spyOn(performance,"now").mockImplementation(()=>time);
+ vi.stubGlobal("requestAnimationFrame",(next:FrameRequestCallback)=>{frames.set(++id,next);return id;});
+ vi.stubGlobal("cancelAnimationFrame",(id:number)=>frames.delete(id));
+ const drain=()=>{for(let n=0;n<25;n++){time+=16;const pending=[...frames.values()];frames.clear();act(()=>pending.forEach(next=>next(time)));}};
  let receive:(event:{data:HighlightResult})=>void;
  vi.stubGlobal("Worker",class {
   set onmessage(callback:typeof receive){receive=callback;}
@@ -17,7 +23,8 @@ it("keeps every streamed code character visible while highlighting runs off-thre
  try {
   const render=async(code:string)=>{await act(async()=>root.render(<StreamingMarkdown isAnimating>{'```tsx\n'+code+'\n```'}</StreamingMarkdown>));};
   await render("const x = 1;");
-  const request=requests.find((item):item is Extract<HighlightRequest,{type:"highlight"}>=>item.type==="highlight")!;
+  drain();
+  const request=requests.find((item):item is Extract<HighlightRequest,{type:"highlight"}>=>item.type==="highlight" && item.code === "const x = 1;")!;
   expect(request.code).toBe("const x = 1;");
   await act(async()=>receive({data:{...request,lines:[[{text:request.code,style:{color:"red"}}]]}}));
   expect(container.querySelector('[data-slot="code-block-line"]')?.textContent).toBe("const x = 1;");
@@ -27,6 +34,6 @@ it("keeps every streamed code character visible while highlighting runs off-thre
   await render("const replacement = true;");
   expect(container.querySelector('[data-slot="code-block-line"]')?.textContent).toBe("const replacement = true;");
   expect(container.querySelector('[data-slot="code-block-line"] [style]')).toBeNull();
- } finally {act(()=>root.unmount());container.remove();vi.unstubAllGlobals();}
+ } finally {act(()=>root.unmount());container.remove();vi.restoreAllMocks();vi.unstubAllGlobals();}
  expect(requests.at(-1)?.type).toBe("dispose");
 });

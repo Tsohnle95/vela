@@ -58,5 +58,45 @@ it("uses immediate following when reduced motion is requested",()=>{
  vi.stubGlobal("matchMedia",()=>({matches:true}));
  const scroll=viewport();act(()=>resize([],{} as ResizeObserver));
  expect(scroll.scrollTop).toBe(1000);
+ expect(frames.size).toBe(1);
+ frame();expect(scroll.scrollTop).toBe(900);
+});
+
+it("does not lose the live edge when layout moves the viewport down",()=>{
+ const scroll=viewport();act(()=>resize([],{} as ResizeObserver));frame();
+ // Browser layout/scroll clamping can deliver a scroll event before ResizeObserver.
+ scroll.scrollTop=860;act(()=>scroll.dispatchEvent(new Event("scroll")));
+ Object.defineProperty(scroll,"scrollHeight",{value:1200});act(()=>resize([],{} as ResizeObserver));
+ for(let n=0;n<40;n++)frame();
+ expect(scroll.scrollTop).toBeCloseTo(1100,0);
+});
+it("continues watching content growth between resize notifications while busy",()=>{
+ const scroll=viewport();act(()=>resize([],{} as ResizeObserver));
+ for(let n=0;n<40;n++)frame();
+ Object.defineProperty(scroll,"scrollHeight",{value:1200});
+ for(let n=0;n<40;n++)frame();
+ expect(scroll.scrollTop).toBeCloseTo(1100,0);
+});
+
+it("releases before a wheel gesture can race the next frame, then resumes at the bottom",()=>{
+ const scroll=viewport();act(()=>resize([],{} as ResizeObserver));frame();
+ act(()=>scroll.dispatchEvent(new WheelEvent("wheel",{deltaY:-40})));
+ expect(frames.size).toBe(0);
+ scroll.scrollTop=300;act(()=>scroll.dispatchEvent(new Event("scroll")));
+ Object.defineProperty(scroll,"scrollHeight",{value:1200});act(()=>resize([],{} as ResizeObserver));
+ frame();expect(scroll.scrollTop).toBe(300);
+ scroll.scrollTop=1100;act(()=>scroll.dispatchEvent(new Event("scroll")));
+ Object.defineProperty(scroll,"scrollHeight",{value:1300});
+ for(let n=0;n<40;n++)frame();
+ expect(scroll.scrollTop).toBeCloseTo(1200,0);
+});
+
+it("follows the final presentation buffer after the runtime finishes",()=>{
+ const scroll=viewport();act(()=>resize([],{} as ResizeObserver));frame();
+ act(()=>root.render(<Panel busy={false}/>));
+ for(let n=0;n<6;n++)frame();
+ Object.defineProperty(scroll,"scrollHeight",{value:1200});
+ for(let n=0;n<30;n++)frame();
+ expect(scroll.scrollTop).toBe(1100);
  expect(frames.size).toBe(0);
 });

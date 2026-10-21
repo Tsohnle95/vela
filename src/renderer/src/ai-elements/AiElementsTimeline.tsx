@@ -79,8 +79,10 @@ function AiElementsToolOutput({tool,streaming,session,interrupted=false}: ToolPr
     const changedPaths=isEditCardTool(tool) && tool.status === "success" ? editFileEntries(tool).map(file => file.file).filter(Boolean) : [];
     const line=<TraceLine status={running ? "running" : failed ? "error" : undefined}><TraceIcon><TerminalIcon/></TraceIcon><TraceTitle>{verb} {command}</TraceTitle></TraceLine>;
     const output=toolOutputText(tool);
+    const autoOpen=terminal ? running && output.length > 0 : failed;
+    useEffect(() => { if (open === undefined && autoOpen) setOpen(true); }, [open,autoOpen]);
     if (!terminal && running && !output) return line;
-    return <TraceCollapsible open={open ?? (terminal ? running && output.length > 0 : failed)} onOpenChange={setOpen}>
+    return <TraceCollapsible open={open ?? autoOpen} onOpenChange={setOpen}>
         <TraceCollapsibleTrigger>{line}</TraceCollapsibleTrigger>
         <TraceCollapsibleContent>
             {changedPaths.length > 0 && <AiElementsFileTree paths={changedPaths} session={session}/>}
@@ -252,8 +254,8 @@ function CitedToolText({value}: {value: NonNullable<ReturnType<typeof structured
 }
 
 function AiElementsChainOfThought({tools, streaming, answering, interrupted, session}: {tools: ToolCallView[]; streaming: boolean; answering: boolean; interrupted?: boolean; session: SessionInfo | null}) {
- const [open,setOpen]=useState<boolean>();
  const running=streaming && !answering && !interrupted;
+ const [open,setOpen]=useState(running);
  const failed=tools.filter(tool => tool.status === "failed").length;
  const status=running ? "running" : failed > 0 ? "error" : undefined;
  return <Trace><TraceCollapsible open={open ?? running} onOpenChange={setOpen}><TraceCollapsibleTrigger><TraceLine status={status}><TraceIcon>{status === "running" ? <LoaderCircleIcon className="animate-spin"/> : status === "error" ? <CircleAlertIcon/> : <CircleCheckIcon/>}</TraceIcon><TraceTitle>{running ? "Researching" : `Researched in ${tools.length} steps${failed > 0 ? `, ${failed} failed` : ""}`}</TraceTitle></TraceLine></TraceCollapsibleTrigger><TraceCollapsibleContent keepMounted><Trace>{tools.map(tool => <AiElementsTool key={tool.id} tool={tool} streaming={streaming} interrupted={interrupted} session={session}/>)}</Trace></TraceCollapsibleContent></TraceCollapsible></Trace>;

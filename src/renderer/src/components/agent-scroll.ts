@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import type { SessionInfo, TranscriptItem } from "@shared/types";
 
 interface AgentScrollMemory {
@@ -7,9 +7,7 @@ interface AgentScrollMemory {
   observedTop: number;
 }
 
-// Remount-safe scroll position per workspace. Opening Settings unmounts the
-// whole workspace area (see Layout in App.tsx), so in-memory scroll refs alone
-// lose the reader's place and a fresh mount re-pins to the bottom.
+// Preserve the reader's place when a workspace panel remounts.
 const agentScrollMemory = new Map<string, AgentScrollMemory>();
 
 /** Test hook: drop remount-persisted scroll positions between isolated renders. */
@@ -37,22 +35,30 @@ export function useAgentScroll(activeSession: SessionInfo | null, transcript: Tr
   const memoryKey = scrollMemoryKey(activeSession);
   const animationRef = useRef<number | null>(null);
   const busyRef = useRef(busy);
+  const followUntilRef = useRef(0);
   busyRef.current = busy;
   const scrollToBottom = (): void => {
     const el = scrollRef.current;
     if (!el) return;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (smooth && busyRef.current && !reducedMotion && el.scrollHeight - el.clientHeight - el.scrollTop > 1) {
+    if (smooth && (busyRef.current || animationRef.current !== null)) {
+      if (reducedMotion) {
+        el.scrollTop = el.scrollHeight;
+        observedTopRef.current = el.scrollTop;
+      }
       if (animationRef.current === null) {
         let previous = performance.now();
         const follow = (now: number): void => {
           animationRef.current = null;
           if (!atBottomRef.current) return;
-          const following = advanceStreamScroll(el, now - previous, busyRef.current);
+          if (busyRef.current) followUntilRef.current = now + 350;
+          const following = advanceStreamScroll(el, now - previous, !reducedMotion && (busyRef.current || now < followUntilRef.current));
           previous = now;
           observedTopRef.current = el.scrollTop;
           if (memoryKey) agentScrollMemory.set(memoryKey, { scrollTop: el.scrollTop, atBottom: true, observedTop: el.scrollTop });
-          if (following) animationRef.current = requestAnimationFrame(follow);
+          // Keep sampling while streaming: Shadow DOM content can grow without
+          // changing the observed flex item's border box.
+          if (following || busyRef.current || now < followUntilRef.current) animationRef.current = requestAnimationFrame(follow);
         };
         animationRef.current = requestAnimationFrame(follow);
       }
@@ -111,25 +117,20 @@ export function useAgentScroll(activeSession: SessionInfo | null, transcript: Tr
     if (atBottomRef.current) scrollToBottom();
   }, [followSignature]);
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    const content = el?.querySelector<HTMLElement>('[data-slot="session-turn-list"]');
-    if (!el || !content || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(() => {
-      if (atBottomRef.current) scrollToBottom();
-    });
-    observer.observe(content);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const followRef = useRef(scrollToBottom);
+  followRef.current = scrollToBottom;
+  useAgentResizeFollow(scrollRef, atBottomRef, followRef);
+
+  useReaderScrollIntent(scrollRef, atBottomRef, animationRef, memoryKey);
 
   const onScroll = (): void => {
     const el = scrollRef.current;
     if (!el) return;
     const floor = Math.max(0, el.scrollHeight - el.clientHeight);
-    const movedByReader = Math.abs(el.scrollTop - Math.min(observedTopRef.current, floor)) > 0.5;
-    const atBottom = movedByReader ? floor - el.scrollTop <= 25 : atBottomRef.current;
+    const movedByReader = el.scrollTop < Math.min(observedTopRef.current, floor) - 0.5;
+    const atBottom = floor - el.scrollTop <= 25 || (!movedByReader && atBottomRef.current);
     if (!movedByReader && atBottom) {
+      atBottomRef.current = true;
       scrollToBottom();
       return;
     }
@@ -139,4 +140,60 @@ export function useAgentScroll(activeSession: SessionInfo | null, transcript: Tr
   };
 
   return { scrollRef, onScroll };
+}
+
+function useReaderScrollIntent(
+  scrollRef: RefObject<HTMLDivElement | null>,
+  atBottomRef: RefObject<boolean>,
+  animationRef: RefObject<number | null>,
+  memoryKey: string | null
+): void {
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const release = () => {
+      atBottomRef.current = false;
+      if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    };
+    const wheel = (event: WheelEvent) => { if (event.deltaY < 0) release(); };
+    const key = (event: KeyboardEvent) => {
+      if (["ArrowUp", "PageUp", "Home"].includes(event.key)) release();
+    };
+    let touchY = 0;
+    const touchStart = (event: TouchEvent) => { touchY = event.touches[0]?.clientY ?? 0; };
+    const touchMove = (event: TouchEvent) => {
+      const next = event.touches[0]?.clientY ?? touchY;
+      if (next > touchY) release();
+      touchY = next;
+    };
+    el.addEventListener("wheel", wheel, { passive: true });
+    el.addEventListener("keydown", key);
+    el.addEventListener("touchstart", touchStart, { passive: true });
+    el.addEventListener("touchmove", touchMove, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", wheel);
+      el.removeEventListener("keydown", key);
+      el.removeEventListener("touchstart", touchStart);
+      el.removeEventListener("touchmove", touchMove);
+    };
+  }, [memoryKey]);
+}
+
+function useAgentResizeFollow(
+  scrollRef: RefObject<HTMLDivElement | null>,
+  atBottomRef: RefObject<boolean>,
+  followRef: RefObject<() => void>
+): void {
+  useEffect(() => {
+    const el = scrollRef.current;
+    const content = el?.querySelector<HTMLElement>('[data-slot="session-turn-list"]');
+    if (!el || !content || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (atBottomRef.current) followRef.current();
+    });
+    observer.observe(content);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 }

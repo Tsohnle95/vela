@@ -133,30 +133,29 @@ const capture = async (version,theme,width,appearance) => {
  await wait(live,"document.documentElement.dataset.streamReady === 'true'");
  const motion = await live.webContents.executeJavaScript("(" + (async () => {
    const samples = [];
-   let interpolated = 0;
-   let firstWord = null;
-   let replacedDuringStreaming = false;
    let firstParagraph = null;
    let paragraphReplaced = false;
-   const replacements = [];
    let last = performance.now();
    let previousScroll = 0;
    let scrollFrames = 0;
+   let pacedFrames = 0;
+   let previousTextLength = 0;
+   let lastDelivery = 0;
+   let readerReleased = false;
+   let resumedFollowing = false;
    let sampling = true;
    let activityFrames=0;
    const labels=new Set();
    const frame = now => {
      samples.push(now-last); last=now;
      const shadow=document.querySelector('[data-ai-elements-surface]')?.shadowRoot;
-     for(const word of shadow?.querySelectorAll('[data-sd-animate]')??[]) {
-       const opacity=Number(getComputedStyle(word).opacity);
-       if(opacity>0 && opacity<1) interpolated++;
-       if(!firstWord) {firstWord=word; firstParagraph=word.closest("p");}
-     }
-     if(firstWord && !firstWord.isConnected) {if(Number(document.documentElement.dataset.streamCursor)<Number(document.documentElement.dataset.streamLength)) replacedDuringStreaming=true;if(!replacements.length) replacements.push({cursor:document.documentElement.dataset.streamCursor,word:firstWord.outerHTML,current:shadow?.querySelector('[data-slot=markdown] p')?.outerHTML});}
+     if(!firstParagraph) firstParagraph=shadow?.querySelector("[data-slot=markdown] p")??null;
      if(firstParagraph && !firstParagraph.isConnected) paragraphReplaced=true;
      const status=shadow?.querySelector('[data-ai-activity]');
      if(status) {activityFrames++;labels.add(status.querySelector('[data-ai-activity-label]')?.textContent);}
+     const textLength=Array.from(shadow?.querySelectorAll('[data-slot=markdown]')??[]).reduce((sum,el)=>sum+el.textContent.length,0);
+     if(textLength>previousTextLength && now-lastDelivery>35) pacedFrames++;
+     previousTextLength=textLength;
      const scroll=document.querySelector('.agent-scroll');
      if(scroll && scroll.scrollTop>previousScroll && scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop>0.5) scrollFrames++;
      previousScroll=scroll?.scrollTop??0;
@@ -164,8 +163,25 @@ const capture = async (version,theme,width,appearance) => {
    };
    requestAnimationFrame(frame);
    for(let index=0;index<100;index++) {
-     window.postMessage({kind:'vela-stream-step'},location.origin);
-     await new Promise(resolve=>setTimeout(resolve,66));
+     lastDelivery=performance.now();
+     const burst=index%3===0?3:1;
+     for(let chunk=0;chunk<burst;chunk++) window.postMessage({kind:'vela-stream-step'},location.origin);
+     await new Promise(resolve=>setTimeout(resolve,[32,240,80,380,48,180][index%6]));
+     const viewport=document.querySelector('.agent-scroll');
+     if(!readerReleased && index>15 && viewport.scrollHeight-viewport.clientHeight>100) {
+       viewport.dispatchEvent(new WheelEvent('wheel',{deltaY:-80}));
+       viewport.scrollTop-=80;
+       viewport.dispatchEvent(new Event('scroll'));
+       const readerTop=viewport.scrollTop;
+       const readerFloor=viewport.scrollHeight-viewport.clientHeight;
+       window.postMessage({kind:'vela-stream-step'},location.origin);
+       await new Promise(resolve=>setTimeout(resolve,100));
+       readerReleased=Math.abs(viewport.scrollTop-readerTop)<1;
+       if(!readerReleased) throw new Error('Live following overrode the reader scrolling up: '+JSON.stringify({readerTop,readerFloor,top:viewport.scrollTop,floor:viewport.scrollHeight-viewport.clientHeight,index}));
+       viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;
+       viewport.dispatchEvent(new Event('scroll'));
+       resumedFollowing=true;
+     }
      if(Number(document.documentElement.dataset.streamCursor)>=Number(document.documentElement.dataset.streamLength)) break;
    }
    await new Promise(resolve=>setTimeout(resolve,350));
@@ -174,15 +190,16 @@ const capture = async (version,theme,width,appearance) => {
    const css=getComputedStyle(shadow.querySelector('[data-slot=markdown] p'));
    const body=getComputedStyle(document.body);
    const scroll=document.querySelector('.agent-scroll');
-   return {activityFrames,activityLabels:[...labels],activityAfterCompletion:!!shadow.querySelector("[data-ai-activity]"),interpolated,replacedDuringStreaming,paragraphReplaced,replacements,scrollFrames,frames:samples.length,averageFrameMs:samples.reduce((a,b)=>a+b,0)/samples.length,maxFrameMs:Math.max(...samples),font:css.fontFamily,folderFont:body.fontFamily,size:css.fontSize,folderSize:body.fontSize,weight:css.fontWeight,folderWeight:body.fontWeight,remainingScroll:scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop,text:shadow.textContent};
+   return {readerReleased,resumedFollowing,pacedFrames,activityFrames,activityLabels:[...labels],activityAfterCompletion:!!shadow.querySelector("[data-ai-activity]"),paragraphReplaced,scrollFrames,frames:samples.length,averageFrameMs:samples.reduce((a,b)=>a+b,0)/samples.length,maxFrameMs:Math.max(...samples),font:css.fontFamily,folderFont:body.fontFamily,size:css.fontSize,folderSize:body.fontSize,weight:css.fontWeight,folderWeight:body.fontWeight,remainingScroll:scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop,text:shadow.textContent};
  }).toString() + ")()");
  await fs.writeFile(OUTPUT+"/streaming.json",JSON.stringify(motion,null,2));
  assert.ok(motion.activityFrames>20,"Activity stays visible while the agent is working");
  assert.ok(motion.activityLabels.some(label=>label?.toLowerCase().includes("command")),"Show actual tool activity");
  assert.ok(motion.activityLabels.includes("Writing response"),"Show text generation phase");
  assert.equal(motion.activityAfterCompletion,false,"Remove live activity when the turn finishes");
- assert.ok(motion.interpolated>10,"New words must visibly interpolate across animation frames");
- assert.equal(motion.replacedDuringStreaming,false,"Previously streamed words must survive later chunks");
+ assert.ok(motion.readerReleased && motion.resumedFollowing,"Reader can scroll away and return to live following");
+ assert.ok(motion.pacedFrames>10,"Text must continue advancing between irregular provider bursts");
+
  assert.equal(motion.paragraphReplaced,false,"The paragraph must survive streaming and final animation cleanup");
  assert.equal(motion.font,motion.folderFont,"Response and folder font families must match");
  assert.equal(motion.size,motion.folderSize,"Response and folder font sizes must match");
@@ -192,6 +209,7 @@ const capture = async (version,theme,width,appearance) => {
  assert.ok(motion.text.includes("The change is ready for review."),"Final streamed text must be complete");
  delete motion.text;
  await fs.writeFile(OUTPUT+"/streaming.json",JSON.stringify(motion,null,2));
+ await fs.writeFile(OUTPUT+"/streaming-final.png",(await live.webContents.capturePage()).toPNG());
  live.destroy();
  console.log("AI Elements style and streaming checks passed:",JSON.stringify(motion));
  app.exit(0);
