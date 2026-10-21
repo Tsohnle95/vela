@@ -542,3 +542,9 @@ settings and Kitty transparency. `VELA_AGENT_TEST_URL` selects another fixture
 server; screenshots and measurements default to `/private/tmp/vela-agent-workspace-report`.
 The bridge is isolated demo data; runtime undo and TUI palette checks have their
 own OpenCode integration smokes.
+
+Open `scripts/fixtures/compact-agent-designs.html` for thirty isolated, numbered
+interactive input concepts with three/four-panel and dark/light previews. Their
+send controls simulate a local message and never invoke a runtime. Run
+`node scripts/compact-agent-designs-smoke.mjs` to check all thirty at narrow
+widths with controls collapsed and expanded in native Chromium.
