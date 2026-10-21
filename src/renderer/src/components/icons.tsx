@@ -1,6 +1,13 @@
 import type { ReactNode, SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
+type GlyphProps = { className?: string };
+
+// Font glyphs share the rail's crisp 16px rasterization; hand-drawn SVG
+// strokes at this size land on fractional pixels.
+function Codicon({ name, className }: { name: string; className?: string }): ReactNode {
+  return <i className={`codicon codicon-${name}${className ? ` ${className}` : ""}`} aria-hidden="true" />;
+}
 
 function Icon({ name, children, className, ...rest }: IconProps & { name: string; children: ReactNode }): ReactNode {
   return (
@@ -160,28 +167,19 @@ export function IconPanelRightOpen(props: IconProps): ReactNode {
   );
 }
 
-export function IconSquarePen(props: IconProps): ReactNode {
-  return (
-    <LucideIcon name="square-pen" {...props}>
-      <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-    </LucideIcon>
-  );
+export function IconSquarePen({ className }: GlyphProps): ReactNode {
+  return <Codicon name="new-session" className={className} />;
 }
 
-export function IconAdd(props: IconProps): ReactNode {
-  return (
-    <Icon name="add" {...props}>
-      <path d="M8 3.2v9.6M3.2 8h9.6" />
-    </Icon>
-  );
+export function IconAdd({ className }: GlyphProps): ReactNode {
+  return <Codicon name="add" className={className} />;
 }
 
 export function IconSquarePlus(props: IconProps): ReactNode {
   return (
     <Icon name="plus-square" strokeWidth={1} {...props}>
       {PANEL_FRAME}
-      <path d="M8 5.5v5M5.5 8h5" />
+      <path d="M8.5 5.5v5M5.5 8.5h5" />
     </Icon>
   );
 }
@@ -237,28 +235,16 @@ export function IconCheck(props: IconProps): ReactNode {
   );
 }
 
-export function IconChevronDown(props: IconProps): ReactNode {
-  return (
-    <Icon name="chevron-down" {...props}>
-      <path d="M4.5 6.2L8 9.8l3.5-3.6" />
-    </Icon>
-  );
+export function IconChevronDown({ className }: GlyphProps): ReactNode {
+  return <Codicon name="chevron-down" className={className} />;
 }
 
-export function IconChevronRight(props: IconProps): ReactNode {
-  return (
-    <Icon name="chevron-right" {...props}>
-      <path d="M6.2 4.5L9.8 8l-3.6 3.5" />
-    </Icon>
-  );
+export function IconChevronRight({ className }: GlyphProps): ReactNode {
+  return <Codicon name="chevron-right" className={className} />;
 }
 
-export function IconChevronUp(props: IconProps): ReactNode {
-  return (
-    <Icon name="chevron-up" {...props}>
-      <path d="M4.5 9.8L8 6.2l3.5 3.6" />
-    </Icon>
-  );
+export function IconChevronUp({ className }: GlyphProps): ReactNode {
+  return <Codicon name="chevron-up" className={className} />;
 }
 
 export function IconClose(props: IconProps): ReactNode {
@@ -341,26 +327,12 @@ export function IconFolderOpen(props: IconProps): ReactNode {
   );
 }
 
-export function IconGear(props: IconProps): ReactNode {
-  return (
-    <Icon name="gear" {...props}>
-      <circle cx="8" cy="8" r="2.1" />
-      <circle cx="8" cy="8" r="4.6" />
-      <path d="M8 1.4v1.6M8 13v1.6M14.6 8H13M3 8H1.4M12.5 3.5l-1.1 1.1M4.6 11.4l-1.1 1.1M12.5 12.5l-1.1-1.1M4.6 4.6L3.5 3.5" />
-    </Icon>
-  );
+export function IconGear({ className }: GlyphProps): ReactNode {
+  return <Codicon name="settings-gear" className={className} />;
 }
 
-export function IconGitBranch(props: IconProps): ReactNode {
-  return (
-    <Icon name="git-branch" {...props}>
-      <circle cx="4.4" cy="3.6" r="1.5" />
-      <circle cx="4.4" cy="12.4" r="1.5" />
-      <circle cx="11.6" cy="8" r="1.5" />
-      <path d="M4.4 5.1v5.8" />
-      <path d="M11.6 9.5c0 2.5-4.6 1.5-7.2 2.6" />
-    </Icon>
-  );
+export function IconGitBranch({ className }: GlyphProps): ReactNode {
+  return <Codicon name="git-branch" className={className} />;
 }
 
 export function IconGlobe(props: IconProps): ReactNode {

@@ -112,12 +112,17 @@
   background: var(--bg-hover);
 }
 
+.sessions-new .codicon {
+  color: var(--text-dim);
+}
+
 .sessions-new .lucide-icon {
   width: var(--icon-size);
   height: var(--icon-size);
   color: var(--text-dim);
 }
 
+.sessions-new:hover .codicon,
 .sessions-new:hover .lucide-icon {
   color: var(--text);
 }
