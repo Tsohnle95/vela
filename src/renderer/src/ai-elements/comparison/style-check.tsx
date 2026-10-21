@@ -12,6 +12,7 @@ const params = new URLSearchParams(location.search);
 const reference = params.get("version") === "reference";
 const dark = params.get("theme") !== "light";
 const streaming = params.has("stream");
+const historyStreaming = streaming && params.has("history");
 const listeners = new Set<(message: BackendMessage) => void>();
 const markdown = `Here's the lay of the land:\n\n## Project: Neptune AI Chatbot\n\nA **full-stack AI chatbot** with a vanilla JS frontend and Express backend.\n\n### Directory breakdown\n\n- \`server.js\` — starts the app\n- \`src/app.js\` — configures CORS and JSON parsing\n\n\`\`\`tsx\nconst theme = \"system\";\nexport const enabled = true;\n\`\`\`\n\n| Check | Result |\n| --- | --- |\n| Typecheck | Passed |\n`;
 const longCode = `const documentationUrl = "https://example.com/${"unbroken-code-token".repeat(24)}";`;
@@ -24,8 +25,13 @@ fixture.push({kind:"pending-input",id:"plan-reminder",inputType:"synthetic",text
 installComparisonBridge();
 window.vela.onMessage = callback => { listeners.add(callback); return () => { listeners.delete(callback); }; };
 window.localStorage.setItem("vela.theme", params.get("appearance") ?? (dark ? "codex-dark" : "codex"));
-window.vela.openSessionById = async () => ({ session: demoSession, transcript: streaming ? [] : fixture, todos: [], usage: null });
-window.vela.sessionTranscript = async () => ({ transcript: streaming ? [] : fixture, todos: [] });
+const history: TranscriptItem[] = [
+  {kind:"user",id:"previous-user",text:"Explain the previous implementation."},
+  {kind:"assistant",id:"previous-answer",messageID:"previous-answer",completed:true,parts:[{kind:"text",id:"previous-text",complete:true,text:Array.from({length:24},(_,index)=>`Paragraph ${index+1}. Existing conversation content must stay visible and clipped inside the viewport while a new response streams.`).join("\n\n")}]}
+];
+const initialTranscript = streaming ? historyStreaming ? history : [] : fixture;
+window.vela.openSessionById = async () => ({ session: demoSession, transcript: initialTranscript, todos: [], usage: null });
+window.vela.sessionTranscript = async () => ({ transcript: initialTranscript, todos: [] });
 
 function StyleBody() {
   const store = useStore();
@@ -38,7 +44,7 @@ function StyleBody() {
   }, [store.addModelPanel]);
   useEffect(() => {
     if (!streaming || !store.session) return;
-    const replay = replayEvents("coding", "Inspect this repository.");
+    const replay = replayEvents(historyStreaming ? "markdown" : "coding", "Inspect this repository.");
     let cursor = 0;
     const receive = (event: MessageEvent) => {
       if (event.source !== window || event.origin !== location.origin || event.data?.kind !== "vela-stream-step") return;

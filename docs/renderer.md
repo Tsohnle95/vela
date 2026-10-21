@@ -235,6 +235,10 @@ Elements response uses shadcn's `MessageScroller` provider, root, viewport and
 content directly; the legacy renderer retains its original scroll hook. Streamdown
 receives authoritative text immediately. There is no application character buffer,
 transcript-height animation, or competing scroll animation.
+`AgentResponseViewport` synchronizes content and viewport resize through the
+upstream `scrollToEnd` API before paint while its scrollable state reports the
+reader at the bottom. This prevents a painted frame of clipped new content before
+the upstream deferred resize callback catches up; scrolling away remains upstream-owned.
 
 Reasoning, individual tool calls, command output and response text stay in their
 chronological inline nodes. Consecutive tools are separate rows, each with its own
@@ -526,11 +530,9 @@ Key mechanisms:
   response region has no layout footprint. Suggested prompts and the alternative
   input/context/todo controls in `AiElementsChat.tsx` are restricted to the
   isolated comparison examples; the application never mounts that full shell.
-  `useAgentScroll` continues owning live-height following and reader scroll memory.
-  Live AI Elements responses ease the viewport toward the growing bottom on
-  animation frames; reader scrolling cancels following, and reduced motion uses
-  immediate positioning. Initial history and the legacy renderer stay immediate.
-  Production Markdown uses the upstream primitives with bounded word fades.
+  The legacy renderer uses `useAgentScroll`; the default response uses the
+  upstream scroller and the before-paint resize synchronization described above.
+  Production Markdown uses the upstream primitives without application text pacing.
   Syntax highlighting runs in `ai-elements/highlight.worker.ts` with the existing
   latest-per-block queue, using the upstream GitHub themes and JavaScript engine
   under the existing CSP. New code remains visible while tokens are pending;

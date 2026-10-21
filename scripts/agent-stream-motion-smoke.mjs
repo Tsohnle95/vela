@@ -21,7 +21,7 @@ async function capture(mode) {
     const row = statusRoot?.querySelector("[data-ai-activity]");
     const label = row?.querySelector("[data-ai-activity-label]");
     const spinner = row?.querySelector("svg")?.getBoundingClientRect();
-    if (label && spinner) frames.push({ time: performance.now(), label: label.textContent, y: label.getBoundingClientRect().top, spinnerY: spinner.y + spinner.height / 2, floor: scroll.scrollHeight - scroll.clientHeight, top: scroll.scrollTop });
+    if (label && spinner) frames.push({ time: performance.now(), label: label.textContent, y: label.getBoundingClientRect().top, spinnerY: spinner.y + spinner.height / 2, floor: scroll.scrollHeight - scroll.clientHeight, top: scroll.scrollTop, visibility: getComputedStyle(scroll).visibility, pageTop: document.scrollingElement.scrollTop });
     if (recording) requestAnimationFrame(() => setTimeout(sample, 0));
   };
   requestAnimationFrame(() => setTimeout(sample, 0));
@@ -97,14 +97,15 @@ app.setPath("userData",PROFILE);
 app.on("window-all-closed",()=>{});
 (async()=>{
  await app.whenReady();
- for(const mode of ["following","released"]) {
-  const win=new BrowserWindow({show:false,width:320,height:300,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
+ for(const mode of ["following","released","following-history"]) {
+  const history=mode==="following-history";
+  const win=new BrowserWindow({show:false,width:history?440:320,height:history?700:300,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
   const errors=[];
   win.webContents.on("console-message",({level,message})=>{if(level==="error") errors.push(message);});
-  await win.loadURL(BASE+"/chat-comparison/style-check.html?stream=1&theme=dark");
+  await win.loadURL(BASE+"/chat-comparison/style-check.html?stream=1&theme=dark"+(history?"&history=1":""));
   for(let attempt=0;attempt<400;attempt++) {
    if(await win.webContents.executeJavaScript("document.documentElement.dataset.streamReady === 'true'")) break;
-   if(attempt===399) throw new Error("Replay did not initialize");
+   if(attempt===399) throw new Error("Replay did not initialize in "+mode+": "+JSON.stringify(errors));
    await new Promise(resolve=>setTimeout(resolve,50));
   }
   const result=await win.webContents.executeJavaScript("("+CAPTURE+")("+JSON.stringify(mode)+")");
@@ -112,6 +113,13 @@ app.on("window-all-closed",()=>{});
   await fs.writeFile(OUTPUT+"/"+mode+".png",(await win.webContents.capturePage()).toPNG());
   console.log(JSON.stringify({mode,phases:result.phases}));
   assert.equal(result.viewportVisible,true,"Upstream pending-scroll state settles and reveals the viewport");
+  const painted=result.frames.filter(frame=>frame.time-result.frames[0].time>500);
+  assert.ok(painted.every(frame=>frame.visibility==="visible"),"Streaming must never hide the transcript");
+  assert.ok(painted.every(frame=>frame.pageTop===0),"Streaming must stay inside its own scroll viewport");
+  if(mode.startsWith("following")) {
+   const gaps=painted.map(frame=>frame.floor-frame.top);
+   assert.ok(Math.max(...gaps)<=2,"Painted transcript falls behind the stream by "+Math.max(...gaps)+"px before catching up");
+  }
   for(const label of ["Thinking","Writing response"]) {
    const phase=result.phases[label];
    assert.ok(phase?.frames>15,"Exercise wrapped lines during "+label);
