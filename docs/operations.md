@@ -27,9 +27,10 @@ the same in every mode.
 With the comparison server running, `node scripts/ai-elements-style-smoke.mjs`
 compares the actual `AgentPanel` response with the reference at matching widths
 in Electron, in light and dark mode. It measures typography, color, spacing and
-geometry, checks shell CSS isolation, and saves screenshots plus measurements
+geometry, checks shell CSS isolation and live word interpolation, and saves screenshots plus measurements
 under `/private/tmp/vela-ai-style-verification` (override with `VELA_STYLE_REPORT`).
-The fixture is `/chat-comparison/style-check.html`; it uses a mock bridge and
+The fixture is `/chat-comparison/style-check.html` (`?stream=1` accepts replay
+steps via same-origin `vela-stream-step` messages); it uses a mock bridge and
 makes no runtime requests. Set `VELA_STYLE_URL` to use a separately hosted
 build of the comparison instead of the default development server.
 

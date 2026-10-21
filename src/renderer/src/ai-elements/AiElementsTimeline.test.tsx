@@ -145,3 +145,12 @@ it("omits empty Copy controls while retaining an available retry action", () => 
  expect(retry).toHaveBeenCalledWith("a");
  expect(container.querySelector('[aria-label="Copy"]')).toBeNull();
 });
+
+it("retains an expanded tool's DOM and state when the next streamed tool arrives", () => {
+ const tool = {kind:"tool" as const,id:"one",tool:{id:"one",title:"bash",detail:"npm test",status:"running" as const,output:"first output"}};
+ const item = {kind:"assistant" as const,id:"a",messageID:"a",completed:false,parts:[tool]};
+ const view=render(<AiElementsTranscript transcript={[item]} busy lastAssistantId="a" session={session}/>);
+ const original=Array.from(container.querySelectorAll('[data-slot="trace-title"]')).find(node=>node.textContent?.includes("npm test"))!;
+ view.rerender(<AiElementsTranscript transcript={[{...item,parts:[tool,{...tool,id:"two",tool:{...tool.tool,id:"two",detail:"npm run build"}}]}]} busy lastAssistantId="a" session={session}/>);
+ expect(Array.from(container.querySelectorAll('[data-slot="trace-title"]')).find(node=>node.textContent?.includes("npm test"))).toBe(original);
+});

@@ -91,7 +91,8 @@ export function AgentPanel({
   const activeSession = session === undefined ? storeSession : session;
   const view = usePanel(activeSession?.workspace);
   const { busy, todos, transcript, sessionUsage, compactionBaseline, currentModel, turnStartedAt, assistantStatus } = view;
-  const { scrollRef, onScroll } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages);
+  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
+  const { scrollRef, onScroll } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages, renderer !== "old");
   const panelRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const panelDragRef = useRef<number | null>(null);
@@ -193,7 +194,6 @@ export function AgentPanel({
     [transcript]
   );
 
-  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
   const responseTranscript = useMemo(
     () => transcript.filter((item) => item.kind !== "permission"),
     [transcript]

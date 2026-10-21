@@ -6,20 +6,23 @@ import { AgentPanel } from "../../components/AgentPanel";
 import { AiElementsTimeline } from "../AiElementsTimeline";
 import { demoSession, installComparisonBridge } from "./bridge";
 import { replayEvents, projectReplay } from "./replay";
-import type { TranscriptItem } from "@shared/types";
+import type { BackendMessage, TranscriptItem } from "@shared/types";
 
 const params = new URLSearchParams(location.search);
 const reference = params.get("version") === "reference";
 const dark = params.get("theme") !== "light";
+const streaming = params.has("stream");
+const listeners = new Set<(message: BackendMessage) => void>();
 const markdown = `Here's the lay of the land:\n\n## Project: Neptune AI Chatbot\n\nA **full-stack AI chatbot** with a vanilla JS frontend and Express backend.\n\n### Directory breakdown\n\n- \`server.js\` — starts the app\n- \`src/app.js\` — configures CORS and JSON parsing\n\n\`\`\`tsx\nconst theme = \"system\";\nexport const enabled = true;\n\`\`\`\n\n| Check | Result |\n| --- | --- |\n| Typecheck | Passed |\n`;
 const events = replayEvents("coding", "Inspect this repository.");
 const fixture: TranscriptItem[] = projectReplay(events, events.length, "Inspect this repository.").transcript;
 const last = fixture.at(-1);
 if (last?.kind === "assistant") last.parts = [...last.parts, {kind:"text",id:"style-markdown",text:markdown,complete:true}];
 installComparisonBridge();
+window.vela.onMessage = callback => { listeners.add(callback); return () => { listeners.delete(callback); }; };
 window.localStorage.setItem("vela.theme", dark ? "codex-dark" : "codex");
-window.vela.openSessionById = async () => ({ session: demoSession, transcript: fixture, todos: [], usage: null });
-window.vela.sessionTranscript = async () => ({ transcript: fixture, todos: [] });
+window.vela.openSessionById = async () => ({ session: demoSession, transcript: streaming ? [] : fixture, todos: [], usage: null });
+window.vela.sessionTranscript = async () => ({ transcript: streaming ? [] : fixture, todos: [] });
 
 function StyleBody() {
   const store = useStore();
@@ -30,13 +33,29 @@ function StyleBody() {
       void store.addModelPanel("/comparison");
     }
   }, [store.addModelPanel]);
+  useEffect(() => {
+    if (!streaming || !store.session) return;
+    const replay = replayEvents("coding", "Inspect this repository.");
+    let cursor = 0;
+    const receive = (event: MessageEvent) => {
+      if (event.source !== window || event.origin !== location.origin || event.data?.kind !== "vela-stream-step") return;
+      const next = replay[cursor++];
+      if (next) listeners.forEach(listener => listener({kind:"event",type:next.type,data:next}));
+      document.documentElement.dataset.streamCursor = String(cursor);
+      document.documentElement.dataset.streamLength = String(replay.length);
+    };
+    window.addEventListener("message", receive);
+    document.documentElement.dataset.streamReady = "true";
+    return () => window.removeEventListener("message", receive);
+  }, [store.session]);
   return reference ? <div className="ai-elements bg-background text-foreground"><div className="flex min-w-0 flex-col gap-6 px-8 py-6" data-ai-elements-content=""><AiElementsTimeline transcript={fixture} busy={false} lastAssistantId="assistant" session={demoSession}/></div></div> : <AgentPanel session={store.session}/>;
 }
 
 async function mount() {
   if (reference) {
     await import("../ai-elements.css");
-    await import("./reference-theme.css");
+    await import("../../styles/_foundation.scss");
+    await import("../app-presentation.css");
   } else {
     await import("../../styles/main.scss");
     await import("@vscode/codicons/dist/codicon.css");

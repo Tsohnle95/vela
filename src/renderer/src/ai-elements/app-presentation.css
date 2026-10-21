@@ -1,0 +1,24 @@
+/* App typography is shared with the folder panels; upstream demos retain their own theme. */
+.ai-elements, .ai-elements-portal {
+  --ai-font-sans: var(--ui-font-family);
+  --text-sm: var(--ui-font-size);
+  --text-sm--line-height: 1.5;
+  --text-xs: calc(var(--ui-font-size) - 1px);
+  --text-xs--line-height: 1.5;
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.ai-elements [data-slot="markdown"] :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight-strong);
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+.ai-elements :is(strong, b) { font-weight: var(--ui-font-weight-strong); }
+@media (prefers-reduced-motion: reduce) {
+  .ai-elements [data-sd-animate], .ai-elements [data-sd-animate-marker]::marker { animation: none; }
+}

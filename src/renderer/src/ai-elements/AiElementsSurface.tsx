@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import styles from "./ai-elements.css?inline";
+import presentation from "./app-presentation.css?inline";
 import { safeExternalUrl } from "@shared/url-policy";
 import { AiElementsPortalProvider } from "./portal-container";
 
@@ -32,7 +33,7 @@ export function AiElementsSurface({ children }: { children: ReactNode }) {
 
   return <div ref={host} data-ai-elements-surface="" style={{ minWidth: 0 }}>
     {root && createPortal(<>
-      <style>{`:host { all: initial; display: block; min-width: 0; }\n${styles}`}</style>
+      <style>{`:host { all: initial; display: block; min-width: 0; }\n${styles}\n${presentation}`}</style>
       <div onClickCapture={(event) => {
         const link = event.target instanceof Element ? event.target.closest("a") : null;
         if (!link) return;

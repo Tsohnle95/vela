@@ -21,20 +21,55 @@ function scrollMemoryKey(session: SessionInfo | null | undefined): string | null
   return session?.workspace.id ?? null;
 }
 
+function advanceStreamScroll(el: HTMLDivElement, elapsed: number, busy: boolean): boolean {
+  const target = Math.max(0, el.scrollHeight - el.clientHeight);
+  const distance = target - el.scrollTop;
+  const step = 1 - Math.exp(-Math.min(64, Math.max(1, elapsed)) / 45);
+  el.scrollTop = distance <= 0.5 || !busy ? target : el.scrollTop + distance * step;
+  return target - el.scrollTop > 0.5;
+}
+
 export function useAgentScroll(activeSession: SessionInfo | null, transcript: TranscriptItem[], busy: boolean,
-  queuedMessages: { id: string; content: string }[] | undefined) {
+  queuedMessages: { id: string; content: string }[] | undefined, smooth = false) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
   const observedTopRef = useRef(0);
   const memoryKey = scrollMemoryKey(activeSession);
+  const animationRef = useRef<number | null>(null);
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
   const scrollToBottom = (): void => {
     const el = scrollRef.current;
     if (!el) return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (smooth && busyRef.current && !reducedMotion && el.scrollHeight - el.clientHeight - el.scrollTop > 1) {
+      if (animationRef.current === null) {
+        let previous = performance.now();
+        const follow = (now: number): void => {
+          animationRef.current = null;
+          if (!atBottomRef.current) return;
+          const following = advanceStreamScroll(el, now - previous, busyRef.current);
+          previous = now;
+          observedTopRef.current = el.scrollTop;
+          if (memoryKey) agentScrollMemory.set(memoryKey, { scrollTop: el.scrollTop, atBottom: true, observedTop: el.scrollTop });
+          if (following) animationRef.current = requestAnimationFrame(follow);
+        };
+        animationRef.current = requestAnimationFrame(follow);
+      }
+      return;
+    }
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
     el.scrollTop = el.scrollHeight;
     observedTopRef.current = el.scrollTop;
     atBottomRef.current = true;
     if (memoryKey) agentScrollMemory.set(memoryKey, { scrollTop: el.scrollTop, atBottom: true, observedTop: observedTopRef.current });
   };
+
+  useLayoutEffect(() => () => {
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
+  }, [memoryKey]);
 
   const transcriptTip = transcript.at(-1);
   const transcriptTipParts = transcriptTip?.kind === "assistant" ? transcriptTip.parts.length : 0;

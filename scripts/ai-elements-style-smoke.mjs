@@ -44,7 +44,7 @@ const probe = () => {
  return {styles,width:root.querySelector(".ai-elements").getBoundingClientRect().width,composer:!!document.querySelector(".composer"),suggestions:document.body.textContent.includes("Explain this repository")};
 };
 const capture = async (version,theme,width) => {
- const win=new BrowserWindow({show:false,width,height:900,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false}});
+ const win=new BrowserWindow({show:false,width,height:900,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
  windows.push(win);
  console.log("Capture",version,theme,width);
  const errors=[];
@@ -53,6 +53,7 @@ const capture = async (version,theme,width) => {
  await wait(win,version==="reference"?"!!document.querySelector('h2')":"!!document.querySelector('[data-ai-elements-surface]')?.shadowRoot?.querySelector('h2')");
  await win.webContents.executeJavaScript("document.fonts.load(" + JSON.stringify('14px "Geist Variable"') + ").then(()=>document.fonts.ready).then(()=>true)");
  await wait(win, "document.fonts.check(" + JSON.stringify('14px "Geist Variable"') + ")");
+ await wait(win, "!!(document.querySelector('[data-ai-elements-surface]')?.shadowRoot??document).querySelector('[data-slot=code-block-line-content] span[style]')");
  await new Promise(resolve=>setTimeout(resolve,300));
  const data=await win.webContents.executeJavaScript("(()=>{try{return ("+probe.toString()+")()}catch(error){return {error:error.stack}}})()");
  if(data.error) throw new Error(data.error);
@@ -84,7 +85,64 @@ const capture = async (version,theme,width) => {
   assert.deepEqual(differences,[],"Production must match reference: "+theme+" "+width);
   actual.win.destroy();reference.win.destroy();
  }
- console.log("AI Elements style parity passed: light/dark at 320/600px, 15 element types, computed typography/color/spacing/geometry, host CSS isolation.");
+ const live = new BrowserWindow({show:false,width:360,height:500,useContentSize:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
+ await live.loadURL(BASE_URL+"/chat-comparison/style-check.html?stream=1&theme=light");
+ await wait(live,"document.documentElement.dataset.streamReady === 'true'");
+ const motion = await live.webContents.executeJavaScript("(" + (async () => {
+   const samples = [];
+   let interpolated = 0;
+   let firstWord = null;
+   let replacedDuringStreaming = false;
+   let firstParagraph = null;
+   let paragraphReplaced = false;
+   const replacements = [];
+   let last = performance.now();
+   let previousScroll = 0;
+   let scrollFrames = 0;
+   let sampling = true;
+   const frame = now => {
+     samples.push(now-last); last=now;
+     const shadow=document.querySelector('[data-ai-elements-surface]')?.shadowRoot;
+     for(const word of shadow?.querySelectorAll('[data-sd-animate]')??[]) {
+       const opacity=Number(getComputedStyle(word).opacity);
+       if(opacity>0 && opacity<1) interpolated++;
+       if(!firstWord) {firstWord=word; firstParagraph=word.closest("p");}
+     }
+     if(firstWord && !firstWord.isConnected) {if(Number(document.documentElement.dataset.streamCursor)<Number(document.documentElement.dataset.streamLength)) replacedDuringStreaming=true;if(!replacements.length) replacements.push({cursor:document.documentElement.dataset.streamCursor,word:firstWord.outerHTML,current:shadow?.querySelector('[data-slot=markdown] p')?.outerHTML});}
+     if(firstParagraph && !firstParagraph.isConnected) paragraphReplaced=true;
+     const scroll=document.querySelector('.agent-scroll');
+     if(scroll && scroll.scrollTop>previousScroll && scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop>0.5) scrollFrames++;
+     previousScroll=scroll?.scrollTop??0;
+     if(sampling) requestAnimationFrame(frame);
+   };
+   requestAnimationFrame(frame);
+   for(let index=0;index<100;index++) {
+     window.postMessage({kind:'vela-stream-step'},location.origin);
+     await new Promise(resolve=>setTimeout(resolve,66));
+     if(Number(document.documentElement.dataset.streamCursor)>=Number(document.documentElement.dataset.streamLength)) break;
+   }
+   await new Promise(resolve=>setTimeout(resolve,350));
+   sampling=false;
+   const shadow=document.querySelector('[data-ai-elements-surface]').shadowRoot;
+   const css=getComputedStyle(shadow.querySelector('[data-slot=markdown] p'));
+   const body=getComputedStyle(document.body);
+   const scroll=document.querySelector('.agent-scroll');
+   return {interpolated,replacedDuringStreaming,paragraphReplaced,replacements,scrollFrames,frames:samples.length,averageFrameMs:samples.reduce((a,b)=>a+b,0)/samples.length,maxFrameMs:Math.max(...samples),font:css.fontFamily,folderFont:body.fontFamily,size:css.fontSize,folderSize:body.fontSize,weight:css.fontWeight,folderWeight:body.fontWeight,remainingScroll:scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop,text:shadow.textContent};
+ }).toString() + ")()");
+ await fs.writeFile(OUTPUT+"/streaming.json",JSON.stringify(motion,null,2));
+ assert.ok(motion.interpolated>10,"New words must visibly interpolate across animation frames");
+ assert.equal(motion.replacedDuringStreaming,false,"Previously streamed words must survive later chunks");
+ assert.equal(motion.paragraphReplaced,false,"The paragraph must survive streaming and final animation cleanup");
+ assert.equal(motion.font,motion.folderFont,"Response and folder font families must match");
+ assert.equal(motion.size,motion.folderSize,"Response and folder font sizes must match");
+ assert.equal(motion.weight,motion.folderWeight,"Response and folder weights must match");
+ assert.ok(motion.scrollFrames>2,"Viewport following must interpolate across frames");
+ assert.ok(motion.remainingScroll<=2,"Streaming must remain pinned to the bottom");
+ assert.ok(motion.text.includes("The change is ready for review."),"Final streamed text must be complete");
+ delete motion.text;
+ await fs.writeFile(OUTPUT+"/streaming.json",JSON.stringify(motion,null,2));
+ live.destroy();
+ console.log("AI Elements style and streaming checks passed:",JSON.stringify(motion));
  app.exit(0);
 })().catch(error=>{console.error(error);fs.writeFile(OUTPUT+"/results.json",JSON.stringify(results,null,2)).finally(()=>app.exit(1))});
 setTimeout(()=>{console.error("Style smoke overall timeout");app.exit(1)},100000).unref();

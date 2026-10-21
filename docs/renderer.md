@@ -522,8 +522,15 @@ Key mechanisms:
   input/context/todo controls in `AiElementsChat.tsx` are restricted to the
   isolated comparison examples; the application never mounts that full shell.
   `useAgentScroll` continues owning live-height following and reader scroll memory.
-  The vendored Streamdown Markdown helper uses the JavaScript Shiki engine under
-  the existing CSP. External anchors retain the shared HTTPS URL policy.
+  Live AI Elements responses ease the viewport toward the growing bottom on
+  animation frames; reader scrolling cancels following, and reduced motion uses
+  immediate positioning. Initial history and the legacy renderer stay immediate.
+  Production Markdown uses the upstream primitives with bounded word fades.
+  Syntax highlighting runs in `ai-elements/highlight.worker.ts` with the existing
+  latest-per-block queue, using the upstream GitHub themes and JavaScript engine
+  under the existing CSP. New code remains visible while tokens are pending;
+  matching highlighted prefixes are retained as more characters arrive. The
+  original Markdown helper remains frozen for the upstream demo gallery. External anchors retain the shared HTTPS URL policy.
   `adapters.ts` accepts optional structured source, citation, suite, stack,
   plan and task metadata; it never infers those records from arbitrary prose.
   Such metadata is conditional on the runtime/tool supplying it. Permissions,
@@ -534,7 +541,12 @@ Key mechanisms:
   class so upstream widgets and portals receive the correct neutral theme.
   `AiElementsSurface.tsx` isolates response CSS in a ShadowRoot so shell Sass
   cannot override upstream typography, spacing or widgets. It owns the reference
-  response padding and mirrors the selected color scheme. Base UI portals use
+  response padding and mirrors the selected color scheme. App response typography
+  uses the same `--ui-font-*` tokens as the folder panels; upstream demo fonts
+  remain unchanged. `StreamingMarkdown.tsx` enables bounded word fades for live
+  deltas, while completed history renders immediately. Tool groups keep a stable
+  component shape when later calls arrive, preserving open details and DOM state.
+  Base UI portals use
   the same shadow boundary through `portal-container.tsx`; only fonts and
   Tailwind property registrations are document-wide. The original composer
   remains outside that boundary. Vendored

@@ -10,7 +10,7 @@ import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions }
 import { Button } from "@/components/ui/button";
 import { CodeBlock, CodeBlockContent } from "@/components/ui/code-block";
 import { Marker, MarkerContent } from "@/components/ui/marker";
-import { Markdown } from "./demos/lib/markdown";
+import { StreamingMarkdown as Markdown } from "./StreamingMarkdown";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { writeClipboard } from "../components/TimelineProse";
 import { parseSubagentTag, parseLegacyTaskText, isInternalSystemReminder, taskChildID, taskDescriptor, toolInput, toolKey, workspaceFilePath, editFileEntries, isEditCardTool } from "../components/timeline-model";
@@ -121,7 +121,7 @@ function hiddenEntry(item: TranscriptItem):boolean {
 }
 
 type EntryProps = SessionProps & {item: TranscriptItem; next?: TranscriptItem; lastAssistantId:string|null; onRetry?: AiElementsTimelineProps["onRetry"]};
-function AiElementsEntry({item,next,busy,lastAssistantId,session,onRetry}: EntryProps): ReactNode {
+const AiElementsEntry = memo(function AiElementsEntry({item,next,busy,lastAssistantId,session,onRetry}: EntryProps): ReactNode {
     switch (item.kind) {
         case "user":
         case "pending-input": return <AiElementsUserMessage item={item} busy={busy} session={session}/>;
@@ -136,7 +136,7 @@ function AiElementsEntry({item,next,busy,lastAssistantId,session,onRetry}: Entry
         case "status": return <Message><MessageContent><Trace><TraceLine status={item.tone === "error" ? "error" : undefined}><TraceTitle>{item.text}</TraceTitle></TraceLine></Trace></MessageContent></Message>;
         case "skill": return <Message><MessageContent><Markdown>{item.text}</Markdown></MessageContent></Message>;
     }
-}
+});
 
 function AiElementsUserMessage({item,session,busy}:SessionProps & {item:Extract<TranscriptItem,{kind:"user"|"pending-input"}>}) {
     const {stageRevert}=useStore();
@@ -267,5 +267,5 @@ function AiElementsAssistantParts({item, streaming, session}: {item: Extract<Tra
    else groups.push({kind:"tools",id:part.id,tools:[part.tool]});
   }
  }
- return <>{groups.map((group,index) => group.kind === "tools" ? group.tools.length > 1 ? <AiElementsChainOfThought key={group.id} tools={group.tools} streaming={streaming} answering={groups.slice(index+1).some(next => next.kind === "part" && next.part.kind === "text" && Boolean(next.part.text))} interrupted={item.interrupted} session={session}/> : <Trace key={group.id}><AiElementsTool tool={group.tools[0]} streaming={streaming} interrupted={item.interrupted} session={session}/></Trace> : group.part.kind === "text" ? group.part.text && <Markdown key={group.part.id} isAnimating={streaming && !item.completed}>{group.part.text}</Markdown> : <Trace key={group.part.id}><ReasoningRow text={group.part.text} running={streaming && !group.part.complete && !item.completed}/></Trace>)}</>;
+ return <>{groups.map((group,index) => group.kind === "tools" ? <AiElementsChainOfThought key={group.id} tools={group.tools} streaming={streaming} answering={groups.slice(index+1).some(next => next.kind === "part" && next.part.kind === "text" && Boolean(next.part.text))} interrupted={item.interrupted} session={session}/> : group.part.kind === "text" ? group.part.text && <Markdown key={group.part.id} isAnimating={streaming && !item.completed}>{group.part.text}</Markdown> : <Trace key={group.part.id}><ReasoningRow text={group.part.text} running={streaming && !group.part.complete && !item.completed}/></Trace>)}</>;
 }

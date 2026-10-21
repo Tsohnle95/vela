@@ -1,4 +1,8 @@
 :root {
+  --ui-font-family: -apple-system-body, ui-sans-serif, -apple-system, system-ui, "Segoe UI", "Helvetica", "Apple Color Emoji", "Arial", sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  --ui-font-size: 13px;
+  --ui-font-weight: 400;
+  --ui-font-weight-strong: 500;
   --workspace-background: radial-gradient(ellipse at 66% 15%, #302456 0, transparent 44%), #151423;
   --top-surface: #1d1b30;
   --rail-surface: #171628;
@@ -267,8 +271,9 @@ html, body, #root {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system-body, ui-sans-serif, -apple-system, system-ui, "Segoe UI", "Helvetica", "Apple Color Emoji", "Arial", sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-  font-size: 13px;
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size);
+  font-weight: var(--ui-font-weight);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   user-select: none;
