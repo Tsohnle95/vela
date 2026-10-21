@@ -82,6 +82,7 @@ async function captureSubmission() {
   const shadow = document.querySelector("[data-ai-elements-surface]").shadowRoot;
   return {
     calls, frames, input: input.value,
+    systemReminderVisible: shadow.textContent.includes("<system-reminder>"),
     viewportVisible: getComputedStyle(document.querySelector(".agent-scroll")).visibility === "visible",
     toolCalls: shadow.querySelectorAll("[data-tool-call]").length,
     customHeightAnimation: !!shadow.querySelector("[data-transcript-growth]"),
@@ -137,6 +138,7 @@ app.on("window-all-closed",()=>{});
  assert.equal(submission.calls,1,"Enter reaches the real Composer/store submission path exactly once");
  assert.equal(submission.viewportVisible,true,"Submission leaves the viewport visible");
  assert.equal(submission.input,"","Submission clears the original composer");
+ assert.equal(submission.systemReminderVisible,false,"Pending Plan-mode reminder stays internal");
  assert.equal(submission.customHeightAnimation,false,"No custom transcript height animation");
  assert.equal(submission.toolCalls,3,"Each tool remains an individual visible row");
  for(const field of ["panelY","panelHeight","composerBottom"]) {

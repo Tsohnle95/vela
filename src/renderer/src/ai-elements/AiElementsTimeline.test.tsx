@@ -12,6 +12,7 @@ vi.mock("../components/TimelineProse", () => ({ writeClipboard: vi.fn().mockReso
 vi.mock("@/components/ui/message-scroller", () => ({MessageScrollerItem: ({children, messageId, scrollAnchor}: {children:ReactNode;messageId:string;scrollAnchor:boolean}) => <div data-scroller-item={messageId} data-anchor={String(scrollAnchor)}>{children}</div>}));
 import { AiElementsPermission, AiElementsTranscript, AiElementsTool } from "./AiElementsTimeline";
 import { ReasoningRow } from "./patterns";
+import { reduceChatStream } from "../chat-stream";
 const session = { id: "session-b", directory: "/tmp/b", workspace: { id: "workspace-b", generation: 1 } } satisfies SessionInfo;
 let container: HTMLDivElement;
 let root: Root;
@@ -30,6 +31,29 @@ const screen = {
 };
 const fireEvent = { click: (target: HTMLElement) => act(() => target.click()) };
 describe("AI Elements runtime bindings", () => {
+    it("keeps the Plan reminder internal throughout inbox admission and delivery", () => {
+        const text = "<system-reminder> You are in Plan mode. Discuss the plan with the user directly in the conversation. </system-reminder>";
+        const pending = reduceChatStream([], { id: "enqueued", type: "session.inbox.enqueued", created: 100,
+            data: { inboxID: "plan-reminder", item: { type: "synthetic", payload: { text } } } });
+        expect(pending).toMatchObject([{ kind: "pending-input", inputType: "synthetic", text }]);
+        const view = render(<AiElementsTranscript transcript={pending} busy={false} lastAssistantId={null} session={session} scrollerItems/>);
+        expect(container.textContent).toBe("");
+        expect(container.querySelector("[data-scroller-item]")).toBeNull();
+        const delivered = reduceChatStream(pending, { id: "delivered", type: "session.inbox.delivered", created: 101, data: { inboxID: "plan-reminder" } });
+        expect(delivered).toMatchObject([{ kind: "synthetic", text }]);
+        view.rerender(<AiElementsTranscript transcript={delivered} busy={false} lastAssistantId={null} session={session} scrollerItems/>);
+        expect(container.textContent).toBe("");
+    });
+    it("renders queued user input only after delivery and preserves user-quoted reminders", () => {
+        const text = "Explain <system-reminder>Plan mode</system-reminder>";
+        const pending = reduceChatStream([], { id: "enqueued", type: "session.inbox.enqueued", created: 100,
+            data: { inboxID: "user-input", item: { type: "user", payload: { text } } } });
+        const view = render(<AiElementsTranscript transcript={pending} busy={false} lastAssistantId={null} session={session}/>);
+        expect(container.textContent).toBe("");
+        const delivered = reduceChatStream(pending, { id: "delivered", type: "session.inbox.delivered", created: 101, data: { inboxID: "user-input" } });
+        view.rerender(<AiElementsTranscript transcript={delivered} busy={false} lastAssistantId={null} session={session}/>);
+        expect(container.textContent).toContain(text);
+    });
     it("routes an approval to the transcript's session rather than the focused session", () => {
         render(<AiElementsPermission session={session} item={{ kind: "permission", id: "p", requestID: "request", action: "Run command", resources: ["npm test"], pending: true }}/>);
         fireEvent.click(screen.getByRole("button", { name: "Approve" }));

@@ -30,6 +30,15 @@ describe("AI Elements task and plan mapping", () => {
 
 
 describe("AI Elements delegated transcript visibility", () => {
+ it("excludes internal pending inputs without dropping delivered synthetic content", () => {
+  const transcript: TranscriptItem[] = [
+   {kind:"pending-input",id:"plan",inputType:"synthetic",text:"<system-reminder>You are in Plan mode.</system-reminder>"},
+   {kind:"pending-input",id:"queued",inputType:"user",text:"Queued request"},
+   {kind:"synthetic",id:"delivered",text:"Visible runtime context"}
+  ];
+  expect(visibleAiTranscript(transcript,[])).toEqual([transcript[2]]);
+  expect(transcript).toHaveLength(3);
+ });
  it("uses the same delegation consolidation as the original renderer instead of exposing duplicate protocol messages", () => {
   const transcript: TranscriptItem[]=[{kind:"user",id:"u",text:"inspect"},{kind:"assistant",id:"a",messageID:"a",completed:true,parts:[{kind:"tool",id:"task",tool:{id:"task",title:"task",detail:"Inspect source",status:"running",input:JSON.stringify({agent:"research",description:"Inspect source"}),metadata:{sessionID:"child"}}}]},{kind:"synthetic",id:"protocol",text:'<subagent id="child" agent="research" description="Inspect source" state="completed" />'}];
   const result=visibleAiTranscript(transcript,[],"parent");

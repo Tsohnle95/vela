@@ -113,6 +113,7 @@ export function visibleAiTranscript(transcript: TranscriptItem[], sessions: Sess
   }
   turn=0;
   return consolidated.filter(item => {
+    if (item.kind === "pending-input") return false;
     if (item.kind === "user") turn++;
     if (item.kind !== "synthetic") return true;
     if (isInternalSystemReminder(item)) return false;

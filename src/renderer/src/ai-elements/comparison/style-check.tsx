@@ -20,6 +20,7 @@ const fixture: TranscriptItem[] = projectReplay(events, events.length, "Inspect 
 const last = fixture.at(-1);
 if (last?.kind === "assistant") last.parts = [...last.parts, {kind:"text",id:"style-markdown",text:markdown+"\n\n```tsx\n"+longCode+"\n```",complete:true}];
 fixture.push({kind:"user",id:"follow-up",text:"Show the next step."},{kind:"assistant",id:"follow-up-answer",messageID:"follow-up-answer",completed:true,parts:[{kind:"text",id:"follow-up-text",text:"Ready for the next step.",complete:true}]});
+fixture.push({kind:"pending-input",id:"plan-reminder",inputType:"synthetic",text:"<system-reminder>You are in Plan mode. Discuss the plan with the user directly in the conversation.</system-reminder>"});
 installComparisonBridge();
 window.vela.onMessage = callback => { listeners.add(callback); return () => { listeners.delete(callback); }; };
 window.localStorage.setItem("vela.theme", params.get("appearance") ?? (dark ? "codex-dark" : "codex"));

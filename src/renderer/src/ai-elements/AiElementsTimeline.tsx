@@ -123,17 +123,17 @@ export function AiElementsTranscript({transcript,busy,lastAssistantId,session=nu
 }
 
 function hiddenEntry(item: TranscriptItem):boolean {
-    return item.kind === "system" || item.kind === "selection" || (item.kind === "synthetic" && isInternalSystemReminder(item));
+    return item.kind === "pending-input" || item.kind === "system" || item.kind === "selection" || (item.kind === "synthetic" && isInternalSystemReminder(item));
 }
 
 type EntryProps = SessionProps & {item: TranscriptItem; lastAssistantId:string|null; onRetry?: AiElementsTimelineProps["onRetry"]};
 const AiElementsEntry = memo(function AiElementsEntry({item,busy,lastAssistantId,session,onRetry}: EntryProps): ReactNode {
     switch (item.kind) {
-        case "user":
-        case "pending-input": return <AiElementsUserMessage item={item} busy={busy} session={session}/>;
+        case "user": return <AiElementsUserMessage item={item} busy={busy} session={session}/>;
         case "assistant": return <AiElementsAssistantMessage item={item} busy={busy} streaming={busy && (item.id === lastAssistantId || !item.completed)} session={session} onRetry={onRetry}/>;
         case "permission": return <AiElementsPermission item={item} session={session}/>;
         case "selection":
+        case "pending-input":
         case "system": return null;
         case "synthetic": return <AiElementsSyntheticMessage item={item} busy={busy} session={session}/>;
         case "shell": return <AiElementsShellMessage item={item} busy={busy} session={session}/>;
@@ -144,7 +144,7 @@ const AiElementsEntry = memo(function AiElementsEntry({item,busy,lastAssistantId
     }
 });
 
-function AiElementsUserMessage({item,session,busy}:SessionProps & {item:Extract<TranscriptItem,{kind:"user"|"pending-input"}>}) {
+function AiElementsUserMessage({item,session,busy}:SessionProps & {item:Extract<TranscriptItem,{kind:"user"}>}) {
     const {stageRevert}=useStore();
     return <Message align="end"><MessageContent><Bubble align="end" variant="muted"><BubbleContent>{item.text}{item.attachments?.map((attachment,index) => <span key={index} className="block text-xs text-muted-foreground">{attachment.name}</span>)}</BubbleContent></Bubble><MessageFooter><MessageCopy text={item.text}/>{session && item.kind === "user" && <MessageAction label="Edit" disabled={busy} onClick={() => void stageRevert(session.workspace,item.id)}><PencilIcon/></MessageAction>}</MessageFooter></MessageContent></Message>;
 }
