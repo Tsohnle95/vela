@@ -669,7 +669,7 @@
       "cyclomatic": 26,
       "nesting": 5,
       "origin": "src/renderer/src/store.tsx:StoreBody/openFile#1",
-      "reason": "Existing editor open policy retains content/binary/size validation, dirty-tab reuse and stale-result checks. Redesign adds current-target validation and captured foreground identity (C24→26), independently reviewed to prevent background/stale reads from exiting browser mode. Existing length/nesting ceilings unchanged."
+      "reason": "Existing editor open policy retains content/binary/size validation, dirty-tab reuse and stale-result checks. Redesign adds current-target validation and captured foreground identity (C24\u219226), independently reviewed to prevent background/stale reads from exiting browser mode. Existing length/nesting ceilings unchanged."
     },
     "src/main/workspace-mutations.ts:WorkspaceMutations/writeFile#1": {
       "codeLines": 105,
@@ -827,7 +827,8 @@
         "src/renderer/src/components/TimelineProse.tsx",
         "src/renderer/src/ai-elements/AiElementsTimeline.tsx",
         "src/renderer/src/ai-elements/adapters.ts",
-        "src/renderer/src/dsh-chat/"
+        "src/renderer/src/dsh-chat/",
+        "src/renderer/src/codex-chat/"
       ]
     },
     {

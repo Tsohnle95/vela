@@ -534,3 +534,55 @@ export function buildTurns(timeline: VisibleTimelineItem[]): TimelineTurn[] {
   return turns;
 }
 
+
+function representedSubagents(
+  transcript: TranscriptItem[],
+  sessions: SessionSummary[],
+  sessionID: string | undefined
+): Set<string> {
+  const ids = new Set<string>();
+  let turn = 0;
+  for (const item of transcript) {
+    if (item.kind === "user") {
+      turn += 1;
+      continue;
+    }
+    if (item.kind !== "assistant") continue;
+    for (const part of item.parts) {
+      if (part.kind !== "tool" || !["task", "subagent"].includes(toolKey(part.tool.title))) continue;
+      const request = taskDescriptor(part.tool);
+      const childID = taskChildID(part.tool, sessions, sessionID, request);
+      if (childID) ids.add(`${turn}:child:${childID}`);
+      const signature = taskDispatchSignature(part.tool, request);
+      if (signature) ids.add(`${turn}:${signature}`);
+    }
+  }
+  return ids;
+}
+
+/** Rows that belong in the conversation surface, with subagent echoes folded in. */
+export function visibleTranscript(
+  transcript: TranscriptItem[],
+  sessions: SessionSummary[],
+  sessionID: string | undefined
+): VisibleTimelineItem[] {
+  const consolidated = consolidateSubagentTools(transcript, sessions, sessionID);
+  const represented = representedSubagents(consolidated, sessions, sessionID);
+  const visible: VisibleTimelineItem[] = [];
+  let turn = 0;
+  for (const item of consolidated) {
+    if (item.kind === "user") turn += 1;
+    if (item.kind === "permission" || item.kind === "pending-input" || item.kind === "selection" || item.kind === "system") {
+      continue;
+    }
+    if (item.kind === "synthetic") {
+      const ref = parseSubagentTag(item.text) ?? parseLegacyTaskText(item.text);
+      const childID = ref ? subagentChildID(ref, sessions, sessionID) : "";
+      if (childID && represented.has(`${turn}:child:${childID}`)) continue;
+      if (ref && represented.has(`${turn}:${refDispatchSignature(ref)}`)) continue;
+      if (isInternalSystemReminder(item)) continue;
+    }
+    visible.push(item);
+  }
+  return visible;
+}

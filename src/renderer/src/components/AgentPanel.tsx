@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps,
 import { usePanel, useStore } from "../store";
 import { OpenCodeTimeline, PermissionPrompt } from "./OpenCodeTimeline";
 import { DshTranscript } from "../dsh-chat/DshTranscript";
+import { CodexTranscript } from "../codex-chat/CodexTranscript";
 import { AiElementsTimeline } from "../ai-elements/AiElementsTimeline";
 import { AiElementsSurface } from "../ai-elements/AiElementsSurface";
 import { FormPrompt } from "./FormPrompt";
@@ -107,6 +108,36 @@ function DshConversation({
 
 type AgentTimelineProps = Omit<ComponentProps<typeof AiElementsTimeline>, "transcript" | "hideActivity">;
 
+function CodexConversation({
+  tuiNotice, transcript, busy, lastAssistantId, session, activity, startedAt, showEmpty, experimentalArt
+}: {
+  tuiNotice: string;
+  transcript: TranscriptItem[];
+  busy: boolean;
+  lastAssistantId: string | null;
+  session: SessionInfo | null;
+  activity: { isWaitingForPermission?: boolean; statusText?: string | null; isWorking?: boolean } | null | undefined;
+  startedAt: number | null | undefined;
+  showEmpty: boolean;
+  experimentalArt: boolean;
+}): ReactNode {
+  return (
+    <>
+      {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
+      <CodexTranscript
+        transcript={transcript}
+        busy={busy}
+        lastAssistantId={lastAssistantId}
+        session={session}
+        activity={activity}
+        startedAt={startedAt}
+        showEmpty={showEmpty}
+        empty={<AgentEmptyState experimentalArt={experimentalArt} />}
+      />
+    </>
+  );
+}
+
 function LegacyConversation({
   renderer, tuiNotice, conversationStarted, busy, experimentalArt, transcript, responseTranscript,
   timelineProps, showResponse, scrollRef, onScroll
@@ -189,7 +220,7 @@ export function AgentPanel({
   const activeSession = session === undefined ? storeSession : session;
   const view = usePanel(activeSession?.workspace);
   const { busy, todos, transcript, sessionUsage, compactionBaseline, currentModel, turnStartedAt, assistantStatus } = view;
-  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "dsh";
+  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "codex";
   const { scrollRef, onScroll } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages);
   const panelRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -357,7 +388,19 @@ export function AgentPanel({
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
         <>
-          {renderer === "dsh" ? (
+          {renderer === "codex" ? (
+            <CodexConversation
+              tuiNotice={tuiNotice}
+              transcript={responseTranscript}
+              busy={busy}
+              lastAssistantId={lastAssistantId}
+              session={activeSession}
+              activity={assistantStatus}
+              startedAt={turnStartedAt}
+              showEmpty={!conversationStarted && !busy}
+              experimentalArt={experimentalArt}
+            />
+          ) : renderer === "dsh" ? (
             <DshConversation
               tuiNotice={tuiNotice}
               transcript={responseTranscript}

@@ -761,12 +761,13 @@ express a cross-component invariant or non-obvious state contract.
 | `BrowserPane` | `BrowserPane.tsx`, `use-browser-guest.ts`, `use-browser-tabs.ts` | Browser tab surface: a navigation row (back / forward / reload-or-stop, "Search or enter a URL" field that turns bare hosts into `https:` and everything else into a search) over a `<webview>` guest in the `vela-browser` partition. Guests are created lazily — a new tab is pure state with no guest at all — so opening one costs nothing, and a loading veil covers the frame until the page stops loading; `use-browser-guest` folds guest events into the browser slice |
 | `BrowserTabsProvider` | `browser-tabs-context.tsx`, `browser-store-provider.tsx` | Browser tab state lives outside the app store, split into a *state* context (tab list + active tab, consumed by the strip and panes) and a stable *actions* context (consumed by the rail, the editor and the store). That split is a responsiveness contract, not a detail: when the slices lived in the app store, opening or closing a tab re-rendered every store consumer (measured 644ms with nine editors open; 2ms after the split)
 | `EditorTabs` | `EditorTabs.tsx`, `editor-groups.ts` | Tab strip for the editor groups: tabs share the strip width (90px floor, 240px ceiling) and overflow past the floor moves into an "all open tabs" menu button; a preview tab (`preview: true`, italic) marks a single Explorer click as transient so the next preview replaces it, while reopening the file, editing it, or pinning it removes that marker; each tab resolves its owning group (drag source and selection target) through the strip's group lookup; owns the tab drag MIME and the editor-group identity helpers |
-| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; defaults to the DSH transcript and retains `?chat-renderer=old|new` as the legacy/comparison surfaces; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
+| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; defaults to the Codex transcript and retains `?chat-renderer=dsh|old|new` for the DSH, legacy, and comparison surfaces; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
 | `Composer` | `Composer.tsx` | Authoritative local prompt draft, attachments, keyboard dispatch and agent controls; takes `controls` (extra control-row slot, used for the session usage ring) and `overlay` (popover anchored to the input); completion and model-menu behavior have the owners below; one or two panels use a rounded input with a bottom toolbar; three or more Agent Mode panels use Split controls with writing and send beside a fixed options cell, which reveals attachment, agent, model and strength controls; the same draft and textarea survive compact layout changes |
 | `ComposerToolbar` | `ComposerToolbar.tsx` | Stateless attachment, agent, model, strength and send controls shared by the full composer and the revealed Split controls footer |
 | `AgentTui` | `AgentTui.tsx` | xterm view for the active runtime's PTY-backed TUI |
 | `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Legacy runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning; selected only by `?chat-renderer=old` |
-| DSH chat transcript | `dsh-chat/` | Default transcript: exact DeepSeek Harness Markdown primitives with frozen-block streaming, collapsed per-Turn process groups, DSH tool/reasoning rows, and floor-aware scrolling |
+| Codex chat transcript | `codex-chat/` | Default transcript: Codex layout, per-segment 16ms/96ms/0.7s fade reveal, worked-for activity divider, compact tool rows, and floor-aware scrolling |
+| DSH chat transcript | `dsh-chat/` | Opt-in (`?chat-renderer=dsh`): DeepSeek Harness Markdown primitives with frozen-block streaming, collapsed per-Turn process groups, DSH tool/reasoning rows, and floor-aware scrolling |
 | `OpenCodeTodoDock` | `OpenCodeTodoDock.tsx` | Structured todo/checklist state near the composer |
 | `AgentTray` | `AgentTray.tsx` | Collapsed agent-panel affordance and session activity indication |
 | `TerminalTray` | `TerminalTray.tsx` | Integrated terminal tabs backed by main-process `node-pty` |
@@ -838,11 +839,40 @@ Key cross-component invariants:
   TUI.
 - Workspace-dependent actions remain inert when no workspace is active.
 
+## Codex chat transcript (`codex-chat/`)
+
+`AgentPanel.tsx` defaults to this surface. It reproduces the Codex webview's
+transcript layout: one centered 48rem column on a 16px item rhythm,
+right-aligned prompts in a 5%-ink bubble (`max-width: 77%`, 16px radius,
+8px/12px padding), a hairline "Worked for …" activity divider, and the answer as
+full-width Markdown.
+
+`CodexMarkdown.tsx` re-renders the whole message on each committed delta — Codex
+does not freeze blocks or re-parse a tail. Arrival is made legible by
+`segment-fade.ts`, a direct port of Codex's fade timeline: ASCII text splits
+into alphanumeric runs with trailing punctuation attached; non-ASCII text
+splits on whitespace-led words. Each new segment fades from 0 to 1 over 0.7s
+while streaming (0.15s otherwise) with easing `cubic-bezier(.37,.55,.86,.88)`,
+scheduled 16ms apart on one shared timeline and capped 96ms ahead of now. An
+`animationend` settles the segment, so later re-renders never restart it.
+Reduced motion collapses the animation to 0s. Do not add typewriters, per-token
+timers, or block freezing here.
+
+`CodexTurn.tsx` reuses `process-model.ts` for the answer boundary. Process rows
+live behind the "Worked for {duration}" (or "Working for {elapsed}" while live)
+divider, which is the only entrance chrome. `CodexToolRow.tsx` is the compact
+tool row (glyph, title, one-line detail, status glyph, expandable payload);
+`CodexReasoning.tsx` is the reasoning disclosure.
+
+`CodexTranscript.tsx` owns its scrollport through the same floor-aware hook as
+the DSH surface. Do not add a second scroll owner in `AgentPanel` for the Codex
+branch.
+
 ## DSH chat transcript (`dsh-chat/`)
 
 `AgentPanel.tsx` selects the transcript with `?chat-renderer`; the default is
-`dsh`, `old` keeps `OpenCodeTimeline`, and `new` keeps the shadcn AI Elements
-comparison surface. The DSH surface is the product transcript, not a preview.
+`codex`, `dsh` keeps the DeepSeek Harness surface, `old` keeps
+`OpenCodeTimeline`, and `new` keeps the shadcn AI Elements comparison surface.
 
 `DshMarkdown.tsx` wraps the published
 `@deepseek-ai/dsh-client-ui-primitives` `MarkdownText` unchanged. While a

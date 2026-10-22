@@ -57,7 +57,8 @@ re-open information already established in the current task context.
 | Renderer store | `src/renderer/src/store.tsx` | UI state, concurrent sessions, backend event subscription |
 | Chat store | `src/renderer/src/chat-store.ts` | Authoritative per-session message/part state and transcript projection |
 | Streaming stack | `src/renderer/src/streaming.ts`, `session-activity.ts`, `assistant-status.ts` | Stream/session lifecycle and working status |
-| DSH transcript | `src/renderer/src/dsh-chat/` | Default agent transcript: exact DSH Markdown primitive, process folding, tool/reasoning rows, scroll owner |
+| Codex transcript | `src/renderer/src/codex-chat/` | Default agent transcript: Codex column/divider layout, per-segment fade reveal, compact tool/reasoning rows, scroll owner |
+| DSH transcript | `src/renderer/src/dsh-chat/` | Opt-in (`?chat-renderer=dsh`) DSH Markdown primitive, process folding, tool/reasoning rows |
 | Message queue | `src/renderer/src/message-queue.ts`, `messages/` | Native inbox follow-ups and local failure fallback |
 | Renderer components | `src/renderer/src/components/` | Sidebar, editor, agent panels, TUI, welcome, terminal |
 | Monaco setup | `src/renderer/src/monaco.ts` | Workers, theme, language mapping |
@@ -67,7 +68,7 @@ re-open information already established in the current task context.
 
 | Task or symptom | Read first | Likely implementation | Tests / validation |
 |---|---|---|---|
-| Agent response/stream/timeline is wrong | `docs/events.md`, relevant `docs/renderer.md` section | `chat-store.ts`, `streaming.ts`, `chat-stream.ts`, `store.tsx`, `dsh-chat/` | Tests/fixtures named by the routed docs; otherwise nearby stream/chat-state tests |
+| Agent response/stream/timeline is wrong | `docs/events.md`, relevant `docs/renderer.md` section | `chat-store.ts`, `streaming.ts`, `chat-stream.ts`, `store.tsx`, `codex-chat/`, `dsh-chat/` | Tests/fixtures named by the routed docs; otherwise nearby stream/chat-state tests |
 | Runtime/provider integration issue | `docs/architecture.md` runtime section, `docs/main.md` | `src/main/runtimes/`, `runtime-adapter.ts` | Runtime-adapter/provider tests or validation named by the routed docs |
 | IPC/API change | `docs/main.md`, `docs/preload.md`, `docs/shared.md` | main handler → preload wrapper → shared type → renderer caller | Contract/IPC/bridge tests named by those docs |
 | File watching/diff/baseline issue | `docs/architecture.md` diff section | `src/main/opencode.ts`, renderer store/editor state | Baseline/watch/diff tests or validation named by the architecture docs |
