@@ -194,7 +194,8 @@ export function CodexTurn({
 }) {
   const process = useMemo(() => turnProcess(turn, busy), [turn, busy]);
   const [workOpen, setWorkOpen] = useState(false);
-  const running = process.live.running;
+  const running = process.live.running || (busy && isLast && process.answer === null);
+  const showActivity = process.hasProcess || running;
   const open = running || workOpen;
   const streaming = busy && isLast && lastAssistantId !== null && process.answer?.item.id === lastAssistantId;
   const startedAt = turn.user?.createdAt ?? process.answer?.item.createdAt;
@@ -206,7 +207,7 @@ export function CodexTurn({
         </div>
       )}
       {process.events.map((item) => <TurnEvent item={item} key={item.id} />)}
-      {process.hasProcess && (
+      {showActivity && (
         <WorkDivider
           process={process}
           running={running}

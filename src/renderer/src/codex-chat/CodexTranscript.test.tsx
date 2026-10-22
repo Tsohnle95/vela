@@ -94,6 +94,12 @@ describe("CodexTranscript", () => {
     expect(container.querySelector(".dsh-scroll")).toBeNull();
   });
 
+  it("shows the working divider before the first tool starts", () => {
+    render([{ kind: "user", id: "user-1", text: "Go", createdAt: Date.now() - 2000 }], { busy: true });
+    expect(container.querySelector(".codex-work-label")?.textContent).toMatch(/^Working for /);
+    expect(container.querySelector(".codex-work")).not.toBeNull();
+  });
+
   it("keeps tool calls behind the activity divider until opened", () => {
     render([
       { kind: "user", id: "user-1", text: "Check it", createdAt: 0 },
