@@ -6,14 +6,8 @@
 </div>
 
 <div align="center">
-  <a href="https://tsohnle95.github.io/vela/showcase/">
-    <img src="resources/vela.png" alt="Vela with the repository explorer, code editor, and an agent panel open side by side. Click for the screenshot tour." width="1275">
-  </a>
+  <img src="resources/vela.png" alt="Vela with the repository explorer, code editor, and an agent panel open side by side." width="1275">
 </div>
-
-<p align="center">
-  <a href="https://tsohnle95.github.io/vela/showcase/">Screenshot tour — docked workspace · agent mode · dual agent mode →</a>
-</p>
 
 Vela is an open-source coding workbench built around the repository you open. Work directly in its files, bring an agent into the same workspace, and follow the work from the first prompt to the diff.
 
