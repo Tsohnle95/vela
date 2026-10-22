@@ -877,8 +877,19 @@ second scroll owner in `AgentPanel` for the DSH branch.
 
 `dsh-chat.css` is the token bridge: it maps the `--dsw-*`, `--dsh-*`, and
 `--shiki-*` variables consumed by the DSH primitives onto Vela's theme, then
-declares the transcript layout and row chrome. Keep DSH component CSS in the
-published package; do not copy it into `styles/`.
+declares the transcript layout and row chrome. The bridge intentionally uses
+Vela's legacy transcript scale and palette rather than DSH's defaults: 14px
+body at 1.6 line height, 17/15/13px headings at 600/600/500, 500 strongs,
+the 8px/12px user bubble, `--agent-chat-ink` text, `--text-dim` rows, and
+Vela's syntax colors. It must not adopt DSH's 14px/24px body, 700-weight
+headings, or DSH teal palette. Keep DSH component CSS in the published
+package; do not copy it into `styles/`.
+
+The published primitives bundle targets React 18 and marks its shimmer
+decoration with `inert=""`; the `postinstall` step
+`scripts/patch-dsh-primitives.mjs` rewrites only that attribute to the React 19
+boolean form. Re-running install must keep the implementation otherwise
+unchanged.
 
 ## Styles (`src/renderer/src/styles/`)
 

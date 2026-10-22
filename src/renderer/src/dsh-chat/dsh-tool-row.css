@@ -18,6 +18,9 @@
 
 .dsh-reasoning-row {
   overflow: hidden;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .dsh-reasoning-leading {
@@ -26,6 +29,8 @@
 
 .dsh-reasoning-title {
   font-weight: 400;
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .dsh-reasoning-separator {
@@ -42,7 +47,7 @@
   min-width: 0;
   overflow: hidden;
   font-size: 13px;
-  line-height: 24px;
+  line-height: 20px;
   white-space: nowrap;
 }
 
@@ -81,6 +86,7 @@
 
 .dsh-tool-row {
   overflow: hidden;
+  color: var(--text-dim);
 }
 
 .dsh-tool-leading {
@@ -88,7 +94,10 @@
 }
 
 .dsh-tool-title {
-  font-weight: 400;
+  color: var(--agent-chat-ink);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 21px;
 }
 
 .dsh-tool-separator {
@@ -104,8 +113,9 @@
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  font-size: 13px;
-  line-height: 24px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -122,11 +132,12 @@
   background: none;
   color: inherit;
   font: inherit;
-  font-size: 13px;
-  line-height: 24px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
   text-align: left;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   cursor: pointer;
 }
 
@@ -134,7 +145,7 @@
   flex: none;
   margin-left: 10px;
   font-family: var(--ds-font-family-code);
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: var(--text-faint);
   white-space: nowrap;
@@ -166,8 +177,8 @@
 .dsh-tool-task-description {
   margin: 0;
   color: var(--text-dim);
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 14px;
+  line-height: 1.5;
   white-space: pre-wrap;
 }
 
@@ -204,8 +215,8 @@
   background: none;
   color: var(--text-dim);
   font: inherit;
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 13px;
+  line-height: 20px;
   text-align: left;
   cursor: pointer;
 }
@@ -228,7 +239,7 @@
   border-radius: 14px;
   background: var(--bg-inset);
   color: var(--text-dim);
-  font: 11px/16px var(--ds-font-family-code);
+  font: 13px/20px var(--ds-font-family-code);
   white-space: pre-wrap;
 }
 
@@ -263,7 +274,7 @@
   min-width: 0;
   margin: 0;
   color: var(--text-dim);
-  font: 11px/16px var(--ds-font-family-code);
+  font: 13px/20px var(--ds-font-family-code);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
