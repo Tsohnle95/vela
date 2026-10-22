@@ -26,7 +26,7 @@ it("does not reprocess the window glass separately for each agent pane", () => {
   expect(panel.backgroundColor).toBe("rgba(0, 0, 0, 0)");
   // jsdom does not compute backdrop filters; the native smoke checks final paint.
   const rules = [...document.querySelector("style")!.sheet!.cssRules] as CSSStyleRule[];
-  const glass = rules.find((rule) => rule.selectorText === ':root[data-theme=kitty] .agent-panel');
+  const glass = rules.find((rule) => rule.selectorText?.split(',').some((selector) => selector.trim() === ':root[data-theme=kitty] .agent-panel'));
   expect(glass?.style.getPropertyValue("backdrop-filter")).toBe("none");
   expect(glass?.style.getPropertyValue("-webkit-backdrop-filter")).toBe("none");
   expect(panel.boxShadow).toBe("none");
@@ -36,4 +36,16 @@ it("keeps TUI controls above terminal cells", () => {
   mount();
   document.querySelector(".agent-panel")!.setAttribute("data-panel-mode", "tui");
   expect(getComputedStyle(document.querySelector(".agent-header")!).position).toBe("relative");
+});
+
+it("shares one transparent glass treatment between left chrome and workspace panes", () => {
+  mount();
+  const rules = [...document.querySelector("style")!.sheet!.cssRules] as CSSStyleRule[];
+  const glass = rules.find((rule) => rule.selectorText?.split(',').some((selector) => selector.trim() === ':root[data-theme=kitty] .activity-rail'));
+  for (const surface of ["activity-rail", "sidebar", "agent-panel", "editor-pane", "titlebar", "settings-page", "terminal-tray"]) {
+    expect(glass?.selectorText).toContain(`:root[data-theme=kitty] .${surface}`);
+  }
+  expect(glass?.style.getPropertyValue("background")).toBe("transparent");
+  expect(glass?.style.getPropertyValue("backdrop-filter")).toBe("none");
+  expect(glass?.style.getPropertyValue("box-shadow")).toBe("none");
 });

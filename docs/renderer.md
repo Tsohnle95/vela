@@ -911,8 +911,9 @@ the attached CLI view of the same session so OpenCode rereads that palette;
 it does not create a new agent session. CLI replacements wait for the previous
 launch and stop to finish; retired launch failures cannot dismiss the current
 TUI. Kitty Glass retains transparent xterm
-and workspace backgrounds in both interfaces. Agent panes do not reprocess the
-native window glass with separate backdrop filters, avoiding pane-dependent tints.
+and workspace backgrounds in both interfaces. The rail, sidebar, titlebar, editor, settings, terminal and agent panes share
+transparent surfaces without separate backdrop filters or panel shadows, so
+the native window owns one consistent glass treatment in both interfaces.
 Prism uses alpha-backed violet panels; Kitty Glass restores the
 transparent glass surfaces and terminal backgrounds of the earlier app, and
 Original Dark restores its warm charcoal palette. All appearances retain the

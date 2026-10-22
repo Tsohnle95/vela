@@ -135,6 +135,28 @@ app.whenReady().then(async()=>{
  for(const color of colors)assert.deepEqual(color,colors[0],'Uniform backdrop has the same tint in every pane');
  console.log('Glass paint',JSON.stringify({layers,colors}));
  await fs.writeFile(OUTPUT+'/kitty-uniform.png',paint.toPNG());
+ const leftGlass=[];
+ await run('document.querySelector("[data-panel-action=show-files]").click()');
+ for(const shellIndex of [0,1]) {
+  await run('document.querySelector("[data-panel-action=toggle-settings]").click()');
+  await run('[...document.querySelectorAll(".ui-choice-card")]['+shellIndex+'].click()');
+  await run('document.querySelector(".settings-close").click()');
+  for(const view of ['files','sessions']) {
+   await run('(()=>{const b=document.querySelector("[data-panel-action=show-'+view+']");if(b.getAttribute("aria-pressed")!=="true")b.click()})()');
+   await pause(200);
+   const points=await run('(()=>{const surfaces={rail:".activity-rail",sidebar:".sidebar",agent:".agent-panel",titlebar:".titlebar"};return Object.entries(surfaces).map(([name,selector])=>{const e=document.querySelector(selector),r=e.getBoundingClientRect(),c=getComputedStyle(e);return {name,background:c.backgroundColor,filter:c.backdropFilter,x:Math.floor(name==="titlebar"?r.left+r.width/2:r.left+6),y:Math.floor(name==="titlebar"?r.top+10:name==="rail"?r.top+r.height*.6:name==="sidebar"?r.bottom-70:r.top+60)}})})()');
+   for(const p of points){assert.equal(p.background,'rgba(0, 0, 0, 0)',p.name+' must use native glass');assert.equal(p.filter,'none',p.name+' must not refilter native glass')}
+   const image=await win.webContents.capturePage(),data=image.toBitmap(),width=image.getSize().width;
+   const pixels=points.map(p=>[...data.subarray((p.y*width+p.x)*4,(p.y*width+p.x)*4+4)]);
+   for(const pixel of pixels)assert.deepEqual(pixel,pixels[2],'Left chrome and agent pane must paint identical glass');
+   leftGlass.push({shell:shellIndex===0?'codex':'classic',view,points,pixels});
+   await fs.writeFile(OUTPUT+'/kitty-left-'+shellIndex+'-'+view+'.png',image.toPNG());
+  }
+ }
+ console.log('Left glass',JSON.stringify(leftGlass));
+ await run('document.querySelector("[data-panel-action=toggle-settings]").click()');
+ await run('document.querySelector(".ui-choice-card").click()');
+ await run('document.querySelector(".settings-close").click()');
  await run('document.documentElement.style.removeProperty("background")');
  await pause(100);
  await fs.writeFile(OUTPUT+'/kitty.png',(await win.webContents.capturePage()).toPNG());
@@ -148,7 +170,7 @@ app.whenReady().then(async()=>{
   assert.equal(brand.text,'Vela');assert.ok(brand.width>0);assert.notEqual(brand.display,'none');assert.equal(brand.topbar,false);assert.equal(brand.legacyText,'none');
   await fs.writeFile(OUTPUT+'/observatory-'+view+'.png',(await win.webContents.capturePage()).toPNG());
  }
- await fs.writeFile(OUTPUT+'/results.json',JSON.stringify({grid,chrome,expandedNarrow,settings,glass,layers,colors,errors},null,2));
+ await fs.writeFile(OUTPUT+'/results.json',JSON.stringify({grid,chrome,expandedNarrow,settings,glass,layers,colors,leftGlass,errors},null,2));
  assert.equal(errors.length,0,'Fixture must not log renderer errors: '+errors.join('\n'));
  console.log('Agent workspace regression passed');
  app.exit(0);
