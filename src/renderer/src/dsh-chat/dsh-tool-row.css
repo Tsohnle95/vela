@@ -1,0 +1,352 @@
+/*
+ * DSH reasoning, tool, and event rows. Kept separate from the transcript
+ * layout/token bridge so each owner stays below the module budget.
+ */
+
+/* Reasoning -------------------------------------------------------------- */
+
+.dsh-reasoning {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dsh-reasoning:not([data-expanded]) {
+  contain: size layout;
+  height: 24px;
+}
+
+.dsh-reasoning-row {
+  overflow: hidden;
+}
+
+.dsh-reasoning-leading {
+  flex-shrink: 0;
+}
+
+.dsh-reasoning-title {
+  font-weight: 400;
+}
+
+.dsh-reasoning-separator {
+  flex: none;
+  width: 2px;
+  height: 2px;
+  margin: 0 8px;
+  border-radius: 1px;
+  background: var(--text-faint);
+}
+
+.dsh-reasoning-summary {
+  flex: auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 24px;
+  white-space: nowrap;
+}
+
+.dsh-reasoning-summary-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dsh-reasoning-summary[data-streaming] {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+}
+
+.dsh-reasoning-summary[data-streaming] .dsh-reasoning-summary-text {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.dsh-reasoning:not([data-preview]) .dsh-reasoning-separator,
+.dsh-reasoning:not([data-preview]) .dsh-reasoning-summary {
+  display: none;
+}
+
+.dsh-reasoning-body {
+  min-width: 0;
+  padding: 4px 0 4px 22px;
+}
+
+/* Tool rows -------------------------------------------------------------- */
+
+.dsh-tool {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dsh-tool-row {
+  overflow: hidden;
+}
+
+.dsh-tool-leading {
+  flex-shrink: 0;
+}
+
+.dsh-tool-title {
+  font-weight: 400;
+}
+
+.dsh-tool-separator {
+  flex: none;
+  width: 2px;
+  height: 2px;
+  margin: 0 8px;
+  border-radius: 1px;
+  background: var(--text-faint);
+}
+
+.dsh-tool-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dsh-tool-summary[data-error] {
+  color: var(--red);
+}
+
+.dsh-tool-file-link {
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  line-height: 24px;
+  text-align: left;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.dsh-tool-diff-stat {
+  flex: none;
+  margin-left: 10px;
+  font-family: var(--ds-font-family-code);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.dsh-diff-added {
+  color: var(--green);
+}
+
+.dsh-diff-removed {
+  color: var(--red);
+}
+
+.dsh-tool-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 4px 0 4px 4px;
+}
+
+.dsh-tool-task {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.dsh-tool-task-description {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+
+.dsh-tool-action {
+  padding: 2px 10px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-hover);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.dsh-tool-action:hover {
+  background: var(--bg-active);
+  color: var(--text);
+}
+
+.dsh-tool-files {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dsh-tool-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dsh-tool-file-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.dsh-tool-patch {
+  max-height: 260px;
+  margin: 0;
+  padding: 12px 16px;
+  overflow: auto;
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-inset);
+  color: var(--text-dim);
+  font: 11px/16px var(--ds-font-family-code);
+  white-space: pre-wrap;
+}
+
+.dsh-io-card {
+  display: flex;
+  flex-direction: column;
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-inset);
+}
+
+.dsh-io-section {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 14px;
+  align-items: baseline;
+  max-height: 150px;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+
+.dsh-io-label {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  color: var(--text-faint);
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.dsh-io-text {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-dim);
+  font: 11px/16px var(--ds-font-family-code);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.dsh-io-text[data-error] {
+  color: var(--red);
+}
+
+.dsh-io-divider {
+  flex: none;
+  height: 0.5px;
+  background: var(--border);
+}
+
+.dsh-tool-subcalls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
+}
+
+/* Events ----------------------------------------------------------------- */
+
+.dsh-status-note {
+  padding: 2px 0;
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.dsh-status-note[data-tone="error"] {
+  color: var(--red);
+}
+
+.dsh-status-note[data-tone="success"] {
+  color: var(--green);
+}
+
+.dsh-error-text {
+  margin: 0;
+  color: var(--red);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+
+.dsh-turn-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-faint);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.dsh-turn-divider::before,
+.dsh-turn-divider::after {
+  flex: 1;
+  height: 0.5px;
+  background: var(--border);
+  content: "";
+}
+
+.dsh-compaction {
+  min-width: 0;
+}
+
+.dsh-compaction-body {
+  padding: 4px 0 4px 22px;
+}
+
+.dsh-context-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.dsh-context-label {
+  color: var(--text-faint);
+  font-size: 11px;
+  line-height: 18px;
+}
+

@@ -1,7 +1,8 @@
 import { AgentScrollArea, AgentStreamStatus } from "../ai-elements/AgentResponseViewport";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode, type RefObject } from "react";
 import { usePanel, useStore } from "../store";
 import { OpenCodeTimeline, PermissionPrompt } from "./OpenCodeTimeline";
+import { DshTranscript } from "../dsh-chat/DshTranscript";
 import { AiElementsTimeline } from "../ai-elements/AiElementsTimeline";
 import { AiElementsSurface } from "../ai-elements/AiElementsSurface";
 import { FormPrompt } from "./FormPrompt";
@@ -46,6 +47,100 @@ function savePanelMode(sessionID: string | undefined, mode: PanelMode): void {
   } catch {
     return;
   }
+}
+
+function AgentEmptyState({ experimentalArt }: { experimentalArt: boolean }): ReactNode {
+  return (
+    <div className="agent-empty">
+      {experimentalArt && <>
+        <img
+          className="agent-empty-art agent-empty-art-dark"
+          src={stationMark}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          decoding="async"
+        />
+        <img
+          className="agent-empty-art agent-empty-art-light"
+          src={lightStationMark}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          decoding="async"
+        />
+      </>}
+      <p>Tell the agent what to work on.</p>
+    </div>
+  );
+}
+
+function DshConversation({
+  tuiNotice, transcript, busy, lastAssistantId, session, activity, startedAt, showEmpty, experimentalArt
+}: {
+  tuiNotice: string;
+  transcript: TranscriptItem[];
+  busy: boolean;
+  lastAssistantId: string | null;
+  session: SessionInfo | null;
+  activity: { isWaitingForPermission?: boolean; statusText?: string | null; isWorking?: boolean } | null | undefined;
+  startedAt: number | null | undefined;
+  showEmpty: boolean;
+  experimentalArt: boolean;
+}): ReactNode {
+  return (
+    <>
+      {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
+      <DshTranscript
+        transcript={transcript}
+        busy={busy}
+        lastAssistantId={lastAssistantId}
+        session={session}
+        activity={activity}
+        startedAt={startedAt}
+        showEmpty={showEmpty}
+        empty={<AgentEmptyState experimentalArt={experimentalArt} />}
+      />
+    </>
+  );
+}
+
+type AgentTimelineProps = Omit<ComponentProps<typeof AiElementsTimeline>, "transcript" | "hideActivity">;
+
+function LegacyConversation({
+  renderer, tuiNotice, conversationStarted, busy, experimentalArt, transcript, responseTranscript,
+  timelineProps, showResponse, scrollRef, onScroll
+}: {
+  renderer: string;
+  tuiNotice: string;
+  conversationStarted: boolean;
+  busy: boolean;
+  experimentalArt: boolean;
+  transcript: TranscriptItem[];
+  responseTranscript: TranscriptItem[];
+  timelineProps: AgentTimelineProps;
+  showResponse: boolean;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  onScroll: () => void;
+}): ReactNode {
+  const legacy = renderer === "old";
+  return (
+    <>
+      <AgentScrollArea legacy={legacy} legacyRef={scrollRef} onLegacyScroll={onScroll} showResponse={showResponse}>
+        {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
+        {!conversationStarted && (legacy || !busy) && <AgentEmptyState experimentalArt={experimentalArt} />}
+        {legacy ? <OpenCodeTimeline {...timelineProps} transcript={transcript} /> : (
+          <div className="agent-response-stream" hidden={!showResponse} data-slot="session-turn-list" data-renderer={renderer}>
+            {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
+            <div>
+              <AiElementsSurface><AiElementsTimeline {...timelineProps} hideActivity transcript={responseTranscript} /></AiElementsSurface>
+            </div>
+          </div>
+        )}
+      </AgentScrollArea>
+      <AgentStreamStatus legacy={legacy} visible={showResponse} {...timelineProps} transcript={responseTranscript}/>
+    </>
+  );
 }
 
 export function AgentPanel({
@@ -94,7 +189,7 @@ export function AgentPanel({
   const activeSession = session === undefined ? storeSession : session;
   const view = usePanel(activeSession?.workspace);
   const { busy, todos, transcript, sessionUsage, compactionBaseline, currentModel, turnStartedAt, assistantStatus } = view;
-  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "new";
+  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "dsh";
   const { scrollRef, onScroll } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages);
   const panelRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -262,41 +357,33 @@ export function AgentPanel({
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
         <>
-          <AgentScrollArea legacy={renderer === "old"} legacyRef={scrollRef} onLegacyScroll={onScroll} showResponse={showResponse}>
-            {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
-            {!conversationStarted && !(renderer !== "old" && busy) && (
-              <div className="agent-empty">
-                {experimentalArt && <>
-                  <img
-                    className="agent-empty-art agent-empty-art-dark"
-                    src={stationMark}
-                    alt=""
-                    aria-hidden="true"
-                    draggable={false}
-                    decoding="async"
-                  />
-                  <img
-                    className="agent-empty-art agent-empty-art-light"
-                    src={lightStationMark}
-                    alt=""
-                    aria-hidden="true"
-                    draggable={false}
-                    decoding="async"
-                  />
-                </>}
-                <p>Tell the agent what to work on.</p>
-              </div>
-            )}
-            {renderer === "old" ? <OpenCodeTimeline {...timelineProps} transcript={transcript} /> : (
-              <div className="agent-response-stream" hidden={!showResponse} data-slot="session-turn-list" data-renderer={renderer}>
-                {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
-                <div>
-                  <AiElementsSurface><AiElementsTimeline {...timelineProps} hideActivity transcript={responseTranscript} /></AiElementsSurface>
-                </div>
-              </div>
-            )}
-          </AgentScrollArea>
-          <AgentStreamStatus legacy={renderer === "old"} visible={showResponse} {...timelineProps} transcript={responseTranscript}/>
+          {renderer === "dsh" ? (
+            <DshConversation
+              tuiNotice={tuiNotice}
+              transcript={responseTranscript}
+              busy={busy}
+              lastAssistantId={lastAssistantId}
+              session={activeSession}
+              activity={assistantStatus}
+              startedAt={turnStartedAt}
+              showEmpty={!conversationStarted && !busy}
+              experimentalArt={experimentalArt}
+            />
+          ) : (
+            <LegacyConversation
+              renderer={renderer}
+              tuiNotice={tuiNotice}
+              conversationStarted={conversationStarted}
+              busy={busy}
+              experimentalArt={experimentalArt}
+              transcript={transcript}
+              responseTranscript={responseTranscript}
+              timelineProps={timelineProps}
+              showResponse={showResponse}
+              scrollRef={scrollRef}
+              onScroll={onScroll}
+            />
+          )}
 
           <div data-component="session-prompt-dock">
             {interactivePrompts}

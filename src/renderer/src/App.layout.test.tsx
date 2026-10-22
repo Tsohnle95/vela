@@ -1390,6 +1390,7 @@ describe("Layout panel sizing", () => {
   });
 
   it("preserves an enlarged tray through subagent navigation and back", async () => {
+    window.history.replaceState(null, "", "/?chat-renderer=new");
     const parent = { ...info("/repo", 1), title: "Main agent" };
     const child = { ...info("/repo", 8), id: "session-child", parentID: parent.id, title: "Inspect renderer", agent: "explore" };
     const parentTranscript: TranscriptItem[] = [{
@@ -1462,6 +1463,7 @@ describe("Layout panel sizing", () => {
     });
     expect(container.querySelector(".agent-session-back")).toBeNull();
     expect(agentWidths()).toEqual([enlarged]);
+    window.history.replaceState(null, "", "/");
   });
 
   it("closing a quadrant tray restores the default side-by-side trays", async () => {

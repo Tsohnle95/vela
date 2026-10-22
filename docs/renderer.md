@@ -761,11 +761,12 @@ express a cross-component invariant or non-obvious state contract.
 | `BrowserPane` | `BrowserPane.tsx`, `use-browser-guest.ts`, `use-browser-tabs.ts` | Browser tab surface: a navigation row (back / forward / reload-or-stop, "Search or enter a URL" field that turns bare hosts into `https:` and everything else into a search) over a `<webview>` guest in the `vela-browser` partition. Guests are created lazily — a new tab is pure state with no guest at all — so opening one costs nothing, and a loading veil covers the frame until the page stops loading; `use-browser-guest` folds guest events into the browser slice |
 | `BrowserTabsProvider` | `browser-tabs-context.tsx`, `browser-store-provider.tsx` | Browser tab state lives outside the app store, split into a *state* context (tab list + active tab, consumed by the strip and panes) and a stable *actions* context (consumed by the rail, the editor and the store). That split is a responsiveness contract, not a detail: when the slices lived in the app store, opening or closing a tab re-rendered every store consumer (measured 644ms with nine editors open; 2ms after the split)
 | `EditorTabs` | `EditorTabs.tsx`, `editor-groups.ts` | Tab strip for the editor groups: tabs share the strip width (90px floor, 240px ceiling) and overflow past the floor moves into an "all open tabs" menu button; a preview tab (`preview: true`, italic) marks a single Explorer click as transient so the next preview replaces it, while reopening the file, editing it, or pinning it removes that marker; each tab resolves its owning group (drag source and selection target) through the strip's group lookup; owns the tab drag MIME and the editor-group identity helpers |
-| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
+| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; defaults to the DSH transcript and retains `?chat-renderer=old|new` as the legacy/comparison surfaces; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
 | `Composer` | `Composer.tsx` | Authoritative local prompt draft, attachments, keyboard dispatch and agent controls; takes `controls` (extra control-row slot, used for the session usage ring) and `overlay` (popover anchored to the input); completion and model-menu behavior have the owners below; one or two panels use a rounded input with a bottom toolbar; three or more Agent Mode panels use Split controls with writing and send beside a fixed options cell, which reveals attachment, agent, model and strength controls; the same draft and textarea survive compact layout changes |
 | `ComposerToolbar` | `ComposerToolbar.tsx` | Stateless attachment, agent, model, strength and send controls shared by the full composer and the revealed Split controls footer |
 | `AgentTui` | `AgentTui.tsx` | xterm view for the active runtime's PTY-backed TUI |
-| `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning |
+| `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Legacy runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning; selected only by `?chat-renderer=old` |
+| DSH chat transcript | `dsh-chat/` | Default transcript: exact DeepSeek Harness Markdown primitives with frozen-block streaming, collapsed per-Turn process groups, DSH tool/reasoning rows, and floor-aware scrolling |
 | `OpenCodeTodoDock` | `OpenCodeTodoDock.tsx` | Structured todo/checklist state near the composer |
 | `AgentTray` | `AgentTray.tsx` | Collapsed agent-panel affordance and session activity indication |
 | `TerminalTray` | `TerminalTray.tsx` | Integrated terminal tabs backed by main-process `node-pty` |
@@ -836,6 +837,48 @@ Key cross-component invariants:
   pointer events, carries no text alternative, and is absent from the embedded
   TUI.
 - Workspace-dependent actions remain inert when no workspace is active.
+
+## DSH chat transcript (`dsh-chat/`)
+
+`AgentPanel.tsx` selects the transcript with `?chat-renderer`; the default is
+`dsh`, `old` keeps `OpenCodeTimeline`, and `new` keeps the shadcn AI Elements
+comparison surface. The DSH surface is the product transcript, not a preview.
+
+`DshMarkdown.tsx` wraps the published
+`@deepseek-ai/dsh-client-ui-primitives` `MarkdownText` unchanged. While a
+message streams it freezes every top-level mdast block except the trailing
+two and re-parses only the source tail, so a chunk append cannot remount or
+reflow earlier prose. There is no typewriter, per-word reveal, or opacity
+animation; the text shown after a render is the accumulated model text. The
+settled arm swaps to the math-enabled grammar through the same component.
+`MarkdownDelegateProvider` supplies local-file and HTTP(S) navigation.
+
+`process-model.ts` owns the answer boundary. The final answer is the trailing
+text of the last assistant step; a later tool-only step means the turn has no
+answer. Everything before that boundary, plus reasoning in the answer step,
+is process. A completed successful turn folds process behind the DSH
+`Completed in …` row. Completed turns with an error or interruption stay open.
+The process group itself is a second disclosure: its header is visible while
+the turn is live, and its body stays collapsed until the reader opens it.
+This is the default standard presentation — do not add entrance motion or
+per-tool reveal timers.
+
+`DshToolRow.tsx` renders the DSH 24px row grammar (leading icon, title, dot,
+one-line summary, hover chevron) with lazily mounted bodies. Shell tools use
+`TerminalBlock`; edit/write tools with both sides use `DiffBlock`; other tools
+use the IN/OUT card. `DshReasoning.tsx` ports DSH's first-line summary,
+latest-completed-paragraph preview, collapse state, and compact Markdown body.
+
+`DshTranscript.tsx` owns its scrollport. It follows the floor only while the
+reader is at the floor (25px), disables native scroll anchoring only in that
+state, restores a per-workspace position on remount, and exposes a
+back-to-bottom control after the reader moves away. Do not reintroduce a
+second scroll owner in `AgentPanel` for the DSH branch.
+
+`dsh-chat.css` is the token bridge: it maps the `--dsw-*`, `--dsh-*`, and
+`--shiki-*` variables consumed by the DSH primitives onto Vela's theme, then
+declares the transcript layout and row chrome. Keep DSH component CSS in the
+published package; do not copy it into `styles/`.
 
 ## Styles (`src/renderer/src/styles/`)
 

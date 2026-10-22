@@ -826,7 +826,8 @@
         "src/renderer/src/components/OpenCodeTool.tsx",
         "src/renderer/src/components/TimelineProse.tsx",
         "src/renderer/src/ai-elements/AiElementsTimeline.tsx",
-        "src/renderer/src/ai-elements/adapters.ts"
+        "src/renderer/src/ai-elements/adapters.ts",
+        "src/renderer/src/dsh-chat/"
       ]
     },
     {

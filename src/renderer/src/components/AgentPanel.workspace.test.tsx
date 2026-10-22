@@ -82,7 +82,7 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   return { promise, resolve };
 }
 
-describe.each(["old", "new"])("%s renderer with original panel and composer", (renderer) => {
+describe.each(["old", "new", "dsh"])("%s renderer with original panel and composer", (renderer) => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -120,7 +120,7 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
   it("retains the original input and shell without suggested prompts", async () => {
     await act(async () => root.render(<AgentPanel />));
     expect(container.querySelector(".agent-panel > .agent-header")).not.toBeNull();
-    expect(container.querySelector(".agent-panel .agent-scroll")).not.toBeNull();
+    expect(container.querySelector(".agent-panel .agent-scroll, .agent-panel .dsh-scroll")).not.toBeNull();
     expect(container.querySelector('[data-component="session-prompt-dock"] .composer')).not.toBeNull();
     expect(container.querySelector('.composer-selector.agent')).not.toBeNull();
     expect(container.querySelector('.composer-selector.model')).not.toBeNull();
@@ -245,6 +245,10 @@ describe.each(["old", "new"])("%s renderer with original panel and composer", (r
       expect(container.querySelector<HTMLElement>(".agent-response-stream")?.hidden).toBe(false);
       expect(container.querySelector(".agent-empty")).toBeNull();
       expect(container.querySelector("[data-agent-stream-status] [data-ai-elements-surface]")?.shadowRoot?.querySelector('[data-ai-activity]')?.textContent).toContain("Running command");
+    }
+    if(renderer==="dsh") {
+      expect(container.querySelector(".agent-empty")).toBeNull();
+      expect(container.querySelector(".dsh-running")?.textContent).toContain("Deep diving");
     }
   });
 

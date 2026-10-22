@@ -12,6 +12,13 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
+    server: {
+      deps: {
+        // DSH's published packages ship CSS Modules as real imports; let Vite
+        // transform them instead of Node's external ESM loader.
+        inline: [/@deepseek-ai\//]
+      }
+    },
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
