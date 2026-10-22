@@ -1,71 +1,68 @@
 <div align="center">
   <img src="resources/icon.png" width="88" alt="Vela">
   <h1>Vela</h1>
-  <p><strong>Agent Development Environment</strong></p>
-  <p>Your repository, editor, terminal, agent, and change review—together on one desktop.</p>
+  <p>A desktop app for coding with an AI agent.</p>
 </div>
 
 <div align="center">
   <img src="resources/vela.png" alt="Vela with the repository explorer, code editor, and an agent panel open side by side." width="1275">
 </div>
 
-Vela is an open-source coding workbench built around the repository you open. Work directly in its files, bring an agent into the same workspace, and follow the work from the first prompt to the diff.
+Vela puts the file tree, editor, terminal, and agent chat in one window. Open a folder, ask the agent for a change, check the diff, and run the project without jumping between apps.
 
-## One workspace for the whole coding loop
+It's an Electron app: React and Monaco in the renderer, Node in the main process. Agent sessions run through OpenCode V2.
 
-- **Explore and edit.** Browse the project, work in the Monaco editor with tabs and autosave, and open a single file or a full repository.
-- **Work with an agent.** Use the built-in OpenCode panel to follow streamed responses, reasoning, tool activity, todos, and permission requests. Choose from the models and agents available through OpenCode, attach files, reference workspace files with `@`, and queue or steer follow-ups.
-- **Run the project.** Use Vela’s integrated terminal from the active workspace, or switch an agent panel to the OpenCode TUI.
-- **Review the change.** Vela surfaces workspace file changes it observes. When it knows a file’s starting content, open a Monaco diff; when it does not, the file stays marked as observed rather than showing a guessed diff. Changes are observed, not attributed to a particular tool or person.
+## What it does
 
-## Agent Mode
+**Browse and edit.** Open a single file or a whole repository. Monaco gives you tabs, autosave, and the usual editing tools.
 
-Spread out when a task benefits from parallel work. Agent Mode arranges up to eight concurrent session panels in a resizable workspace. Each panel keeps its own session and workspace context, so you can move between agent work without losing your place in the code.
+**Work with an agent.** The agent panel runs an OpenCode session. Responses stream in with reasoning and tool calls. You can choose the model and agent, attach files, reference workspace files with `@`, and queue a follow-up while the agent is still working.
 
-## OpenCode V2
+**Run agents side by side.** Agent mode tiles up to eight sessions in one workspace. Each panel keeps its own session and context.
 
-OpenCode V2 is the only runtime enabled in Vela today. Vela connects to a compatible OpenCode service or starts one through the `opencode` CLI; its available models and agents come from that runtime. DeepSeek Harness code remains in the repository as dormant source and is not selectable in the app. Other runtimes are not available yet.
+**Use the terminal.** Vela has an integrated terminal for the current workspace, and an agent panel can switch to the OpenCode TUI.
 
-## Mobile companion
+**See what changed.** Vela watches the workspace and lists the files touched during the session. When it has a file's starting contents it shows a real diff. When it doesn't, the file is marked as observed instead of showing a guessed diff.
 
-Pair the optional mobile companion from **Settings → Mobile Setup**. Keep Vela Desktop open while using the phone; when the companion server is connected to the shared OpenCode service, both can access the same sessions. See [Connecting the mobile companion](docs/operations.md#connecting-the-mobile-companion).
+**Use your phone.** Pair the mobile companion from Settings → Mobile Setup and use the same sessions while the desktop app is open.
 
-## Get started
+## Setup
 
-### Requirements
+You need:
 
-- Node 22.23.2 or later within the Node 22 release line
-- OpenCode V2 on your `PATH`, or a compatible OpenCode service already running
-- macOS for the most complete and validated experience; development launch is also supported on Linux and Windows
+- Node 22.23.2 or newer on the 22.x line
+- npm
+- `opencode` V2 on your `PATH`. Vela connects to a running service, or starts one with `opencode serve --service`.
+- macOS for the best-tested experience. Linux and Windows work for development, but get less validation.
 
-### Run from source
+Run it from source:
 
 ```sh
 npm install
 npm run dev
 ```
 
-Open a folder from Vela to create a workspace session. Vela discovers a compatible OpenCode service or starts one using the installed CLI.
+Open a folder in the app to start a workspace session.
 
-### Build and install
+Build it:
 
 ```sh
-npm run build          # compile and launch
-npm run build:compile  # compile only
-npm start              # launch the existing build
-npm run pack           # package Vela.app on macOS
-npm run install-app    # build, package, and install to /Applications (macOS)
+npm run build         # compile and launch
+npm run build:compile # compile only, into out/
+npm start             # launch the existing build
+npm run pack          # package Vela.app for macOS
+npm run install-app   # build, package, and install to /Applications
 ```
 
-## Contributing
+## Checks
 
 ```sh
 npm test
-npm run check
+npm run typecheck
+npm run check          # typecheck, tests, docs, architecture, compile
+npm run test:platform  # native launcher, PTY, and filesystem checks
 ```
 
-`npm run check` runs TypeScript checks, the Vitest suite, documentation validation, and a production compile. macOS is the primary GUI validation target; Linux and Windows also receive launcher and terminal smoke coverage.
+## Docs
 
-## Project docs
-
-[Architecture](docs/architecture.md) · [Walkthrough](docs/walkthrough.md) · [Events](docs/events.md) · [Main process](docs/main.md) · [Preload bridge](docs/preload.md) · [Renderer](docs/renderer.md) · [Shared types](docs/shared.md) · [Operations](docs/operations.md)
+[Architecture](docs/architecture.md) · [Main process](docs/main.md) · [Renderer](docs/renderer.md) · [Events](docs/events.md) · [Operations](docs/operations.md)
