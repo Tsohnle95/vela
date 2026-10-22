@@ -9,6 +9,7 @@ import '@vscode/codicons/dist/codicon.css';
 installComparisonBridge();
 const panels=Array.from({length:8},(_,i)=>({id:'fixture-'+i,title:['Layout','Runtime','Tests','Docs','Editor','Themes','Session','Review'][i],directory:'/fixture/'+['layout','runtime','tests','docs','editor','themes','session','review'][i],runtimeID:'opencode',workspace:{id:(i+1)+'1111111-1111-4111-8111-111111111111',generation:i+1}}));
 const listeners=new Set();
+window.fixtureSent=[];
 const empty=async()=>[];
 const history=id=>[{kind:'user',id:id+'-user',text:'Inspect the panel and verify the smallest useful change.'},{kind:'assistant',id:id+'-assistant',messageID:id+'-assistant',completed:true,parts:[{kind:'text',id:id+'-text',text:Array.from({length:12},(_,i)=>'Step '+(i+1)+'. The conversation remains visible while the input stays at the bottom. Verify the source behavior and preserve the current session.').join('\n\n'),complete:true}]}];
 Object.assign(window.vela,{
@@ -17,15 +18,16 @@ Object.assign(window.vela,{
  reportUnsavedEditorFiles:async()=>{},setAppearance:async()=>{},
  sessions:async()=>panels.map(p=>({...p,time:{created:Date.now(),updated:Date.now()}})),
  models:async()=>[{id:'fixture-model',providerID:'fixture',name:'Example model',variants:['low','high']}],
- sessionSelection:async()=>({model:{id:'fixture-model',providerID:'fixture'},variant:'high',agentID:'build'}),
+ sessionSelection:async()=>({model:{id:'fixture-model',providerID:'fixture',variant:'high'},agent:{id:'build',name:'Build'}}),
  agents:async()=>[{id:'build',name:'Build'}],
  openSessionById:async id=>({session:panels.find(p=>p.id===id),transcript:history(id),todos:[],usage:null}),
  sessionTranscript:async (_workspace,id)=>({transcript:history(id??'fixture'),todos:[]}),
+ prompt:async (workspace,text,files)=>{const id=panels.find(p=>p.workspace.id===workspace.id)?.id??'fixture';window.fixtureSent.push({workspace,text,files});return {transcript:[...history(id),{kind:'user',id:id+'-sent',text}],todos:[]}},
  terminalList:empty,appStylesState:async()=>null,sassWatchState:undefined,setSassWatch:undefined,
 });
 window.vela=new Proxy(window.vela,{get:(target,key)=>key in target?target[key]:String(key).startsWith("on")?()=>()=>{}:async()=>null});
 window.fixturePanels=panels;
-window.fixtureReplay=()=>{for(const panel of panels){for(const event of replayEvents('markdown','Inspect the panel')){const msg={kind:'event',workspace:panel.workspace,event:{...event,data:{...event.data,sessionID:panel.id}}};for(const listener of listeners)listener(msg);}}};
+window.fixtureReplay=()=>{for(const panel of panels){for(const event of replayEvents('markdown','Inspect the panel')){const msg={kind:'event',workspace:panel.workspace,type:event.type,data:{...event,id:panel.id+'-'+event.id,created:Date.now(),data:{...event.data,sessionID:panel.id}}};for(const listener of listeners)listener(msg);}for(const listener of listeners)listener({kind:'event',workspace:panel.workspace,type:'session.model.selected',data:{id:'model-'+panel.id,created:Date.now(),data:{sessionID:panel.id,model:{id:'fixture-model',providerID:'fixture',variant:'high'}}}});for(const listener of listeners)listener({kind:'event',workspace:panel.workspace,type:'session.idle',data:{id:'idle-'+panel.id,created:Date.now(),data:{sessionID:panel.id}}});}};
 window.localStorage.setItem('vela.theme',new URLSearchParams(location.search).get('appearance')??'codex-dark');
 window.localStorage.setItem('vela.ui',new URLSearchParams(location.search).get('shell')??'codex');
 createRoot(document.getElementById('root')).render(React.createElement(App));

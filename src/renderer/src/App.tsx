@@ -14,7 +14,7 @@ import { SettingsPage } from "./components/SettingsPage";
 import { SettingsSidebar, type SettingsSection } from "./components/SettingsSidebar";
 import { protectEditorUnload } from "./editor-close-guard";
 import { ThemeProvider } from "./theme";
-import { agentPanelGrid, panelSlotFor, distributePanelSlots, MAX_AGENT_PANELS, AGENT_DEFAULT_W, AGENT_MIN_W, EDITOR_MIN_VISIBLE_W, type PanelSlot } from "./agent-panels";
+import { agentPanelGridSlot, panelSlotFor, distributePanelSlots, MAX_AGENT_PANELS, AGENT_DEFAULT_W, AGENT_MIN_W, EDITOR_MIN_VISIBLE_W, type PanelSlot } from "./agent-panels";
 import { PanelColumn } from "./layout/PanelColumn";
 import { sidebarViewVisible } from "./layout/rail";
 import { useDragResize, useTitlebarTabsOffset, useTrayHeight } from "./layout/panel-interactions";
@@ -138,6 +138,9 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
     : Math.max(0, winW - sideShown - (sideOpen ? 1 : 0));
 
   useLayoutEffect(() => {
+    // Settings borrows sidebar space; its hidden workspace size must not clamp saved panels.
+    // Re-measure on return so actual window resizes still constrain the workspace.
+    if (settingsOpen) return;
     const area = workspaceAreaRef.current;
     if (!area) return;
     const measure = (): void => {
@@ -269,24 +272,14 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
       const gridIDs = [...panels].reverse()
         .map((panel) => panel.workspace.id)
         .filter((id) => openIDs.includes(id));
-      const { columns, rows } = agentPanelGrid(gridIDs.length);
-      const base = Math.max(AGENT_MIN_W, Math.floor(avail / columns));
       setSlots((slots) => {
         const next = { ...slots };
         gridIDs.forEach((id, index) => {
-          const column = index % columns;
-          const row = Math.floor(index / columns);
           next[id] = {
-            ...(next[id] ?? { open: true, width: base, left: 0, top: 0, height: 100 }),
+            ...next[id],
             open: true,
-            width: gridIDs.length === 1
-              ? AGENT_DEFAULT_W
-              : column === columns - 1
-                ? Math.max(AGENT_MIN_W, avail - base * (columns - 1))
-                : base,
-            left: column * base,
-            top: row * (100 / rows),
-            height: 100 / rows
+            ...agentPanelGridSlot(gridIDs.length, index, avail),
+            ...(gridIDs.length === 1 ? { width: AGENT_DEFAULT_W } : {})
           };
         });
         return next;
@@ -386,9 +379,10 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
     }
   );
 
+  const visibleSideOpen = settingsOpen || sideOpen;
   const cols = [
-    sideOpen ? `${sideW}px` : "0px",
-    sideOpen ? "1px" : "0px",
+    visibleSideOpen ? `${sideW}px` : "0px",
+    visibleSideOpen ? "1px" : "0px",
     "minmax(0,1fr)"
   ].join(" ");
 
@@ -532,9 +526,7 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
   };
 
   const openSettings = (): void => {
-    setSidebarOpen(true);
     setSettingsSection("appearance");
-    setChangesOpen(false);
     setSettingsOpen(true);
   };
 
@@ -585,7 +577,7 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
 
       <div
         ref={mainRowRef}
-        className={sideOpen ? "main-row" : "main-row sidebar-closed"}
+        className={visibleSideOpen ? "main-row" : "main-row sidebar-closed"}
         style={{ "--pane-columns": cols } as CSSProperties}
       >
         <ActivityRail
@@ -602,7 +594,7 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
           onToggleChanges={() => { setSettingsOpen(false); setChangesOpen((value) => !value); }}
           onToggleSettings={() => settingsOpen ? setSettingsOpen(false) : openSettings()}
         />
-        <div className={`sidebar-slot ${sideOpen ? "" : "collapsed"}`}>
+        <div className={`sidebar-slot ${visibleSideOpen ? "" : "collapsed"}`}>
           {settingsOpen ? <SettingsSidebar
             section={settingsSection}
             onSectionChange={setSettingsSection}
@@ -617,7 +609,7 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
             tab={sideTab}
           />}
         </div>
-        <div className={`divider ${sideOpen ? "" : "collapsed"}`} onMouseDown={sideDrag} style={{ pointerEvents: sideOpen ? undefined : "none" }} />
+        <div className={`divider ${visibleSideOpen ? "" : "collapsed"}`} onMouseDown={sideDrag} style={{ pointerEvents: sideOpen && !settingsOpen ? undefined : "none" }} />
         <div className="workspace-host" ref={workspaceHostRef}>
           <div
           ref={workspaceAreaRef}

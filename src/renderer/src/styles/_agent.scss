@@ -26,6 +26,25 @@
   border-bottom: 1px solid var(--border);
 }
 
+// GUI chrome overlays the transcript instead of reserving a clipped top row.
+.agent-panel[data-panel-mode="gui"] .agent-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: max-content;
+  max-width: 100%;
+  z-index: 80;
+  border-bottom: 0;
+}
+
+.agent-panel[data-panel-mode="gui"] {
+  --agent-response-right: 48px;
+}
+
+.agent-panel[data-panel-mode="gui"] > .agent-scroll {
+  padding-right: 48px;
+}
+
 .agent-orb {
   display: grid;
   place-items: center;

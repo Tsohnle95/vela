@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePanel, useStore } from "../store";
 import type { PromptFile, SessionInfo } from "@shared/types";
 import { droppedFilePaths, isExternalFileDrag } from "../drop";
-import { IconArrowUp, IconAdd, IconCheck, IconChevronDown, IconFile, IconGitBranch, IconImage, IconStop, IconTerminal } from "./icons";
+import { IconArrowUp, IconCheck, IconFile, IconImage, IconStop, IconTerminal } from "./icons";
 import { QueuedMessageChips } from "./QueuedMessageChips";
 import { buildPromptFiles, useComposerCompletions } from "./composer-completions";
 import { ComposerModelMenu, formatVariant, useComposerModels } from "./ComposerModelMenu";
+import { ComposerToolbar } from "./ComposerToolbar";
 import { useMenuDismiss } from "./use-menu-dismiss";
 
 type MenuKind = "model" | "agent" | null;
@@ -19,122 +20,7 @@ function isImagePath(path: string): boolean {
   return IMAGE_EXTENSIONS.has(name.slice(dot + 1).toLowerCase());
 }
 
-type ComposerToolbarProps = {
-  supportsAttachments: boolean;
-  attachmentInputRef: RefObject<HTMLInputElement | null>;
-  addAttachmentPaths: (paths: string[]) => void;
-  agentName?: string;
-  agentMenuOpen: boolean;
-  toggleAgentMenu: () => void;
-  modelName: string;
-  modelMenuOpen: boolean;
-  toggleModelMenu: () => void;
-  responseStrength: string;
-  showResponseStrength: boolean;
-  strengthMenuOpen: boolean;
-  toggleStrengthMenu: () => void;
-  controls?: ReactNode;
-  busy: boolean;
-  statusText?: string | null;
-  canSend: boolean;
-  onSend: () => void;
-  onStop: () => void;
-};
-
-function ComposerToolbar({
-  supportsAttachments,
-  attachmentInputRef,
-  addAttachmentPaths,
-  agentName,
-  agentMenuOpen,
-  toggleAgentMenu,
-  modelName,
-  modelMenuOpen,
-  toggleModelMenu,
-  responseStrength,
-  showResponseStrength,
-  strengthMenuOpen,
-  toggleStrengthMenu,
-  controls,
-  busy,
-  statusText,
-  canSend,
-  onSend,
-  onStop
-}: ComposerToolbarProps): ReactNode {
-  const sendTitle = busy ? statusText ?? "Stop the agent" : canSend ? "Send (Enter)" : "Type a prompt first";
-
-  return (
-    <div className="composer-toolbar">
-      <div className="composer-chips composer-toolbar-start">
-        {supportsAttachments && (
-          <>
-            <input
-              ref={attachmentInputRef}
-              className="composer-file-input"
-              type="file"
-              multiple
-              hidden
-              onChange={(event) => {
-                addAttachmentPaths([...event.currentTarget.files ?? []]
-                  .map((file) => window.vela.getPathForFile(file))
-                  .filter(Boolean));
-                event.currentTarget.value = "";
-              }}
-            />
-            <button className="composer-attach" title="Attach files" aria-label="Attach files" onClick={() => attachmentInputRef.current?.click()}>
-              <IconAdd />
-            </button>
-          </>
-        )}
-        <button
-          className={`composer-selector agent ${agentMenuOpen ? "open" : ""}`}
-          title="Change agent"
-          aria-label={`Change agent${agentName ? `: ${agentName}` : ""}`}
-          onClick={toggleAgentMenu}
-        >
-          <IconGitBranch />
-          <span>{agentName ?? "Agent"}</span>
-          <IconChevronDown />
-        </button>
-      </div>
-      <div className="composer-actions composer-toolbar-end">
-        <button
-          className={`composer-selector model ${modelMenuOpen ? "open" : ""}`}
-          title="Change model and response strength"
-          aria-label={`Change model: ${modelName}`}
-          onClick={toggleModelMenu}
-        >
-          <span>{modelName}</span>
-          <IconChevronDown />
-        </button>
-        {showResponseStrength && (
-          <button
-            className={`composer-selector strength ${strengthMenuOpen ? "open" : ""}`}
-            title="Change response strength"
-            aria-label={`Change response strength: ${responseStrength}`}
-            onClick={toggleStrengthMenu}
-          >
-            <span>{responseStrength}</span>
-            <IconChevronDown />
-          </button>
-        )}
-        {controls}
-        <button
-          className={`composer-send ${busy ? "stop" : ""}`}
-          title={sendTitle}
-          aria-label={busy ? "Stop the agent" : "Send prompt"}
-          disabled={!busy && !canSend}
-          onClick={busy ? onStop : onSend}
-        >
-          {busy ? <IconStop /> : <IconArrowUp />}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export function Composer({ session, controls, overlay }: { session?: SessionInfo | null; controls?: ReactNode; overlay?: ReactNode }): ReactNode {
+export function Composer({ session, controls, overlay, compact = false }: { compact?: boolean; session?: SessionInfo | null; controls?: ReactNode; overlay?: ReactNode }): ReactNode {
   const store = useStore();
   const {
     switchModel,
@@ -157,6 +43,7 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
   const currentModel = activeSession ? view.currentModel : store.lastModel ?? null;
   const [input, setInput] = useState("");
   const [files, setFiles] = useState<{ path: string; name: string }[]>([]);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const [menu, setMenu] = useState<MenuKind>(null);
   const [notice, setNotice] = useState("");
   const modelState = useComposerModels(models, currentModel, switchModel, workspace, () => setMenu(null));
@@ -167,12 +54,14 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const composerRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLButtonElement>(null);
   const canSend = input.trim().length > 0 || files.length > 0;
   const variantLabel = currentModel?.variant
     ? formatVariant(currentModel.variant)
     : (currentModel?.variants?.length ?? 0) > 0 ? "Auto" : "";
 
-  useMenuDismiss(Boolean(menu), composerRef, useCallback(() => setMenu(null), []));
+  useMenuDismiss(Boolean(menu) || optionsOpen, composerRef, useCallback(() => { setMenu(null); setOptionsOpen(false); }, []));
+  useEffect(() => { setMenu(null); setOptionsOpen(false); }, [compact]);
 
   const { completion, setCompletion, applyCompletion, updateCompletion } = useComposerCompletions({
     workspace, input, mentions, inputRef, setInput, setMentions, runCommand, setNotice, supportsCommands, supportsAttachments
@@ -317,8 +206,17 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
 
   return (
     <div
-      className="composer"
+      className={`composer${compact ? " composer-split" : ""}`}
+      data-composer-layout={compact ? "split-controls" : undefined}
       ref={composerRef}
+      onKeyDown={(event) => {
+        if (!compact || !optionsOpen || event.key !== "Escape" || event.defaultPrevented) return;
+        event.preventDefault();
+        event.stopPropagation();
+        setMenu(null);
+        setOptionsOpen(false);
+        optionsRef.current?.focus();
+      }}
     >
       {files.length > 0 && (
         <div className="composer-attachments">
@@ -414,7 +312,19 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
           }}
         />
         {overlay}
-        <ComposerToolbar
+        {compact && <>
+          <button
+            className={`composer-send composer-split-send ${busy ? "stop" : ""}`}
+            title={busy ? assistantStatus?.statusText ?? "Stop the agent" : "Send (Enter)"}
+            aria-label={busy ? "Stop the agent" : "Send prompt"}
+            disabled={!busy && !canSend}
+            onClick={busy ? () => void stop(workspace ?? undefined) : send}
+          >{busy ? <IconStop /> : <IconArrowUp />}</button>
+          <button ref={optionsRef} className="composer-options-toggle" aria-label="Prompt options" aria-expanded={optionsOpen}
+            onClick={() => { setOptionsOpen(!optionsOpen); setMenu(null); }}>⋮</button>
+        </>}
+        {(!compact || optionsOpen) && <ComposerToolbar
+          hideSend={compact}
           supportsAttachments={supportsAttachments}
           attachmentInputRef={attachmentInputRef}
           addAttachmentPaths={addAttachmentPaths}
@@ -434,7 +344,7 @@ export function Composer({ session, controls, overlay }: { session?: SessionInfo
           canSend={canSend}
           onSend={send}
           onStop={() => void stop(workspace ?? undefined)}
-        />
+        />}
       </div>
 
       {notice && <div className="composer-notice">{notice}</div>}

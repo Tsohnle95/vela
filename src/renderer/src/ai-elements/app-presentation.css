@@ -59,4 +59,5 @@
 
 [data-ai-elements-content] {
   padding-bottom: var(--agent-response-bottom, 1.5rem);
+  padding-right: var(--agent-response-right, 2rem);
 }

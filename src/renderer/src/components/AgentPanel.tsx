@@ -311,7 +311,7 @@ export function AgentPanel({
               </div>
             )}
             <OpenCodeTodoDock todos={todos} />
-            <Composer session={activeSession} />
+            <Composer session={activeSession} compact={compactComposer} />
           </div>
         </>
       )}

@@ -537,8 +537,10 @@ light themes, and checks titlebar visibility during Changes review.
 
 With `npm run chat:compare` serving the repository, run
 `node scripts/agent-workspace-smoke.mjs` to exercise the actual app grid through
-eight panels, compact composer geometry, idle conversation spacing, appearance
-settings and Kitty transparency. `VELA_AGENT_TEST_URL` selects another fixture
+eight panels (including full-width odd rows), Split controls geometry and
+draft/send behavior, top-edge conversation scrolling, Settings layout restoration,
+appearance settings and Kitty transparency. A uniform-backdrop pixel comparison
+checks that agent panes share one glass treatment. `VELA_AGENT_TEST_URL` selects another fixture
 server; screenshots and measurements default to `/private/tmp/vela-agent-workspace-report`.
 The bridge is isolated demo data; runtime undo and TUI palette checks have their
 own OpenCode integration smokes.

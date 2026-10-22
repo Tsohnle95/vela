@@ -759,7 +759,7 @@ describe("Layout panel sizing", () => {
     expect(container.querySelectorAll(".agent-panel")).toHaveLength(3);
     const cols = gridCols();
     expect(cols).toHaveLength(3);
-    expect(agentWidths()).toEqual([740, 740, 740]);
+    expect(agentWidths()).toEqual([1480, 740, 740]);
     expect(agentLefts()).toEqual([0, 0, 740]);
   });
 
@@ -1122,7 +1122,7 @@ describe("Layout panel sizing", () => {
     expect(agentLefts()).toEqual([924]);
   });
 
-  it("model mode places three panels into three quadrants", async () => {
+  it("model mode fills the incomplete row with the third panel", async () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
     await act(async () => {
@@ -1135,11 +1135,109 @@ describe("Layout panel sizing", () => {
 
     expect(container.querySelectorAll('.agent-panel[data-compact="true"]')).toHaveLength(3);
     expect(container.querySelectorAll('.agent-col[data-grid-row="lower"]')).toHaveLength(1);
-    expect(agentWidths()).toEqual([740, 740, 740]);
+    expect(agentWidths()).toEqual([1480, 740, 740]);
     expect(agentLefts()).toEqual([0, 0, 740]);
     expect(agentCols().map((col) => col.style.top)).toEqual(["50%", "0%", "0%"]);
     expect(agentCols().map((col) => col.style.height)).toEqual(["50%", "50%", "50%"]);
     expect(container.querySelector<HTMLElement>(".workspace-area")!.style.getPropertyValue("--editor-right")).toBe("1480px");
+  });
+
+  it.each([3, 5, 7])("fills every Agent Mode row with %i panels after resizing", async (count) => {
+    await act(async () => root.render(<App />));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
+    await act(async () => {
+      for (let generation = 2; generation <= count; generation++) {
+        dispatch({ kind: "session", session: info(`/repo-${generation}`, generation) });
+      }
+    });
+    await enterAgentMode(...Array.from({ length: count - 1 }, (_, index) => `repo-${index + 2}`));
+    expect(agentCols()).toHaveLength(count);
+    for (const width of [1480, 1637, 901]) {
+      await act(async () => setWidth(width));
+      for (const top of ["0%", "50%"]) {
+        const row = agentCols().filter((col) => col.style.top === top).sort((a, b) => Number.parseFloat(a.style.left) - Number.parseFloat(b.style.left));
+        expect(row.length).toBeGreaterThan(0);
+        expect(Number.parseFloat(row[0].style.left)).toBe(0);
+        row.forEach((col, index) => {
+          const right = Number.parseFloat(col.style.left) + Number.parseFloat(col.style.width);
+          expect(right).toBe(index + 1 < row.length ? Number.parseFloat(row[index + 1].style.left) : width);
+        });
+      }
+    }
+  });
+
+  it.each(["rail", "close"])("preserves Agent Mode and its collapsed sidebar through Settings (%s)", async (exit) => {
+    await act(async () => root.render(<App />));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
+    await act(async () => {
+      sideTab(container, "Sessions").click();
+      dispatch({ kind: "session", session: info("/two", 2) });
+    });
+    await enterAgentMode("two");
+    const beforeWidths = agentWidths();
+    const settings = container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-settings"]')!;
+    await act(async () => settings.click());
+    expect(container.querySelector(".settings-sidebar")).not.toBeNull();
+    expect(Number.parseFloat(gridCols()[0])).toBeGreaterThan(0);
+    await act(async () => {
+      (exit === "rail" ? settings : container.querySelector<HTMLButtonElement>('.settings-close')!).click();
+    });
+    expect(container.querySelector(".app.agent-mode")).not.toBeNull();
+    expect(gridCols()[0]).toBe("0px");
+    expect(sideTab(container, "Sessions").getAttribute("aria-pressed")).toBe("false");
+    expect(agentWidths()).toEqual(beforeWidths);
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-model-mode"]')!.click());
+    expect(sideTab(container, "Sessions").getAttribute("aria-pressed")).toBe("true");
+    expect(gridCols()[0]).toBe("230px");
+  });
+
+  it("keeps a manually widened normal-mode panel across Settings geometry changes", async () => {
+    const observers = new Set<() => void>();
+    vi.stubGlobal("ResizeObserver", class {
+      constructor(private callback: () => void) {}
+      observe() { observers.add(this.callback); }
+      disconnect() { observers.delete(this.callback); }
+    });
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+      if (!this.classList.contains("workspace-area")) return 0;
+      const columns = gridCols();
+      return window.innerWidth - Number.parseFloat(columns[0]) - Number.parseFloat(columns[1]);
+    });
+    await act(async () => root.render(<App />));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
+    await act(async () => sideTab(container, "Files").click());
+    await act(async () => observers.forEach((callback) => callback()));
+    await act(async () => {
+      const handle = container.querySelector<HTMLElement>(".agent-col .panel-resize-left")!;
+      handle.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 1200 }));
+      window.dispatchEvent(new MouseEvent("mousemove", { clientX: 145 }));
+      window.dispatchEvent(new MouseEvent("mouseup"));
+    });
+    expect(agentWidths()).toEqual([1380]);
+    const beforeLefts = agentLefts();
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-settings"]')!.click());
+    await act(async () => observers.forEach((callback) => callback()));
+    await act(async () => container.querySelector<HTMLButtonElement>('.settings-close')!.click());
+    expect(gridCols()[0]).toBe("0px");
+    expect(agentWidths()).toEqual([1380]);
+    expect(agentLefts()).toEqual(beforeLefts);
+
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-settings"]')!.click());
+    await act(async () => setWidth(1000));
+    await act(async () => observers.forEach((callback) => callback()));
+    await act(async () => container.querySelector<HTMLButtonElement>('.settings-close')!.click());
+    expect(agentWidths()).toEqual([1000]);
+  });
+
+  it("preserves Changes and collapsed sidebar when closing Settings", async () => {
+    await act(async () => root.render(<App />));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
+    await act(async () => sideTab(container, "Files").click());
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-changes"]')!.click());
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-settings"]')!.click());
+    await act(async () => container.querySelector<HTMLButtonElement>('.settings-close')!.click());
+    expect(gridCols()[0]).toBe("0px");
+    expect(container.querySelector('[data-testid="changes-view"]')).not.toBeNull();
   });
 
   it("restores a single agent to its default right-anchored width after agent mode", async () => {

@@ -1,84 +1,87 @@
-// Grid cells trade the full-size composer card for a quiet bottom input.
+// Split controls reserve the footer for writing; selectors appear on demand.
 :root .agent-panel[data-compact="true"] {
   --agent-response-bottom: 8px;
 }
 
 :root .agent-panel[data-compact="true"] > [data-component="session-prompt-dock"] {
-  padding: 4px 10px 6px;
-}
-
-:root .agent-panel[data-compact="true"] .composer {
-  max-width: none;
-}
-
-:root .agent-panel[data-compact="true"] .composer-body {
-  min-height: 0;
-  padding: 5px 0 0;
-  gap: 2px;
-  border: 0;
-  border-top: 1px solid var(--border-strong);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-:root .agent-panel[data-compact="true"] .composer-body:focus-within {
-  border-color: var(--accent);
-  box-shadow: none;
-}
-
-:root .agent-panel[data-compact="true"] .composer-input {
-  min-height: 24px;
-  max-height: 72px;
-  padding: 0 2px;
-  font-size: 12px;
-  line-height: 20px;
-}
-
-:root .agent-panel[data-compact="true"] .composer-toolbar,
-:root .agent-panel[data-compact="true"] .composer-actions,
-:root .agent-panel[data-compact="true"] .composer-toolbar-start,
-:root .agent-panel[data-compact="true"] .composer-toolbar-end {
-  min-height: 22px;
-  height: 22px;
-  gap: 3px;
-}
-
-:root .agent-panel[data-compact="true"] .composer-attach,
-:root .agent-panel[data-compact="true"] .composer-send,
-:root .agent-panel[data-compact="true"] .composer-selector {
-  height: 22px;
-  min-height: 22px;
-  padding-inline: 4px;
-  font-size: 10px;
-}
-
-:root .agent-panel[data-compact="true"] .composer-send,
-:root .agent-panel[data-compact="true"] .composer-attach {
-  width: 24px;
-  border-radius: 4px;
-  box-shadow: none;
-}
-
-:root .agent-panel[data-compact="true"] .composer-selector.agent {
-  flex: 0 0 22px;
-  width: 22px;
-  max-width: 22px;
   padding: 0;
-  justify-content: center;
 }
 
-:root .agent-panel[data-compact="true"] .composer-selector.agent > span,
-:root .agent-panel[data-compact="true"] .composer-selector.agent .codicon-chevron-down {
-  display: none;
-}
+:root .agent-panel .composer-split {
+  max-width: none;
 
-:root .agent-panel[data-compact="true"] .composer-selector.model {
-  flex: 1 1 auto;
-  max-width: 160px;
-}
+  .composer-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px 42px;
+    align-items: center;
+    min-height: 42px;
+    padding: 0;
+    gap: 0;
+    border: 0;
+    border-top: 1px solid var(--border-strong);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
 
-:root .agent-panel[data-compact="true"] .composer-selector.strength {
-  min-width: 40px;
-  max-width: 60px;
+  .composer-body:focus-within {
+    border-color: var(--accent);
+    box-shadow: none;
+  }
+
+  .composer-input {
+    min-width: 0;
+    min-height: 24px;
+    max-height: 72px;
+    padding: 5px 9px;
+    font-size: 12px;
+    line-height: 20px;
+  }
+
+  .composer-split-send {
+    width: 25px;
+    height: 25px;
+    min-height: 25px;
+    padding: 0;
+    border-radius: 4px;
+    box-shadow: none;
+  }
+
+  .composer-options-toggle {
+    align-self: stretch;
+    width: 42px;
+    border: 0;
+    border-left: 1px solid var(--border-strong);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .composer-options-toggle:hover,
+  .composer-options-toggle[aria-expanded="true"] {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+
+  .composer-toolbar {
+    grid-column: 1 / -1;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 5px 9px;
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .composer-toolbar-start,
+  .composer-toolbar-end {
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .composer-selector.model {
+    max-width: 160px;
+  }
 }

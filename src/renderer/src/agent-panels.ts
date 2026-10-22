@@ -10,6 +10,17 @@ export function agentPanelGrid(panelCount: number): { columns: number; rows: num
   };
 }
 
+/** Each row divides the full width, including an incomplete final row. */
+export function agentPanelGridSlot(panelCount: number, index: number, areaW: number): Pick<PanelSlot, "left" | "width" | "top" | "height"> {
+  const { columns, rows } = agentPanelGrid(panelCount);
+  const row = Math.floor(index / columns);
+  const column = index % columns;
+  const rowColumns = Math.min(columns, panelCount - row * columns);
+  const left = Math.floor(areaW * column / rowColumns);
+  const right = Math.floor(areaW * (column + 1) / rowColumns);
+  return { left, width: right - left, top: row * (100 / rows), height: 100 / rows };
+}
+
 export const AGENT_DEFAULT_W = 325;
 export const AGENT_MIN_W = 280;
 export const EDITOR_MIN_VISIBLE_W = 180;
@@ -51,7 +62,7 @@ export function panelSlotFor(
     if (inAgentMode && stored) {
       return {
         open: true,
-        width: Math.max(AGENT_DEFAULT_W, stored.width),
+        width: stored.width,
         left: stored.left,
         top: stored.top,
         height: stored.height
@@ -99,33 +110,39 @@ export function distributePanelSlots(
   }
   const total = areaW;
   const grid = modelMode && openIDs.length >= 3;
-  const { columns, rows } = agentPanelGrid(openIDs.length);
+  if (grid) {
+    const next = { ...current };
+    [...openIDs].reverse().forEach((id, index) => {
+      next[id] = { open: true, leftAnchored: false, ...agentPanelGridSlot(openIDs.length, index, total) };
+    });
+    return next;
+  }
+  const { columns } = agentPanelGrid(openIDs.length);
   const width = Math.max(AGENT_MIN_W, Math.floor(total / columns));
   const anchorW = Math.max(AGENT_MIN_W, total - width * (columns - 1));
   const next: Record<string, PanelSlot> = {};
   let boundary = Math.max(0, areaW - anchorW);
-  for (const [index, panel] of [...targetPanels].reverse().entries()) {
+  for (const panel of [...targetPanels].reverse()) {
     const id = panel.workspace.id;
     if (id === anchorId || !openIDs.includes(id)) continue;
     boundary -= width;
     next[id] = {
       open: true,
       width,
-      left: grid ? (index % columns) * Math.floor(total / columns) : Math.max(0, boundary),
+      left: Math.max(0, boundary),
       leftAnchored: false,
-      top: grid ? Math.floor(index / columns) * (100 / rows) : 0,
-      height: grid ? 100 / rows : 100
+      top: 0,
+      height: 100
     };
   }
   if (anchorId) {
-    const anchorIndex = openIDs.length - 1;
     next[anchorId] = {
       open: true,
       width: anchorW,
-      left: grid ? (anchorIndex % columns) * Math.floor(total / columns) : Math.max(0, areaW - anchorW),
+      left: Math.max(0, areaW - anchorW),
       leftAnchored: false,
-      top: grid ? Math.floor(anchorIndex / columns) * (100 / rows) : 0,
-      height: grid ? 100 / rows : 100
+      top: 0,
+      height: 100
     };
   }
   return { ...current, ...next };

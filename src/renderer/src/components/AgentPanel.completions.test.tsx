@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SessionInfo } from "@shared/types";
 
 let currentSession: SessionInfo;
+let panelBusy = false;
+const stop = vi.fn(async () => {});
 const runCommand = vi.fn(async () => {});
 const sendPrompt = vi.fn(async () => {});
 
@@ -23,12 +25,12 @@ vi.mock("../store", () => ({
     loadModels: vi.fn(),
     sendPrompt,
     runCommand,
-    stop: vi.fn(),
+    stop,
     busy: false
   }),
   usePanel: () => ({
     session: currentSession,
-    busy: false,
+    busy: panelBusy,
     transcript: [],
     todos: [],
     sessionUsage: null,
@@ -74,6 +76,8 @@ describe("composer slash and mention completions", () => {
   beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     currentSession = session("one", 1);
+    panelBusy = false;
+    stop.mockClear();
     runCommand.mockClear();
     sendPrompt.mockClear();
     container = document.createElement("div");
@@ -86,6 +90,45 @@ describe("composer slash and mention completions", () => {
     container.remove();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it("keeps the running agent stop action in the split writing row", async () => {
+    panelBusy = true;
+    window.vela = {} as Window["vela"];
+    await act(async () => root.render(<Composer compact />));
+    const buttons = container.querySelectorAll<HTMLButtonElement>('[aria-label="Stop the agent"]');
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].classList.contains("composer-split-send")).toBe(true);
+    await act(async () => buttons[0].click());
+    expect(stop).toHaveBeenCalledExactlyOnceWith(currentSession.workspace);
+  });
+
+  it("uses split controls without remounting the draft when compact mode changes", async () => {
+    window.vela = {} as Window["vela"];
+    await act(async () => root.render(<Composer compact />));
+    const input = container.querySelector("textarea")!;
+    await act(async () => type(input, "Keep this draft"));
+    const options = container.querySelector<HTMLButtonElement>('[aria-label="Prompt options"]');
+    expect(options).not.toBeNull();
+    expect(container.querySelector(".composer-toolbar")).toBeNull();
+    await act(async () => options!.click());
+    expect(options!.getAttribute("aria-expanded")).toBe("true");
+    const attach = container.querySelector<HTMLButtonElement>('[aria-label="Attach files"]')!;
+    expect(attach).not.toBeNull();
+    attach.focus();
+    await act(async () => attach.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(container.querySelector(".composer-toolbar")).toBeNull();
+    expect(document.activeElement).toBe(options);
+    await act(async () => root.render(<Composer />));
+    expect(container.querySelector("textarea")).toBe(input);
+    expect(input.value).toBe("Keep this draft");
+    expect(container.querySelector(".composer-toolbar")).not.toBeNull();
+    await act(async () => root.render(<Composer compact />));
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Prompt options"]')!.click());
+    await act(async () => document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })));
+    expect(container.querySelector(".composer-toolbar")).toBeNull();
+    await pressEnter(input);
+    expect(sendPrompt).toHaveBeenCalledWith("Keep this draft", [], currentSession.workspace);
   });
 
   it("lists slash commands including built-ins and runs the selected one", async () => {

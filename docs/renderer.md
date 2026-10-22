@@ -748,7 +748,7 @@ express a cross-component invariant or non-obvious state contract.
 
 | Component | File | Responsibility |
 |---|---|---|
-| `App` | `App.tsx` | Workspace shell and activity rail; panel geometry and focus routing; the rail hosts Sessions/Files views, Terminal, the Changes review view, and browser creation with Settings pinned at the bottom and stays visible in Agent Mode; Settings overlays the mounted workspace and masks its paint and input with opacity, inherited visibility and inertness, so editor and response state survive |
+| `App` | `App.tsx` | Workspace shell and activity rail; panel geometry and focus routing; the rail hosts Sessions/Files views, Terminal, the Changes review view, and browser creation with Settings pinned at the bottom and stays visible in Agent Mode; Settings overlays the mounted workspace and masks its paint and input with opacity, inherited visibility and inertness, so editor and response state survive; its visible navigation sidebar does not change the workspace sidebar, selected view, Changes view, or Agent Mode state; workspace measurement pauses while covered, then resumes on return so Settings cannot clamp saved panel widths |
 | `Titlebar` | `Titlebar.tsx` | Left-panel toggle beside the traffic lights, a slot the focused editor group's tab strip portals into, and the titlebar actions (Agent Mode, add-agent panel, and the right-panel toggle in the corner); the leading block is sized so the strip starts exactly where the left app panel ends, and never narrower than its controls so a collapsed panel cannot clip the toggle; empty strip surface is part of the window drag region while tabs and controls set `no-drag`; both panel toggles are the same mirrored panel glyph pair (dashed while its panel is hidden) and flip with panel state without accent highlighting |
 | Launch bootstrap | `launch.ts`, `mount-app.tsx`, `src/renderer/index.html` | Static Folded light art paints before the IDE modules load; three visible seconds precede mounting the IDE, which opens at workspace size without selecting a session |
 | `FileSidebar` | `FileSidebar.tsx` | Sessions/Files navigation rendered for the rail-selected view (preserves the selected view when a workspace or session opens), Vela header, Explorer, filesystem actions, open-workspace root removal, terminal context actions |
@@ -762,7 +762,8 @@ express a cross-component invariant or non-obvious state contract.
 | `BrowserTabsProvider` | `browser-tabs-context.tsx`, `browser-store-provider.tsx` | Browser tab state lives outside the app store, split into a *state* context (tab list + active tab, consumed by the strip and panes) and a stable *actions* context (consumed by the rail, the editor and the store). That split is a responsiveness contract, not a detail: when the slices lived in the app store, opening or closing a tab re-rendered every store consumer (measured 644ms with nine editors open; 2ms after the split)
 | `EditorTabs` | `EditorTabs.tsx`, `editor-groups.ts` | Tab strip for the editor groups: tabs share the strip width (90px floor, 240px ceiling) and overflow past the floor moves into an "all open tabs" menu button; a preview tab (`preview: true`, italic) marks a single Explorer click as transient so the next preview replaces it, while reopening the file, editing it, or pinning it removes that marker; each tab resolves its owning group (drag source and selection target) through the strip's group lookup; owns the tab drag MIME and the editor-group identity helpers |
 | `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
-| `Composer` | `Composer.tsx` | Authoritative local prompt draft, attachments, keyboard dispatch and agent controls; takes `controls` (extra control-row slot, used for the session usage ring) and `overlay` (popover anchored to the input); completion and model-menu behavior have the owners below; the agent input uses one rounded surface with a bottom toolbar (attachment and compact agent control on the left; model, available response strength, and send on the right); at minimum panel width the model and response strength remain visible while their labels can truncate |
+| `Composer` | `Composer.tsx` | Authoritative local prompt draft, attachments, keyboard dispatch and agent controls; takes `controls` (extra control-row slot, used for the session usage ring) and `overlay` (popover anchored to the input); completion and model-menu behavior have the owners below; one or two panels use a rounded input with a bottom toolbar; three or more Agent Mode panels use Split controls with writing and send beside a fixed options cell, which reveals attachment, agent, model and strength controls; the same draft and textarea survive compact layout changes |
+| `ComposerToolbar` | `ComposerToolbar.tsx` | Stateless attachment, agent, model, strength and send controls shared by the full composer and the revealed Split controls footer |
 | `AgentTui` | `AgentTui.tsx` | xterm view for the active runtime's PTY-backed TUI |
 | `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning |
 | `OpenCodeTodoDock` | `OpenCodeTodoDock.tsx` | Structured todo/checklist state near the composer |
@@ -910,7 +911,9 @@ the attached CLI view of the same session so OpenCode rereads that palette;
 it does not create a new agent session. CLI replacements wait for the previous
 launch and stop to finish; retired launch failures cannot dismiss the current
 TUI. Kitty Glass retains transparent xterm
-and workspace backgrounds in both interfaces. Prism uses alpha-backed violet panels; Kitty Glass restores the
+and workspace backgrounds in both interfaces. Agent panes do not reprocess the
+native window glass with separate backdrop filters, avoiding pane-dependent tints.
+Prism uses alpha-backed violet panels; Kitty Glass restores the
 transparent glass surfaces and terminal backgrounds of the earlier app, and
 Original Dark restores its warm charcoal palette. All appearances retain the
 same workspace layout, with independent interface chrome. The window and native chrome
@@ -1070,11 +1073,15 @@ focused coding session. Entering Agent Mode seeds its panel set with that one
 session; additional active sessions are loaded explicitly from the agent
 panel's three-dots menu, up to eight visible panels. Three or more panels use
 a two-row grid that expands from two through four columns, with horizontal as well
-as vertical dividers. At three or more visible panels, the existing composer
-switches to a compact borderless input with a top rule; drafting, attachments,
+as vertical dividers. Each row divides the full available width among its panels;
+an incomplete final row has wider panels rather than an empty grid cell. At three or more visible panels, the existing composer
+switches to Split controls: a writing/send area beside a fixed 42px options cell.
+Attachment, agent, model and strength controls reveal on demand; drafting, attachments,
 agent/model/effort controls, and send/stop retain the same owners. The activity
 row mounts only while busy or waiting for approval, so an idle conversation does
-not reserve space above its input. Exiting Agent Mode resets the temporary set to the
+not reserve space above its input. The GUI header overlays the top-right corner
+rather than reserving a full-width row above the transcript; transcript padding
+clears the options control. TUI controls retain their separate header row. Exiting Agent Mode resets the temporary set to the
 currently focused session, while all other active sessions remain available in
 the menu and continue running in the backend. Selecting a hidden session in
 normal mode switches the single coding workspace; selecting one in Agent Mode
