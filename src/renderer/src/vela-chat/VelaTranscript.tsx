@@ -61,7 +61,7 @@ export function VelaTranscript({
         onScroll={onScroll}
       >
         <div ref={contentRef} className="vela-column">
-          {showEmpty && turns.length === 0 && empty}
+          {showEmpty && turns.length === 0 && <div className="vela-empty">{empty}</div>}
           {turns.map((turn, index) => (
             <VelaTurn
               key={turn.id}

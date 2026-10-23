@@ -47,8 +47,25 @@
   gap: 16px;
   width: 100%;
   max-width: 48rem;
+  min-height: 100%;
   margin-inline: auto;
   padding: 16px 20px 32px;
+}
+
+/* Symmetric block padding when empty, so the centre is the true viewport centre. */
+.vela-column:has(> .vela-empty) {
+  padding-block: 16px;
+}
+
+/* The empty state owns the whole viewport so it can sit dead centre. */
+.vela-empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  text-align: center;
 }
 
 /* ── Turn + message shell ─────────────────────────────────────────────── */
