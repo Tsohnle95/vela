@@ -13,7 +13,7 @@ $codex: ':is([data-shell="codex"])';
   /* The top bar is its own size: smaller than the rail, as in Codex. */
   --titlebar-h: 40px;
   /* The content is a card inset from the chrome on every side. */
-  --content-gutter: 6px;
+  --content-gutter: 0px;
   --content-radius: 10px;
   /* Hairline on the chrome-facing edges of the content card. */
   --content-border: color-mix(in srgb, var(--fg) 5%, transparent);
