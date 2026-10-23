@@ -136,7 +136,7 @@ describe("CodexTranscript", () => {
       ],
       { busy: true, lastAssistantId: "assistant-1" }
     );
-    const root = container.querySelector<HTMLElement>(".codex-md");
+    const root = container.querySelector<HTMLElement>(".codex-answer .codex-md");
     expect(root?.hasAttribute("data-markdown-animated")).toBe(true);
     const segments = container.querySelectorAll(".codex-fade");
     expect(segments.length).toBeGreaterThan(1);

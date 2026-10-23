@@ -18,6 +18,10 @@ export interface FadeTimeline {
   segmentKeyByElement: WeakMap<HTMLElement, string>;
   nextSegmentStartAtMs: number;
   settledKeys: Set<string>;
+  /** Content-addressed keys, mirroring Codex's `previousSegments` reuse. */
+  segments: { content: string; key: string }[];
+  usedKeys: Set<string>;
+  nextSegmentId: number;
 }
 
 export function createFadeTimeline(): FadeTimeline {
@@ -26,8 +30,45 @@ export function createFadeTimeline(): FadeTimeline {
     startAtMsByKey: new Map(),
     segmentKeyByElement: new WeakMap(),
     nextSegmentStartAtMs: 0,
-    settledKeys: new Set()
+    settledKeys: new Set(),
+    segments: [],
+    usedKeys: new Set(),
+    nextSegmentId: 0
   };
+}
+
+/**
+ * Start a render pass. Keys are reused by position (same or prefix content) or
+ * by identical content elsewhere, so a tokenization change mid-stream does not
+ * re-animate prose that is already on screen.
+ */
+export function beginSegmentPass(timeline: FadeTimeline): void {
+  timeline.usedKeys.clear();
+}
+
+export function resolveSegmentKey(timeline: FadeTimeline, index: number, content: string): string {
+  const previous = timeline.segments[index];
+  if (
+    previous !== undefined
+    && !timeline.usedKeys.has(previous.key)
+    && (previous.content === content || (previous.content.length > 0 && content.startsWith(previous.content)))
+  ) {
+    timeline.segments[index] = { content, key: previous.key };
+    timeline.usedKeys.add(previous.key);
+    return previous.key;
+  }
+  for (let candidateIndex = timeline.segments.length - 1; candidateIndex >= 0; candidateIndex -= 1) {
+    const candidate = timeline.segments[candidateIndex];
+    if (candidate === undefined || timeline.usedKeys.has(candidate.key) || candidate.content !== content) continue;
+    timeline.segments[index] = { content, key: candidate.key };
+    timeline.usedKeys.add(candidate.key);
+    return candidate.key;
+  }
+  const key = `fade-segment-${timeline.nextSegmentId}`;
+  timeline.nextSegmentId += 1;
+  timeline.segments[index] = { content, key };
+  timeline.usedKeys.add(key);
+  return key;
 }
 
 export interface AttachSegmentOptions {

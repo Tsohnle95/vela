@@ -53,7 +53,7 @@ export function CodexToolRow({ tool }: { tool: ToolCallView }) {
   const kind = toolKey(tool.title);
   const activity = activityOfTool(tool);
   const detail = tool.detail?.replace(/\s+/g, " ").trim() ?? "";
-  const body = tool.output ?? (typeof tool.input === "string" ? tool.input : "");
+  const body = tool.output ?? "";
   const expandable = body.trim().length > 0;
   return (
     <div className="codex-tool" data-status={tool.status} data-kind={kind}>
@@ -80,7 +80,7 @@ export function CodexToolRow({ tool }: { tool: ToolCallView }) {
       </button>
       {open && expandable && (
         <pre className="codex-tool-body">
-          <code>{body}</code>
+          <code>{body.length > 8000 ? `${body.slice(0, 8000)}\n…` : body}</code>
         </pre>
       )}
     </div>

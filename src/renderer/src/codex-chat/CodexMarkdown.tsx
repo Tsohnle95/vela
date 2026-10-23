@@ -1,14 +1,17 @@
-import { memo, useMemo, useRef, type CSSProperties, type ReactNode } from "react";
+import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { marked } from "marked";
 import {
   attachSegment,
+  beginSegmentPass,
   createFadeTimeline,
   FADE_SEGMENT_DELAY_MS,
   FADE_SEGMENT_MAX_DELAY_MS,
+  resolveSegmentKey,
   segmentDelay,
   splitSegments,
   type FadeTimeline
 } from "./segment-fade";
+import { StreamingTextBuffer } from "./streaming-buffer";
 
 /**
  * Codex's streamed Markdown surface. Codex re-renders the whole message while
@@ -34,31 +37,32 @@ interface MdToken {
 
 interface RenderContext {
   animate: boolean;
+  adaptive: boolean;
   timeline: FadeTimeline;
+  cursor: number;
 }
 
-function SegmentedText({
-  text,
-  path,
-  context
-}: {
-  text: string;
-  path: string;
-  context: RenderContext;
-}) {
+function subscribeVisibility(listener: () => void): () => void {
+  document.addEventListener("visibilitychange", listener);
+  return () => document.removeEventListener("visibilitychange", listener);
+}
+
+function visibilitySnapshot(): boolean {
+  return document.visibilityState !== "hidden";
+}
+
+function SegmentedText({ text, context }: { text: string; context: RenderContext }) {
   const segments = useMemo(() => splitSegments(text), [text]);
-  if (!context.animate) return <>{text}</>;
   return (
     <>
-      {segments.map((segment, index) => (
-        <FadeSegment
-          key={`${path}.s${index}`}
-          segmentKey={`${path}.s${index}`}
-          index={index}
-          context={context}
-          text={segment}
-        />
-      ))}
+      {segments.map((segment) => {
+        const index = context.cursor;
+        context.cursor += 1;
+        const segmentKey = resolveSegmentKey(context.timeline, index, segment);
+        return context.animate
+          ? <FadeSegment key={segmentKey} segmentKey={segmentKey} index={index} context={context} text={segment} />
+          : <span key={segmentKey}>{segment}</span>;
+      })}
     </>
   );
 }
@@ -76,6 +80,12 @@ function FadeSegment({
 }) {
   const settled = context.timeline.settledKeys.has(segmentKey);
   if (settled) return <span>{text}</span>;
+  const settle = (): void => {
+    context.timeline.settledKeys.add(segmentKey);
+  };
+  if (context.adaptive) {
+    return <span className="codex-fade" onAnimationEnd={settle}>{text}</span>;
+  }
   const delay = context.timeline.delayMsByKey.get(segmentKey)
     ?? segmentDelay(index, FADE_SEGMENT_DELAY_MS, FADE_SEGMENT_MAX_DELAY_MS);
   const attach = (element: HTMLSpanElement | null): void => {
@@ -93,7 +103,7 @@ function FadeSegment({
       ref={attach}
       className="codex-fade"
       style={{ "--fade-delay": `${delay}ms` } as CSSProperties}
-      onAnimationEnd={() => context.timeline.settledKeys.add(segmentKey)}
+      onAnimationEnd={settle}
     >
       {text}
     </span>
@@ -108,7 +118,7 @@ const WRAPPED_INLINE: Record<string, "strong" | "em" | "del"> = {
 
 function renderInlineToken(token: MdToken, path: string, context: RenderContext): ReactNode {
   if (token.type === "text" || token.type === "escape" || token.type === "html") {
-    return <SegmentedText key={path} text={token.text ?? token.raw ?? ""} path={path} context={context} />;
+    return <SegmentedText key={path} text={token.text ?? token.raw ?? ""} context={context} />;
   }
   const wrapper = WRAPPED_INLINE[token.type];
   if (wrapper !== undefined) {
@@ -129,7 +139,7 @@ function renderInlineToken(token: MdToken, path: string, context: RenderContext)
   if (token.tokens && token.tokens.length > 0) {
     return <InlineTokens key={path} tokens={token.tokens} path={path} context={context} />;
   }
-  return <SegmentedText key={path} text={token.text ?? token.raw ?? ""} path={path} context={context} />;
+  return <SegmentedText key={path} text={token.text ?? token.raw ?? ""} context={context} />;
 }
 
 function InlineTokens({
@@ -148,7 +158,7 @@ function Inline({ token, path, context }: { token: MdToken; path: string; contex
   if (token.tokens && token.tokens.length > 0) {
     return <InlineTokens tokens={token.tokens} path={path} context={context} />;
   }
-  return <SegmentedText text={token.text ?? ""} path={path} context={context} />;
+  return <SegmentedText text={token.text ?? ""} context={context} />;
 }
 
 function renderHeading(token: MdToken, path: string, context: RenderContext): ReactNode {
@@ -195,7 +205,7 @@ function renderList(token: MdToken, path: string, context: RenderContext): React
           <li key={itemPath} className="codex-md-list-item">
             {item.tokens && item.tokens.length > 0
               ? renderBlocks(item.tokens, itemPath, context)
-              : <SegmentedText text={item.text ?? ""} path={itemPath} context={context} />}
+              : <SegmentedText text={item.text ?? ""} context={context} />}
           </li>
         );
       })}
@@ -249,7 +259,7 @@ function renderFallbackBlock(token: MdToken, path: string, context: RenderContex
   if (token.text) {
     return (
       <p key={path} className="codex-md-paragraph">
-        <SegmentedText text={token.text} path={path} context={context} />
+        <SegmentedText text={token.text} context={context} />
       </p>
     );
   }
@@ -291,25 +301,47 @@ function renderBlocks(tokens: MdToken[], path: string, context: RenderContext): 
 export const CodexMarkdown = memo(function CodexMarkdown({
   text,
   streaming = false,
-  className
+  className,
+  tone = "assistant"
 }: {
   text: string;
   streaming?: boolean;
   className?: string;
+  tone?: "assistant" | "user";
 }) {
+  const streamId = useId();
+  const visible = useSyncExternalStore(subscribeVisibility, visibilitySnapshot, () => true);
+  const adaptive = streaming && visible;
+  const bufferRef = useRef<StreamingTextBuffer | null>(null);
+  bufferRef.current ??= new StreamingTextBuffer(text, streamId, adaptive);
+  const buffer = bufferRef.current;
+  const snapshot = useSyncExternalStore(buffer.subscribe, buffer.getSnapshot, buffer.getSnapshot);
+  useLayoutEffect(() => {
+    buffer.update(text, streamId, adaptive, 10);
+  }, [buffer, text, streamId, adaptive]);
+  useEffect(() => () => buffer.destroy(), [buffer]);
+
+  const rendered = adaptive ? snapshot.text : text;
   const timeline = useRef<FadeTimeline | null>(null);
   timeline.current ??= createFadeTimeline();
   const tokens = useMemo(
-    () => (text ? (marked.lexer(text) as unknown as MdToken[]) : []),
-    [text]
+    () => (rendered ? (marked.lexer(rendered) as unknown as MdToken[]) : []),
+    [rendered]
   );
-  const context: RenderContext = { animate: streaming, timeline: timeline.current };
+  const context: RenderContext = {
+    animate: streaming,
+    adaptive,
+    timeline: timeline.current,
+    cursor: 0
+  };
+  beginSegmentPass(context.timeline);
   return (
     <div
       className={className ? `codex-md ${className}` : "codex-md"}
       data-markdown-animated={streaming ? "" : undefined}
+      data-adaptive={adaptive ? "" : undefined}
       data-markdown-text-style="assistant-message"
-      data-streaming={streaming ? "" : undefined}
+      data-markdown-text-tone={tone === "user" ? "user-message" : undefined}
     >
       {renderBlocks(tokens, "md", context)}
     </div>

@@ -847,16 +847,37 @@ right-aligned prompts in a 5%-ink bubble (`max-width: 77%`, 16px radius,
 8px/12px padding), a hairline "Worked for …" activity divider, and the answer as
 full-width Markdown.
 
-`CodexMarkdown.tsx` re-renders the whole message on each committed delta — Codex
-does not freeze blocks or re-parse a tail. Arrival is made legible by
-`segment-fade.ts`, a direct port of Codex's fade timeline: ASCII text splits
-into alphanumeric runs with trailing punctuation attached; non-ASCII text
-splits on whitespace-led words. Each new segment fades from 0 to 1 over 0.7s
-while streaming (0.15s otherwise) with easing `cubic-bezier(.37,.55,.86,.88)`,
-scheduled 16ms apart on one shared timeline and capped 96ms ahead of now. An
-`animationend` settles the segment, so later re-renders never restart it.
-Reduced motion collapses the animation to 0s. Do not add typewriters, per-token
-timers, or block freezing here.
+Codex has two streaming modes, and both live here.
+
+`streaming-buffer.ts` is the adaptive mode, ported from Codex's `Gpd`: while the
+response streams, the renderer paints a character-rate smoothing buffer rather
+than raw network chunks. The buffer tracks arrival speed into a `rate`, drains
+toward the target on a 50ms tick, and publishes on `requestAnimationFrame`, so
+text reveals continuously. It pauses while the document is hidden and snaps to
+the full source the moment streaming ends or the stream identity changes.
+
+`segment-fade.ts` is the non-adaptive reveal, ported from Codex's
+`K_d`/`q_d`/`Y_d`/`zSd`: ASCII text splits into alphanumeric runs with trailing
+punctuation attached, non-ASCII splits on whitespace-led words. Segment keys are
+content-addressed (reuse by same position or prefix, else by identical content
+elsewhere), so a mid-stream tokenization change never re-animates prose already
+on screen. Each new segment fades from 0 to 1 with easing
+`cubic-bezier(.37,.55,.86,.88)`, scheduled 16ms apart on one shared timeline and
+capped 96ms ahead of now; an `animationend` settles it permanently.
+
+Under adaptive streaming Codex passes `fadeSegmentDelayMs: 0`, so the stagger is
+disabled and new text and block elements fade over
+`--animation-duration-streaming-text` (0.7s) with no delay; outside it the fade
+uses `--transition-duration-basic` (0.15s) with the 16/96ms stagger. List items,
+table rows, blockquotes and rules fade as blocks; paragraphs and headings fade
+through their text segments. Reduced motion collapses all of it to 0s. The
+message DOM keeps its segment spans whether or not animation is active so the
+stream ending cannot reflow the answer. Do not add typewriters, per-token timers,
+or block freezing here.
+
+`CodexMarkdown.tsx` re-renders the whole message per committed delta — Codex does
+not freeze blocks or re-parse a tail. User prompts render through the same
+markdown with the `user-message` tone.
 
 `CodexTurn.tsx` reuses `process-model.ts` for the answer boundary. Process rows
 live behind the "Worked for {duration}" (or "Working for {elapsed}" while live)

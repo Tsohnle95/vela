@@ -80,7 +80,6 @@
   min-width: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
-  white-space: pre-wrap;
   padding: 8px 12px;
   border-radius: 16px;
   background: color-mix(in srgb, var(--fg) 5%, transparent);
@@ -212,6 +211,10 @@
   color: var(--codex-text-secondary);
 }
 
+.codex-md-user > .codex-md-paragraph {
+  margin-block: 0;
+}
+
 /* ── Streamed-text fade ───────────────────────────────────────────────── */
 
 @keyframes codex-fade-in {
@@ -225,7 +228,17 @@
   animation-delay: var(--fade-delay, 0s);
 }
 
-.codex-md[data-markdown-animated][data-streaming] .codex-fade {
+.codex-md[data-markdown-animated][data-adaptive] .codex-fade {
+  --duration: var(--codex-animation-duration-streaming-text);
+}
+
+.codex-md[data-markdown-animated] :is(.codex-md-list-item, .codex-md-table tr, .codex-md-blockquote, .codex-md-hr) {
+  opacity: 1;
+  animation: codex-fade-in var(--duration, var(--codex-transition-duration-basic)) var(--codex-fade-easing) both;
+  animation-delay: var(--fade-delay, 0s);
+}
+
+.codex-md[data-markdown-animated][data-adaptive] :is(.codex-md-list-item, .codex-md-table tr, .codex-md-blockquote, .codex-md-hr) {
   --duration: var(--codex-animation-duration-streaming-text);
 }
 

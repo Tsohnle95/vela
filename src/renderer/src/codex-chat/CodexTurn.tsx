@@ -203,7 +203,9 @@ export function CodexTurn({
     <section className="codex-turn" data-turn={turn.id}>
       {turn.user && (
         <div className="codex-message" data-role="user">
-          <div className="codex-user-bubble">{turn.user.text}</div>
+          <div className="codex-user-bubble">
+            <CodexMarkdown text={turn.user.text} tone="user" className="codex-md-user" />
+          </div>
         </div>
       )}
       {process.events.map((item) => <TurnEvent item={item} key={item.id} />)}
