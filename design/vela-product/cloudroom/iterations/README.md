@@ -11,6 +11,8 @@ collection remains available from the directory.
 - Use Left/Right outside interactive controls to browse. The iteration
   selector groups the references and both families. **All designs** opens
   a thumbnail directory; Escape closes it.
+- Use Up/Down outside interactive controls to cycle palettes, wrapping at
+  either end. This uses the same saved per-design choice as the dropdown.
 - The **Palette** dropdown offers 24 standard, vibrant, pastel, and saturated
   choices. A selection is remembered separately for each design in browser
   storage. The URL also records the selected design and palette, so it can

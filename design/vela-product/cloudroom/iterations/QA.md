@@ -16,6 +16,9 @@ Checked October 23, 2026 under Node 22.23.2 with isolated Electron profiles.
 - Checked independent per-design palette choices, full reload, URL restoration,
   browser Back, arrow navigation, native palette-key ownership, wraparound,
   directory selection, and collapsing/restoring review controls.
+- Up/Down palette shortcuts checked for both directions, wraparound, unchanged
+  design selection, URL updates, saved per-design choices, and native dropdown
+  key ownership.
 - Reviewed rendered desktop/mobile contact sheets and palette sheets for both
   families. All directory thumbnails come from actual renders.
 - Original #1/#2 URLs also checked for 80px desktop titles, no decorative
