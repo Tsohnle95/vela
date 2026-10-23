@@ -32,6 +32,32 @@
       <div class="screen-caption"><span>Code. Ask. Review. Run.</span><span>Everything in one window.</span></div>
     </section>
     <section class="details" aria-label="Workspace features"><div><span>01</span><h2>Edit your code.</h2><p>Monaco, tabs, and autosave.</p></div><div><span>02</span><h2>Work with agents.</h2><p>OpenCode sessions, side by side.</p></div><div><span>03</span><h2>Review the changes.</h2><p>Live file changes and per-file diffs.</p></div></section>
+    <div class="product-information">
+      <section class="capabilities" aria-labelledby="capabilities-title">
+        <div class="section-heading"><span class="section-label">01 / THE WORKSPACE</span><h2 id="capabilities-title">Your tools, in context.</h2><p>Open a repository and keep the files, conversation, and changes in the same window.</p></div>
+        <div class="capability-list">
+          <article><span class="feature-number">01</span><div><h3>An editor you can work in.</h3><p>Browse the file tree and edit with Monaco. Tabs and autosave keep your files close while you work with an agent.</p><div class="feature-tags"><span>Monaco editor</span><span>File explorer</span><span>Autosave</span></div></div></article>
+          <article><span class="feature-number">02</span><div><h3>Give your agent the context.</h3><p>Choose your model and agent, attach files, or reference workspace files with <code>@</code>. Follow streamed responses, reasoning, and tool calls. Queue a follow-up while the current task is running.</p><div class="feature-tags"><span>OpenCode V2</span><span>File attachments</span><span>Queued follow-ups</span></div></div></article>
+          <article><span class="feature-number">03</span><div><h3>Work on more than one task.</h3><p>Agent mode tiles up to eight sessions in one workspace. Each panel keeps its own conversation and context, so you can follow separate tasks side by side.</p><div class="feature-tags"><span>Up to 8 sessions</span><span>Independent context</span></div></div></article>
+          <article><span class="feature-number">04</span><div><h3>See what actually changed.</h3><p>Vela watches your workspace and lists files touched during the session. Review a per-file diff when starting contents are available. Other changes are marked as observed.</p><div class="feature-tags"><span>Live file changes</span><span>Per-file diffs</span></div></div></article>
+        </div>
+      </section>
+      <section class="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading"><span class="section-label">02 / THE WORKFLOW</span><h2 id="workflow-title">From folder to reviewed change.</h2></div>
+        <ol class="workflow-steps"><li><span>01</span><h3>Open your repository.</h3><p>Choose a folder. Browse the files and open what you’re working on in the editor.</p></li><li><span>02</span><h3>Work with OpenCode.</h3><p>Describe the change, add the relevant files, and follow the session beside your code.</p></li><li><span>03</span><h3>Review it. Run it.</h3><p>Check the changed files, edit the result, and run your project in the integrated terminal.</p></li></ol>
+      </section>
+      <section class="connected-tools" aria-label="Terminal and mobile companion">
+        <article><span class="section-label">IN THE WORKSPACE</span><h3>A terminal, right here.</h3><p>Run commands in the current workspace with the integrated terminal. You can also switch an agent panel to the OpenCode TUI.</p></article>
+        <article><span class="section-label">AWAY FROM THE DESK</span><h3>The same sessions on your phone.</h3><p>Pair the mobile companion from <strong>Settings → Mobile Setup</strong>. Access your sessions while Vela remains open on your desktop.</p></article>
+      </section>
+      <section class="getting-started" aria-labelledby="setup-title">
+        <div class="section-heading"><span class="section-label">03 / GET STARTED</span><h2 id="setup-title">Bring your repository.<br>Connect OpenCode.</h2><p>Vela runs agent sessions through OpenCode V2. Have <code>opencode</code> available on your PATH before starting a session.</p><a class="setup-link" href="https://github.com/Tsohnle95/vela#setup" target="_blank" rel="noopener">Read the setup guide <span aria-hidden="true">↗</span></a></div>
+        <div class="setup-panel"><div class="setup-panel-title">RUN FROM SOURCE <span>macOS recommended</span></div><pre><code>git clone https://github.com/Tsohnle95/vela.git
+cd vela
+npm install
+npm run dev</code></pre><p>Requires Node 22.23.2 or newer on the 22.x line, npm, and OpenCode V2.</p><p>Linux and Windows are available for development, with less platform validation than macOS.</p></div>
+      </section>
+    </div>
   </main>
   <footer><a class="footer-brand" href="#">Vela</a><span>Your code. Your workspace.</span><a href="https://github.com/Tsohnle95/vela" target="_blank" rel="noopener">GitHub ↗</a></footer>
   <script src="designs.js"></script>
