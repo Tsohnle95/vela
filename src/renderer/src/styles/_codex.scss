@@ -10,6 +10,8 @@ $codex: ':is([data-shell="codex"])';
   --chrome-size: calc(var(--control-size) + 18px);
   --rail-w: var(--chrome-size);
   --titlebar-h: var(--chrome-size);
+  /* Content corner radius where the surface meets the chrome. */
+  --content-radius: 10px;
 }
 
 
@@ -44,6 +46,26 @@ $codex: ':is([data-shell="codex"])';
 #{$codex} .main-row {
   gap: 0;
   padding: 0;
+  background: var(--top-surface);
+}
+
+/* The content surface rounds into the chrome at the top corners, matching
+   Codex's main-content radius; the rail and titlebar stay square. */
+#{$codex} .main-row > .sidebar-slot,
+#{$codex} .main-row > .workspace-host {
+  overflow: hidden;
+}
+
+#{$codex} .main-row > .sidebar-slot {
+  border-start-start-radius: var(--content-radius);
+}
+
+#{$codex} .main-row > .workspace-host {
+  border-start-end-radius: var(--content-radius);
+}
+
+#{$codex} .main-row.sidebar-closed > .workspace-host {
+  border-start-start-radius: var(--content-radius);
 }
 
 // ── Rail ───────────────────────────────────────────────────────────────────
