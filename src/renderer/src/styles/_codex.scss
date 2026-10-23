@@ -28,6 +28,12 @@ $codex: ':is([data-shell="codex"])';
   padding-top: var(--titlebar-h);
 }
 
+#{$codex} .titlebar-leading-actions,
+#{$codex} .titlebar-actions {
+  height: 100%;
+  align-items: center;
+}
+
 #{$codex} .titlebar {
   height: var(--titlebar-h);
   gap: 10px;
@@ -102,6 +108,7 @@ $codex: ':is([data-shell="codex"])';
 }
 
 #{$codex} .activity-tool {
+  margin-inline: auto;
   width: var(--control-size);
   height: var(--control-size);
   border-radius: var(--control-radius);
