@@ -94,7 +94,7 @@
   document.getElementById('hide-controls').addEventListener('click', () => setControls(true));
   document.getElementById('restore-controls').addEventListener('click', () => setControls(false));
   document.addEventListener('keydown', event => {
-    if (dialog.open || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || /^(INPUT|SELECT|TEXTAREA|BUTTON|SUMMARY|A)$/.test(event.target.tagName) || event.target.isContentEditable) return;
+    if (dialog.open || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing || /^(INPUT|TEXTAREA)$/.test(event.target.tagName) || event.target.isContentEditable) return;
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       event.preventDefault();
       const index = palettes.findIndex(p => p.id === colorSelector.value);
@@ -102,9 +102,10 @@
       colorSelector.dispatchEvent(new Event('change'));
       return;
     }
+    if (/^(SELECT|BUTTON|SUMMARY|A)$/.test(event.target.tagName)) return;
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     event.preventDefault(); advance(event.key === 'ArrowRight' ? 1 : -1);
-  });
+  }, { capture: true });
   window.addEventListener('popstate', () => {
     const params = new URLSearchParams(location.search);
     const id = Number(params.get('design'));

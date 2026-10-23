@@ -11,8 +11,10 @@ collection remains available from the directory.
 - Use Left/Right outside interactive controls to browse. The iteration
   selector groups the references and both families. **All designs** opens
   a thumbnail directory; Escape closes it.
-- Use Up/Down outside interactive controls to cycle palettes, wrapping at
-  either end. This uses the same saved per-design choice as the dropdown.
+- Use Up/Down to cycle palettes, including after focusing a navigation button
+  or a closed dropdown. The keys wrap at either end and use the same saved
+  per-design choice as the palette picker. Text editing and open dialogs keep
+  their normal keys.
 - The **Palette** dropdown offers 24 standard, vibrant, pastel, and saturated
   choices. A selection is remembered separately for each design in browser
   storage. The URL also records the selected design and palette, so it can
@@ -27,7 +29,9 @@ and -4px tracking, with the source’s 1080px, 800px, and 640px responsive
 breakpoints. Individual iterations do not override the primary type scale.
 
 Screenshots are the unmodified real Vela image. There are no colored frames,
-padding surfaces, outlines, or decorative shapes behind them. The only
+padding surfaces, or outlines. Reference #1 intentionally restores its folded
+mark and orbit artwork behind the hero screenshot; the 30 new iterations keep
+their screenshot-only treatment. The only other
 presentation effects are neutral elevation, spacing, and occasional slight
 perspective. Palettes change page colors and actions; they do not recolor
 the screenshot or the existing app icon. The previous prohibition on

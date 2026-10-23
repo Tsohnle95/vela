@@ -29,6 +29,17 @@ const watchdog=setTimeout(()=>app.exit(1),240000);
  assert.equal(await js('window.velaIterations.filter(d=>!d.reference&&d.family===2).length'),15);
  assert.equal(await js('window.velaPalettes.length'),24);
  console.log('Checking saved palettes and navigation');
+ await select(21);await color('mint');await js('document.querySelector("#next").focus()');
+ win.webContents.sendInputEvent({type:'keyDown',keyCode:'Down'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'Down'});await settle();
+ assert.equal(await js('document.querySelector("#palette").value'),'mono','Down must cycle palettes after clicking a navigation control');
+ for(const target of ['#design','#palette']){
+  await color('mint');await js('document.querySelector('+JSON.stringify(target)+').focus()');
+  win.webContents.sendInputEvent({type:'keyDown',keyCode:'Down'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'Down'});await settle();
+  assert.equal(await js('document.querySelector("#palette").value'),'mono',target+' must not swallow palette cycling');
+  assert.equal(await js('document.querySelector("#design").value'),'21');
+  win.webContents.sendInputEvent({type:'keyDown',keyCode:'Up'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'Up'});await settle();
+  assert.equal(await js('document.querySelector("#palette").value'),'mint');
+ }
  // Exercise normal navigation before the deliberately dense 768-change style matrix.
  await select(21);await color('ultraviolet');await select(22);await color('paper');await select(21);
  assert.equal(await js('document.querySelector("#palette").value'),'ultraviolet');
@@ -43,8 +54,8 @@ const watchdog=setTimeout(()=>app.exit(1),240000);
  await js('document.querySelector("#main").dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowDown",bubbles:true,cancelable:true}))');assert.equal(await js('document.querySelector("#palette").value'),'mint');
  await js('document.querySelector("#main").dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowDown",bubbles:true,cancelable:true}))');assert.equal(await js('document.querySelector("#palette").value'),'mono');
  assert.equal(await js('document.querySelector("#design").value'),'22');assert.equal(await js('new URL(location.href).searchParams.get("palette")'),'mono');
- await js('document.querySelector("#palette").dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowUp",bubbles:true,cancelable:true}))');assert.equal(await js('document.querySelector("#palette").value'),'mono');
- await select(21);await select(22);assert.equal(await js('document.querySelector("#palette").value'),'mono');
+ await js('document.querySelector("#palette").dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowUp",bubbles:true,cancelable:true}))');assert.equal(await js('document.querySelector("#palette").value'),'mint');
+ await select(21);await select(22);assert.equal(await js('document.querySelector("#palette").value'),'mint');
  await select(1);await js('document.querySelector("#previous").click()');assert.equal(await js('document.querySelector("#design").value'),'50');await js('document.querySelector("#next").click()');assert.equal(await js('document.querySelector("#design").value'),'1');
  console.log('Checking thumbnail directory');
  win.setContentSize(320,1050);await settle();await js('document.querySelector("#browse").click();document.querySelectorAll(".gallery-card img").forEach(i=>i.loading="eager")');await js('Promise.all([...document.querySelectorAll(".gallery-card img")].map(i=>i.decode()))');assert.equal(await js('document.querySelectorAll(".gallery-card").length'),32);assert.ok(await js('document.querySelector("dialog").scrollWidth<=document.querySelector("dialog").clientWidth+1'));await fs.writeFile(OUTPUT+'/gallery-mobile.png',(await win.webContents.capturePage()).toPNG());
@@ -101,8 +112,8 @@ const watchdog=setTimeout(()=>app.exit(1),240000);
  for(const id of [21,36])for(const p of palettes){await select(id);await color(p.id);await js('document.querySelector(".iteration-controls").style.visibility="hidden"');await settle();const capture=await win.webContents.capturePage();await fs.writeFile(OUTPUT+'/palette-'+id+'-'+p.id+'.jpg',capture.resize({width:400}).toJPEG(85));await js('document.querySelector(".iteration-controls").style.visibility=""');}
  if(REFRESH){await fs.mkdir(ROOT+'/previews',{recursive:true});for(const id of ids)await fs.copyFile(OUTPUT+'/preview-'+String(id).padStart(2,'0')+'.jpg',ROOT+'/previews/'+String(id).padStart(2,'0')+'.jpg');}
  // Original #1 and #2 keep their URLs and now share the corrected image treatment/type.
- for(const id of [1,2]){win.setContentSize(1440,1000);await win.loadFile(ROOT+'/../index.html',{query:{design:String(id)}});await settle();assert.equal(await js('getComputedStyle(document.querySelector("h1")).fontSize'),'80px');assert.equal(await js('document.querySelectorAll(".home-orbit,.home-art>.vela-mark").length'),0);assert.ok(await js('[...document.querySelectorAll(".app-shot")].every(e=>getComputedStyle(e).backgroundColor==="rgba(0, 0, 0, 0)"&&parseFloat(getComputedStyle(e).paddingLeft)===0)'));}
- const failures=measurements.filter(m=>m.overflow>1||m.outside.length||m.frames||!m.typeMatches||!m.images||m.headings!==1||m.ornaments);
+ for(const id of [1,2]){win.setContentSize(1440,1000);await win.loadFile(ROOT+'/../index.html',{query:{design:String(id)}});await settle();assert.equal(await js('getComputedStyle(document.querySelector("h1")).fontSize'),'80px');assert.equal(await js('document.querySelectorAll(".home-orbit,.home-art>.vela-mark").length'),id===1?3:0);assert.ok(await js('[...document.querySelectorAll(".app-shot")].every(e=>getComputedStyle(e).backgroundColor==="rgba(0, 0, 0, 0)"&&parseFloat(getComputedStyle(e).paddingLeft)===0)'));}
+ const failures=measurements.filter(m=>m.overflow>1||m.outside.length||m.frames||!m.typeMatches||!m.images||m.headings!==1||(m.id===1?m.ornaments!==3:m.ornaments!==0));
  for(const width of [1440,390]){
   const cards=ids.map(id=>'<figure><img src="'+width+'-'+id+'.png"><figcaption>'+id+'</figcaption></figure>').join('');
   await fs.writeFile(OUTPUT+'/sheet-'+width+'.html','<html><style>*{box-sizing:border-box}body{margin:0;padding:15px;background:#d8ded5;display:grid;grid-template-columns:repeat(4,1fr);gap:15px}figure{margin:0;background:white;overflow:hidden}img{display:block;width:100%}figcaption{font:15px monospace;padding:8px}</style>'+cards+'</html>');win.setContentSize(width===1440?1600:800,width===1440?2650:4700);await win.loadFile(OUTPUT+'/sheet-'+width+'.html');await js('Promise.all([...document.images].map(i=>i.decode()))');await settle();await fs.writeFile(OUTPUT+'/contact-'+width+'.png',(await win.webContents.capturePage()).toPNG());

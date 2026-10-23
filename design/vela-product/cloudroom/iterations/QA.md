@@ -5,7 +5,8 @@ Checked October 23, 2026 under Node 22.23.2 with isolated Electron profiles.
 - 30 new iterations: 15 from #1 and 15 from #2, plus both retained references.
 - All 32 pages rendered at 1440, 1024, 768, 390, and 320 CSS pixels: 160
   layouts checked for horizontal overflow, offscreen headlines/actions/images,
-  screenshot frames, added artwork, and image decoding.
+  screenshot frames, image decoding, and the absence of added artwork in the
+  30 new iterations. Reference #1's restored mark and two orbits are intentional.
 - Headline size, weight, and line-height checked against Cloudroom’s measured
   responsive scale at each width. The desktop cap is 80px, replacing the
   previous 110px title in #1.
@@ -16,13 +17,16 @@ Checked October 23, 2026 under Node 22.23.2 with isolated Electron profiles.
 - Checked independent per-design palette choices, full reload, URL restoration,
   browser Back, arrow navigation, native palette-key ownership, wraparound,
   directory selection, and collapsing/restoring review controls.
-- Up/Down palette shortcuts checked for both directions, wraparound, unchanged
-  design selection, URL updates, saved per-design choices, and native dropdown
-  key ownership.
+- Reproduced the reported shortcut failure with a real Down keypress after
+  focusing a navigation button. The previous handler ignored button/select
+  targets. Real Up/Down keypresses now check buttons, the design selector, and
+  the palette selector, including unchanged design selection. Text editing,
+  open dialogs, and Left/Right native control ownership remain protected.
 - Reviewed rendered desktop/mobile contact sheets and palette sheets for both
   families. All directory thumbnails come from actual renders.
-- Original #1/#2 URLs also checked for 80px desktop titles, no decorative
-  logo/orbits behind the hero screenshot, and no colored screenshot frames.
+- Original #1/#2 URLs checked for 80px desktop titles and no colored screenshot
+  frames. #1 restores its folded logo and orbit artwork at the user's request;
+  #2 and the new iterations retain their plain screenshots.
 
 Normal history/reload checks run before the deliberately dense palette matrix.
 This keeps normal navigation verification separate from Chromium’s history
