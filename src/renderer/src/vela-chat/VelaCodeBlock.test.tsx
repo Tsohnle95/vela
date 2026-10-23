@@ -29,6 +29,15 @@ describe("VelaCodeBlock", () => {
     expect(container.textContent).toContain("Copy");
   });
 
+  it("emits per-token colour variables once highlighting settles", async () => {
+    act(() => {
+      root.render(<VelaCodeBlock code="const value = 1;" lang="ts" streaming={false} />);
+    });
+    await vi.waitFor(() => {
+      expect(container.querySelectorAll('[style*="--shiki-light"]').length).toBeGreaterThan(0);
+    }, { timeout: 5_000 });
+  });
+
   it("falls back to a plain text language label", () => {
     act(() => {
       root.render(<VelaCodeBlock code="hello" streaming />);

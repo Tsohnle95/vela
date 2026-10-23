@@ -321,12 +321,17 @@
   white-space: pre-wrap;
 }
 
-.vela-code-pre .vela-code-line {
+/* Shiki emits one variable pair per token; consume it on the span that carries it. */
+.vela-code [style*="--shiki-light"] {
   color: var(--shiki-light, inherit);
 }
 
-html.dark .vela-code-pre .vela-code-line {
+html.dark .vela-code [style*="--shiki-light"] {
   color: var(--shiki-dark, inherit);
+}
+
+.vela-code-pre {
+  color: var(--fg);
 }
 
 .vela-md a {
