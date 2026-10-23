@@ -1,7 +1,7 @@
 import { Marked } from "marked";
 
 /**
- * Codex's streaming parse strategy, ported from `qSd`/`JSd`/`YSd`:
+ * Streaming parse strategy, ported from Codex's `qSd`/`JSd`/`YSd`:
  * while text grows, only the tail after the last safe block boundary is
  * lexed again; earlier tokens are reused by identity so React sees unchanged
  * blocks. A boundary is only trusted outside fenced code and outside list,

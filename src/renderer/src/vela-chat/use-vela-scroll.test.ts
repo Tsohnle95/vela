@@ -3,7 +3,7 @@ import {
   BOTTOM_THRESHOLD_PX,
   distanceFromBottom,
   easeOutCubic
-} from "./use-codex-scroll";
+} from "./use-vela-scroll";
 
 describe("distanceFromBottom", () => {
   it("measures from the floor and clamps at zero", () => {

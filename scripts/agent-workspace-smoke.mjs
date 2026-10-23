@@ -6,7 +6,7 @@ import electron from "electron";
 const temporary = await mkdtemp(path.join(os.tmpdir(), "vela-agent-workspace-"));
 const output = process.env.VELA_AGENT_REPORT ?? "/private/tmp/vela-agent-workspace-report";
 await mkdir(output, { recursive: true });
-const url = process.env.VELA_AGENT_TEST_URL ?? "http://127.0.0.1:5280/scripts/fixtures/agent-workspace.html?chat-renderer=dsh";
+const url = process.env.VELA_AGENT_TEST_URL ?? "http://127.0.0.1:5280/scripts/fixtures/agent-workspace.html";
 const entry = path.join(temporary, "main.cjs");
 const source = String.raw`
 const {app,BrowserWindow}=require('electron');

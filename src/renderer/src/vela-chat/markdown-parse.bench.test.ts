@@ -14,7 +14,7 @@ describe("streaming parse budget", () => {
       parseMarkdown(document.slice(0, end), true, cache);
     }
     const elapsed = performance.now() - startedAt;
-    console.log(`[codex-chat] streamed ${document.length} chars in ${chunks} chunks: ${elapsed.toFixed(1)}ms`);
+    console.log(`[vela-chat] streamed ${document.length} chars in ${chunks} chunks: ${elapsed.toFixed(1)}ms`);
     expect(elapsed).toBeLessThan(2_000);
   });
 });

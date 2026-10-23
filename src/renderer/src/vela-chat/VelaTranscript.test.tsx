@@ -11,7 +11,7 @@ vi.mock("../store", () => ({
   })
 }));
 
-import { CodexTranscript, clearCodexScrollMemoryForTests } from "./CodexTranscript";
+import { VelaTranscript, clearVelaScrollMemoryForTests } from "./VelaTranscript";
 
 const session: SessionInfo = {
   id: "session-1",
@@ -39,7 +39,7 @@ let root: Root;
 
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  clearCodexScrollMemoryForTests();
+  clearVelaScrollMemoryForTests();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -56,7 +56,7 @@ function render(transcript: TranscriptItem[], options: {
 } = {}): void {
   act(() => {
     root.render(
-      <CodexTranscript
+      <VelaTranscript
         transcript={transcript}
         busy={options.busy ?? false}
         lastAssistantId={options.lastAssistantId ?? null}
@@ -67,7 +67,7 @@ function render(transcript: TranscriptItem[], options: {
   });
 }
 
-describe("CodexTranscript", () => {
+describe("VelaTranscript", () => {
   it("renders a right-aligned prompt, a worked-for divider and the answer", () => {
     render([
       { kind: "user", id: "user-1", text: "Inspect the repo", createdAt: 0 },
@@ -88,19 +88,19 @@ describe("CodexTranscript", () => {
         { kind: "text", id: "text-1", text: "Here is the summary.", complete: true }
       ])
     ]);
-    expect(container.querySelector(".codex-user-bubble")?.textContent).toBe("Inspect the repo");
-    expect(container.querySelector(".codex-work-label")?.textContent).toBe("Worked for 4s");
-    expect(container.querySelector(".codex-answer .codex-md")?.textContent).toContain("Here is the summary.");
-    expect(container.querySelector(".dsh-scroll")).toBeNull();
+    expect(container.querySelector(".vela-user-bubble")?.textContent).toBe("Inspect the repo");
+    expect(container.querySelector(".vela-work-label")?.textContent).toBe("Worked for 4s");
+    expect(container.querySelector(".vela-answer .vela-md")?.textContent).toContain("Here is the summary.");
+    expect(container.querySelector(".vela-scroll")).not.toBeNull();
   });
 
   it("shows the scroll button only when the reader leaves the floor", () => {
     render([{ kind: "user", id: "user-1", text: "Go", createdAt: 0 }]);
-    const scroller = container.querySelector<HTMLElement>(".codex-scroll");
+    const scroller = container.querySelector<HTMLElement>(".vela-scroll");
     expect(scroller).not.toBeNull();
     Object.defineProperty(scroller, "scrollHeight", { value: 1000, configurable: true });
     Object.defineProperty(scroller, "clientHeight", { value: 200, configurable: true });
-    const slot = (): Element | null => container.querySelector(".codex-to-bottom-slot");
+    const slot = (): Element | null => container.querySelector(".vela-to-bottom-slot");
 
     scroller!.scrollTop = 100;
     act(() => {
@@ -117,8 +117,8 @@ describe("CodexTranscript", () => {
 
   it("shows the working divider before the first tool starts", () => {
     render([{ kind: "user", id: "user-1", text: "Go", createdAt: Date.now() - 2000 }], { busy: true });
-    expect(container.querySelector(".codex-work-label")?.textContent).toMatch(/^Working for /);
-    expect(container.querySelector(".codex-work")).not.toBeNull();
+    expect(container.querySelector(".vela-work-label")?.textContent).toMatch(/^Working for /);
+    expect(container.querySelector(".vela-work")).not.toBeNull();
   });
 
   it("keeps tool calls behind the activity divider until opened", () => {
@@ -141,11 +141,11 @@ describe("CodexTranscript", () => {
         { kind: "text", id: "text-1", text: "Done.", complete: true }
       ])
     ]);
-    expect(container.querySelector(".codex-tool")).toBeNull();
+    expect(container.querySelector(".vela-tool")).toBeNull();
     act(() => {
-      container.querySelector<HTMLButtonElement>(".codex-work-head")?.click();
+      container.querySelector<HTMLButtonElement>(".vela-work-head")?.click();
     });
-    expect(container.querySelector(".codex-tool-summary")?.textContent).toBe("Ran ls");
+    expect(container.querySelector(".vela-tool-summary")?.textContent).toBe("Ran ls");
   });
 
   it("marks streamed text with fade segments", () => {
@@ -156,9 +156,9 @@ describe("CodexTranscript", () => {
       ],
       { busy: true, lastAssistantId: "assistant-1" }
     );
-    const root = container.querySelector<HTMLElement>(".codex-answer .codex-md");
+    const root = container.querySelector<HTMLElement>(".vela-answer .vela-md");
     expect(root?.hasAttribute("data-markdown-animated")).toBe(true);
-    const segments = container.querySelectorAll(".codex-fade");
+    const segments = container.querySelectorAll(".vela-fade");
     expect(segments.length).toBeGreaterThan(1);
     expect(Array.from(segments).map((node) => node.textContent).join("")).toBe("Streaming words here");
   });
@@ -177,8 +177,8 @@ describe("CodexTranscript", () => {
       { kind: "user", id: "user-1", text: "Go", createdAt: 0 },
       assistant([{ kind: "text", id: "text-1", text: "**Bold** and `code`", complete: true }])
     ]);
-    expect(container.querySelector(".codex-md strong")?.textContent).toBe("Bold");
-    expect(container.querySelector(".codex-md-codespan")?.textContent).toBe("code");
-    expect(container.querySelectorAll(".codex-fade")).toHaveLength(0);
+    expect(container.querySelector(".vela-md strong")?.textContent).toBe("Bold");
+    expect(container.querySelector(".vela-md-codespan")?.textContent).toBe("code");
+    expect(container.querySelectorAll(".vela-fade")).toHaveLength(0);
   });
 });

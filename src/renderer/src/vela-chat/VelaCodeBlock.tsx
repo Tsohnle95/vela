@@ -3,12 +3,12 @@ import { loadHighlighter } from "../ai-elements/upstream/lib/highlighter";
 import { writeClipboard } from "../components/TimelineProse";
 
 /**
- * Codex's fenced code block. Codex shows a plain code surface while the fence
- * is still streaming and highlights once it settles, so the block never
- * re-tokenizes on every chunk. The header carries the language, copy and wrap
+ * A fenced code block that shows a plain surface while the fence is still
+ * streaming and highlights once it settles, so it never re-tokenizes on every
+ * chunk. The header carries the language, copy and wrap
  * controls.
  */
-export function CodexCodeBlock({
+export function VelaCodeBlock({
   code,
   lang,
   streaming
@@ -50,23 +50,23 @@ export function CodexCodeBlock({
   };
 
   return (
-    <div className="codex-code" data-language={lang || undefined}>
-      <div className="codex-code-header">
-        <span className="codex-code-lang">{lang ?? "text"}</span>
-        <span className="codex-code-actions">
-          <button type="button" className="codex-code-action" onClick={() => setWrap((value) => !value)}>
+    <div className="vela-code" data-language={lang || undefined}>
+      <div className="vela-code-header">
+        <span className="vela-code-lang">{lang ?? "text"}</span>
+        <span className="vela-code-actions">
+          <button type="button" className="vela-code-action" onClick={() => setWrap((value) => !value)}>
             {wrap ? "No wrap" : "Wrap"}
           </button>
-          <button type="button" className="codex-code-action" onClick={copy}>
+          <button type="button" className="vela-code-action" onClick={copy}>
             {copied ? "Copied" : "Copy"}
           </button>
         </span>
       </div>
-      <pre className="codex-code-pre" data-wrap={wrap || undefined}>
+      <pre className="vela-code-pre" data-wrap={wrap || undefined}>
         <code>
           {lines
             ? lines.map((line, lineIndex) => (
-                <span key={lineIndex} className="codex-code-line">
+                <span key={lineIndex} className="vela-code-line">
                   {line.length > 0 ? line : "\u200b"}
                   {"\n"}
                 </span>

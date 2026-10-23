@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CodexCodeBlock } from "./CodexCodeBlock";
+import { VelaCodeBlock } from "./VelaCodeBlock";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -18,12 +18,12 @@ afterEach(() => {
   container.remove();
 });
 
-describe("CodexCodeBlock", () => {
+describe("VelaCodeBlock", () => {
   it("shows the language, code and both controls", () => {
     act(() => {
-      root.render(<CodexCodeBlock code="const a = 1;" lang="ts" streaming />);
+      root.render(<VelaCodeBlock code="const a = 1;" lang="ts" streaming />);
     });
-    expect(container.querySelector(".codex-code-lang")?.textContent).toBe("ts");
+    expect(container.querySelector(".vela-code-lang")?.textContent).toBe("ts");
     expect(container.textContent).toContain("const a = 1;");
     expect(container.textContent).toContain("Wrap");
     expect(container.textContent).toContain("Copy");
@@ -31,8 +31,8 @@ describe("CodexCodeBlock", () => {
 
   it("falls back to a plain text language label", () => {
     act(() => {
-      root.render(<CodexCodeBlock code="hello" streaming />);
+      root.render(<VelaCodeBlock code="hello" streaming />);
     });
-    expect(container.querySelector(".codex-code-lang")?.textContent).toBe("text");
+    expect(container.querySelector(".vela-code-lang")?.textContent).toBe("text");
   });
 });

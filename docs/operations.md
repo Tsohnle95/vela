@@ -18,11 +18,10 @@ The second tab contains all original upstream pattern examples, retaining
 upstream scripts and interactions; controls that are inert in upstream examples
 remain inert. `npm run chat:compare:build` produces the comparison build.
 
-For an actual OpenCode session in Vela, append `?chat-renderer=compare` to the
-renderer document URL to display both response renderers inside the original
-panel. `?chat-renderer=old` selects the original response renderer; the default
-is AI Elements response content. The original composer and panel controls remain
-the same in every mode.
+Vela has a single agent transcript (the Vela surface in `vela-chat/`); it no
+longer switches renderers through query parameters. Use the comparison build
+above for renderer experiments; it owns its own document and never changes the
+shipped panel.
 
 With the comparison server running, `node scripts/ai-elements-style-smoke.mjs`
 compares the actual `AgentPanel` response with the reference at matching widths

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { TranscriptItem } from "@shared/types";
 
 /**
- * Codex's transcript scroll semantics, ported from `ThreadScrollLayout`.
+ * Transcript scroll semantics, ported from Codex's `ThreadScrollLayout`.
  *
  * - distance from the floor is `max(0, scrollHeight - clientHeight - scrollTop)`
  * - "at the bottom" is a 24px threshold, not a ratio
@@ -18,7 +18,7 @@ export const SCROLL_TO_BOTTOM_DURATION_MS = 260;
 const scrollMemory = new Map<string, number>();
 
 /** Test hook: drop per-workspace positions between isolated renders. */
-export function clearCodexScrollMemoryForTests(): void {
+export function clearVelaScrollMemoryForTests(): void {
   scrollMemory.clear();
 }
 
@@ -85,7 +85,7 @@ export function animateScrollToFloor(
   state.frame = window.requestAnimationFrame(step);
 }
 
-export function useCodexScroll(
+export function useVelaScroll(
   memoryKey: string | undefined,
   transcript: TranscriptItem[],
   busy: boolean,

@@ -1389,51 +1389,16 @@ describe("Layout panel sizing", () => {
     expect(container.querySelector('.titlebar-actions [data-panel-action="add-model-panel"]')).not.toBeNull();
   });
 
-  it("preserves an enlarged tray through subagent navigation and back", async () => {
-    window.history.replaceState(null, "", "/?chat-renderer=new");
+  it("preserves an enlarged tray across a session re-render", async () => {
     const parent = { ...info("/repo", 1), title: "Main agent" };
-    const child = { ...info("/repo", 8), id: "session-child", parentID: parent.id, title: "Inspect renderer", agent: "explore" };
-    const parentTranscript: TranscriptItem[] = [{
-      kind: "assistant",
-      id: "assistant-dispatch",
-      messageID: "assistant-dispatch",
-      completed: true,
-      parts: [{
-        kind: "tool",
-        id: "tool-dispatch",
-        tool: {
-          id: "tool-dispatch",
-          title: "subagent",
-          detail: "",
-          status: "running",
-          input: JSON.stringify({ agent: "explore", description: "Inspect renderer" }),
-          inputValue: { agent: "explore", description: "Inspect renderer" },
-          metadata: { sessionID: child.id }
-        }
-      }]
-    }];
-    let parentOpenCount = 0;
     window.vela = {
       ...api(),
       state: async () => parent,
       activeSessions: async () => [parent],
-      sessions: async () => [
-        { id: parent.id, title: "Main agent", directory: "/repo", updatedAt: 2 },
-        { id: child.id, title: child.title!, directory: "/repo", updatedAt: 3, parentID: parent.id, agent: child.agent }
-      ],
-      openSessionById: async (sessionID: string) => {
-        const session = sessionID === child.id
-          ? child
-          : parentOpenCount++ === 0
-            ? parent
-            : { ...info("/repo", 10 + parentOpenCount), id: parent.id, title: "Main agent" };
-        dispatch({ kind: "session", session });
-        return {
-          session,
-          transcript: sessionID === child.id ? [] : parentTranscript,
-          todos: [],
-          usage: null
-        };
+      sessions: async () => [{ id: parent.id, title: "Main agent", directory: "/repo", updatedAt: 2 }],
+      openSessionById: async () => {
+        dispatch({ kind: "session", session: parent });
+        return { session: parent, transcript: [], todos: [], usage: null };
       }
     };
 
@@ -1451,17 +1416,9 @@ describe("Layout panel sizing", () => {
     expect(enlarged).toBeGreaterThan(280);
 
     await act(async () => {
-      container.querySelector("[data-ai-elements-surface]")!.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Open agent"]')!.click();
+      await window.vela.openSessionById(parent.id, parent.workspace.generation);
       await new Promise((resolve) => setTimeout(resolve, 30));
     });
-    expect(container.querySelector(".agent-session-back")).not.toBeNull();
-    expect(agentWidths()).toEqual([enlarged]);
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(".agent-session-back")!.click();
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    });
-    expect(container.querySelector(".agent-session-back")).toBeNull();
     expect(agentWidths()).toEqual([enlarged]);
     window.history.replaceState(null, "", "/");
   });

@@ -82,12 +82,12 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   return { promise, resolve };
 }
 
-describe.each(["old", "new", "dsh"])("%s renderer with original panel and composer", (renderer) => {
+describe.each(["vela"])("%s renderer with original panel and composer", (renderer) => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(() => {
-    window.history.replaceState(null, "", `/?chat-renderer=${renderer}`);
+    window.history.replaceState(null, "", "/");
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     window.localStorage.clear();
     clearAgentScrollMemoryForTests();
@@ -120,7 +120,7 @@ describe.each(["old", "new", "dsh"])("%s renderer with original panel and compos
   it("retains the original input and shell without suggested prompts", async () => {
     await act(async () => root.render(<AgentPanel />));
     expect(container.querySelector(".agent-panel > .agent-header")).not.toBeNull();
-    expect(container.querySelector(".agent-panel .agent-scroll, .agent-panel .dsh-scroll")).not.toBeNull();
+    expect(container.querySelector(".agent-panel .vela-scroll")).not.toBeNull();
     expect(container.querySelector('[data-component="session-prompt-dock"] .composer')).not.toBeNull();
     expect(container.querySelector('.composer-selector.agent')).not.toBeNull();
     expect(container.querySelector('.composer-selector.model')).not.toBeNull();
@@ -241,98 +241,9 @@ describe.each(["old", "new", "dsh"])("%s renderer with original panel and compos
     currentSession=session("working",9);
     await act(async()=>root.render(<AgentPanel/>));
     expect(container.querySelector(".composer")).not.toBeNull();
-    if(renderer==="new") {
-      expect(container.querySelector<HTMLElement>(".agent-response-stream")?.hidden).toBe(false);
-      expect(container.querySelector(".agent-empty")).toBeNull();
-      expect(container.querySelector("[data-agent-stream-status] [data-ai-elements-surface]")?.shadowRoot?.querySelector('[data-ai-activity]')?.textContent).toContain("Running command");
-    }
-    if(renderer==="dsh") {
-      expect(container.querySelector(".agent-empty")).toBeNull();
-      expect(container.querySelector(".dsh-running")?.textContent).toContain("Deep diving");
-    }
+    expect(container.querySelector(".agent-empty")).toBeNull();
+    expect(container.querySelector(".vela-working-label")?.textContent).toContain("Working");
   });
-
-  if (renderer === "old") {
-  it("follows resized stream content only until the reader scrolls away", async () => {
-    await act(async () => root.render(<AgentPanel />));
-    const scroll = container.querySelector<HTMLDivElement>(".agent-scroll")!;
-    Object.defineProperties(scroll, {
-      clientHeight: { configurable: true, value: 100 },
-      scrollHeight: { configurable: true, value: 500, writable: true },
-      scrollTop: { configurable: true, value: 0, writable: true }
-    });
-
-    panelTranscript = [{ kind: "user", id: "user-1", text: "Inspect" }];
-    await act(async () => root.render(<AgentPanel />));
-    expect(scroll.scrollTop).toBe(500);
-
-    Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 700, writable: true });
-    await act(async () => resizeCallbacks.forEach(callback => callback([], {} as ResizeObserver)));
-    expect(scroll.scrollTop).toBe(700);
-
-    scroll.scrollTop = 300;
-    await act(async () => scroll.dispatchEvent(new Event("scroll")));
-    Object.defineProperty(scroll, "scrollHeight", { configurable: true, value: 900, writable: true });
-    await act(async () => resizeCallbacks.forEach(callback => callback([], {} as ResizeObserver)));
-    expect(scroll.scrollTop).toBe(300);
-  });
-
-  it("keeps the transcript pinned to the bottom when a queued message grows the prompt dock", async () => {
-    panelTranscript = [{ kind: "user", id: "user-1", text: "Inspect" }];
-    await act(async () => root.render(<AgentPanel />));
-    const scroll = container.querySelector<HTMLDivElement>(".agent-scroll")!;
-    Object.defineProperties(scroll, {
-      clientHeight: { configurable: true, value: 100, writable: true },
-      scrollHeight: { configurable: true, value: 500, writable: true },
-      scrollTop: { configurable: true, value: 500, writable: true }
-    });
-
-    scroll.scrollTop = 350;
-    panelQueuedMessages = [{ id: "queued-1", content: "Continue with the audit", createdAt: Date.now() }];
-    await act(async () => root.render(<AgentPanel />));
-
-    expect(scroll.scrollTop).toBe(500);
-  });
-
-  it("restores a scrolled-up position across a remount instead of jumping to the bottom", async () => {
-    currentSession = session("scroll", 9);
-    panelTranscript = [{ kind: "user", id: "user-1", text: "Inspect" }];
-    await act(async () => root.render(<AgentPanel />));
-    const scroll = container.querySelector<HTMLDivElement>(".agent-scroll")!;
-    Object.defineProperties(scroll, {
-      clientHeight: { configurable: true, value: 100 },
-      scrollHeight: { configurable: true, value: 500, writable: true },
-      scrollTop: { configurable: true, value: 500, writable: true }
-    });
-
-    await act(async () => scroll.dispatchEvent(new WheelEvent("wheel", { deltaY: -200 })));
-    scroll.scrollTop = 200;
-    await act(async () => scroll.dispatchEvent(new Event("scroll")));
-
-    // Settings open/close unmounts the workspace area; remount the panel.
-    await act(async () => root.unmount());
-    root = createRoot(container);
-    await act(async () => root.render(<AgentPanel />));
-    const restored = container.querySelector<HTMLDivElement>(".agent-scroll")!;
-    Object.defineProperties(restored, {
-      clientHeight: { configurable: true, value: 100, writable: true },
-      scrollHeight: { configurable: true, value: 500, writable: true },
-      scrollTop: { configurable: true, value: 200, writable: true }
-    });
-    restored.scrollTop = 200;
-    await act(async () => restored.dispatchEvent(new Event("scroll")));
-
-    // New content arrives while the reader sits mid-conversation: the panel
-    // must not yank them to the live edge.
-    panelTranscript = [
-      { kind: "user", id: "user-1", text: "Inspect" },
-      { kind: "user", id: "user-2", text: "Continue" }
-    ];
-    await act(async () => root.render(<AgentPanel />));
-    expect(restored.scrollTop).toBe(200);
-  });
-
-  }
 
   it("returns from a child agent session to its parent", async () => {
     currentSession = { ...session("child", 1), id: "child", parentID: "parent", title: "Review changes", agent: "review" };

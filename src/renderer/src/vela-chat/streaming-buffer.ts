@@ -1,8 +1,8 @@
 /**
- * Codex's adaptive streaming buffer, ported from `Gpd` in the ChatGPT/Codex
- * webview bundle (`app-initial-*.js`).
+ * Adaptive streaming buffer, ported from `Gpd` in the Codex webview bundle
+ * (`app-initial-*.js`).
  *
- * While a response streams, Codex does not paint raw network chunks. It feeds
+ * While a response streams, the renderer does not paint raw network chunks. It feeds
  * the accumulated text through this buffer, which reveals characters at an
  * adaptive rate: the rate tracks arrival speed, then drains toward the target
  * on a 50ms tick and publishes on `requestAnimationFrame`. The result is one

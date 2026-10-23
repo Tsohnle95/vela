@@ -1,7 +1,7 @@
 # Codex transcript parity — implementation plan
 
 Status: **in progress** (step baseline complete, steps 1–5 open)
-Owner: `src/renderer/src/codex-chat/`
+Owner: `src/renderer/src/vela-chat/`
 Goal: make Vela's agent transcript behave like the Codex desktop transcript
 (`/Applications/ChatGPT.app`, bundle id `com.openai.codex`, 26.1016.61520).
 
@@ -170,7 +170,7 @@ Acceptance: recorded benchmark + no re-parse when text is unchanged.
 Run before each commit:
 
 ```sh
-npx vitest run src/renderer/src/codex-chat
+npx vitest run src/renderer/src/vela-chat
 npm run typecheck
 npm run architecture:check
 npm run docs:check

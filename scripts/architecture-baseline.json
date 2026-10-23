@@ -827,8 +827,7 @@
         "src/renderer/src/components/TimelineProse.tsx",
         "src/renderer/src/ai-elements/AiElementsTimeline.tsx",
         "src/renderer/src/ai-elements/adapters.ts",
-        "src/renderer/src/dsh-chat/",
-        "src/renderer/src/codex-chat/"
+        "src/renderer/src/vela-chat/"
       ]
     },
     {

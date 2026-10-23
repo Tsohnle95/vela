@@ -17,13 +17,13 @@ import {
   type SegmentCache
 } from "./segment-fade";
 import { StreamingTextBuffer } from "./streaming-buffer";
-import { CodexCodeBlock } from "./CodexCodeBlock";
+import { VelaCodeBlock } from "./VelaCodeBlock";
 import { createParseCache, parseMarkdown, type MdToken, type ParseCache } from "./markdown-parse";
 
 /**
- * Codex's streamed Markdown surface. Codex re-renders the whole message while
- * tokens arrive and makes arrival legible with the segment fade above; it does
- * not freeze or re-parse the tail, so prose never jumps between blocks.
+ * Vela's streamed Markdown surface. The whole message re-renders while tokens
+ * arrive and arrival is made legible with the segment fade above; it does not
+ * freeze blocks, so prose never jumps between blocks.
  */
 
 interface RenderContext {
@@ -77,7 +77,7 @@ function FadeSegment({
     context.timeline.settledKeys.add(segmentKey);
   };
   if (context.adaptive) {
-    return <span className="codex-fade" onAnimationEnd={settle}>{text}</span>;
+    return <span className="vela-fade" onAnimationEnd={settle}>{text}</span>;
   }
   const delay = context.timeline.delayMsByKey.get(segmentKey)
     ?? segmentDelay(index, FADE_SEGMENT_DELAY_MS, FADE_SEGMENT_MAX_DELAY_MS);
@@ -94,7 +94,7 @@ function FadeSegment({
   return (
     <span
       ref={attach}
-      className="codex-fade"
+      className="vela-fade"
       style={{ "--fade-delay": `${delay}ms` } as CSSProperties}
       onAnimationEnd={settle}
     >
@@ -113,7 +113,7 @@ function textOf(token: MdToken): string {
   return token.text ?? token.raw ?? "";
 }
 
-function CodexMath({ tex, display }: { tex: string; display: boolean }) {
+function VelaMath({ tex, display }: { tex: string; display: boolean }) {
   const html = useMemo(() => {
     try {
       return katex.renderToString(tex, { displayMode: display, throwOnError: false, strict: "ignore" });
@@ -121,10 +121,10 @@ function CodexMath({ tex, display }: { tex: string; display: boolean }) {
       return null;
     }
   }, [tex, display]);
-  if (html === null) return <span className="codex-math-fallback">{tex}</span>;
+  if (html === null) return <span className="vela-math-fallback">{tex}</span>;
   return (
     <span
-      className={display ? "codex-math codex-math-display" : "codex-math"}
+      className={display ? "vela-math vela-math-display" : "vela-math"}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -134,7 +134,7 @@ function renderImageToken(token: MdToken, path: string): ReactNode {
   return (
     <img
       key={path}
-      className="codex-md-image"
+      className="vela-md-image"
       src={token.href}
       alt={token.text ?? ""}
       loading="lazy"
@@ -163,9 +163,9 @@ function renderInlineToken(token: MdToken, path: string, context: RenderContext)
     return <Tag key={path}><InlineTokens tokens={token.tokens ?? []} path={path} context={context} /></Tag>;
   }
   if (type === "codespan") {
-    return <code key={path} className="codex-md-codespan">{textOf(token)}</code>;
+    return <code key={path} className="vela-md-codespan">{textOf(token)}</code>;
   }
-  if (type === "inlineMath") return <CodexMath key={path} tex={token.text ?? ""} display={false} />;
+  if (type === "inlineMath") return <VelaMath key={path} tex={token.text ?? ""} display={false} />;
   if (type === "image") return renderImageToken(token, path);
   if (type === "link") return renderLinkToken(token, path, context);
   if (type === "br") return <br key={path} />;
@@ -198,7 +198,7 @@ function renderHeading(token: MdToken, path: string, context: RenderContext): Re
   const depth = Math.min(Math.max(token.depth ?? 1, 1), 6);
   const Tag = `h${depth}` as "h1";
   return (
-    <Tag key={path} className="codex-md-heading">
+    <Tag key={path} className="vela-md-heading">
       <Inline token={token} path={path} context={context} />
     </Tag>
   );
@@ -206,7 +206,7 @@ function renderHeading(token: MdToken, path: string, context: RenderContext): Re
 
 function renderParagraph(token: MdToken, path: string, context: RenderContext): ReactNode {
   return (
-    <p key={path} className="codex-md-paragraph">
+    <p key={path} className="vela-md-paragraph">
       <Inline token={token} path={path} context={context} />
     </p>
   );
@@ -215,21 +215,21 @@ function renderParagraph(token: MdToken, path: string, context: RenderContext): 
 function renderCode(token: MdToken, path: string, context: RenderContext): ReactNode {
   if (context.tone === "user") {
     return (
-      <pre key={path} className="codex-md-pre">
+      <pre key={path} className="vela-md-pre">
         <code className={token.lang ? `language-${token.lang}` : undefined}>{token.text ?? ""}</code>
       </pre>
     );
   }
   return (
-    <div key={path} className="codex-md-code-block">
-      <CodexCodeBlock code={token.text ?? ""} lang={token.lang} streaming={context.animate} />
+    <div key={path} className="vela-md-code-block">
+      <VelaCodeBlock code={token.text ?? ""} lang={token.lang} streaming={context.animate} />
     </div>
   );
 }
 
 function renderBlockquote(token: MdToken, path: string, context: RenderContext): ReactNode {
   return (
-    <blockquote key={path} className="codex-md-blockquote">
+    <blockquote key={path} className="vela-md-blockquote">
       {renderBlocks(token.tokens ?? [], path, context)}
     </blockquote>
   );
@@ -238,22 +238,22 @@ function renderBlockquote(token: MdToken, path: string, context: RenderContext):
 function renderList(token: MdToken, path: string, context: RenderContext): ReactNode {
   const Tag = token.ordered ? "ol" : "ul";
   return (
-    <Tag key={path} className="codex-md-list" start={token.ordered ? token.start : undefined}>
+    <Tag key={path} className="vela-md-list" start={token.ordered ? token.start : undefined}>
       {(token.items ?? []).map((item, index) => {
         const itemPath = `${path}.li${index}`;
         return (
-          <li key={itemPath} className="codex-md-list-item" data-task={item.task || undefined}>
+          <li key={itemPath} className="vela-md-list-item" data-task={item.task || undefined}>
             {item.task && (
               <input
                 type="checkbox"
-                className="codex-md-checkbox"
+                className="vela-md-checkbox"
                 checked={Boolean(item.checked)}
                 readOnly
                 tabIndex={-1}
                 aria-hidden="true"
               />
             )}
-            <span className="codex-md-list-body">
+            <span className="vela-md-list-body">
               {item.tokens && item.tokens.length > 0
                 ? renderBlocks(item.tokens, itemPath, context)
                 : <SegmentedText text={item.text ?? ""} context={context} />}
@@ -267,9 +267,9 @@ function renderList(token: MdToken, path: string, context: RenderContext): React
 
 function renderTable(token: MdToken, path: string, context: RenderContext): ReactNode {
   return (
-    <div key={path} className="codex-md-table-container">
+    <div key={path} className="vela-md-table-container">
       <div
-        className="codex-md-table-scroller"
+        className="vela-md-table-scroller"
         role="region"
         tabIndex={0}
         aria-label="Scrollable table"
@@ -284,7 +284,7 @@ function renderTable(token: MdToken, path: string, context: RenderContext): Reac
           event.preventDefault();
         }}
       >
-        <table className="codex-md-table">
+        <table className="vela-md-table">
           <thead>
             <tr>
               {(token.header ?? []).map((cell, index) => {
@@ -320,14 +320,14 @@ function renderTable(token: MdToken, path: string, context: RenderContext): Reac
 function renderFallbackBlock(token: MdToken, path: string, context: RenderContext): ReactNode {
   if (token.tokens && token.tokens.length > 0) {
     return (
-      <p key={path} className="codex-md-paragraph">
+      <p key={path} className="vela-md-paragraph">
         <InlineTokens tokens={token.tokens} path={path} context={context} />
       </p>
     );
   }
   if (token.text) {
     return (
-      <p key={path} className="codex-md-paragraph">
+      <p key={path} className="vela-md-paragraph">
         <SegmentedText text={token.text} context={context} />
       </p>
     );
@@ -352,14 +352,14 @@ function renderBlock(token: MdToken, path: string, context: RenderContext): Reac
       return renderList(token, path, context);
     case "blockMath":
       return (
-        <div key={path} className="codex-math-block">
-          <CodexMath tex={token.text ?? ""} display />
+        <div key={path} className="vela-math-block">
+          <VelaMath tex={token.text ?? ""} display />
         </div>
       );
     case "table":
       return renderTable(token, path, context);
     case "hr":
-      return <hr key={path} className="codex-md-hr" />;
+      return <hr key={path} className="vela-md-hr" />;
     default:
       return renderFallbackBlock(token, path, context);
   }
@@ -370,10 +370,10 @@ function renderBlocks(tokens: MdToken[], path: string, context: RenderContext): 
 }
 
 /**
- * `streaming` turns on Codex's segment fade. The timeline lives for the whole
+ * `streaming` turns on the segment fade. The timeline lives for the whole
  * message so settled segments stay settled as the text grows.
  */
-export const CodexMarkdown = memo(function CodexMarkdown({
+export const VelaMarkdown = memo(function VelaMarkdown({
   text,
   streaming = false,
   className,
@@ -421,7 +421,7 @@ export const CodexMarkdown = memo(function CodexMarkdown({
   pruneSegmentCache(context.segments);
   return (
     <div
-      className={className ? `codex-md ${className}` : "codex-md"}
+      className={className ? `vela-md ${className}` : "vela-md"}
       data-markdown-animated={streaming ? "" : undefined}
       data-adaptive={adaptive ? "" : undefined}
       data-markdown-text-style="assistant-message"

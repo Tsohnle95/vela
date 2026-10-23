@@ -1,11 +1,7 @@
-import { AgentScrollArea, AgentStreamStatus } from "../ai-elements/AgentResponseViewport";
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePanel, useStore } from "../store";
-import { OpenCodeTimeline, PermissionPrompt } from "./OpenCodeTimeline";
-import { DshTranscript } from "../dsh-chat/DshTranscript";
-import { CodexTranscript } from "../codex-chat/CodexTranscript";
-import { AiElementsTimeline } from "../ai-elements/AiElementsTimeline";
-import { AiElementsSurface } from "../ai-elements/AiElementsSurface";
+import { PermissionPrompt } from "./OpenCodeTimeline";
+import { VelaTranscript } from "../vela-chat/VelaTranscript";
 import { FormPrompt } from "./FormPrompt";
 import { OpenCodeTodoDock } from "./OpenCodeTodoDock";
 import type { SessionInfo, TranscriptItem } from "@shared/types";
@@ -17,7 +13,6 @@ import { Composer } from "./Composer";
 import { TurnTimer, useAgentUsage } from "./AgentUsage";
 import stationMark from "../assets/agent-station.png";
 import lightStationMark from "../assets/agent-station-light.png";
-import { useAgentScroll } from "./agent-scroll";
 import { useMenuDismiss } from "./use-menu-dismiss";
 
 type PanelMode = "gui" | "tui";
@@ -76,7 +71,7 @@ function AgentEmptyState({ experimentalArt }: { experimentalArt: boolean }): Rea
   );
 }
 
-function DshConversation({
+function VelaConversation({
   tuiNotice, transcript, busy, lastAssistantId, session, activity, startedAt, showEmpty, experimentalArt
 }: {
   tuiNotice: string;
@@ -92,7 +87,7 @@ function DshConversation({
   return (
     <>
       {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
-      <DshTranscript
+      <VelaTranscript
         transcript={transcript}
         busy={busy}
         lastAssistantId={lastAssistantId}
@@ -102,74 +97,6 @@ function DshConversation({
         showEmpty={showEmpty}
         empty={<AgentEmptyState experimentalArt={experimentalArt} />}
       />
-    </>
-  );
-}
-
-type AgentTimelineProps = Omit<ComponentProps<typeof AiElementsTimeline>, "transcript" | "hideActivity">;
-
-function CodexConversation({
-  tuiNotice, transcript, busy, lastAssistantId, session, activity, startedAt, showEmpty, experimentalArt
-}: {
-  tuiNotice: string;
-  transcript: TranscriptItem[];
-  busy: boolean;
-  lastAssistantId: string | null;
-  session: SessionInfo | null;
-  activity: { isWaitingForPermission?: boolean; statusText?: string | null; isWorking?: boolean } | null | undefined;
-  startedAt: number | null | undefined;
-  showEmpty: boolean;
-  experimentalArt: boolean;
-}): ReactNode {
-  return (
-    <>
-      {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
-      <CodexTranscript
-        transcript={transcript}
-        busy={busy}
-        lastAssistantId={lastAssistantId}
-        session={session}
-        activity={activity}
-        startedAt={startedAt}
-        showEmpty={showEmpty}
-        empty={<AgentEmptyState experimentalArt={experimentalArt} />}
-      />
-    </>
-  );
-}
-
-function LegacyConversation({
-  renderer, tuiNotice, conversationStarted, busy, experimentalArt, transcript, responseTranscript,
-  timelineProps, showResponse, scrollRef, onScroll
-}: {
-  renderer: string;
-  tuiNotice: string;
-  conversationStarted: boolean;
-  busy: boolean;
-  experimentalArt: boolean;
-  transcript: TranscriptItem[];
-  responseTranscript: TranscriptItem[];
-  timelineProps: AgentTimelineProps;
-  showResponse: boolean;
-  scrollRef: RefObject<HTMLDivElement | null>;
-  onScroll: () => void;
-}): ReactNode {
-  const legacy = renderer === "old";
-  return (
-    <>
-      <AgentScrollArea legacy={legacy} legacyRef={scrollRef} onLegacyScroll={onScroll} showResponse={showResponse}>
-        {tuiNotice && <div className="agent-tui-notice">{tuiNotice}</div>}
-        {!conversationStarted && (legacy || !busy) && <AgentEmptyState experimentalArt={experimentalArt} />}
-        {legacy ? <OpenCodeTimeline {...timelineProps} transcript={transcript} /> : (
-          <div className="agent-response-stream" hidden={!showResponse} data-slot="session-turn-list" data-renderer={renderer}>
-            {renderer === "compare" && <OpenCodeTimeline {...timelineProps} transcript={transcript} />}
-            <div>
-              <AiElementsSurface><AiElementsTimeline {...timelineProps} hideActivity transcript={responseTranscript} /></AiElementsSurface>
-            </div>
-          </div>
-        )}
-      </AgentScrollArea>
-      <AgentStreamStatus legacy={legacy} visible={showResponse} {...timelineProps} transcript={responseTranscript}/>
     </>
   );
 }
@@ -220,8 +147,6 @@ export function AgentPanel({
   const activeSession = session === undefined ? storeSession : session;
   const view = usePanel(activeSession?.workspace);
   const { busy, todos, transcript, sessionUsage, compactionBaseline, currentModel, turnStartedAt, assistantStatus } = view;
-  const renderer = new URLSearchParams(window.location.search).get("chat-renderer") ?? "codex";
-  const { scrollRef, onScroll } = useAgentScroll(activeSession, transcript, busy, view.queuedMessages);
   const panelRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const panelDragRef = useRef<number | null>(null);
@@ -327,8 +252,6 @@ export function AgentPanel({
     () => transcript.filter((item) => item.kind !== "permission"),
     [transcript]
   );
-  const showResponse = responseTranscript.length > 0 || busy || Boolean(assistantStatus?.isWaitingForPermission);
-  const timelineProps = { busy, lastAssistantId, session: activeSession, activity: assistantStatus, startedAt: turnStartedAt };
 
   // Approvals and forms are interactive: the surface the user is watching owns
   // them. The embedded TUI renders its own prompts in the terminal, so drawing
@@ -388,45 +311,17 @@ export function AgentPanel({
         <AgentTui workspace={activeSession.workspace} onExit={handleTuiExit} onError={handleTuiError} />
       ) : (
         <>
-          {renderer === "codex" ? (
-            <CodexConversation
-              tuiNotice={tuiNotice}
-              transcript={responseTranscript}
-              busy={busy}
-              lastAssistantId={lastAssistantId}
-              session={activeSession}
-              activity={assistantStatus}
-              startedAt={turnStartedAt}
-              showEmpty={!conversationStarted && !busy}
-              experimentalArt={experimentalArt}
-            />
-          ) : renderer === "dsh" ? (
-            <DshConversation
-              tuiNotice={tuiNotice}
-              transcript={responseTranscript}
-              busy={busy}
-              lastAssistantId={lastAssistantId}
-              session={activeSession}
-              activity={assistantStatus}
-              startedAt={turnStartedAt}
-              showEmpty={!conversationStarted && !busy}
-              experimentalArt={experimentalArt}
-            />
-          ) : (
-            <LegacyConversation
-              renderer={renderer}
-              tuiNotice={tuiNotice}
-              conversationStarted={conversationStarted}
-              busy={busy}
-              experimentalArt={experimentalArt}
-              transcript={transcript}
-              responseTranscript={responseTranscript}
-              timelineProps={timelineProps}
-              showResponse={showResponse}
-              scrollRef={scrollRef}
-              onScroll={onScroll}
-            />
-          )}
+          <VelaConversation
+            tuiNotice={tuiNotice}
+            transcript={responseTranscript}
+            busy={busy}
+            lastAssistantId={lastAssistantId}
+            session={activeSession}
+            activity={assistantStatus}
+            startedAt={turnStartedAt}
+            showEmpty={!conversationStarted && !busy}
+            experimentalArt={experimentalArt}
+          />
 
           <div data-component="session-prompt-dock">
             {interactivePrompts}

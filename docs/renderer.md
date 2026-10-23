@@ -572,9 +572,9 @@ Key mechanisms:
   panel surface. Vendored
   source/provenance lives under `ai-elements/upstream/`; runnable original
   examples are under `ai-elements/demos/`. See the comparison procedure in
-  [operations.md](operations.md). `?chat-renderer=old` selects the original
-  implementation; `?chat-renderer=compare` displays both against the live panel
-  view. Neither presentation becomes another transcript authority.
+  [operations.md](operations.md). The AI Elements comparison surface remains
+  available for renderer experiments and never becomes another transcript
+  authority.
 - **Legacy runtime-neutral transcript presentation** — `OpenCodeTimeline.tsx` owns
   chronological run/turn composition, auxiliary events and permission prompts.
   Its pure `timeline-model.ts` owns tool/path/edit metadata, task descriptors,
@@ -761,13 +761,12 @@ express a cross-component invariant or non-obvious state contract.
 | `BrowserPane` | `BrowserPane.tsx`, `use-browser-guest.ts`, `use-browser-tabs.ts` | Browser tab surface: a navigation row (back / forward / reload-or-stop, "Search or enter a URL" field that turns bare hosts into `https:` and everything else into a search) over a `<webview>` guest in the `vela-browser` partition. Guests are created lazily — a new tab is pure state with no guest at all — so opening one costs nothing, and a loading veil covers the frame until the page stops loading; `use-browser-guest` folds guest events into the browser slice |
 | `BrowserTabsProvider` | `browser-tabs-context.tsx`, `browser-store-provider.tsx` | Browser tab state lives outside the app store, split into a *state* context (tab list + active tab, consumed by the strip and panes) and a stable *actions* context (consumed by the rail, the editor and the store). That split is a responsiveness contract, not a detail: when the slices lived in the app store, opening or closing a tab re-rendered every store consumer (measured 644ms with nine editors open; 2ms after the split)
 | `EditorTabs` | `EditorTabs.tsx`, `editor-groups.ts` | Tab strip for the editor groups: tabs share the strip width (90px floor, 240px ceiling) and overflow past the floor moves into an "all open tabs" menu button; a preview tab (`preview: true`, italic) marks a single Explorer click as transient so the next preview replaces it, while reopening the file, editing it, or pinning it removes that marker; each tab resolves its owning group (drag source and selection target) through the strip's group lookup; owns the tab drag MIME and the editor-group identity helpers |
-| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; defaults to the Codex transcript and retains `?chat-renderer=dsh|old|new` for the DSH, legacy, and comparison surfaces; the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
+| `AgentPanel` | `AgentPanel.tsx` | Session-owned GUI/TUI surface, timeline, composer, model/agent controls, usage/status; its header keeps the turn timer, the back control for delegated sessions, and the panel options menu (context usage/session/mode/close) behind a horizontal-dots control; renders the Vela transcript as the only agent transcript (no renderer switch); the empty GUI view shows optional station art above "Tell the agent what to work on." when Experimental art is enabled, centers the prompt without art when disabled, and clears both after the first user/assistant turn; Shift+Tab cycles agents, Shift+P cycles favorite models, and Ctrl+Tab cycles response strength without intercepting typed Shift+S |
 | `Composer` | `Composer.tsx` | Authoritative local prompt draft, attachments, keyboard dispatch and agent controls; takes `controls` (extra control-row slot, used for the session usage ring) and `overlay` (popover anchored to the input); completion and model-menu behavior have the owners below; one or two panels use a rounded input with a bottom toolbar; three or more Agent Mode panels use Split controls with writing and send beside a fixed options cell, which reveals attachment, agent, model and strength controls; the same draft and textarea survive compact layout changes |
 | `ComposerToolbar` | `ComposerToolbar.tsx` | Stateless attachment, agent, model, strength and send controls shared by the full composer and the revealed Split controls footer |
 | `AgentTui` | `AgentTui.tsx` | xterm view for the active runtime's PTY-backed TUI |
-| `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Legacy runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning; selected only by `?chat-renderer=old` |
-| Codex chat transcript | `codex-chat/` | Default transcript: Codex layout, per-segment 16ms/96ms/0.7s fade reveal, worked-for activity divider, compact tool rows, and floor-aware scrolling |
-| DSH chat transcript | `dsh-chat/` | Opt-in (`?chat-renderer=dsh`): DeepSeek Harness Markdown primitives with frozen-block streaming, collapsed per-Turn process groups, DSH tool/reasoning rows, and floor-aware scrolling |
+| `OpenCodeTimeline` | `OpenCodeTimeline.tsx` | Legacy runtime-neutral chronological rendering of assistant text/tools/delegation with hidden reasoning; used by the AI Elements comparison, not by `AgentPanel` |
+| Vela transcript | `vela-chat/` | The agent transcript: adaptive streaming buffer, per-segment 16ms/96ms/0.7s fade reveal, worked-for divider, activity rows, and floor-aware scrolling |
 | `OpenCodeTodoDock` | `OpenCodeTodoDock.tsx` | Structured todo/checklist state near the composer |
 | `AgentTray` | `AgentTray.tsx` | Collapsed agent-panel affordance and session activity indication |
 | `TerminalTray` | `TerminalTray.tsx` | Integrated terminal tabs backed by main-process `node-pty` |
@@ -839,108 +838,55 @@ Key cross-component invariants:
   TUI.
 - Workspace-dependent actions remain inert when no workspace is active.
 
-## Codex chat transcript (`codex-chat/`)
+## Vela transcript (`vela-chat/`)
 
-`AgentPanel.tsx` defaults to this surface. It reproduces the Codex webview's
-transcript layout: one centered 48rem column on a 16px item rhythm,
-right-aligned prompts in a 5%-ink bubble (`max-width: 77%`, 16px radius,
-8px/12px padding), a hairline "Worked for …" activity divider, and the answer as
-full-width Markdown.
+`AgentPanel.tsx` renders this surface directly; there is no renderer switch. It
+uses one centered 48rem column on a 16px item rhythm, right-aligned prompts in a
+5%-ink bubble (`max-width: 77%`, 16px radius, 8px/12px padding), a hairline
+"Worked for …" activity divider, and full-width answer Markdown.
 
-Codex has two streaming modes, and both live here.
+`streaming-buffer.ts` is the adaptive mode: while the response streams the
+renderer paints a character-rate smoothing buffer rather than raw chunks. The
+buffer tracks arrival speed into a `rate`, drains toward the target on a 50ms
+tick, and publishes on `requestAnimationFrame`. It pauses while the document is
+hidden and snaps to the full source when streaming ends or the stream identity
+changes.
 
-`streaming-buffer.ts` is the adaptive mode, ported from Codex's `Gpd`: while the
-response streams, the renderer paints a character-rate smoothing buffer rather
-than raw network chunks. The buffer tracks arrival speed into a `rate`, drains
-toward the target on a 50ms tick, and publishes on `requestAnimationFrame`, so
-text reveals continuously. It pauses while the document is hidden and snaps to
-the full source the moment streaming ends or the stream identity changes.
+`segment-fade.ts` is the non-adaptive reveal: ASCII text splits into
+alphanumeric runs with trailing punctuation attached, non-ASCII splits on
+whitespace-led words. Segment keys are content-addressed, so a mid-stream
+tokenization change never re-animates prose already on screen. Each new segment
+fades from 0 to 1 with easing `cubic-bezier(.37,.55,.86,.88)`, 16ms apart on one
+shared timeline capped 96ms ahead; `animationend` settles it permanently.
 
-`segment-fade.ts` is the non-adaptive reveal, ported from Codex's
-`K_d`/`q_d`/`Y_d`/`zSd`: ASCII text splits into alphanumeric runs with trailing
-punctuation attached, non-ASCII splits on whitespace-led words. Segment keys are
-content-addressed (reuse by same position or prefix, else by identical content
-elsewhere), so a mid-stream tokenization change never re-animates prose already
-on screen. Each new segment fades from 0 to 1 with easing
-`cubic-bezier(.37,.55,.86,.88)`, scheduled 16ms apart on one shared timeline and
-capped 96ms ahead of now; an `animationend` settles it permanently.
+Under adaptive streaming the stagger is disabled and new text and block elements
+fade over `--vela-animation-duration-streaming-text` (0.7s) with no delay;
+outside it the fade uses `--vela-transition-duration-basic` (0.15s) with the
+16/96ms stagger. List items, table rows, blockquotes and rules fade as blocks.
+Reduced motion collapses all of it to 0s. Segment spans stay mounted when
+animation toggles so the end of a stream cannot reflow the answer. Do not add
+typewriters, per-token timers, or block freezing.
 
-Under adaptive streaming Codex passes `fadeSegmentDelayMs: 0`, so the stagger is
-disabled and new text and block elements fade over
-`--animation-duration-streaming-text` (0.7s) with no delay; outside it the fade
-uses `--transition-duration-basic` (0.15s) with the 16/96ms stagger. List items,
-table rows, blockquotes and rules fade as blocks; paragraphs and headings fade
-through their text segments. Reduced motion collapses all of it to 0s. The
-message DOM keeps its segment spans whether or not animation is active so the
-stream ending cannot reflow the answer. Do not add typewriters, per-token timers,
-or block freezing here.
+`VelaMarkdown.tsx` re-renders the whole message per committed delta and caches
+segment splits plus a streaming prefix lexer (`markdown-parse.ts`) so earlier
+blocks keep token identity. User prompts use the `user-message` tone; fenced
+code uses `VelaCodeBlock` with deferred highlighting.
 
-`CodexMarkdown.tsx` re-renders the whole message per committed delta — Codex does
-not freeze blocks or re-parse a tail. User prompts render through the same
-markdown with the `user-message` tone.
+`VelaTurn.tsx` reuses `process-model.ts` for the answer boundary. Activity rows
+live behind the "Worked for {duration}" (or "Working for {elapsed}") divider.
+`VelaToolRow.tsx` dispatches exec/read/search/list/patch/web rows; exec and
+patch rows expand to payloads. `VelaReasoning.tsx` is the reasoning disclosure.
 
-`CodexTurn.tsx` reuses `process-model.ts` for the answer boundary. Process rows
-live behind the "Worked for {duration}" (or "Working for {elapsed}" while live)
-divider, which is the only entrance chrome. `CodexToolRow.tsx` is the compact
-tool row (glyph, title, one-line detail, status glyph, expandable payload);
-`CodexReasoning.tsx` is the reasoning disclosure.
+`VelaTranscript.tsx` owns its scrollport through `use-vela-scroll.ts`: 24px
+floor threshold, `overflow-anchor: none`, instant follow while pinned, and a
+260ms easeOutCubic scroll-to-bottom. Do not add a second scroll owner in
+`AgentPanel`.
 
-`CodexTranscript.tsx` owns its scrollport through the same floor-aware hook as
-the DSH surface. Do not add a second scroll owner in `AgentPanel` for the Codex
-branch.
-
-## DSH chat transcript (`dsh-chat/`)
-
-`AgentPanel.tsx` selects the transcript with `?chat-renderer`; the default is
-`codex`, `dsh` keeps the DeepSeek Harness surface, `old` keeps
-`OpenCodeTimeline`, and `new` keeps the shadcn AI Elements comparison surface.
-
-`DshMarkdown.tsx` wraps the published
-`@deepseek-ai/dsh-client-ui-primitives` `MarkdownText` unchanged. While a
-message streams it freezes every top-level mdast block except the trailing
-two and re-parses only the source tail, so a chunk append cannot remount or
-reflow earlier prose. There is no typewriter, per-word reveal, or opacity
-animation; the text shown after a render is the accumulated model text. The
-settled arm swaps to the math-enabled grammar through the same component.
-`MarkdownDelegateProvider` supplies local-file and HTTP(S) navigation.
-
-`process-model.ts` owns the answer boundary. The final answer is the trailing
-text of the last assistant step; a later tool-only step means the turn has no
-answer. Everything before that boundary, plus reasoning in the answer step,
-is process. A completed successful turn folds process behind the DSH
-`Completed in …` row. Completed turns with an error or interruption stay open.
-The process group itself is a second disclosure: its header is visible while
-the turn is live, and its body stays collapsed until the reader opens it.
-This is the default standard presentation — do not add entrance motion or
-per-tool reveal timers.
-
-`DshToolRow.tsx` renders the DSH 24px row grammar (leading icon, title, dot,
-one-line summary, hover chevron) with lazily mounted bodies. Shell tools use
-`TerminalBlock`; edit/write tools with both sides use `DiffBlock`; other tools
-use the IN/OUT card. `DshReasoning.tsx` ports DSH's first-line summary,
-latest-completed-paragraph preview, collapse state, and compact Markdown body.
-
-`DshTranscript.tsx` owns its scrollport. It follows the floor only while the
-reader is at the floor (25px), disables native scroll anchoring only in that
-state, restores a per-workspace position on remount, and exposes a
-back-to-bottom control after the reader moves away. Do not reintroduce a
-second scroll owner in `AgentPanel` for the DSH branch.
-
-`dsh-chat.css` is the token bridge: it maps the `--dsw-*`, `--dsh-*`, and
-`--shiki-*` variables consumed by the DSH primitives onto Vela's theme, then
-declares the transcript layout and row chrome. The bridge intentionally uses
-Vela's legacy transcript scale and palette rather than DSH's defaults: 14px
-body at 1.6 line height, 17/15/13px headings at 600/600/500, 500 strongs,
-the 8px/12px user bubble, `--agent-chat-ink` text, `--text-dim` rows, and
-Vela's syntax colors. It must not adopt DSH's 14px/24px body, 700-weight
-headings, or DSH teal palette. Keep DSH component CSS in the published
-package; do not copy it into `styles/`.
-
-The published primitives bundle targets React 18 and marks its shimmer
-decoration with `inert=""`; the `postinstall` step
-`scripts/patch-dsh-primitives.mjs` rewrites only that attribute to the React 19
-boolean form. Re-running install must keep the implementation otherwise
-unchanged.
+Known limits: Vela tool payloads carry no per-call timestamps, so Codex's
+elapsed qualifiers are omitted; MCP and dynamic-tool rows use the generic
+summary; patch bodies render a coloured unified diff. The layout, streaming and
+constants were reverse-engineered from the Codex webview; that provenance is
+the only reason bundle symbols appear in comments.
 
 ## Styles (`src/renderer/src/styles/`)
 
@@ -1050,7 +996,7 @@ released at that collapsed position.
 
 - Workers wired for editor/json/css/html/ts (`?worker` imports).
 - Codex profiles include Pierre-style syntax slots and language-specific token overrides; other profiles retain per-slot fallbacks. Comments use plain rather than italic text.
-- Startup migrates old product-prefixed local-storage keys before persisted preferences initialize. The `vela.theme` color profile defaults to Daybreak (`codex`) when absent; Midnight retains the `codex-dark` ID; saved palette IDs remain compatible. The independent `vela.ui` preference defaults to `codex`, with `classic` restoring card chrome. Shell selection publishes `data-shell`; palette selection supplies colors. Switching either removes obsolete inline tokens before applying the new combination.
+- Startup migrates old product-prefixed local-storage keys before persisted preferences initialize. The `vela.theme` color profile defaults to Daybreak (`codex`) when absent; Midnight retains the `vela-dark` ID; saved palette IDs remain compatible. The independent `vela.ui` preference defaults to `codex`, with `classic` restoring card chrome. Shell selection publishes `data-shell`; palette selection supplies colors. Switching either removes obsolete inline tokens before applying the new combination.
 - `vela-${appearanceId}` themes (diff insert/remove colors included) for all persisted color profiles. Saved `kitty` and `original` selections keep their IDs rather than mapping to Blueprint or Control Deck. Monaco
   parses theme palette colors with `Color.fromHex`, which silently maps any
   non-hex value to pure red — every palette color must be hex

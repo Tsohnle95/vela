@@ -74,13 +74,13 @@ function summaryFor(tool: ToolCallView, kind: RowKind): string {
 function StatusFooter({ status }: { status: ToolCallView["status"] }) {
   if (status === "running") return null;
   return (
-    <div className="codex-exec-footer">
-      <span className="codex-exec-status">
+    <div className="vela-exec-footer">
+      <span className="vela-exec-status">
         {status === "failed" ? (
           "Failed"
         ) : (
           <>
-            <svg className="codex-exec-check" viewBox="0 0 16 16" aria-hidden="true">
+            <svg className="vela-exec-check" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M3.5 8.5l3 3 6-7" />
             </svg>
             Success
@@ -93,7 +93,7 @@ function StatusFooter({ status }: { status: ToolCallView["status"] }) {
 
 function DiffBody({ text }: { text: string }) {
   return (
-    <pre className="codex-diff">
+    <pre className="vela-diff">
       {text.split("\n").map((line, index) => (
         <div
           key={index}
@@ -117,8 +117,8 @@ function DiffBody({ text }: { text: string }) {
 function ExecBody({ tool }: { tool: ToolCallView }) {
   const output = tool.output ?? "";
   return (
-    <div className="codex-exec-card" data-testid="exec-shell-body">
-      <div className="codex-exec-output">
+    <div className="vela-exec-card" data-testid="exec-shell-body">
+      <div className="vela-exec-output">
         <pre>{output || "No output"}</pre>
       </div>
       <StatusFooter status={tool.status} />
@@ -130,14 +130,14 @@ function PatchBody({ tool }: { tool: ToolCallView }) {
   const body = tool.output ?? "";
   const looksLikeDiff = /(^|\n)(@@ |\+\+\+ |--- )/.test(body);
   return (
-    <div className="codex-patch-card">
-      {looksLikeDiff ? <DiffBody text={body} /> : <pre className="codex-patch-output">{body || "No changes"}</pre>}
+    <div className="vela-patch-card">
+      {looksLikeDiff ? <DiffBody text={body} /> : <pre className="vela-patch-output">{body || "No changes"}</pre>}
     </div>
   );
 }
 
-/** One Codex tool call: collapsed summary row with an expandable payload. */
-export function CodexToolRow({ tool }: { tool: ToolCallView }) {
+/** One activity row: collapsed summary with an expandable payload. */
+export function VelaToolRow({ tool }: { tool: ToolCallView }) {
   const key = toolKey(tool.title);
   const kind = rowKind(key);
   const [open, setOpen] = useState(false);
@@ -145,27 +145,27 @@ export function CodexToolRow({ tool }: { tool: ToolCallView }) {
   const body = kind === "exec" || kind === "patch" ? tool.output ?? "" : "";
   const expandable = kind === "exec" || kind === "patch" || (kind === "generic" && Boolean(body));
   return (
-    <div className="codex-tool" data-kind={kind} data-status={tool.status}>
+    <div className="vela-tool" data-kind={kind} data-status={tool.status}>
       <button
         type="button"
-        className="codex-tool-head"
+        className="vela-tool-head"
         aria-expanded={expandable ? open : undefined}
         data-expandable={expandable || undefined}
         onClick={() => {
           if (expandable) setOpen((value) => !value);
         }}
       >
-        <span className="codex-tool-summary" data-running={running || undefined}>
+        <span className="vela-tool-summary" data-running={running || undefined}>
           {summaryFor(tool, kind)}
         </span>
         {expandable && (
-          <svg className="codex-tool-chevron" viewBox="0 0 16 16" aria-hidden="true" data-open={open || undefined}>
+          <svg className="vela-tool-chevron" viewBox="0 0 16 16" aria-hidden="true" data-open={open || undefined}>
             <path d="M6 4l4 4-4 4" />
           </svg>
         )}
       </button>
       {open && expandable && (
-        <div className="codex-tool-body">
+        <div className="vela-tool-body">
           {kind === "patch" ? <PatchBody tool={tool} /> : <ExecBody tool={tool} />}
         </div>
       )}

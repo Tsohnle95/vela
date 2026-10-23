@@ -2,26 +2,26 @@ import { useMemo, type ReactNode } from "react";
 import type { SessionInfo, TranscriptItem } from "@shared/types";
 import { useStore } from "../store";
 import { buildTurns, visibleTranscript } from "../components/timeline-model";
-import { CodexTurn } from "./CodexTurn";
-import { useCodexScroll } from "./use-codex-scroll";
-import "./codex-chat.css";
+import { VelaTurn } from "./VelaTurn";
+import { useVelaScroll } from "./use-vela-scroll";
+import "./vela-chat.css";
 
-export { clearCodexScrollMemoryForTests } from "./use-codex-scroll";
+export { clearVelaScrollMemoryForTests } from "./use-vela-scroll";
 
 function Working({ waiting }: { waiting: boolean }) {
   return (
-    <div className="codex-working" data-chat-running="">
-      <span className="codex-working-spinner" aria-hidden="true" />
-      <span className="codex-working-label">{waiting ? "Waiting for your action" : "Working"}</span>
+    <div className="vela-working" data-chat-running="">
+      <span className="vela-working-spinner" aria-hidden="true" />
+      <span className="vela-working-label">{waiting ? "Waiting for your action" : "Working"}</span>
     </div>
   );
 }
 
 /**
- * Codex's transcript surface: one centered 48rem column, a 16px item rhythm,
- * and Codex's 24px floor-ownership scroll semantics.
+ * Vela's transcript surface: one centered 48rem column, a 16px item rhythm,
+ * and 24px floor-ownership scroll semantics.
  */
-export function CodexTranscript({
+export function VelaTranscript({
   transcript,
   busy,
   lastAssistantId,
@@ -45,7 +45,7 @@ export function CodexTranscript({
     [transcript, sessions, session?.id]
   );
   const turns = useMemo(() => buildTurns(visible), [visible]);
-  const { scrollRef, contentRef, showButton, onScroll, scrollToBottom } = useCodexScroll(
+  const { scrollRef, contentRef, showButton, onScroll, scrollToBottom } = useVelaScroll(
     session?.workspace.id,
     transcript,
     busy,
@@ -53,17 +53,17 @@ export function CodexTranscript({
   );
 
   return (
-    <div className="codex-chat" data-codex-chat="">
+    <div className="vela-chat" data-vela-chat="">
       <div
         ref={scrollRef}
-        className="codex-scroll"
-        data-codex-following={showButton ? undefined : ""}
+        className="vela-scroll"
+        data-vela-following={showButton ? undefined : ""}
         onScroll={onScroll}
       >
-        <div ref={contentRef} className="codex-column">
+        <div ref={contentRef} className="vela-column">
           {showEmpty && turns.length === 0 && empty}
           {turns.map((turn, index) => (
-            <CodexTurn
+            <VelaTurn
               key={turn.id}
               turn={turn}
               busy={busy}
@@ -75,10 +75,10 @@ export function CodexTranscript({
           {busy && turns.length === 0 && <Working waiting={activity?.isWaitingForPermission === true} />}
         </div>
       </div>
-      <div className="codex-to-bottom-slot" data-visible={showButton || undefined}>
+      <div className="vela-to-bottom-slot" data-visible={showButton || undefined}>
         <button
           type="button"
-          className="codex-to-bottom"
+          className="vela-to-bottom"
           aria-label="Scroll to bottom"
           aria-hidden={!showButton}
           tabIndex={showButton ? 0 : -1}

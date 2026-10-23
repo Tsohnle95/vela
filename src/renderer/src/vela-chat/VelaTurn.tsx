@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { SessionInfo, ToolCallView, TranscriptItem } from "@shared/types";
 import type { TimelineTurn } from "../components/timeline-model";
 import { writeClipboard } from "../components/TimelineProse";
-import { turnProcess, type TurnProcess } from "../dsh-chat/process-model";
-import { CodexMarkdown } from "./CodexMarkdown";
-import { CodexReasoning } from "./CodexReasoning";
-import { CodexToolRow } from "./CodexToolRow";
+import { turnProcess, type TurnProcess } from "./process-model";
+import { VelaMarkdown } from "./VelaMarkdown";
+import { VelaReasoning } from "./VelaReasoning";
+import { VelaToolRow } from "./VelaToolRow";
 
 function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -37,7 +37,7 @@ function ShellRow({ item }: { item: Extract<TranscriptItem, { kind: "shell" }> }
     inputValue: { command: item.command },
     output: item.output
   };
-  return <CodexToolRow tool={tool} />;
+  return <VelaToolRow tool={tool} />;
 }
 
 function processRow(
@@ -52,7 +52,7 @@ function processRow(
     if (part.kind === "reasoning") {
       if (!part.text.trim()) return null;
       return (
-        <CodexReasoning
+        <VelaReasoning
           key={`${part.id}:${partIndex}`}
           text={part.text}
           running={streaming && item.id === lastAssistantId && !part.complete}
@@ -60,11 +60,11 @@ function processRow(
       );
     }
     if (part.kind === "tool") {
-      return <CodexToolRow key={`${part.id}:${partIndex}`} tool={part.tool} />;
+      return <VelaToolRow key={`${part.id}:${partIndex}`} tool={part.tool} />;
     }
     if (!part.text.trim()) return null;
     return (
-      <CodexMarkdown
+      <VelaMarkdown
         key={`${part.id}:${partIndex}`}
         text={part.text}
         streaming={streaming && item.id === lastAssistantId && !item.completed}
@@ -76,21 +76,21 @@ function processRow(
 function TurnEvent({ item }: { item: TranscriptItem }) {
   switch (item.kind) {
     case "status":
-      return <div className="codex-status-note" data-tone={item.tone}>{item.text}</div>;
+      return <div className="vela-status-note" data-tone={item.tone}>{item.text}</div>;
     case "divider":
-      return <div className="codex-turn-divider"><span>Session compacted</span></div>;
+      return <div className="vela-turn-divider"><span>Session compacted</span></div>;
     case "compaction":
       return (
-        <div className="codex-status-note" data-tone={item.status === "failed" ? "error" : "info"}>
+        <div className="vela-status-note" data-tone={item.status === "failed" ? "error" : "info"}>
           {item.status === "running" ? "Compacting context…" : item.status === "failed" ? "Compaction failed" : "Context compacted"}
         </div>
       );
     case "synthetic":
     case "skill":
       return (
-        <div className="codex-context-row">
-          {item.kind === "skill" && <span className="codex-context-label">Skill · {item.name}</span>}
-          <CodexMarkdown text={item.text} />
+        <div className="vela-context-row">
+          {item.kind === "skill" && <span className="vela-context-label">Skill · {item.name}</span>}
+          <VelaMarkdown text={item.text} />
         </div>
       );
     default:
@@ -120,22 +120,22 @@ function WorkDivider({
       ? `Worked for ${formatDuration(process.durationMs)}`
       : `${process.rows.length} previous messages`;
   return (
-    <div className="codex-work" data-running={running || undefined}>
-      <div className="codex-work-headrow">
+    <div className="vela-work" data-running={running || undefined}>
+      <div className="vela-work-headrow">
         <button
           type="button"
-          className="codex-work-head"
+          className="vela-work-head"
           aria-expanded={open}
           onClick={onToggle}
         >
-          <span className="codex-work-label">{label}</span>
-          <svg className="codex-work-chevron" viewBox="0 0 16 16" aria-hidden="true" data-open={open || undefined}>
+          <span className="vela-work-label">{label}</span>
+          <svg className="vela-work-chevron" viewBox="0 0 16 16" aria-hidden="true" data-open={open || undefined}>
             <path d="M6 4l4 4-4 4" />
           </svg>
         </button>
       </div>
-      <div className="codex-work-rule" aria-hidden="true" />
-      {open && <div className="codex-work-body">{children}</div>}
+      <div className="vela-work-rule" aria-hidden="true" />
+      {open && <div className="vela-work-body">{children}</div>}
     </div>
   );
 }
@@ -165,21 +165,21 @@ function Answer({
     });
   };
   return (
-    <div className="codex-answer" data-streaming={streaming || undefined}>
-      <CodexMarkdown text={text} streaming={streaming} />
-      {answer.item.interrupted && <span className="codex-answer-stopped">Stopped</span>}
+    <div className="vela-answer" data-streaming={streaming || undefined}>
+      <VelaMarkdown text={text} streaming={streaming} />
+      {answer.item.interrupted && <span className="vela-answer-stopped">Stopped</span>}
       {!streaming && (
-        <div className="codex-answer-footer">
-          <button type="button" className="codex-answer-copy" onClick={copy}>{copied ? "Copied" : "Copy"}</button>
-          {elapsed !== undefined && <span className="codex-answer-meta">{formatDuration(elapsed)}</span>}
+        <div className="vela-answer-footer">
+          <button type="button" className="vela-answer-copy" onClick={copy}>{copied ? "Copied" : "Copy"}</button>
+          {elapsed !== undefined && <span className="vela-answer-meta">{formatDuration(elapsed)}</span>}
         </div>
       )}
     </div>
   );
 }
 
-/** One Codex turn: right-aligned prompt, a worked-for activity divider, then the answer. */
-export function CodexTurn({
+/** One turn: right-aligned prompt, a worked-for activity divider, then the answer. */
+export function VelaTurn({
   turn,
   busy,
   lastAssistantId,
@@ -200,11 +200,11 @@ export function CodexTurn({
   const streaming = busy && isLast && lastAssistantId !== null && process.answer?.item.id === lastAssistantId;
   const startedAt = turn.user?.createdAt ?? process.answer?.item.createdAt;
   return (
-    <section className="codex-turn" data-turn={turn.id}>
+    <section className="vela-turn" data-turn={turn.id}>
       {turn.user && (
-        <div className="codex-message" data-role="user">
-          <div className="codex-user-bubble">
-            <CodexMarkdown text={turn.user.text} tone="user" className="codex-md-user" />
+        <div className="vela-message" data-role="user">
+          <div className="vela-user-bubble">
+            <VelaMarkdown text={turn.user.text} tone="user" className="vela-md-user" />
           </div>
         </div>
       )}
@@ -221,16 +221,16 @@ export function CodexTurn({
         </WorkDivider>
       )}
       {process.answer && (
-        <div className="codex-message" data-role="assistant">
+        <div className="vela-message" data-role="assistant">
           <Answer answer={process.answer} streaming={streaming || false} turn={turn} />
         </div>
       )}
       {process.answer?.item.retry && (
-        <div className="codex-status-note" data-tone="info">
+        <div className="vela-status-note" data-tone="info">
           {process.answer.item.retry.message} · attempt {process.answer.item.retry.attempt}
         </div>
       )}
-      {process.answer?.item.error && <div className="codex-error-text">{process.answer.item.error}</div>}
+      {process.answer?.item.error && <div className="vela-error-text">{process.answer.item.error}</div>}
     </section>
   );
 }

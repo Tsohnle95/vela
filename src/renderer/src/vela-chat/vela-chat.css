@@ -1,45 +1,45 @@
 /*
- * Codex transcript surface.
+ * Vela transcript surface.
  *
- * Geometry, spacing and the streamed-text fade are taken from the Codex
- * webview (ChatGPT.app / com.openai.codex): a centered 48rem column on a 16px
+ * Geometry, spacing and the streamed-text fade follow the Codex webview
+ * (ChatGPT.app / com.openai.codex): a centered 48rem column on a 16px
  * item rhythm, right-aligned prompts, a hairline "Worked for" activity
  * divider, and per-segment text fades (16ms step, 96ms cap, 0.7s while
  * streaming). Colours resolve through Vela's appearance tokens.
  */
 
-.codex-chat {
-  --codex-chat-font-size: 14px;
-  --codex-chat-code-font-size: 12px;
-  --codex-leading-relaxed: 1.625;
-  --codex-markdown-space: calc(var(--codex-chat-font-size) / 4);
-  --codex-transition-duration-basic: 0.15s;
-  --codex-animation-duration-streaming-text: 0.7s;
-  --codex-fade-easing: cubic-bezier(0.37, 0.55, 0.86, 0.88);
-  --codex-text: var(--fg);
-  --codex-text-secondary: color-mix(in srgb, var(--fg) 62%, transparent);
-  --codex-text-tertiary: color-mix(in srgb, var(--fg) 46%, transparent);
-  --codex-rule: var(--border-subtle);
-  --codex-hover: color-mix(in srgb, var(--fg) 5%, transparent);
+.vela-chat {
+  --vela-chat-font-size: 14px;
+  --vela-chat-code-font-size: 12px;
+  --vela-leading-relaxed: 1.625;
+  --vela-markdown-space: calc(var(--vela-chat-font-size) / 4);
+  --vela-transition-duration-basic: 0.15s;
+  --vela-animation-duration-streaming-text: 0.7s;
+  --vela-fade-easing: cubic-bezier(0.37, 0.55, 0.86, 0.88);
+  --vela-text: var(--fg);
+  --vela-text-secondary: color-mix(in srgb, var(--fg) 62%, transparent);
+  --vela-text-tertiary: color-mix(in srgb, var(--fg) 46%, transparent);
+  --vela-rule: var(--border-subtle);
+  --vela-hover: color-mix(in srgb, var(--fg) 5%, transparent);
 
   position: relative;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-  color: var(--codex-text);
+  color: var(--vela-text);
 }
 
-.codex-scroll {
+.vela-scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Codex disables native anchoring; the scroll hook owns the position. */
+  /* Native anchoring is disabled; the scroll hook owns the position. */
   overflow-anchor: none;
 }
 
-.codex-column {
+.vela-column {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -53,31 +53,31 @@
 
 /* ── Turn + message shell ─────────────────────────────────────────────── */
 
-.codex-turn {
+.vela-turn {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
 }
 
-.codex-message {
+.vela-message {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-width: 0;
 }
 
-.codex-message[data-role="user"] {
+.vela-message[data-role="user"] {
   align-items: flex-end;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.codex-message[data-role="assistant"] {
+.vela-message[data-role="assistant"] {
   gap: 4px;
 }
 
-.codex-user-bubble {
+.vela-user-bubble {
   max-width: 77%;
   min-width: 0;
   overflow: hidden;
@@ -85,70 +85,70 @@
   padding: 8px 12px;
   border-radius: 16px;
   background: color-mix(in srgb, var(--fg) 5%, transparent);
-  font-size: var(--codex-chat-font-size);
-  line-height: var(--codex-leading-relaxed);
+  font-size: var(--vela-chat-font-size);
+  line-height: var(--vela-leading-relaxed);
 }
 
 /* ── Markdown ─────────────────────────────────────────────────────────── */
 
-.codex-md {
-  --markdown-font-size: var(--codex-chat-font-size);
-  --markdown-line-height: calc(var(--markdown-font-size) * var(--codex-leading-relaxed));
-  --markdown-space: var(--codex-markdown-space);
+.vela-md {
+  --markdown-font-size: var(--vela-chat-font-size);
+  --markdown-line-height: calc(var(--markdown-font-size) * var(--vela-leading-relaxed));
+  --markdown-space: var(--vela-markdown-space);
 
-  color: var(--codex-text);
+  color: var(--vela-text);
   font-size: var(--markdown-font-size);
   line-height: var(--markdown-line-height);
   overflow-wrap: anywhere;
   min-width: 0;
 }
 
-.codex-md > :first-child {
+.vela-md > :first-child {
   margin-top: 0;
 }
 
-.codex-md > :last-child {
+.vela-md > :last-child {
   margin-bottom: 0;
 }
 
-.codex-md > .codex-md-paragraph:not(:first-child) {
+.vela-md > .vela-md-paragraph:not(:first-child) {
   margin-top: calc(var(--markdown-space) * 2);
 }
 
-.codex-md > .codex-md-paragraph + .codex-md-paragraph {
+.vela-md > .vela-md-paragraph + .vela-md-paragraph {
   margin-block: calc(var(--markdown-space) * 4);
 }
 
-.codex-md-heading {
+.vela-md-heading {
   margin-top: calc(var(--markdown-space) * 4);
   margin-bottom: calc(var(--markdown-space) * 2);
   font-weight: 600;
   line-height: 1.3;
 }
 
-.codex-md > .codex-md-heading:where(h1, h2, h3) + .codex-md-paragraph,
-.codex-md > .codex-md-paragraph + .codex-md-list {
+.vela-md > .vela-md-heading:where(h1, h2, h3) + .vela-md-paragraph,
+.vela-md > .vela-md-paragraph + .vela-md-list {
   margin-top: 0;
 }
 
-.codex-md h1 { font-size: 1.5em; }
-.codex-md h2 { font-size: 1.3em; }
-.codex-md h3 { font-size: 1.15em; }
+.vela-md h1 { font-size: 1.5em; }
+.vela-md h2 { font-size: 1.3em; }
+.vela-md h3 { font-size: 1.15em; }
 
-.codex-md-list {
+.vela-md-list {
   margin-block: calc(var(--markdown-space) * 2);
   padding-inline-start: 1.5em;
 }
 
-.codex-md-list .codex-md-list {
+.vela-md-list .vela-md-list {
   margin-block: calc(var(--markdown-space));
 }
 
-.codex-md-list-item {
+.vela-md-list-item {
   margin-block: calc(var(--markdown-space));
 }
 
-.codex-md-codespan {
+.vela-md-codespan {
   padding: 1px 5px;
   border-radius: 4px;
   background: color-mix(in srgb, var(--fg) 8%, transparent);
@@ -156,7 +156,7 @@
   font-size: 0.875em;
 }
 
-.codex-md-pre {
+.vela-md-pre {
   margin-block: calc(var(--markdown-space) * 2);
   padding: 12px;
   overflow-x: auto;
@@ -166,61 +166,61 @@
   line-height: 1.5;
 }
 
-.codex-md-pre code {
+.vela-md-pre code {
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   white-space: pre;
 }
 
-.codex-md-blockquote {
+.vela-md-blockquote {
   margin-block: calc(var(--markdown-space) * 2);
   padding-inline-start: calc(var(--markdown-space) * 6);
   border: 0;
-  color: var(--codex-text-secondary);
+  color: var(--vela-text-secondary);
   position: relative;
 }
 
-.codex-md-blockquote::after {
+.vela-md-blockquote::after {
   content: "";
   position: absolute;
   inset-block: calc(var(--markdown-space) * 2);
   inset-inline-start: 0;
   width: var(--markdown-space);
   border-radius: calc(var(--markdown-space) / 2);
-  background: var(--codex-rule);
+  background: var(--vela-rule);
 }
 
-.codex-md-hr {
+.vela-md-hr {
   margin-block: calc(var(--markdown-space) * 7);
   border: 0;
-  border-top: 1px solid var(--codex-rule);
+  border-top: 1px solid var(--vela-rule);
 }
 
-.codex-md-table-container {
+.vela-md-table-container {
   margin-block: calc(var(--markdown-space) * 2);
   max-width: 100%;
 }
 
-.codex-md-table-scroller {
+.vela-md-table-scroller {
   max-width: 100%;
   overflow-x: auto;
   outline: none;
 }
 
-.codex-md-table {
+.vela-md-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875em;
 }
 
-.codex-md-table th,
-.codex-md-table td {
+.vela-md-table th,
+.vela-md-table td {
   padding: 6px 10px;
-  border: 1px solid var(--codex-rule);
+  border: 1px solid var(--vela-rule);
   text-align: start;
   overflow-wrap: break-word;
 }
 
-.codex-md-image {
+.vela-md-image {
   display: block;
   width: auto;
   height: auto;
@@ -228,76 +228,76 @@
   max-height: 12.5rem;
   object-fit: contain;
   margin-block: 12px;
-  border: 1px solid var(--codex-rule);
+  border: 1px solid var(--vela-rule);
   border-radius: 6px;
   box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 12%));
 }
 
-.codex-md-list-item[data-task] {
+.vela-md-list-item[data-task] {
   display: flex;
   gap: 8px;
   align-items: flex-start;
   list-style: none;
 }
 
-.codex-md-list-item[data-task] .codex-md-checkbox {
+.vela-md-list-item[data-task] .vela-md-checkbox {
   flex: 0 0 auto;
   margin: 3px 0 0;
   accent-color: var(--fg);
 }
 
-.codex-md-list-body {
+.vela-md-list-body {
   min-width: 0;
 }
 
 /* ── Fenced code blocks (Codex code component) ────────────────────────── */
 
-.codex-code {
+.vela-code {
   margin-block: calc(var(--markdown-space) * 2);
-  border: 1px solid var(--codex-rule);
+  border: 1px solid var(--vela-rule);
   border-radius: 8px;
   overflow: hidden;
   background: var(--bg-inset, color-mix(in srgb, var(--fg) 6%, transparent));
 }
 
-.codex-code-header {
+.vela-code-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 5px 10px;
-  border-bottom: 1px solid var(--codex-rule);
-  color: var(--codex-text-secondary);
+  border-bottom: 1px solid var(--vela-rule);
+  color: var(--vela-text-secondary);
   font-size: 12px;
 }
 
-.codex-code-lang {
+.vela-code-lang {
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   text-transform: lowercase;
 }
 
-.codex-code-actions {
+.vela-code-actions {
   display: inline-flex;
   gap: 2px;
 }
 
-.codex-code-action {
+.vela-code-action {
   padding: 1px 6px;
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--codex-text-secondary);
+  color: var(--vela-text-secondary);
   font: inherit;
   font-size: 12px;
   cursor: pointer;
 }
 
-.codex-code-action:hover {
-  background: var(--codex-hover);
-  color: var(--codex-text);
+.vela-code-action:hover {
+  background: var(--vela-hover);
+  color: var(--vela-text);
 }
 
-.codex-code-pre {
+.vela-code-pre {
   margin: 0;
   padding: 12px;
   overflow-x: auto;
@@ -307,86 +307,86 @@
   tab-size: 2;
 }
 
-.codex-code-pre[data-wrap] {
+.vela-code-pre[data-wrap] {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.codex-code-pre code {
+.vela-code-pre code {
   font-family: inherit;
   white-space: pre;
 }
 
-.codex-code-pre[data-wrap] code {
+.vela-code-pre[data-wrap] code {
   white-space: pre-wrap;
 }
 
-.codex-code-pre .codex-code-line {
+.vela-code-pre .vela-code-line {
   color: var(--shiki-light, inherit);
 }
 
-html.dark .codex-code-pre .codex-code-line {
+html.dark .vela-code-pre .vela-code-line {
   color: var(--shiki-dark, inherit);
 }
 
-.codex-md a {
+.vela-md a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.codex-md-reasoning {
-  color: var(--codex-text-secondary);
+.vela-md-reasoning {
+  color: var(--vela-text-secondary);
 }
 
-.codex-md-user > .codex-md-paragraph {
+.vela-md-user > .vela-md-paragraph {
   margin-block: 0;
 }
 
 /* ── Streamed-text fade ───────────────────────────────────────────────── */
 
-@keyframes codex-fade-in {
+@keyframes vela-fade-in {
   0% { opacity: 0; }
   to { opacity: 1; }
 }
 
-.codex-md[data-markdown-animated] .codex-fade {
+.vela-md[data-markdown-animated] .vela-fade {
   opacity: 1;
-  animation: codex-fade-in var(--duration, var(--codex-transition-duration-basic)) var(--codex-fade-easing) both;
+  animation: vela-fade-in var(--duration, var(--vela-transition-duration-basic)) var(--vela-fade-easing) both;
   animation-delay: var(--fade-delay, 0s);
 }
 
-.codex-md[data-markdown-animated][data-adaptive] .codex-fade {
-  --duration: var(--codex-animation-duration-streaming-text);
+.vela-md[data-markdown-animated][data-adaptive] .vela-fade {
+  --duration: var(--vela-animation-duration-streaming-text);
 }
 
-.codex-md[data-markdown-animated] :is(.codex-md-list-item, .codex-md-table tr, .codex-md-blockquote, .codex-md-hr) {
+.vela-md[data-markdown-animated] :is(.vela-md-list-item, .vela-md-table tr, .vela-md-blockquote, .vela-md-hr) {
   opacity: 1;
-  animation: codex-fade-in var(--duration, var(--codex-transition-duration-basic)) var(--codex-fade-easing) both;
+  animation: vela-fade-in var(--duration, var(--vela-transition-duration-basic)) var(--vela-fade-easing) both;
   animation-delay: var(--fade-delay, 0s);
 }
 
-.codex-md[data-markdown-animated][data-adaptive] :is(.codex-md-list-item, .codex-md-table tr, .codex-md-blockquote, .codex-md-hr) {
-  --duration: var(--codex-animation-duration-streaming-text);
+.vela-md[data-markdown-animated][data-adaptive] :is(.vela-md-list-item, .vela-md-table tr, .vela-md-blockquote, .vela-md-hr) {
+  --duration: var(--vela-animation-duration-streaming-text);
 }
 
 /* ── Worked-for activity divider ──────────────────────────────────────── */
 
-.codex-work {
+.vela-work {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.codex-work-headrow {
+.vela-work-headrow {
   display: flex;
   align-items: center;
-  font-size: var(--codex-chat-font-size);
-  color: var(--codex-text-secondary);
+  font-size: var(--vela-chat-font-size);
+  color: var(--vela-text-secondary);
 }
 
-.codex-work-head {
+.vela-work-head {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -401,15 +401,15 @@ html.dark .codex-code-pre .codex-code-line {
   cursor: default;
 }
 
-.codex-work-head:hover {
-  background: var(--codex-hover);
+.vela-work-head:hover {
+  background: var(--vela-hover);
 }
 
-.codex-work-label {
-  color: var(--codex-text-tertiary);
+.vela-work-label {
+  color: var(--vela-text-tertiary);
 }
 
-.codex-work-chevron {
+.vela-work-chevron {
   width: 12px;
   height: 12px;
   fill: none;
@@ -417,21 +417,21 @@ html.dark .codex-code-pre .codex-code-line {
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform var(--codex-transition-duration-basic);
+  transition: transform var(--vela-transition-duration-basic);
 }
 
-.codex-work-chevron[data-open] {
+.vela-work-chevron[data-open] {
   transform: rotate(90deg);
 }
 
-.codex-work-rule {
+.vela-work-rule {
   width: 100%;
   height: 1px;
   margin-top: 4px;
-  background: var(--codex-rule);
+  background: var(--vela-rule);
 }
 
-.codex-work-body {
+.vela-work-body {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -441,13 +441,13 @@ html.dark .codex-code-pre .codex-code-line {
 
 /* ── Tool calls (Codex activity rows) ─────────────────────────────────── */
 
-.codex-tool {
+.vela-tool {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.codex-tool-head {
+.vela-tool-head {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -457,23 +457,23 @@ html.dark .codex-code-pre .codex-code-line {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--codex-text-tertiary);
+  color: var(--vela-text-tertiary);
   font: inherit;
-  font-size: var(--codex-chat-font-size);
+  font-size: var(--vela-chat-font-size);
   line-height: 1.5;
   text-align: start;
   cursor: default;
 }
 
-.codex-tool-head[data-expandable] {
+.vela-tool-head[data-expandable] {
   cursor: pointer;
 }
 
-.codex-tool-head[data-expandable]:hover {
-  color: var(--codex-text);
+.vela-tool-head[data-expandable]:hover {
+  color: var(--vela-text);
 }
 
-.codex-tool-summary {
+.vela-tool-summary {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -481,25 +481,25 @@ html.dark .codex-code-pre .codex-code-line {
   font-family: inherit;
 }
 
-.codex-tool-summary[data-running] {
+.vela-tool-summary[data-running] {
   background: linear-gradient(
     90deg,
-    var(--codex-text-tertiary) 0%,
-    var(--codex-text) 50%,
-    var(--codex-text-tertiary) 100%
+    var(--vela-text-tertiary) 0%,
+    var(--vela-text) 50%,
+    var(--vela-text-tertiary) 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: codex-shimmer 1.6s linear infinite;
+  animation: vela-shimmer 1.6s linear infinite;
 }
 
-@keyframes codex-shimmer {
+@keyframes vela-shimmer {
   to { background-position: -200% 0; }
 }
 
-.codex-tool-chevron {
+.vela-tool-chevron {
   flex: 0 0 auto;
   width: 12px;
   height: 12px;
@@ -509,34 +509,34 @@ html.dark .codex-code-pre .codex-code-line {
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0;
-  transition: transform var(--codex-transition-duration-basic), opacity var(--codex-transition-duration-basic);
+  transition: transform var(--vela-transition-duration-basic), opacity var(--vela-transition-duration-basic);
 }
 
-.codex-tool-head:hover .codex-tool-chevron,
-.codex-tool-head:focus-visible .codex-tool-chevron,
-.codex-tool-chevron[data-open] {
+.vela-tool-head:hover .vela-tool-chevron,
+.vela-tool-head:focus-visible .vela-tool-chevron,
+.vela-tool-chevron[data-open] {
   opacity: 1;
 }
 
-.codex-tool-chevron[data-open] {
+.vela-tool-chevron[data-open] {
   transform: rotate(90deg);
 }
 
-.codex-tool-body {
+.vela-tool-body {
   padding-top: 8px;
   min-width: 0;
 }
 
-.codex-exec-card {
+.vela-exec-card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--border-strong, var(--codex-rule));
+  border: 1px solid var(--border-strong, var(--vela-rule));
   border-radius: 8px;
   background: var(--bg-inset, color-mix(in srgb, var(--fg) 5%, transparent));
 }
 
-.codex-exec-output {
+.vela-exec-output {
   max-height: 9rem;
   overflow: auto;
   padding: 8px;
@@ -545,28 +545,28 @@ html.dark .codex-code-pre .codex-code-line {
   line-height: 1.5;
 }
 
-.codex-exec-output pre {
+.vela-exec-output pre {
   margin: 0;
   white-space: pre;
 }
 
-.codex-exec-footer {
+.vela-exec-footer {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 2px 10px 4px;
-  color: var(--codex-text-tertiary);
+  color: var(--vela-text-tertiary);
   font-size: 12px;
 }
 
-.codex-exec-status {
+.vela-exec-status {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   margin-inline-start: auto;
 }
 
-.codex-exec-check {
+.vela-exec-check {
   width: 11px;
   height: 11px;
   fill: none;
@@ -576,14 +576,14 @@ html.dark .codex-code-pre .codex-code-line {
   stroke-linejoin: round;
 }
 
-.codex-patch-card {
+.vela-patch-card {
   overflow: hidden;
-  border: 1px solid var(--codex-rule);
+  border: 1px solid var(--vela-rule);
   border-radius: 8px;
   background: color-mix(in srgb, var(--fg) 4%, transparent);
 }
 
-.codex-diff {
+.vela-diff {
   margin: 0;
   max-height: 15rem;
   overflow: auto;
@@ -594,21 +594,21 @@ html.dark .codex-code-pre .codex-code-line {
   white-space: pre;
 }
 
-.codex-diff [data-kind="add"] {
+.vela-diff [data-kind="add"] {
   color: var(--green, #2ea043);
   background: color-mix(in srgb, var(--green, #2ea043) 10%, transparent);
 }
 
-.codex-diff [data-kind="del"] {
+.vela-diff [data-kind="del"] {
   color: var(--red, #d9534f);
   background: color-mix(in srgb, var(--red, #d9534f) 10%, transparent);
 }
 
-.codex-diff [data-kind="hunk"] {
-  color: var(--codex-text-tertiary);
+.vela-diff [data-kind="hunk"] {
+  color: var(--vela-text-tertiary);
 }
 
-.codex-patch-output {
+.vela-patch-output {
   margin: 0;
   max-height: 10rem;
   overflow: auto;
@@ -621,13 +621,13 @@ html.dark .codex-code-pre .codex-code-line {
 
 /* ── Reasoning ────────────────────────────────────────────────────────── */
 
-.codex-reasoning {
+.vela-reasoning {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.codex-reasoning-head {
+.vela-reasoning-head {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -635,18 +635,18 @@ html.dark .codex-code-pre .codex-code-line {
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: var(--codex-text-secondary);
+  color: var(--vela-text-secondary);
   font: inherit;
-  font-size: var(--codex-chat-font-size);
+  font-size: var(--vela-chat-font-size);
   cursor: pointer;
   text-align: start;
 }
 
-.codex-reasoning-head:hover {
-  background: var(--codex-hover);
+.vela-reasoning-head:hover {
+  background: var(--vela-hover);
 }
 
-.codex-reasoning-glyph {
+.vela-reasoning-glyph {
   width: 14px;
   height: 14px;
   fill: none;
@@ -657,130 +657,130 @@ html.dark .codex-code-pre .codex-code-line {
   opacity: 0.7;
 }
 
-.codex-reasoning-label {
-  color: var(--codex-text);
+.vela-reasoning-label {
+  color: var(--vela-text);
 }
 
-.codex-reasoning-body {
+.vela-reasoning-body {
   padding: 2px 6px 6px 28px;
 }
 
 /* ── Answer footer / status ───────────────────────────────────────────── */
 
-.codex-answer {
+.vela-answer {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
 }
 
-.codex-answer-stopped {
-  color: var(--codex-text-tertiary);
+.vela-answer-stopped {
+  color: var(--vela-text-tertiary);
   font-size: 12px;
 }
 
-.codex-answer-footer {
+.vela-answer-footer {
   display: flex;
   align-items: center;
   gap: 10px;
   min-height: 20px;
   opacity: 0;
-  transition: opacity var(--codex-transition-duration-basic);
+  transition: opacity var(--vela-transition-duration-basic);
 }
 
-.codex-answer:hover .codex-answer-footer,
-.codex-answer:focus-within .codex-answer-footer {
+.vela-answer:hover .vela-answer-footer,
+.vela-answer:focus-within .vela-answer-footer {
   opacity: 1;
 }
 
-.codex-answer-copy {
+.vela-answer-copy {
   padding: 2px 6px;
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--codex-text-secondary);
+  color: var(--vela-text-secondary);
   font: inherit;
   font-size: 12px;
   cursor: pointer;
 }
 
-.codex-answer-copy:hover {
-  background: var(--codex-hover);
-  color: var(--codex-text);
+.vela-answer-copy:hover {
+  background: var(--vela-hover);
+  color: var(--vela-text);
 }
 
-.codex-answer-meta {
-  color: var(--codex-text-tertiary);
+.vela-answer-meta {
+  color: var(--vela-text-tertiary);
   font-size: 12px;
 }
 
-.codex-status-note {
+.vela-status-note {
   padding: 2px 0;
-  color: var(--codex-text-secondary);
+  color: var(--vela-text-secondary);
   font-size: 12px;
 }
 
-.codex-status-note[data-tone="error"] {
+.vela-status-note[data-tone="error"] {
   color: var(--red, #d9534f);
 }
 
-.codex-error-text {
+.vela-error-text {
   color: var(--red, #d9534f);
   font-size: 12.5px;
 }
 
-.codex-turn-divider {
+.vela-turn-divider {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--codex-text-tertiary);
+  color: var(--vela-text-tertiary);
   font-size: 12px;
 }
 
-.codex-turn-divider::before,
-.codex-turn-divider::after {
+.vela-turn-divider::before,
+.vela-turn-divider::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--codex-rule);
+  background: var(--vela-rule);
 }
 
-.codex-context-row {
+.vela-context-row {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 6px 0;
-  color: var(--codex-text-secondary);
+  color: var(--vela-text-secondary);
   font-size: 12.5px;
 }
 
-.codex-context-label {
-  color: var(--codex-text-tertiary);
+.vela-context-label {
+  color: var(--vela-text-tertiary);
   font-size: 11.5px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-.codex-working {
+.vela-working {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--codex-text-secondary);
-  font-size: var(--codex-chat-font-size);
+  color: var(--vela-text-secondary);
+  font-size: var(--vela-chat-font-size);
 }
 
-.codex-working-spinner {
+.vela-working-spinner {
   width: 11px;
   height: 11px;
   border: 1.5px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
-  animation: codex-spin 0.7s linear infinite;
+  animation: vela-spin 0.7s linear infinite;
 }
 
 /* ── Back to bottom ───────────────────────────────────────────────────── */
 
-.codex-to-bottom-slot {
+.vela-to-bottom-slot {
   position: absolute;
   inset-inline: 0;
   bottom: 12px;
@@ -789,41 +789,41 @@ html.dark .codex-code-pre .codex-code-line {
   pointer-events: none;
 }
 
-.codex-to-bottom {
+.vela-to-bottom {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--codex-rule);
+  border: 1px solid var(--vela-rule);
   border-radius: 999px;
   background: var(--bg-panel, var(--bg));
-  color: var(--codex-text-secondary);
+  color: var(--vela-text-secondary);
   box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 12%));
   cursor: pointer;
   pointer-events: none;
   opacity: 0;
-  transition: opacity var(--codex-transition-duration-basic) ease-in-out;
+  transition: opacity var(--vela-transition-duration-basic) ease-in-out;
 }
 
-.codex-to-bottom-slot[data-visible] .codex-to-bottom {
+.vela-to-bottom-slot[data-visible] .vela-to-bottom {
   opacity: 1;
   pointer-events: auto;
 }
 
-.codex-to-bottom:hover {
-  color: var(--codex-text);
+.vela-to-bottom:hover {
+  color: var(--vela-text);
   background: var(--bg-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .codex-md[data-markdown-animated] .codex-fade {
+  .vela-md[data-markdown-animated] .vela-fade {
     animation-duration: 0s;
     animation-delay: 0s !important;
   }
 
-  .codex-tool-spinner,
-  .codex-working-spinner {
+  .vela-tool-spinner,
+  .vela-working-spinner {
     animation-duration: 2s;
   }
 }
