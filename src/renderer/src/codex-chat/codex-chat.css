@@ -439,25 +439,26 @@ html.dark .codex-code-pre .codex-code-line {
   min-width: 0;
 }
 
-/* ── Tool calls ───────────────────────────────────────────────────────── */
+/* ── Tool calls (Codex activity rows) ─────────────────────────────────── */
 
 .codex-tool {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-radius: 8px;
 }
 
 .codex-tool-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
-  padding: 4px 6px;
+  max-width: 100%;
+  align-self: flex-start;
+  padding: 0;
   border: 0;
-  border-radius: 8px;
   background: transparent;
-  color: var(--codex-text-secondary);
+  color: var(--codex-text-tertiary);
+  font: inherit;
   font-size: var(--codex-chat-font-size);
   line-height: 1.5;
   text-align: start;
@@ -469,77 +470,52 @@ html.dark .codex-code-pre .codex-code-line {
 }
 
 .codex-tool-head[data-expandable]:hover {
-  background: var(--codex-hover);
-}
-
-.codex-tool-leading {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-
-.codex-tool-glyph {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.7;
-}
-
-.codex-tool-status {
-  width: 12px;
-  height: 12px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.codex-tool[data-status="failed"] .codex-tool-status {
-  color: var(--red, #d9534f);
-}
-
-.codex-tool-spinner {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: codex-spin 0.7s linear infinite;
-}
-
-.codex-tool-title {
-  flex: 0 0 auto;
   color: var(--codex-text);
 }
 
-.codex-tool-detail {
+.codex-tool-summary {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--codex-text-secondary);
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 0.94em;
+  font-family: inherit;
+}
+
+.codex-tool-summary[data-running] {
+  background: linear-gradient(
+    90deg,
+    var(--codex-text-tertiary) 0%,
+    var(--codex-text) 50%,
+    var(--codex-text-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: codex-shimmer 1.6s linear infinite;
+}
+
+@keyframes codex-shimmer {
+  to { background-position: -200% 0; }
 }
 
 .codex-tool-chevron {
   flex: 0 0 auto;
   width: 12px;
   height: 12px;
-  margin-inline-start: auto;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform var(--codex-transition-duration-basic);
+  opacity: 0;
+  transition: transform var(--codex-transition-duration-basic), opacity var(--codex-transition-duration-basic);
+}
+
+.codex-tool-head:hover .codex-tool-chevron,
+.codex-tool-head:focus-visible .codex-tool-chevron,
+.codex-tool-chevron[data-open] {
+  opacity: 1;
 }
 
 .codex-tool-chevron[data-open] {
@@ -547,20 +523,100 @@ html.dark .codex-code-pre .codex-code-line {
 }
 
 .codex-tool-body {
-  margin: 4px 0 8px;
-  padding: 10px 12px;
-  overflow-x: auto;
+  padding-top: 8px;
+  min-width: 0;
+}
+
+.codex-exec-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-strong, var(--codex-rule));
   border-radius: 8px;
-  background: var(--bg-inset, color-mix(in srgb, var(--fg) 6%, transparent));
-  color: var(--codex-text-secondary);
+  background: var(--bg-inset, color-mix(in srgb, var(--fg) 5%, transparent));
+}
+
+.codex-exec-output {
+  max-height: 9rem;
+  overflow: auto;
+  padding: 8px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.codex-exec-output pre {
+  margin: 0;
+  white-space: pre;
+}
+
+.codex-exec-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 10px 4px;
+  color: var(--codex-text-tertiary);
+  font-size: 12px;
+}
+
+.codex-exec-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: auto;
+}
+
+.codex-exec-check {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.codex-patch-card {
+  overflow: hidden;
+  border: 1px solid var(--codex-rule);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.codex-diff {
+  margin: 0;
+  max-height: 15rem;
+  overflow: auto;
+  padding: 8px 10px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.codex-diff [data-kind="add"] {
+  color: var(--green, #2ea043);
+  background: color-mix(in srgb, var(--green, #2ea043) 10%, transparent);
+}
+
+.codex-diff [data-kind="del"] {
+  color: var(--red, #d9534f);
+  background: color-mix(in srgb, var(--red, #d9534f) 10%, transparent);
+}
+
+.codex-diff [data-kind="hunk"] {
+  color: var(--codex-text-tertiary);
+}
+
+.codex-patch-output {
+  margin: 0;
+  max-height: 10rem;
+  overflow: auto;
+  padding: 8px 10px;
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 12px;
   line-height: 1.5;
   white-space: pre-wrap;
-}
-
-@keyframes codex-spin {
-  to { transform: rotate(360deg); }
 }
 
 /* ── Reasoning ────────────────────────────────────────────────────────── */

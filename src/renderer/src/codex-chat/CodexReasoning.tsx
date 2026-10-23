@@ -19,7 +19,7 @@ export function CodexReasoning({ text, running }: { text: string; running: boole
         <svg className="codex-reasoning-glyph" viewBox="0 0 16 16" aria-hidden="true">
           <path d="M6.2 2.6a3.2 3.2 0 0 1 4.3 3c0 2.1-1.6 2.6-1.6 4.4H6.5c0-1.8-1.6-2.3-1.6-4.4 0-.9.4-1.7 1.3-3zM6.4 12h2.4M6.8 14h1.6" />
         </svg>
-        <span className="codex-reasoning-label">{running ? "Thinking" : "Reasoning"}</span>
+        <span className="codex-reasoning-label">{running ? "Thinking" : "Thought"}</span>
         {running && <span className="codex-tool-spinner" aria-hidden="true" />}
         <svg className="codex-tool-chevron" viewBox="0 0 16 16" aria-hidden="true" data-open={open || undefined}>
           <path d="M6 4l4 4-4 4" />

@@ -85,18 +85,18 @@ Pretty-print: `node_modules/.bin/esbuild /tmp/codex/<file>.js --format=esm --min
 
 Replace the generic `CodexToolRow` with Codex's per-tool renderers.
 
-- [ ] 1.1 Map Vela tool keys → Codex row types (shell/command, read, write,
+- [x] 1.1 Map Vela tool keys → Codex row types (shell/command, read, write,
       edit/patch/diff, search/grep, web, MCP, reasoning, other).
-- [ ] 1.2 Shell/command row: exact row grammar, command text, live output,
+- [x] 1.2 Shell/command row: exact row grammar, command text, live output,
       success/failure glyphs, expand/collapse, output container.
-- [ ] 1.3 Read row: path display, line range, expand body.
-- [ ] 1.4 Edit/patch row: summary line, diff body rendering, add/remove counts.
-- [ ] 1.5 Search/web rows: query + result summary grammar.
-- [ ] 1.6 Reasoning row: exact presentation (collapsed/expanded, tone, copy).
-- [ ] 1.7 Status transitions while running (spinner → check/cross) with the
+- [x] 1.3 Read row: path display, line range, expand body.
+- [x] 1.4 Edit/patch row: summary line, diff body rendering, add/remove counts.
+- [x] 1.5 Search/web rows: query + result summary grammar.
+- [x] 1.6 Reasoning row: exact presentation (collapsed/expanded, tone, copy).
+- [x] 1.7 Status transitions while running (spinner → check/cross) with the
       bundle's timing.
-- [ ] 1.8 Tests: one DOM test per row type + status transition.
-- [ ] 1.9 `npm run check`; commit.
+- [x] 1.8 Tests: one DOM test per row type + status transition.
+- [x] 1.9 `npm run check`; commit.
 
 Acceptance: for each row type, the rendered element tree, classes, copy, and
 states match the spec in "Step 1 findings" below.
@@ -331,3 +331,12 @@ the plain-text fallback.
 - [ ] Step 5.1b: streaming prefix lexer (safe prefix end + longest-prefix token
       reuse). Deliberately deferred: a wrong split corrupts list/fence context,
       so it needs the list/fence boundary scanner and its own tests.
+
+- 2026-10-22: step 1 implemented from the persisted spec: shared activity row
+  (collapsed summary + hover chevron), exec card (`Ran`/`Running`/`Stopped`
+  summary, `max-h-36` output, Success/Failed footer), read/search/list/web
+  summary-only rows, per-file patch row with diff colouring, reasoning
+  "Thinking"/"Thought". Limitations: Vela tool payloads carry no per-call
+  timestamps, so "in {elapsed}"/"Thought for {elapsed}" are omitted; MCP and
+  dynamic-tool rows fall back to the generic summary; diff body is a coloured
+  unified-diff pre rather than Codex's diff viewer.

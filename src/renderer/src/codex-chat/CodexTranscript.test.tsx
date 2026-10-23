@@ -145,8 +145,7 @@ describe("CodexTranscript", () => {
     act(() => {
       container.querySelector<HTMLButtonElement>(".codex-work-head")?.click();
     });
-    expect(container.querySelector(".codex-tool-title")?.textContent).toBe("bash");
-    expect(container.querySelector(".codex-tool-detail")?.textContent).toBe("ls");
+    expect(container.querySelector(".codex-tool-summary")?.textContent).toBe("Ran ls");
   });
 
   it("marks streamed text with fade segments", () => {

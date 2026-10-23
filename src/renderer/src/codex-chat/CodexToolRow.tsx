@@ -1,77 +1,163 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import type { ToolCallView } from "@shared/types";
 import { toolKey } from "../components/timeline-model";
-import { activityOfTool, type ProcessActivity } from "../dsh-chat/process-model";
 
-function toolGlyph(activity: ProcessActivity): ReactNode {
-  switch (activity) {
+type RowKind = "exec" | "read" | "search" | "list" | "patch" | "web" | "generic";
+
+const EXEC = new Set(["bash", "shell", "terminal", "run_code", "code"]);
+const READ = new Set(["read", "read_image"]);
+const SEARCH = new Set(["grep", "search_code"]);
+const LIST = new Set(["glob", "list", "list_files"]);
+const PATCH = new Set(["write", "edit", "patch", "apply_patch"]);
+const WEB = new Set(["websearch", "web_search", "search", "webfetch", "web_fetch"]);
+
+function rowKind(key: string): RowKind {
+  if (EXEC.has(key)) return "exec";
+  if (READ.has(key)) return "read";
+  if (SEARCH.has(key)) return "search";
+  if (LIST.has(key)) return "list";
+  if (PATCH.has(key)) return "patch";
+  if (WEB.has(key)) return "web";
+  return "generic";
+}
+
+function field(tool: ToolCallView, names: string[]): string | undefined {
+  const values = tool.inputValue as Record<string, unknown> | undefined;
+  for (const name of names) {
+    const value = values?.[name];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return undefined;
+}
+
+function commandOf(tool: ToolCallView): string {
+  const command = field(tool, ["command", "cmd"]) ?? tool.detail ?? "";
+  return command.replace(/^\$\s*/, "").trim();
+}
+
+function pathOf(tool: ToolCallView): string {
+  return field(tool, ["filePath", "file_path", "path"]) ?? tool.detail ?? "";
+}
+
+function queryOf(tool: ToolCallView): string {
+  return field(tool, ["query", "pattern"]) ?? tool.detail ?? "";
+}
+
+function verb(kind: RowKind, status: ToolCallView["status"]): string {
+  const running = status === "running";
+  const failed = status === "failed";
+  if (kind === "exec") return running ? "Running" : failed ? "Stopped" : "Ran";
+  if (kind === "patch") return running ? "Editing" : failed ? "Rejected" : "Edited";
+  return "";
+}
+
+function summaryFor(tool: ToolCallView, kind: RowKind): string {
+  const command = commandOf(tool);
+  switch (kind) {
+    case "exec":
+      return command ? `${verb(kind, tool.status)} ${command}` : `${verb(kind, tool.status)} command`;
     case "read":
-    case "readImage":
-      return <path d="M3 2.5h6.5L12 5v8.5H3zM9 2.5V5h3" />;
-    case "edit":
-    case "write":
-      return <path d="M2.5 11.5l1-3 7-7 2 2-7 7zM9.5 2.5l2 2" />;
+      return `Read ${pathOf(tool)}`.trim();
     case "search":
-      return <path d="M7 2a5 5 0 1 0 0 10A5 5 0 0 0 7 2zM10.5 10.5L14 14" />;
-    case "webSearch":
-    case "webFetch":
-      return <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zM2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12" />;
-    case "subagents":
-      return <path d="M4 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM4 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5.5 6.5l4.5-2M5.5 9.5l4.5 2" />;
-    case "plan":
-      return <path d="M3 3h10M3 8h10M3 13h6" />;
-    case "commands":
-      return <path d="M2.5 3.5h11v9h-11zM5 7l2 1.5-2 1.5M8.5 10h2.5" />;
-    case "code":
-      return <path d="M5.5 4.5L2.5 8l3 3.5M10.5 4.5l3 3.5-3 3.5" />;
-    case "questions":
-      return <path d="M5.5 6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.7-.9 1.4M8 12.4v.1" />;
+      return queryOf(tool) ? `Searched for ${queryOf(tool)}` : "Searched for files";
+    case "list":
+      return pathOf(tool) ? `Listed files in ${pathOf(tool)}` : "Listed files";
+    case "patch":
+      return `${verb(kind, tool.status)} ${pathOf(tool)}`.trim();
+    case "web":
+      return tool.detail?.trim() ? `Searched the web for ${tool.detail.trim()}` : "Searched the web";
     default:
-      return <path d="M8 2l1.4 4.6L14 8l-4.6 1.4L8 14l-1.4-4.6L2 8l4.6-1.4z" />;
+      return tool.detail?.trim() ? `${tool.title} ${tool.detail.trim()}` : tool.title;
   }
 }
 
-function statusGlyph(tool: ToolCallView): ReactNode {
-  if (tool.status === "running") return <span className="codex-tool-spinner" aria-hidden="true" />;
-  if (tool.status === "failed") {
-    return (
-      <svg className="codex-tool-status" viewBox="0 0 16 16" aria-hidden="true">
-        <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />
-      </svg>
-    );
-  }
+function StatusFooter({ status }: { status: ToolCallView["status"] }) {
+  if (status === "running") return null;
   return (
-    <svg className="codex-tool-status" viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M3.5 8.5l3 3 6-7" />
-    </svg>
+    <div className="codex-exec-footer">
+      <span className="codex-exec-status">
+        {status === "failed" ? (
+          "Failed"
+        ) : (
+          <>
+            <svg className="codex-exec-check" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-7" />
+            </svg>
+            Success
+          </>
+        )}
+      </span>
+    </div>
   );
 }
 
-/** One Codex-style tool call: a compact row that expands to its raw payload. */
-export function CodexToolRow({ tool }: { tool: ToolCallView }) {
-  const [open, setOpen] = useState(false);
-  const kind = toolKey(tool.title);
-  const activity = activityOfTool(tool);
-  const detail = tool.detail?.replace(/\s+/g, " ").trim() ?? "";
-  const body = tool.output ?? "";
-  const expandable = body.trim().length > 0;
+function DiffBody({ text }: { text: string }) {
   return (
-    <div className="codex-tool" data-status={tool.status} data-kind={kind}>
+    <pre className="codex-diff">
+      {text.split("\n").map((line, index) => (
+        <div
+          key={index}
+          data-kind={
+            line.startsWith("@@")
+              ? "hunk"
+              : line.startsWith("+") && !line.startsWith("+++")
+                ? "add"
+                : line.startsWith("-") && !line.startsWith("---")
+                  ? "del"
+                  : undefined
+          }
+        >
+          {line || " "}
+        </div>
+      ))}
+    </pre>
+  );
+}
+
+function ExecBody({ tool }: { tool: ToolCallView }) {
+  const output = tool.output ?? "";
+  return (
+    <div className="codex-exec-card" data-testid="exec-shell-body">
+      <div className="codex-exec-output">
+        <pre>{output || "No output"}</pre>
+      </div>
+      <StatusFooter status={tool.status} />
+    </div>
+  );
+}
+
+function PatchBody({ tool }: { tool: ToolCallView }) {
+  const body = tool.output ?? "";
+  const looksLikeDiff = /(^|\n)(@@ |\+\+\+ |--- )/.test(body);
+  return (
+    <div className="codex-patch-card">
+      {looksLikeDiff ? <DiffBody text={body} /> : <pre className="codex-patch-output">{body || "No changes"}</pre>}
+    </div>
+  );
+}
+
+/** One Codex tool call: collapsed summary row with an expandable payload. */
+export function CodexToolRow({ tool }: { tool: ToolCallView }) {
+  const key = toolKey(tool.title);
+  const kind = rowKind(key);
+  const [open, setOpen] = useState(false);
+  const running = tool.status === "running";
+  const body = kind === "exec" || kind === "patch" ? tool.output ?? "" : "";
+  const expandable = kind === "exec" || kind === "patch" || (kind === "generic" && Boolean(body));
+  return (
+    <div className="codex-tool" data-kind={kind} data-status={tool.status}>
       <button
         type="button"
         className="codex-tool-head"
         aria-expanded={expandable ? open : undefined}
+        data-expandable={expandable || undefined}
         onClick={() => {
           if (expandable) setOpen((value) => !value);
         }}
-        data-expandable={expandable || undefined}
       >
-        <span className="codex-tool-leading" aria-hidden="true">
-          <svg className="codex-tool-glyph" viewBox="0 0 16 16">{toolGlyph(activity)}</svg>
-          {statusGlyph(tool)}
+        <span className="codex-tool-summary" data-running={running || undefined}>
+          {summaryFor(tool, kind)}
         </span>
-        <span className="codex-tool-title">{tool.title}</span>
-        {detail && <span className="codex-tool-detail">{detail}</span>}
         {expandable && (
           <svg className="codex-tool-chevron" viewBox="0 0 16 16" aria-hidden="true" data-open={open || undefined}>
             <path d="M6 4l4 4-4 4" />
@@ -79,9 +165,9 @@ export function CodexToolRow({ tool }: { tool: ToolCallView }) {
         )}
       </button>
       {open && expandable && (
-        <pre className="codex-tool-body">
-          <code>{body.length > 8000 ? `${body.slice(0, 8000)}\n…` : body}</code>
-        </pre>
+        <div className="codex-tool-body">
+          {kind === "patch" ? <PatchBody tool={tool} /> : <ExecBody tool={tool} />}
+        </div>
       )}
     </div>
   );
