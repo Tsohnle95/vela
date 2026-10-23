@@ -35,7 +35,7 @@ import { resolveRunningAppSource } from "./source-resolver";
 
 // Keep in sync with --titlebar-h in styles/_codex.scss (40px) so the macOS
 // traffic lights sit centred in the titlebar the renderer paints.
-const TITLEBAR_HEIGHT = 40;
+const TITLEBAR_HEIGHT = 44;
 const TRAFFIC_LIGHT_HEIGHT = 14;
 
 function windowChromeOptions() {

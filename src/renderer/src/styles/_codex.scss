@@ -6,12 +6,11 @@
 $codex: ':is([data-shell="codex"])';
 
 #{$codex} {
-  /* One number owns the top bar height and the left rail width.
-     The panel hugs the control: 4px of air on each side. */
-  --chrome-size: calc(var(--control-size) + 8px);
+  /* Codex's own window constant: one 44px chrome size for the top bar and
+     the left rail, with 36px controls centred inside. */
+  --chrome-size: 44px;
   --rail-w: var(--chrome-size);
-  /* The top bar is its own size: smaller than the rail, as in Codex. */
-  --titlebar-h: 40px;
+  --titlebar-h: 44px;
   /* The content is a card inset from the chrome on every side. */
   --content-gutter: 0px;
   --content-radius: 10px;
