@@ -78,7 +78,7 @@ export const APPEARANCES: AppearanceProfile[] = [
     description: "Quiet white surfaces, hairline dividers and a blue signal.",
     scheme: "light",
     colors: {
-      base: "#ffffff", top: "#f6f6f6", pane: "#fcfcfc", editor: "#ffffff", editorOpaque: "#ffffff", agent: "#ffffff", rail: "#f6f6f6", tab: "#f3f3f3", console: "#f8f8f8", status: "#ffffff",
+      base: "#ffffff", top: "#f4f4f4", pane: "#fcfcfc", editor: "#ffffff", editorOpaque: "#ffffff", agent: "#ffffff", rail: "#f4f4f4", tab: "#f3f3f3", console: "#f8f8f8", status: "#ffffff",
       ink: "#0d0d0d", muted: "#5d5d5d", faint: "#8f8f8f", line: "rgba(0,0,0,.10)", lineStrong: "rgba(0,0,0,.15)", lineSoft: "rgba(0,0,0,.05)", selected: "#e8e8e8", user: "#f3f3f3", card: "#ffffff", compose: "#ffffff", composeShadow: "0 7px 22px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.05)",
       accent: "#3a83f7", good: "#3a843f", danger: "#d92d20", icon: "#8f8f8f", sendInk: "#ffffff", glow: "rgba(58,131,247,.05)", syntaxKeyword: "#d32a61", syntaxFunction: "#693acf", syntaxString: "#199f43", syntaxComment: "#737373", syntaxNumber: "#1ca1c7", syntaxVariable: "#d47628", syntaxAttribute: "#18a46c", syntaxType: "#a631be", syntaxConstant: "#d5a910", syntaxOperator: "#08c0ef", syntaxPunctuation: "#636363", syntaxTag: "#d5512f", syntaxDecorator: "#1a85d4", syntaxNamespace: "#d5901c", syntaxRegexp: "#17a5af"
     }

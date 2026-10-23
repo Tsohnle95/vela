@@ -19,7 +19,7 @@ export function VelaCodeBlock({
 }) {
   const [lines, setLines] = useState<ReactNode[][] | null>(null);
   const [copied, setCopied] = useState(false);
-  const [wrap, setWrap] = useState(false);
+  const [wrap, setWrap] = useState(true);
 
   useEffect(() => {
     if (streaming) {

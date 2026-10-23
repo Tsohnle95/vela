@@ -25,7 +25,8 @@ describe("VelaCodeBlock", () => {
     });
     expect(container.querySelector(".vela-code-lang")?.textContent).toBe("ts");
     expect(container.textContent).toContain("const a = 1;");
-    expect(container.textContent).toContain("Wrap");
+    expect(container.querySelector(".vela-code-pre")?.hasAttribute("data-wrap")).toBe(true);
+    expect(container.textContent).toContain("No wrap");
     expect(container.textContent).toContain("Copy");
   });
 

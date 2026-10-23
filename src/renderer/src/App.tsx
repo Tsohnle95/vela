@@ -78,7 +78,7 @@ function Layout({ children }: { children?: ReactNode }): ReactNode {
     }
   );
   const [terminalRequest, setTerminalRequest] = useState<{ id: number; directory: string } | null>(null);
-  const [sideTab, setSideTab] = useState<SidebarTab>("files");
+  const [sideTab, setSideTab] = useState<SidebarTab>("sessions");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [changesOpen, setChangesOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("appearance");

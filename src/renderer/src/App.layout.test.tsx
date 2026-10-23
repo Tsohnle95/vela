@@ -185,14 +185,8 @@ describe("Layout panel sizing", () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 30)));
 
-    expect(sideTab(container, "Files").className).toContain("active");
-    expect(sideTab(container, "Sessions").className).not.toContain("active");
-
-    await act(async () => {
-      sideTab(container, "Sessions").click();
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    });
     expect(sideTab(container, "Sessions").className).toContain("active");
+    expect(sideTab(container, "Files").className).not.toContain("active");
 
     await act(async () => {
       dispatch({ kind: "session", session: info("/fresh", 5) });
@@ -209,7 +203,7 @@ describe("Layout panel sizing", () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
 
-    const files = sideTab(container, "Files");
+    const files = sideTab(container, "Sessions");
     expect(files.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector(".main-row.sidebar-closed")).toBeNull();
     expect(container.querySelector(".sidebar.collapsed")).toBeNull();
@@ -310,7 +304,6 @@ describe("Layout panel sizing", () => {
     expect(sideTab(container, "Sessions")).not.toBeNull();
 
     await act(async () => {
-      sideTab(container, "Sessions").click();
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
     expect(sideTab(container, "Sessions").className).toContain("active");
@@ -1170,7 +1163,6 @@ describe("Layout panel sizing", () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
     await act(async () => {
-      sideTab(container, "Sessions").click();
       dispatch({ kind: "session", session: info("/two", 2) });
     });
     await enterAgentMode("two");
@@ -1205,7 +1197,7 @@ describe("Layout panel sizing", () => {
     });
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
-    await act(async () => sideTab(container, "Files").click());
+    await act(async () => sideTab(container, "Sessions").click());
     await act(async () => observers.forEach((callback) => callback()));
     await act(async () => {
       const handle = container.querySelector<HTMLElement>(".agent-col .panel-resize-left")!;
@@ -1232,7 +1224,7 @@ describe("Layout panel sizing", () => {
   it("preserves Changes and collapsed sidebar when closing Settings", async () => {
     await act(async () => root.render(<App />));
     await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
-    await act(async () => sideTab(container, "Files").click());
+    await act(async () => sideTab(container, "Sessions").click());
     await act(async () => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-changes"]')!.click());
     await act(async () => container.querySelector<HTMLButtonElement>('[data-panel-action="toggle-settings"]')!.click());
     await act(async () => container.querySelector<HTMLButtonElement>('.settings-close')!.click());
@@ -1504,15 +1496,13 @@ describe("Layout panel sizing", () => {
 
   it("stays in the IDE with an Open Workspace action after closing the last session", async () => {
     await act(async () => root.render(<App />));
-    // Let the startup restore populate the open-session list before switching
-    // away from the default Files tab.
+    // Let the startup restore populate the open-session list.
     await act(async () => new Promise((resolve) => setTimeout(resolve, 80)));
 
     expect(container.querySelector(".app")).not.toBeNull();
     expect(container.querySelector(".welcome")).toBeNull();
 
     await act(async () => {
-      sideTab(container, "Sessions").click();
       await new Promise((resolve) => setTimeout(resolve, 80));
     });
 
@@ -1557,7 +1547,7 @@ describe("Layout panel sizing", () => {
     expect(windowView).toHaveBeenCalledExactlyOnceWith("session");
     expect(container.querySelector(".welcome")).toBeNull();
     expect(container.querySelector(".app")).not.toBeNull();
-    expect(container.querySelector<HTMLButtonElement>(".sessions-new")?.textContent?.trim()).toBe("Open Workspace");
+    expect(container.querySelector<HTMLButtonElement>(".sessions-new")?.textContent?.trim()).toBe("New Session");
     expect(container.querySelector(".agent-col .agent-panel")).not.toBeNull();
     expect(container.querySelector(".welcome .rowlink")).toBeNull();
   });
