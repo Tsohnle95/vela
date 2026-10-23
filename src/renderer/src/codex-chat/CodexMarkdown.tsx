@@ -1,5 +1,6 @@
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
-import { Marked } from "marked";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import {
   attachSegment,
   beginSegmentCachePass,
@@ -17,32 +18,13 @@ import {
 } from "./segment-fade";
 import { StreamingTextBuffer } from "./streaming-buffer";
 import { CodexCodeBlock } from "./CodexCodeBlock";
+import { createParseCache, parseMarkdown, type MdToken, type ParseCache } from "./markdown-parse";
 
 /**
  * Codex's streamed Markdown surface. Codex re-renders the whole message while
  * tokens arrive and makes arrival legible with the segment fade above; it does
  * not freeze or re-parse the tail, so prose never jumps between blocks.
  */
-
-const codexMarked = new Marked({ breaks: true, gfm: true });
-
-interface MdToken {
-  type: string;
-  raw?: string;
-  text?: string;
-  tokens?: MdToken[];
-  items?: MdToken[];
-  header?: MdToken[];
-  rows?: MdToken[][];
-  lang?: string;
-  href?: string;
-  title?: string | null;
-  depth?: number;
-  ordered?: boolean;
-  start?: number;
-  task?: boolean;
-  checked?: boolean | null;
-}
 
 interface RenderContext {
   animate: boolean;
@@ -131,6 +113,23 @@ function textOf(token: MdToken): string {
   return token.text ?? token.raw ?? "";
 }
 
+function CodexMath({ tex, display }: { tex: string; display: boolean }) {
+  const html = useMemo(() => {
+    try {
+      return katex.renderToString(tex, { displayMode: display, throwOnError: false, strict: "ignore" });
+    } catch {
+      return null;
+    }
+  }, [tex, display]);
+  if (html === null) return <span className="codex-math-fallback">{tex}</span>;
+  return (
+    <span
+      className={display ? "codex-math codex-math-display" : "codex-math"}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
+
 function renderImageToken(token: MdToken, path: string): ReactNode {
   return (
     <img
@@ -166,6 +165,7 @@ function renderInlineToken(token: MdToken, path: string, context: RenderContext)
   if (type === "codespan") {
     return <code key={path} className="codex-md-codespan">{textOf(token)}</code>;
   }
+  if (type === "inlineMath") return <CodexMath key={path} tex={token.text ?? ""} display={false} />;
   if (type === "image") return renderImageToken(token, path);
   if (type === "link") return renderLinkToken(token, path, context);
   if (type === "br") return <br key={path} />;
@@ -350,6 +350,12 @@ function renderBlock(token: MdToken, path: string, context: RenderContext): Reac
       return renderBlockquote(token, path, context);
     case "list":
       return renderList(token, path, context);
+    case "blockMath":
+      return (
+        <div key={path} className="codex-math-block">
+          <CodexMath tex={token.text ?? ""} display />
+        </div>
+      );
     case "table":
       return renderTable(token, path, context);
     case "hr":
@@ -395,9 +401,11 @@ export const CodexMarkdown = memo(function CodexMarkdown({
   timeline.current ??= createFadeTimeline();
   const segmentCache = useRef<SegmentCache | null>(null);
   segmentCache.current ??= createSegmentCache();
+  const parseCache = useRef<ParseCache | null>(null);
+  parseCache.current ??= createParseCache();
   const tokens = useMemo(
-    () => (rendered ? (codexMarked.lexer(rendered) as unknown as MdToken[]) : []),
-    [rendered]
+    () => parseMarkdown(rendered, streaming, parseCache.current as ParseCache),
+    [rendered, streaming]
   );
   const context: RenderContext = {
     animate: streaming,

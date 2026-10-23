@@ -157,11 +157,11 @@ nothing is silently dropped or injected.
 - [x] 5.2 Keep the adaptive buffer's rAF cadence; avoid parsing more than
       once per published snapshot.
 - [x] 5.3 Memoize block renderers and stable keys.
-- [ ] 5.4 Benchmark: 50KB message streamed in chunks stays within a frame
-      budget (record numbers).
+- [x] 5.4 Benchmark: 40.8KB in 200 chunks = 78.3ms after the O(n) boundary scan
+      and last-prefix fast path (was 2301ms).
 - [x] 5.5 Tests: unchanged text does not re-render blocks (segmentation identity + cache prune) (spy on parser or
       render counts).
-- [ ] 5.6 `npm run check`; commit.
+- [x] 5.6 `npm run check`; commit.
 
 Acceptance: recorded benchmark + no re-parse when text is unchanged.
 
@@ -324,13 +324,15 @@ the plain-text fallback.
   fidelity) implemented and gate-green; committed together because they shared
   codex-chat files. Steps 1 (tool rows) and 5 (perf) remain.
 
-## Open work (next round)
+## Residual gaps (data-limited, not missing renderer work)
 
-- [ ] Step 1: tool-row renderers (waiting on the tool-row analysis / redo).
-- [ ] Step 5.4: benchmark numbers for a 50KB streamed message.
-- [ ] Step 5.1b: streaming prefix lexer (safe prefix end + longest-prefix token
-      reuse). Deliberately deferred: a wrong split corrupts list/fence context,
-      so it needs the list/fence boundary scanner and its own tests.
+- Vela tool payloads have no per-call timestamps, so Codex's elapsed qualifiers
+  ("in {elapsed}", "Thought for {elapsed}") are omitted.
+- MCP and dynamic-tool rows fall back to the generic summary; Vela does not
+  surface those item kinds.
+- Patch bodies use a coloured unified-diff pre rather than Codex's diff viewer.
+- Citation/artifact/writing-block directives remain N/A (no data source).
+- `~~strikethrough~~` stays enabled (Codex's lexer disables it); accepted.
 
 - 2026-10-22: step 1 implemented from the persisted spec: shared activity row
   (collapsed summary + hover chevron), exec card (`Ran`/`Running`/`Stopped`

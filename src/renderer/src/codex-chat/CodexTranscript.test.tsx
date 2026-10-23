@@ -163,6 +163,15 @@ describe("CodexTranscript", () => {
     expect(Array.from(segments).map((node) => node.textContent).join("")).toBe("Streaming words here");
   });
 
+  it("renders inline and block math", () => {
+    render([
+      { kind: "user", id: "user-1", text: "Go", createdAt: 0 },
+      assistant([{ kind: "text", id: "text-1", text: "Inline \\(x^2\\) math.\n\n$$\nx^2\n$$", complete: true }])
+    ]);
+    expect(container.querySelector(".katex")).not.toBeNull();
+    expect(container.querySelector(".katex-display")).not.toBeNull();
+  });
+
   it("renders markdown structure without streaming animation when complete", () => {
     render([
       { kind: "user", id: "user-1", text: "Go", createdAt: 0 },
