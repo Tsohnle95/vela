@@ -10,7 +10,8 @@ $codex: ':is([data-shell="codex"])';
   --chrome-size: calc(var(--control-size) + 18px);
   --rail-w: var(--chrome-size);
   --titlebar-h: var(--chrome-size);
-  /* Content corner radius where the surface meets the chrome. */
+  /* The content is a card inset from the chrome on every side. */
+  --content-gutter: 6px;
   --content-radius: 10px;
 }
 
@@ -49,23 +50,34 @@ $codex: ':is([data-shell="codex"])';
   background: var(--top-surface);
 }
 
-/* The content surface rounds into the chrome at the top corners, matching
-   Codex's main-content radius; the rail and titlebar stay square. */
+/* The content is one card inset from the chrome: a gutter on all sides and
+   rounded outer corners, while the rail and titlebar stay square. */
 #{$codex} .main-row > .sidebar-slot,
 #{$codex} .main-row > .workspace-host {
   overflow: hidden;
+  margin-block: var(--content-gutter);
 }
 
 #{$codex} .main-row > .sidebar-slot {
+  margin-inline: var(--content-gutter) 0;
   border-start-start-radius: var(--content-radius);
+  border-end-start-radius: var(--content-radius);
 }
 
 #{$codex} .main-row > .workspace-host {
+  margin-inline: 0 var(--content-gutter);
   border-start-end-radius: var(--content-radius);
+  border-end-end-radius: var(--content-radius);
+}
+
+#{$codex} .main-row > .divider {
+  margin-block: var(--content-gutter);
 }
 
 #{$codex} .main-row.sidebar-closed > .workspace-host {
+  margin-inline-start: var(--content-gutter);
   border-start-start-radius: var(--content-radius);
+  border-end-start-radius: var(--content-radius);
 }
 
 // ── Rail ───────────────────────────────────────────────────────────────────
