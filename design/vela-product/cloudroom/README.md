@@ -1,5 +1,9 @@
 # Vela release directions
 
+The selected #1 and #2 now have corrected Cloudroom-scale headlines and plain
+app screenshots. [Thirty further iterations and 24 palettes](iterations/index.html)
+keep both as references, with fifteen new compositions from each direction.
+
 Open [the collection](index.html) directly from disk. Twenty standalone
 compositions share Vela’s real screenshot, current folded mint mark, and
 factual product content. No server, build, remote fonts, or external assets

@@ -1,0 +1,30 @@
+body.iteration-page{--button-text:#10251a;--surface:#131b16;--shadow:#00000055;background:var(--bg);color:var(--fg)}
+.iteration-page .button{color:var(--button-text)}
+.iteration-page .hero-copy>p{max-width:440px;font-size:17px}
+.iteration-page .hero-copy,.iteration-page section,.iteration-page section>div{min-width:0}
+.iteration-page main>.home-hero{padding-top:65px}
+.iteration-page .app-shot{padding:0;border:0;background:none;box-shadow:none}
+.iteration-page .app-shot img{box-shadow:0 22px 65px var(--shadow)}
+.iteration-page .home-screen{box-shadow:none}
+.iteration-story{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:80px;align-items:start;margin:100px 0}
+.iteration-story p{font-size:17px;max-width:470px}
+.iteration-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;margin:90px 0}
+.iteration-details article{padding-top:24px;border-top:1px solid var(--line)}
+.iteration-details h2{font-size:28px;margin-bottom:18px}
+.iteration-details p{font-size:15px}
+.iteration-controls{position:fixed;z-index:30;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);padding:7px;background:#141a17f5;color:#f0f3ec;border:1px solid #435346;border-radius:8px;box-shadow:0 8px 32px #0005;backdrop-filter:blur(15px);font-size:11px}
+.iteration-controls[hidden]{display:none}
+.iteration-controls button{border:0;border-radius:4px;background:transparent;min-height:36px;padding:8px 10px;color:inherit;white-space:nowrap}
+.iteration-controls button:hover{background:#2e3b31}
+.iteration-controls select{min-width:0;padding:9px;background:#27342b;color:#f1f6ee;border:0;border-radius:4px;font-size:11px;min-height:36px}
+.design-navigation{display:flex;align-items:center;min-width:0;gap:3px}.design-navigation select{width:230px}.design-navigation button{font-size:17px}
+.palette-navigation{display:flex;align-items:center;gap:8px;min-width:0}.palette-navigation label{font-size:10px;color:#bdcebf}.palette-navigation select{width:160px}
+.iteration-controls #hide-controls{font-size:19px}
+.iteration-controls :is(button,select):focus-visible{outline-color:#c7ffd3}
+.gallery-family{margin:30px 0 45px}.gallery-family>h3{font-size:21px;margin:0 0 22px;color:#c5d5c8}.gallery-family-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.iteration-page dialog{--accent:#b3f6d6}.iteration-page dialog img{filter:none!important}.iteration-page .gallery-card h3{color:#f0f5ec}
+.gallery-heading>a{font-size:12px;color:#c6ddcc;margin-left:auto;margin-right:25px}
+@media(max-width:1000px){.iteration-story{gap:45px}.iteration-controls{gap:7px}.design-navigation select{width:205px}.palette-navigation select{width:145px}.iteration-details{gap:30px}}
+@media(max-width:800px){.iteration-controls{width:calc(100% - 24px);max-width:580px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px}.design-navigation{grid-column:1/3;grid-row:1}.design-navigation select{width:100%;flex:1}.palette-navigation{grid-column:1/3;grid-row:2;padding-left:10px}.palette-navigation select{width:auto;flex:1}.iteration-controls #browse{grid-column:3;grid-row:2;font-size:10px}.iteration-controls #hide-controls{grid-column:3;grid-row:1;justify-self:end}.iteration-controls button{padding:7px}.iteration-controls select{font-size:11px}.iteration-story{grid-template-columns:minmax(0,1fr);gap:25px;margin:65px 0}.iteration-details{grid-template-columns:minmax(0,1fr);gap:35px;margin:65px 0}.iteration-details h2{font-size:27px}.iteration-details p{font-size:14px}.iteration-story p{font-size:15px;max-width:100%}.iteration-page .hero-copy>p{font-size:15px}.iteration-page .site-footer{padding-bottom:160px}.gallery-family-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gallery-family>h3{font-size:18px}.gallery-heading>a{font-size:10px;margin-right:15px}.iteration-page main>.home-hero{padding-top:52px}}
+@media(max-width:640px){.iteration-page main>.home-hero{padding-top:32px}}
+@media(max-width:420px){.gallery-family-grid{grid-template-columns:minmax(0,1fr)}.iteration-controls{bottom:10px}.iteration-controls select{font-size:10px}.palette-navigation label{font-size:10px}.iteration-controls button{min-height:34px}.iteration-page .site-header nav{gap:13px}}

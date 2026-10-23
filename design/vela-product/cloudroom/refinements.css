@@ -1,0 +1,12 @@
+/* Cloudroom's public hero type scale, checked against its live stylesheet. */
+:is(.d1,.d2) h1,.iteration-page h1{font-size:clamp(54px,5.8vw,80px);font-weight:550;line-height:1.04;letter-spacing:-4px}
+.d1 .home-screen .app-shot img{border:0}
+.d1 .home-product>.app-shot,.d2 .wide-screen{padding:0;border:0;background:none;box-shadow:none}
+:is(.d1,.d2) .app-shot img,.iteration-page .app-shot img{border:0;border-radius:7px;filter:none}
+.d1 .home-art{height:auto;display:block;min-height:0;overflow:visible}
+.d1 .home-screen{position:relative;bottom:auto;width:100%;transform:perspective(1400px) rotateY(-6deg) rotateX(3deg);box-shadow:0 25px 60px #0005}
+.d1 .home-hero{grid-template-columns:minmax(0,.85fr) minmax(0,1fr);gap:40px;min-height:640px;padding:65px 0 100px}
+.d2 .wide-hero{padding-top:75px}
+@media(max-width:1080px){:is(.d1,.d2) h1,.iteration-page h1{font-size:clamp(54px,6.3vw,68px);letter-spacing:-3px}.d1 .home-hero{gap:24px;min-height:560px}}
+@media(max-width:800px){:is(.d1,.d2) h1,.iteration-page h1{font-size:72px}.d1 .home-hero{grid-template-columns:minmax(0,1fr);gap:48px;padding:52px 0 40px;min-height:0}.d1 .home-hero .hero-copy{max-width:560px}.d1 .home-art{max-width:680px;width:100%;margin:auto}.d1 .home-screen{width:100%;bottom:auto;transform:none}.d2 .wide-hero{padding-top:52px}}
+@media(max-width:640px){:is(.d1,.d2) h1,.iteration-page h1{font-size:clamp(50px,12vw,72px);letter-spacing:-2.7px}.d1 .home-hero{gap:40px;padding-top:32px}.d1 .home-screen{width:100%}.d2 .wide-hero{padding-top:32px}}

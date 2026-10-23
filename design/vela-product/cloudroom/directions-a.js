@@ -4,7 +4,7 @@
   window.velaDirections.push(
     {
       id: 1, name: 'Home for the work',
-      body: () => `<section class="home-hero">${copy('Your code.<br> Your agents.<br> <em>One home.</em>', 'Keep the editor, the conversation, and the changes in one desktop workspace.')}<div class="home-art"><div class="home-orbit orbit-one"></div><div class="home-orbit orbit-two"></div>${mark()}<div class="home-screen">${shot()}</div></div></section><section class="home-product"><h2>Stay with the work.</h2><p>Open a repository. Give OpenCode a task. Follow the changes beside your code.</p>${shot()}</section>${featureRow()}${faq()}`
+      body: () => `<section class="home-hero">${copy('Your code.<br> Your agents.<br> <em>One home.</em>', 'Keep the editor, the conversation, and the changes in one desktop workspace.')}<div class="home-art"><div class="home-screen">${shot()}</div></div></section><section class="home-product"><h2>Stay with the work.</h2><p>Open a repository. Give OpenCode a task. Follow the changes beside your code.</p>${shot()}</section>${featureRow()}${faq()}`
     },
     {
       id: 2, name: 'Everything in view',
