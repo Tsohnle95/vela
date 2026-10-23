@@ -2,14 +2,18 @@ import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useSyncExtern
 import { Marked } from "marked";
 import {
   attachSegment,
+  beginSegmentCachePass,
   beginSegmentPass,
+  cachedSegments,
+  createSegmentCache,
+  pruneSegmentCache,
   createFadeTimeline,
   FADE_SEGMENT_DELAY_MS,
   FADE_SEGMENT_MAX_DELAY_MS,
   resolveSegmentKey,
   segmentDelay,
-  splitSegments,
-  type FadeTimeline
+  type FadeTimeline,
+  type SegmentCache
 } from "./segment-fade";
 import { StreamingTextBuffer } from "./streaming-buffer";
 import { CodexCodeBlock } from "./CodexCodeBlock";
@@ -46,6 +50,7 @@ interface RenderContext {
   timeline: FadeTimeline;
   cursor: number;
   tone: "assistant" | "user";
+  segments: SegmentCache;
 }
 
 function subscribeVisibility(listener: () => void): () => void {
@@ -58,7 +63,7 @@ function visibilitySnapshot(): boolean {
 }
 
 function SegmentedText({ text, context }: { text: string; context: RenderContext }) {
-  const segments = useMemo(() => splitSegments(text), [text]);
+  const segments = cachedSegments(context.segments, text);
   return (
     <>
       {segments.map((segment) => {
@@ -388,6 +393,8 @@ export const CodexMarkdown = memo(function CodexMarkdown({
   const rendered = adaptive ? snapshot.text : text;
   const timeline = useRef<FadeTimeline | null>(null);
   timeline.current ??= createFadeTimeline();
+  const segmentCache = useRef<SegmentCache | null>(null);
+  segmentCache.current ??= createSegmentCache();
   const tokens = useMemo(
     () => (rendered ? (codexMarked.lexer(rendered) as unknown as MdToken[]) : []),
     [rendered]
@@ -397,9 +404,13 @@ export const CodexMarkdown = memo(function CodexMarkdown({
     adaptive,
     timeline: timeline.current,
     cursor: 0,
-    tone
+    tone,
+    segments: segmentCache.current
   };
   beginSegmentPass(context.timeline);
+  beginSegmentCachePass(context.segments);
+  const content = renderBlocks(tokens, "md", context);
+  pruneSegmentCache(context.segments);
   return (
     <div
       className={className ? `codex-md ${className}` : "codex-md"}
@@ -408,7 +419,7 @@ export const CodexMarkdown = memo(function CodexMarkdown({
       data-markdown-text-style="assistant-message"
       data-markdown-text-tone={tone === "user" ? "user-message" : undefined}
     >
-      {renderBlocks(tokens, "md", context)}
+      {content}
     </div>
   );
 });

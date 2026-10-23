@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   attachSegment,
+  beginSegmentCachePass,
+  cachedSegments,
   createFadeTimeline,
+  createSegmentCache,
+  pruneSegmentCache,
   FADE_SEGMENT_DELAY_MS,
   FADE_SEGMENT_MAX_DELAY_MS,
   segmentDelay,
@@ -90,5 +94,35 @@ describe("attachSegment", () => {
     element.style.setProperty("--fade-delay", "fixed");
     attachSegment(options);
     expect(element.style.getPropertyValue("--fade-delay")).toBe("fixed");
+  });
+});
+
+
+describe("cachedSegments", () => {
+  it("returns the same array identity for the same text", () => {
+    const cache = createSegmentCache();
+    const first = cachedSegments(cache, "hello world");
+    const second = cachedSegments(cache, "hello world");
+    expect(second).toBe(first);
+    expect(first).toEqual(["hello ", "world"]);
+  });
+
+  it("bypasses the cache for text above the size bound", () => {
+    const cache = createSegmentCache();
+    const long = "a ".repeat(3000);
+    const first = cachedSegments(cache, long);
+    const second = cachedSegments(cache, long);
+    expect(second).not.toBe(first);
+    expect(cache.byText.has(long)).toBe(false);
+  });
+
+  it("prunes entries unused by the current pass", () => {
+    const cache = createSegmentCache();
+    cachedSegments(cache, "first");
+    beginSegmentCachePass(cache);
+    cachedSegments(cache, "second");
+    pruneSegmentCache(cache);
+    expect(cache.byText.has("first")).toBe(false);
+    expect(cache.byText.has("second")).toBe(true);
   });
 });

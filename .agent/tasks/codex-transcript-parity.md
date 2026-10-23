@@ -152,14 +152,14 @@ nothing is silently dropped or injected.
 
 ## Step 5 — Render performance and memoization
 
-- [ ] 5.1 Port the text-part/token cache idea (`jSd`/`LSd`/`textPartCache`)
+- [x] 5.1 Port the text-part cache idea (segmentation identity); the streaming prefix lexer stays open (see Open work) (`jSd`/`LSd`/`textPartCache`)
       so a growing message does not re-parse/re-render earlier blocks.
-- [ ] 5.2 Keep the adaptive buffer's rAF cadence; avoid parsing more than
+- [x] 5.2 Keep the adaptive buffer's rAF cadence; avoid parsing more than
       once per published snapshot.
-- [ ] 5.3 Memoize block renderers and stable keys.
+- [x] 5.3 Memoize block renderers and stable keys.
 - [ ] 5.4 Benchmark: 50KB message streamed in chunks stays within a frame
       budget (record numbers).
-- [ ] 5.5 Tests: unchanged text does not re-render blocks (spy on parser or
+- [x] 5.5 Tests: unchanged text does not re-render blocks (segmentation identity + cache prune) (spy on parser or
       render counts).
 - [ ] 5.6 `npm run check`; commit.
 
@@ -180,15 +180,65 @@ npm run check        # full gate; must exit 0
 Known environment caveat: this machine has Node v26.10.0 while the repo pins
 `.node-version` 22.23.2; the gate is not authoritative until re-run on 22.
 
-## Step 1 findings (fill from analysis)
+## Step 1 findings (verified)
 
-- Row types and modules: PENDING subagent report.
-- Shell/command row: PENDING.
-- Read row: PENDING.
-- Patch/diff row: PENDING.
-- Search/web row: PENDING.
-- Reasoning row: PENDING.
-- Copy/i18n ids: PENDING.
+Modules (extracted to /tmp/codex/pretty2 by the analysis):
+- Dispatcher `SO` in `sites-end-resource-62e43bb0850b.js` (per item.type).
+- Shared row shell `Up`=`GZe` / header `Hp`=`RZe` / body `VZe` in
+  `app-primary-58a09006cc0c.js`.
+- Exec `CC` (row) + `WC` (summary); shell card `Xh`=`sn` + terminal `Qt` in
+  `user-message-attachments-45859a154be4.js`.
+- Patch `PT` (container) / `IT` (per-file) / `BT` (diff card) / `VT` (viewer).
+- Read `RC`, search `EC`, list `NC`, web `lO`, reasoning `pE` (all in the
+  dispatcher chunk).
+- MCP `Fh` in `mcp-tool-item-content-e2f13173844a.js`; dynamic tools in
+  `agent-activity-item-e6a54ce06805.js`.
+- NOTE: `command-messages-*.js` is the command palette, and
+  `static-thread-transcript-*.js` renders no tool rows.
+
+Row shell: padding-offset wrapper → `div.flex.min-w-0.flex-col` → header
+`group/activity-header relative inline-flex min-w-0 max-w-full self-start
+items-center gap-1 p-0 text-start` with a full-area `<button aria-expanded>`
+and summary span; body is height/opacity animated, `overflow-hidden`.
+
+Exec: DEFAULT COLLAPSED. Summary text (i18n `toolSummaryForCmd.*`):
+"Ran {command}", "Ran {command} in {elapsed}", "Stopped {command}[ after
+{elapsed}]", "Ran command[ in {elapsed}]", background-terminal variants.
+In-progress = cadenced shimmer + elapsed (NO spinner/check/cross in the
+header). Expanded body: `data-testid="exec-shell-body"` →
+`group flex flex-col overflow-hidden rounded-lg border border-strong
+bg-secondary-soft-alpha` → output scroller `vertical-scroll-fade-mask max-h-36
+[--edge-fade-distance:2rem] flex flex-col-reverse overflow-auto
+whitespace-pre font-code` → footer: "Success" + check, "Exit code {n}",
+"Stopped" (`execFooter.*`). Empty output: "No output" (`codex.shell.noOutput`).
+Shell header has "Shell" (`codex.shell.name`), cwd tooltip, copy-output.
+
+Patch: DEFAULT COLLAPSED per file. Summary per change type (`codex.patch.change.*`):
+Creating/Created, Deleting/Deleted, Editing/Edited, Stopped creating/deleting/
+editing, Rejected; expanded headers "Created file"/"Deleted file"/"Edited file".
+Per-file diff card: `border-default flex flex-col overflow-hidden rounded-lg
+border`, header `bg-background-primary-ghost-hover/60`, body
+`composer-diff-simple-line overflow-y-auto max-h-60` (short `max-h-25`), code
+fallback `!p-2 max-h-40 vertical-scroll-fade-mask`; fallbacks "Diff too large
+to preview", "No changes", "Contents deleted".
+
+Read/Search/List: summary only (no body): "<verb>Read</verb> {path}",
+"<verb>Searched</verb> for {query|files}", "<verb>Listed</verb> files[ in {path}]"
+(`toolSummaryForCmd.read/.searchedFor/.searchedForFiles/.listedFiles`).
+
+Web: no expansion; "Searched the web for {detail}" or "Searched the web"
+(`codex.webSearch.summary.*`).
+
+Reasoning: header "Thinking" / "Thought" / "Thought for {elapsed}"
+(`reasoningItem.*`), shimmer while streaming; body markdown in a scroll box,
+expanded while streaming, collapsed when complete; disclosure hidden when empty.
+
+Defaults/status: exec collapsed, patch per-file collapsed, reasoning expanded
+only while streaming. Colors: summary `text-text-tertiary/90`, muted
+`text-text/40`, hover `text-default`, reasoning `text-text/30`. No tool-name
+normalization exists; Codex derives row type from the event kind
+(`commandExecution`, `fileChange`, `mcpToolCall`, `webSearch`, `reasoning`).
+Vela must map its `ToolCallView.title`/part data onto these row types.
 
 ## Step 2 findings (verified)
 
@@ -273,3 +323,11 @@ the plain-text fallback.
 - 2026-10-22: step 2 (scroll) + step 3 (code blocks) + step 4 (markdown
   fidelity) implemented and gate-green; committed together because they shared
   codex-chat files. Steps 1 (tool rows) and 5 (perf) remain.
+
+## Open work (next round)
+
+- [ ] Step 1: tool-row renderers (waiting on the tool-row analysis / redo).
+- [ ] Step 5.4: benchmark numbers for a 50KB streamed message.
+- [ ] Step 5.1b: streaming prefix lexer (safe prefix end + longest-prefix token
+      reuse). Deliberately deferred: a wrong split corrupts list/fence context,
+      so it needs the list/fence boundary scanner and its own tests.

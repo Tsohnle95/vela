@@ -156,3 +156,47 @@ function splitAsciiSegments(text: string): string[] {
   }
   return segments;
 }
+
+
+export interface SegmentCache {
+  byText: Map<string, string[]>;
+  used: Set<string>;
+}
+
+const SEGMENT_CACHE_LIMIT = 500;
+const SEGMENT_CACHE_MAX_TEXT = 4096;
+
+/**
+ * Per-message cache of segment splits. Returns the same array identity for the
+ * same text, so untouched text keeps stable React keys; entries not used by the
+ * current render are pruned. Long text bypasses the cache, matching Codex's
+ * `textPartCache` bounds.
+ */
+export function createSegmentCache(): SegmentCache {
+  return { byText: new Map(), used: new Set() };
+}
+
+export function beginSegmentCachePass(cache: SegmentCache): void {
+  cache.used.clear();
+}
+
+export function pruneSegmentCache(cache: SegmentCache): void {
+  for (const key of cache.byText.keys()) {
+    if (!cache.used.has(key)) cache.byText.delete(key);
+  }
+}
+
+export function cachedSegments(cache: SegmentCache, text: string): string[] {
+  if (text.length > SEGMENT_CACHE_MAX_TEXT) return splitSegments(text);
+  cache.used.add(text);
+  const cached = cache.byText.get(text);
+  if (cached !== undefined) return cached;
+  const segments = splitSegments(text);
+  cache.byText.set(text, segments);
+  while (cache.byText.size > SEGMENT_CACHE_LIMIT) {
+    const oldest = cache.byText.keys().next().value;
+    if (oldest === undefined) break;
+    cache.byText.delete(oldest);
+  }
+  return segments;
+}
