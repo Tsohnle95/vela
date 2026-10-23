@@ -9,7 +9,8 @@ $codex: ':is([data-shell="codex"])';
   /* Codex's own window constant: one 44px chrome size for the top bar and
      the left rail, with 36px controls centred inside. */
   --chrome-size: 44px;
-  --rail-w: var(--chrome-size);
+  /* Measured against Codex at the same zoom: rail 51, titlebar 43. */
+  --rail-w: 50px;
   --titlebar-h: 44px;
   /* The content is a card inset from the chrome on every side. */
   --content-gutter: 0px;
@@ -94,9 +95,9 @@ $codex: ':is([data-shell="codex"])';
 
 // ── Rail ───────────────────────────────────────────────────────────────────
 #{$codex} .activity-rail {
-  width: var(--chrome-size);
-  min-width: var(--chrome-size);
-  max-width: var(--chrome-size);
+  width: var(--rail-w);
+  min-width: var(--rail-w);
+  max-width: var(--rail-w);
   align-items: center;
   gap: 6px;
   padding: 14px 0;
