@@ -6,8 +6,9 @@
 $codex: ':is([data-shell="codex"])';
 
 #{$codex} {
-  /* One number owns the top bar height and the left rail width. */
-  --chrome-size: calc(var(--control-size) + 18px);
+  /* One number owns the top bar height and the left rail width.
+     The panel hugs the control: 4px of air on each side. */
+  --chrome-size: calc(var(--control-size) + 8px);
   --rail-w: var(--chrome-size);
   --titlebar-h: var(--chrome-size);
   /* The content is a card inset from the chrome on every side. */
