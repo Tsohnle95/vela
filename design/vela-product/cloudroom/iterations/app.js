@@ -37,7 +37,8 @@
     try { localStorage.setItem(storageKey, JSON.stringify(choices)); } catch { /* Session choices still work without storage. */ }
   }
   function applyPalette(id) {
-    const palette = palettes.find(p => p.id === id) || palettes[0];
+    const selected = palettes.find(p => p.id === id) || palettes[0];
+    const palette = current === 1 && selected.id === 'mint' ? { ...selected, ...window.velaReferenceOneMint } : selected;
     const tokens = { '--bg': palette.bg, '--fg': palette.fg, '--accent': palette.accent, '--muted': palette.muted, '--line': palette.line, '--surface': palette.surface, '--button-text': palette.button, '--shadow': palette.shadow };
     for (const [token, value] of Object.entries(tokens)) document.body.style.setProperty(token, value);
     document.body.dataset.palette = palette.id;

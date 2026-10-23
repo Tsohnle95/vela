@@ -1,5 +1,6 @@
 (() => {
   // Foreground and action colors are explicit so light and vivid palettes stay readable.
+  window.velaReferenceOneMint = { muted: '#9a9e9a', line: '#2a2e2b', button: '#0c1811' };
   window.velaPalettes = [
     { id: 'mint', name: 'Vela mint', group: 'Standard', bg: '#080909', fg: '#f4f5f1', accent: '#b3f6d6', muted: '#a1aaa4', line: '#303a34', surface: '#131b16', button: '#10251a', shadow: '#00000055' },
     { id: 'mono', name: 'Black & white', group: 'Standard', bg: '#090909', fg: '#f5f5f5', accent: '#ffffff', muted: '#a5a5a5', line: '#343434', surface: '#181818', button: '#171717', shadow: '#00000066' },

@@ -93,7 +93,8 @@ const watchdog=setTimeout(()=>app.exit(1),240000);
   await select(id);
   const failed=await js('('+(()=>{
    const failures=[];
-   for(const p of window.velaPalettes){
+   for(const base of window.velaPalettes){
+    const p=document.body.classList.contains('d1')&&base.id==='mint'?{...base,...window.velaReferenceOneMint}:base;
     const picker=document.querySelector('#palette');picker.value=p.id;picker.dispatchEvent(new Event('change'));
     const s=getComputedStyle(document.body),button=getComputedStyle(document.querySelector('main .button'));
     const rgb=hex=>'rgb('+hex.slice(1).match(/../g).map(x=>parseInt(x,16)).join(', ')+')';
@@ -112,8 +113,8 @@ const watchdog=setTimeout(()=>app.exit(1),240000);
  for(const id of [21,36])for(const p of palettes){await select(id);await color(p.id);await js('document.querySelector(".iteration-controls").style.visibility="hidden"');await settle();const capture=await win.webContents.capturePage();await fs.writeFile(OUTPUT+'/palette-'+id+'-'+p.id+'.jpg',capture.resize({width:400}).toJPEG(85));await js('document.querySelector(".iteration-controls").style.visibility=""');}
  if(REFRESH){await fs.mkdir(ROOT+'/previews',{recursive:true});for(const id of ids)await fs.copyFile(OUTPUT+'/preview-'+String(id).padStart(2,'0')+'.jpg',ROOT+'/previews/'+String(id).padStart(2,'0')+'.jpg');}
  // Original #1 and #2 keep their URLs and now share the corrected image treatment/type.
- for(const id of [1,2]){win.setContentSize(1440,1000);await win.loadFile(ROOT+'/../index.html',{query:{design:String(id)}});await settle();assert.equal(await js('getComputedStyle(document.querySelector("h1")).fontSize'),'80px');assert.equal(await js('document.querySelectorAll(".home-orbit,.home-art>.vela-mark").length'),id===1?3:0);assert.ok(await js('[...document.querySelectorAll(".app-shot")].every(e=>getComputedStyle(e).backgroundColor==="rgba(0, 0, 0, 0)"&&parseFloat(getComputedStyle(e).paddingLeft)===0)'));}
- const failures=measurements.filter(m=>m.overflow>1||m.outside.length||m.frames||!m.typeMatches||!m.images||m.headings!==1||(m.id===1?m.ornaments!==3:m.ornaments!==0));
+ for(const id of [1,2]){win.setContentSize(1440,1000);await win.loadFile(ROOT+'/../index.html',{query:{design:String(id)}});await settle();assert.equal(await js('getComputedStyle(document.querySelector("h1")).fontSize'),id===1?'110px':'80px');assert.equal(await js('document.querySelectorAll(".home-orbit,.home-art>.vela-mark").length'),id===1?3:0);if(id===2)assert.ok(await js('[...document.querySelectorAll(".app-shot")].every(e=>getComputedStyle(e).backgroundColor==="rgba(0, 0, 0, 0)"&&parseFloat(getComputedStyle(e).paddingLeft)===0)'));}
+ const failures=measurements.filter(m=>!m.images||m.headings!==1||(m.id===1?m.ornaments!==3:m.ornaments!==0)||(m.id!==1&&(m.overflow>1||m.outside.length||m.frames||!m.typeMatches)));
  for(const width of [1440,390]){
   const cards=ids.map(id=>'<figure><img src="'+width+'-'+id+'.png"><figcaption>'+id+'</figcaption></figure>').join('');
   await fs.writeFile(OUTPUT+'/sheet-'+width+'.html','<html><style>*{box-sizing:border-box}body{margin:0;padding:15px;background:#d8ded5;display:grid;grid-template-columns:repeat(4,1fr);gap:15px}figure{margin:0;background:white;overflow:hidden}img{display:block;width:100%}figcaption{font:15px monospace;padding:8px}</style>'+cards+'</html>');win.setContentSize(width===1440?1600:800,width===1440?2650:4700);await win.loadFile(OUTPUT+'/sheet-'+width+'.html');await js('Promise.all([...document.images].map(i=>i.decode()))');await settle();await fs.writeFile(OUTPUT+'/contact-'+width+'.png',(await win.webContents.capturePage()).toPNG());

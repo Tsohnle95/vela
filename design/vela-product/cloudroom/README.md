@@ -1,8 +1,9 @@
 # Vela release directions
 
-The selected #1 and #2 have corrected Cloudroom-scale headlines and unframed
-app screenshots. #1's folded mark and orbit artwork have been restored behind
-its hero image. [Thirty further iterations and 24 palettes](iterations/index.html)
+Reference #1 exactly reproduces its original design from commit `7c0a724b`,
+including the original type, perspective, spacing, artwork, and frames.
+Reference #2 and the [thirty further iterations with 24 palettes](iterations/index.html)
+retain their corrected Cloudroom-scale typography and screenshot treatments.
 keep both as references, with fifteen new compositions from each direction.
 
 Open [the collection](index.html) directly from disk. Twenty standalone
