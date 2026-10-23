@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   attachSegment,
   beginSegmentCachePass,
@@ -41,6 +41,7 @@ describe("attachSegment", () => {
     const timeline = createFadeTimeline();
     const first = document.createElement("span");
     const second = document.createElement("span");
+    const now = vi.spyOn(performance, "now").mockReturnValue(1_000);
 
     attachSegment({
       element: first,
@@ -49,6 +50,7 @@ describe("attachSegment", () => {
       segmentKey: "a",
       timeline
     });
+    now.mockReturnValue(1_005);
     attachSegment({
       element: second,
       fadeSegmentDelayMs: FADE_SEGMENT_DELAY_MS,
@@ -59,8 +61,8 @@ describe("attachSegment", () => {
 
     expect(first.style.getPropertyValue("--fade-delay")).toBe("0ms");
     const secondDelay = Number.parseInt(second.style.getPropertyValue("--fade-delay"), 10);
-    expect(secondDelay).toBeGreaterThanOrEqual(5);
-    expect(secondDelay).toBeLessThanOrEqual(17);
+    expect(secondDelay).toBe(11);
+    now.mockRestore();
     expect(timeline.delayMsByKey.get("b")).toBe(secondDelay);
   });
 

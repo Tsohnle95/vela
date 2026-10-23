@@ -32,6 +32,17 @@ import {
   type WindowView
 } from "./window-sizing";
 import { resolveRunningAppSource } from "./source-resolver";
+
+// Keep in sync with --titlebar-h in styles/_codex.scss (40px) so the macOS
+// traffic lights sit centred in the titlebar the renderer paints.
+const TITLEBAR_HEIGHT = 40;
+const TRAFFIC_LIGHT_HEIGHT = 14;
+
+function windowChromeOptions() {
+  if (process.platform !== "darwin") return { titleBarStyle: "default" as const };
+  const y = Math.round((TITLEBAR_HEIGHT - TRAFFIC_LIGHT_HEIGHT) / 2);
+  return { titleBarStyle: "hiddenInset" as const, trafficLightPosition: { x: 16, y } };
+}
 import { AppStylesController } from "./app-styles";
 import { DevToolsController } from "./devtools-controller";
 import { SavedWorkspaceStore } from "./saved-workspaces";
@@ -215,7 +226,7 @@ function createWindow(show = true): BrowserWindow {
     backgroundColor: "#00000000",
     vibrancy: process.platform === "darwin" ? "under-window" : undefined,
     visualEffectState: process.platform === "darwin" ? "active" : undefined,
-    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
+    ...windowChromeOptions(),
     movable: true,
     resizable: true,
     fullscreenable: true,
