@@ -7,7 +7,7 @@ $codex: ':is([data-shell="codex"])';
 
 #{$codex} {
   /* Rail and titlebar stay proportional to the shared control size. */
-  --rail-w: calc(var(--control-size) + 22px);
+  --rail-w: calc(var(--control-size) + 18px);
 }
 
 
@@ -20,7 +20,7 @@ $codex: ':is([data-shell="codex"])';
 }
 
 #{$codex} .titlebar {
-  height: calc(var(--control-size) + 8px);
+  height: calc(var(--control-size) + 18px);
   gap: 10px;
   border-bottom: 0;
 }
