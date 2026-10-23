@@ -13,8 +13,8 @@ Verified locally on October 23, 2026 under repository-supported Node 22.23.2.
 - Verified selector, previous/next wraparound, modal directory selection,
   Escape dismissal, arrow-key navigation, native select key ownership,
   task switching in version 14, and disclosure interaction in version 22.
-- Verified the original Design 24 header remains borderless and its new
-  collection link exists. Its pre-existing stylesheet edits were preserved.
+- Verified the original Design 24 header remains borderless. Collection
+  links and review commentary are kept out of the product footer. Its pre-existing stylesheet edits were preserved.
 - Created all 30 local directory thumbnails from the actual 1440px renders.
 - Repository gate: 199 test files passed, 1,609 tests passed, 2 test files and
   4 tests skipped; typecheck, docs, architecture, and production build passed.

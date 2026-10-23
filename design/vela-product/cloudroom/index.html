@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Vela brings your code editor, OpenCode agents, terminal, and live changes into one desktop workspace.">
+  <title>Vela — Your code. Your agents. One home.</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="directions-b.css">
+  <link rel="stylesheet" href="directions-c.css">
+  <link rel="stylesheet" href="directions-d.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site"></div>
+  <aside class="design-controls" aria-label="Preview navigation">
+    <button id="previous" aria-label="Previous design">←</button>
+    <label class="sr-only" for="design">Choose a design</label><select id="design"></select>
+    <button id="next" aria-label="Next design">→</button>
+    <button id="browse" aria-haspopup="dialog">All designs</button>
+    <button id="hide-controls" aria-label="Hide preview controls">×</button>
+  </aside>
+  <button id="restore-controls" hidden aria-label="Show design navigation">Designs</button>
+  <dialog id="gallery" aria-labelledby="gallery-title">
+    <div class="gallery-heading"><h2 id="gallery-title">Vela</h2><button id="close-gallery" aria-label="Close designs">×</button></div>
+    <div id="gallery-grid"></div>
+  </dialog>
+  <script src="fragments.js"></script>
+  <script src="directions-a.js"></script>
+  <script src="directions-b.js"></script>
+  <script src="directions-c.js"></script>
+  <script src="directions-d.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

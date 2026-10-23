@@ -65,7 +65,7 @@ const watchdog=setTimeout(()=>app.exit(1),180000);
  await settle();assert.equal(await js('document.querySelector("dialog").open'),false);
  await win.loadFile(ROOT+'/../index.html',{query:{design:'24'}});
  assert.equal(await js('getComputedStyle(document.querySelector("header")).borderBottomWidth'),'0px');
- assert.ok(await js('document.querySelector("#source-collection-link")'));
+ assert.equal(await js('document.querySelector("#source-collection-link")'),null);
  const failures=results.filter(x=>x.overflow>1||x.outside.length||x.headings!==1||!x.images||!x.links);
  await fs.writeFile(OUTPUT+'/results.json',JSON.stringify({results,errors,failures,interactions:'passed'},null,2));
  // Raster contact sheets of actual rendered desktop and mobile compositions.
