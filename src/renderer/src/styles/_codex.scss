@@ -6,7 +6,8 @@
 $codex: ':is([data-shell="codex"])';
 
 #{$codex} {
-  --rail-w: 54px;
+  /* Rail and titlebar stay proportional to the shared control size. */
+  --rail-w: calc(var(--control-size) + 22px);
 }
 
 
@@ -19,7 +20,7 @@ $codex: ':is([data-shell="codex"])';
 }
 
 #{$codex} .titlebar {
-  height: 40px;
+  height: calc(var(--control-size) + 8px);
   gap: 10px;
   border-bottom: 0;
 }
@@ -55,9 +56,9 @@ $codex: ':is([data-shell="codex"])';
 }
 
 #{$codex} .activity-tool {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: var(--control-size);
+  height: var(--control-size);
+  border-radius: var(--control-radius);
   color: var(--text-dim);
 }
 
@@ -73,12 +74,12 @@ $codex: ':is([data-shell="codex"])';
 }
 
 #{$codex} .activity-tool .os-icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--control-icon-size);
+  height: var(--control-icon-size);
 }
 
 #{$codex} .activity-tool .codicon {
-  font-size: var(--icon-size);
+  font-size: var(--control-icon-size);
 }
 
 // ── Sidebar ────────────────────────────────────────────────────────────────

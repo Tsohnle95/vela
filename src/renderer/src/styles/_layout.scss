@@ -120,13 +120,13 @@
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: var(--control-size);
+  height: var(--control-size);
   padding: 0;
   color: var(--text-dim);
   background: transparent;
   border: 0;
-  border-radius: 11px;
+  border-radius: var(--control-radius);
   transition: color 120ms var(--ease), background 120ms var(--ease), box-shadow 120ms var(--ease);
 }
 
@@ -139,9 +139,9 @@
 }
 
 .activity-tool.active { box-shadow: inset 0 0 0 1px var(--border-strong); }
-.activity-tool .os-icon { width: var(--icon-size); height: var(--icon-size); }
+.activity-tool .os-icon { width: var(--control-icon-size); height: var(--control-icon-size); }
 
-.activity-tool .codicon { font-size: var(--icon-size); line-height: 1; }
+.activity-tool .codicon { font-size: var(--control-icon-size); line-height: 1; }
 .activity-tool:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -248,17 +248,18 @@
 .titlebar-actions .icon-btn {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 4px;
+  width: var(--control-size);
+  height: var(--control-size);
+  padding: 0;
+  border-radius: var(--control-radius);
 }
 
 .titlebar-leading-actions .icon-btn {
   -webkit-app-region: no-drag;
 }
 
-.titlebar .icon-btn .codicon { font-size: var(--icon-size); }
-.titlebar .icon-btn .os-icon { width: var(--icon-size); height: var(--icon-size); }
+.titlebar .icon-btn .codicon { font-size: var(--control-icon-size); }
+.titlebar .icon-btn .os-icon { width: var(--control-icon-size); height: var(--control-icon-size); }
 
 .titlebar-leading-actions .icon-btn.on,
 .titlebar-actions .icon-btn.on {

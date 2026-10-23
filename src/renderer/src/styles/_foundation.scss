@@ -80,6 +80,11 @@
 
   --icon-size: 16px;
 
+  /* Codex control scale: uniform 32px square, 16px icon, 8px radius. */
+  --control-size: 32px;
+  --control-icon-size: 16px;
+  --control-radius: 8px;
+
   /* File-tree icon palette (light values) for the extracted per-language glyphs. */
   --trees-icon-gray: #84848a;
   --trees-icon-red: #d52c36;
