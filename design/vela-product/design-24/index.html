@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Thirty independent interpretations of Vela's Source design.">
+  <title>Vela — Source, reimagined</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="collection.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site"></div>
+  <aside class="review" aria-label="Design collection controls">
+    <button id="previous" aria-label="Previous version">←</button>
+    <label for="version">Source /</label><select id="version"></select>
+    <button id="next" aria-label="Next version">→</button>
+    <button id="show-all" aria-expanded="false" aria-controls="collection">All 30</button>
+    <a href="../index.html?design=24">Original ↗</a>
+  </aside>
+  <dialog id="collection" aria-labelledby="collection-title">
+    <div class="dialog-top"><div><p class="label">DESIGN 24 / THIRTY NEW DIRECTIONS</p><h2 id="collection-title">Source, reimagined.</h2></div><button id="close-collection" aria-label="Close collection">×</button></div>
+    <p class="collection-intro">A study of quiet grids, code typography, muted green, and the relationship between a repository and its agent. Choose a composition to explore.</p>
+    <div id="collection-grid"></div>
+  </dialog>
+  <script src="concepts.js"></script>
+  <script src="concepts-more.js"></script>
+  <script src="collection.js"></script>
+</body>
+</html>

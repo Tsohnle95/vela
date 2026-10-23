@@ -33,6 +33,14 @@ function render() {
   document.getElementById('headline').innerHTML = title;
   document.getElementById('description').innerHTML = description;
   document.title = `Vela — ${name}`;
+  document.getElementById('source-collection-link')?.remove();
+  if (current === 24) {
+    const collectionLink = document.createElement('a');
+    collectionLink.id = 'source-collection-link';
+    collectionLink.href = 'design-24/index.html?version=1';
+    collectionLink.textContent = 'Explore 30 new takes on Source ↗';
+    document.querySelector('footer').append(collectionLink);
+  }
   const url = new URL(location.href);
   url.searchParams.set('design', String(current));
   history.replaceState(null, '', url);
