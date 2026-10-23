@@ -7,6 +7,8 @@ Verified locally on October 23, 2026 under repository-supported Node 22.23.2.
   390, and 320 CSS pixels: 150 layouts, zero horizontal-overflow failures,
   zero offscreen headline/action/product failures, all product images decoded,
   one primary heading per version, and zero renderer errors.
+- Removed decorative eyebrow labels, marginal notes, numbering, screenshot
+  captions, and rendered design commentary across all 30 interpretations.
 - Reviewed raster contact sheets of all 30 desktop and all 30 mobile layouts.
 - Verified selector, previous/next wraparound, modal directory selection,
   Escape dismissal, arrow-key navigation, native select key ownership,

@@ -1,0 +1,5 @@
+/* Preserve the feature layout after removing its decorative numbering gutter. */
+.design-12 .capability-list article{grid-template-columns:minmax(0,1fr)}
+.release-brand-art{display:none}
+.design-25 .release-brand-art{display:block;width:82px;height:82px;margin:0 auto 26px;clip-path:polygon(5% 10%,32% 0,51% 65%,72% 0,98% 10%,64% 100%,36% 100%);background:linear-gradient(105deg,#879e6d 0 47%,#486a50 48%)}
+@media(max-width:760px){.design-25 .release-brand-art{width:65px;height:65px;margin-bottom:20px}}

@@ -2,13 +2,13 @@
    composition. Shared product fragments keep facts and asset references stable. */
 (() => {
   const repo = 'https://github.com/Tsohnle95/vela';
-  const label = (text) => `<p class="label">${text}</p>`;
-  const actions = (text = 'Download for macOS') => `<div class="actions"><a class="primary" href="${repo}/releases" target="_blank" rel="noopener">${text} <span aria-hidden="true">↗</span></a><a class="secondary" href="${repo}" target="_blank" rel="noopener">View source <span aria-hidden="true">↗</span></a></div><p class="platform">macOS · OpenCode V2</p>`;
-  const shot = (caption = 'The editor. The agent. The same context.', cls = '') => `<figure id="workspace" class="product ${cls}"><div class="frame-label"><span>VELA / WORKSPACE</span><span>EDITOR + OPENCODE</span></div><img src="../assets/vela.png" width="1420" height="887" alt="Vela desktop: Neptune repository files, JavaScript editor, and an OpenCode agent conversation side by side."><figcaption>${caption}</figcaption></figure>`;
+  const label = () => '';
+  const actions = (text = 'Download for macOS') => `<div class="actions"><a class="primary" href="${repo}/releases" target="_blank" rel="noopener">${text} <span aria-hidden="true">↗</span></a><a class="secondary" href="${repo}" target="_blank" rel="noopener">View source <span aria-hidden="true">↗</span></a></div>`;
+  const shot = (_caption = '', cls = '') => `<figure id="workspace" class="product ${cls}"><img src="../assets/vela.png" width="1420" height="887" alt="Vela desktop: Neptune repository files, JavaScript editor, and an OpenCode agent conversation side by side."></figure>`;
   const intro = (heading = 'Build with<br> <em>context.</em>', text = 'Keep OpenCode beside your repository. Write, review, and run without leaving Vela.') => `<div class="intro"><h1>${heading}</h1><p class="lede">${text}</p>${actions()}</div>`;
-  const features = (cls = '') => `<section class="features ${cls}" aria-label="Workspace capabilities"><article><span>01 / EDIT</span><h2>Your files.<br> Your editor.</h2><p>Browse the repository and edit with Monaco, tabs, and autosave.</p></article><article><span>02 / ASK</span><h2>An agent.<br> In context.</h2><p>Work with OpenCode beside the files it changes.</p></article><article><span>03 / REVIEW</span><h2>Follow the work.<br> Review the diff.</h2><p>Watch workspace changes and inspect per-file diffs when starting contents are available.</p></article></section>`;
-  const note = (text) => `<p class="annotation">${text}</p>`;
-  const steps = () => `<ol class="steps"><li><span>01</span><div><h2>Open a repository.</h2><p>Your file tree, ready to explore.</p></div></li><li><span>02</span><div><h2>Work with OpenCode.</h2><p>Ask, attach files, and follow the session.</p></div></li><li><span>03</span><div><h2>Review. Edit. Run.</h2><p>Check the diff and use the integrated terminal.</p></div></li></ol>`;
+  const features = (cls = '') => `<section class="features ${cls}" aria-label="Workspace capabilities"><article><h2>Your files.<br> Your editor.</h2><p>Browse the repository and edit with Monaco, tabs, and autosave.</p></article><article><h2>An agent.<br> In context.</h2><p>Work with OpenCode beside the files it changes.</p></article><article><h2>Follow the work.<br> Review the diff.</h2><p>Watch workspace changes and inspect per-file diffs when starting contents are available.</p></article></section>`;
+  const note = () => '';
+  const steps = () => `<ol class="steps"><li><div><h2>Open a repository.</h2><p>Your file tree, ready to explore.</p></div></li><li><div><h2>Work with OpenCode.</h2><p>Ask, attach files, and follow the session.</p></div></li><li><div><h2>Review. Edit. Run.</h2><p>Check the diff and use the integrated terminal.</p></div></li></ol>`;
   window.sourceConcepts = [
     {
       name: 'Margin notes', motif: '01 / annotated manuscript',

@@ -7,8 +7,9 @@ remain available, including the existing borderless Design 24.
 
 Use the selector, previous/next buttons, or Left/Right keys outside interactive
 controls. **All 30** opens the directory; Escape closes it. Each interpretation
-has an expandable design note explaining the reading of the original and the
-composition that follows from it. Browser back/forward restores the version.
+uses release-style presentation, without eyebrow labels, marginal notes,
+numbering, screenshot captions, or design commentary. Browser back/forward
+restores the version.
 
 The reference was reviewed as a rendered page and in source: a fine 32px grid,
 borderless monospaced wordmark, very large proportional headline, green
@@ -52,3 +53,8 @@ Product images are the existing Vela screenshot. Code headings, diagrams,
 and the workflow diff are illustrative. External actions preserve the existing
 repository, releases, and setup destinations. No download availability,
 customer, performance, or benchmark claims are added.
+
+Presentation rule: show the product as a real release. Keep design rationale,
+reference analysis, specimen numbers, decorative microcopy, and review comments
+out of the rendered product pages. The collection directory contains only
+preview images and design names.

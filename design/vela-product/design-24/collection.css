@@ -73,3 +73,12 @@
 .collection-preview{display:block;width:100%;height:auto;margin:16px 0;border:1px solid #e0e7da;border-radius:2px}
 
 @media(max-width:420px){#collection-grid{grid-template-columns:1fr}.collection-card{padding:18px}.collection-card[aria-current]{padding:17px}.collection-card h3{font-size:21px}.collection-card p{font-size:12px}.collection-card small{font-size:9px}}
+
+/* Release presentation: removed marginalia and annotations do not reserve space. */
+.manuscript{grid-template-columns:minmax(0,1fr);max-width:1000px;margin:auto}
+.margin-bottom,.margin-rule{display:none}
+.ledger-row{grid-template-columns:1.3fr 1fr}.ledger-row>p{grid-column:auto}.ledger-image{padding-left:0}
+.code-poem>div{gap:0}.poem-shot .product{margin-left:0}.code-poem h1{padding-left:0}.poetry-bottom{margin-left:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.review label.sr-only{display:block}
+@media(max-width:700px){.manuscript{grid-template-columns:minmax(0,1fr)}.ledger-row{grid-template-columns:1fr}.ledger-row>p{grid-column:1}.v1 main{padding-top:25px}.notebook>div{padding-bottom:30px}.anatomy-rail{margin-top:20px}.colophon-body{padding-top:15px}}
