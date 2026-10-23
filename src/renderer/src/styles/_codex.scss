@@ -6,8 +6,9 @@
 $codex: ':is([data-shell="codex"])';
 
 #{$codex} {
-  /* Rail and titlebar stay proportional to the shared control size. */
+  /* Top and left chrome are the same thickness: one control scale + gutter. */
   --rail-w: calc(var(--control-size) + 18px);
+  --titlebar-h: calc(var(--control-size) + 18px);
 }
 
 
@@ -16,11 +17,11 @@ $codex: ':is([data-shell="codex"])';
 // share `#f6f6f6` with no border between them, and the file/session panel below
 // is a lighter `#fcfcfc`, so the band and rail read as a single surface.
 #{$codex} .app {
-  padding-top: 40px;
+  padding-top: var(--titlebar-h);
 }
 
 #{$codex} .titlebar {
-  height: calc(var(--control-size) + 18px);
+  height: var(--titlebar-h);
   gap: 10px;
   border-bottom: 0;
 }
