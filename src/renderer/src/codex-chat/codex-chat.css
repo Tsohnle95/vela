@@ -35,6 +35,8 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  /* Codex disables native anchoring; the scroll hook owns the position. */
+  overflow-anchor: none;
 }
 
 .codex-column {
@@ -171,20 +173,37 @@
 
 .codex-md-blockquote {
   margin-block: calc(var(--markdown-space) * 2);
-  padding-inline-start: 12px;
-  border-inline-start: 2px solid var(--codex-rule);
+  padding-inline-start: calc(var(--markdown-space) * 6);
+  border: 0;
   color: var(--codex-text-secondary);
+  position: relative;
+}
+
+.codex-md-blockquote::after {
+  content: "";
+  position: absolute;
+  inset-block: calc(var(--markdown-space) * 2);
+  inset-inline-start: 0;
+  width: var(--markdown-space);
+  border-radius: calc(var(--markdown-space) / 2);
+  background: var(--codex-rule);
 }
 
 .codex-md-hr {
-  margin-block: calc(var(--markdown-space) * 4);
+  margin-block: calc(var(--markdown-space) * 7);
   border: 0;
   border-top: 1px solid var(--codex-rule);
 }
 
-.codex-md-table-wrap {
+.codex-md-table-container {
   margin-block: calc(var(--markdown-space) * 2);
+  max-width: 100%;
+}
+
+.codex-md-table-scroller {
+  max-width: 100%;
   overflow-x: auto;
+  outline: none;
 }
 
 .codex-md-table {
@@ -199,6 +218,115 @@
   border: 1px solid var(--codex-rule);
   text-align: start;
   overflow-wrap: break-word;
+}
+
+.codex-md-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 12.5rem;
+  max-height: 12.5rem;
+  object-fit: contain;
+  margin-block: 12px;
+  border: 1px solid var(--codex-rule);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 12%));
+}
+
+.codex-md-list-item[data-task] {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  list-style: none;
+}
+
+.codex-md-list-item[data-task] .codex-md-checkbox {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+  accent-color: var(--fg);
+}
+
+.codex-md-list-body {
+  min-width: 0;
+}
+
+/* ── Fenced code blocks (Codex code component) ────────────────────────── */
+
+.codex-code {
+  margin-block: calc(var(--markdown-space) * 2);
+  border: 1px solid var(--codex-rule);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-inset, color-mix(in srgb, var(--fg) 6%, transparent));
+}
+
+.codex-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--codex-rule);
+  color: var(--codex-text-secondary);
+  font-size: 12px;
+}
+
+.codex-code-lang {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  text-transform: lowercase;
+}
+
+.codex-code-actions {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.codex-code-action {
+  padding: 1px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--codex-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.codex-code-action:hover {
+  background: var(--codex-hover);
+  color: var(--codex-text);
+}
+
+.codex-code-pre {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  line-height: 1.5;
+  tab-size: 2;
+}
+
+.codex-code-pre[data-wrap] {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.codex-code-pre code {
+  font-family: inherit;
+  white-space: pre;
+}
+
+.codex-code-pre[data-wrap] code {
+  white-space: pre-wrap;
+}
+
+.codex-code-pre .codex-code-line {
+  color: var(--shiki-light, inherit);
+}
+
+html.dark .codex-code-pre .codex-code-line {
+  color: var(--shiki-dark, inherit);
 }
 
 .codex-md a {
@@ -609,14 +737,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--codex-rule);
   border-radius: 999px;
   background: var(--bg-panel, var(--bg));
   color: var(--codex-text-secondary);
   box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 12%));
   cursor: pointer;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--codex-transition-duration-basic) ease-in-out;
+}
+
+.codex-to-bottom-slot[data-visible] .codex-to-bottom {
+  opacity: 1;
   pointer-events: auto;
 }
 

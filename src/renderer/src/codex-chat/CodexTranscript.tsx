@@ -2,11 +2,11 @@ import { useMemo, type ReactNode } from "react";
 import type { SessionInfo, TranscriptItem } from "@shared/types";
 import { useStore } from "../store";
 import { buildTurns, visibleTranscript } from "../components/timeline-model";
-import { useDshScroll } from "../dsh-chat/use-dsh-scroll";
 import { CodexTurn } from "./CodexTurn";
+import { useCodexScroll } from "./use-codex-scroll";
 import "./codex-chat.css";
 
-export { clearDshScrollMemoryForTests as clearCodexScrollMemoryForTests } from "../dsh-chat/use-dsh-scroll";
+export { clearCodexScrollMemoryForTests } from "./use-codex-scroll";
 
 function Working({ waiting }: { waiting: boolean }) {
   return (
@@ -19,7 +19,7 @@ function Working({ waiting }: { waiting: boolean }) {
 
 /**
  * Codex's transcript surface: one centered 48rem column, a 16px item rhythm,
- * and scroll ownership that follows the floor only while the reader is there.
+ * and Codex's 24px floor-ownership scroll semantics.
  */
 export function CodexTranscript({
   transcript,
@@ -45,7 +45,7 @@ export function CodexTranscript({
     [transcript, sessions, session?.id]
   );
   const turns = useMemo(() => buildTurns(visible), [visible]);
-  const { scrollRef, contentRef, following, onScroll, returnToBottom } = useDshScroll(
+  const { scrollRef, contentRef, showButton, onScroll, scrollToBottom } = useCodexScroll(
     session?.workspace.id,
     transcript,
     busy,
@@ -57,7 +57,7 @@ export function CodexTranscript({
       <div
         ref={scrollRef}
         className="codex-scroll"
-        data-codex-following={following ? "" : undefined}
+        data-codex-following={showButton ? undefined : ""}
         onScroll={onScroll}
       >
         <div ref={contentRef} className="codex-column">
@@ -75,15 +75,20 @@ export function CodexTranscript({
           {busy && turns.length === 0 && <Working waiting={activity?.isWaitingForPermission === true} />}
         </div>
       </div>
-      {!following && (
-        <div className="codex-to-bottom-slot">
-          <button type="button" className="codex-to-bottom" aria-label="Back to bottom" onClick={returnToBottom}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
-      )}
+      <div className="codex-to-bottom-slot" data-visible={showButton || undefined}>
+        <button
+          type="button"
+          className="codex-to-bottom"
+          aria-label="Scroll to bottom"
+          aria-hidden={!showButton}
+          tabIndex={showButton ? 0 : -1}
+          onClick={scrollToBottom}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }

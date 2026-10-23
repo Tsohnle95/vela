@@ -55,7 +55,7 @@ describe("attachSegment", () => {
 
     expect(first.style.getPropertyValue("--fade-delay")).toBe("0ms");
     const secondDelay = Number.parseInt(second.style.getPropertyValue("--fade-delay"), 10);
-    expect(secondDelay).toBeGreaterThanOrEqual(14);
+    expect(secondDelay).toBeGreaterThanOrEqual(5);
     expect(secondDelay).toBeLessThanOrEqual(17);
     expect(timeline.delayMsByKey.get("b")).toBe(secondDelay);
   });

@@ -94,6 +94,27 @@ describe("CodexTranscript", () => {
     expect(container.querySelector(".dsh-scroll")).toBeNull();
   });
 
+  it("shows the scroll button only when the reader leaves the floor", () => {
+    render([{ kind: "user", id: "user-1", text: "Go", createdAt: 0 }]);
+    const scroller = container.querySelector<HTMLElement>(".codex-scroll");
+    expect(scroller).not.toBeNull();
+    Object.defineProperty(scroller, "scrollHeight", { value: 1000, configurable: true });
+    Object.defineProperty(scroller, "clientHeight", { value: 200, configurable: true });
+    const slot = (): Element | null => container.querySelector(".codex-to-bottom-slot");
+
+    scroller!.scrollTop = 100;
+    act(() => {
+      scroller!.dispatchEvent(new Event("scroll"));
+    });
+    expect(slot()?.hasAttribute("data-visible")).toBe(true);
+
+    scroller!.scrollTop = 800;
+    act(() => {
+      scroller!.dispatchEvent(new Event("scroll"));
+    });
+    expect(slot()?.hasAttribute("data-visible")).toBe(false);
+  });
+
   it("shows the working divider before the first tool starts", () => {
     render([{ kind: "user", id: "user-1", text: "Go", createdAt: Date.now() - 2000 }], { busy: true });
     expect(container.querySelector(".codex-work-label")?.textContent).toMatch(/^Working for /);
