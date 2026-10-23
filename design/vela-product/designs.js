@@ -10,7 +10,7 @@ const designs = [
   ['Lilac journal', 'Keep your code<br><em>in good company.</em>', 'Vela brings OpenCode into your workspace,<br>with your editor, terminal, and diffs close by.'],
   ['Monochrome', 'YOUR NEXT<br><em>WORKSPACE.</em>', 'Code editor. OpenCode agents. Integrated terminal.<br>Live diffs. Together in Vela.'],
   ['Horizon', 'Space to think.<br><em>Tools to build.</em>', 'Work with your code and OpenCode side by side.<br>Keep the editor, terminal, and changes in view.'],
-  ['Dot matrix', 'Open folder.<br><em>Start building.</em>', 'Browse the repository. Ask your agent.<br>Read the diff. Run it in the terminal.'],
+  ['Dot matrix', 'One place.<br><em>Your whole workflow.</em>', 'Code with OpenCode, edit your files, and review changes.<br>Your desktop workspace, brought together.'],
   ['Signal', 'Your agents.<br><em>In context.</em>', 'OpenCode sessions beside the files they work on.<br>One desktop app for the whole workflow.'],
   ['Terracotta', 'Good work<br><em>starts here.</em>', 'Your code, your terminal, and your agent.<br>Vela keeps the workspace together.'],
   ['Mint belt', 'From prompt<br><em>to working code.</em>', 'Ask OpenCode, follow the changes, and edit the result.<br>All inside the same desktop workspace.'],
