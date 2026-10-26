@@ -2,7 +2,30 @@
   const repository = 'https://github.com/Tsohnle95/vela';
   const assets = window.velaAssetBase || '../assets';
   const cta = (text = 'Download for macOS') => `<a class="button" href="${repository}/releases" target="_blank" rel="noopener">${text}<span aria-hidden="true">↗</span></a>`;
-  const shot = (classes = '') => `<figure class="app-shot ${classes}"><img src="${assets}/vela.png" width="1420" height="887" alt="Vela showing a repository, JavaScript editor, and OpenCode conversation side by side."></figure>`;
+  const shots = {
+    default: {
+      file: 'vela',
+      width: 1420,
+      height: 887,
+      alt: 'Vela showing a repository, JavaScript editor, and OpenCode conversation side by side.',
+    },
+    light: {
+      file: 'vela-light',
+      width: 1619,
+      height: 971,
+      alt: 'Vela in a light theme, with the file tree, a chat controller in the editor, and an OpenCode conversation in one window.',
+    },
+    dark: {
+      file: 'vela-dark',
+      width: 1619,
+      height: 971,
+      alt: 'Vela in a dark theme, with the file tree, a chat controller in the editor, and an OpenCode conversation in one window.',
+    },
+  };
+  const shot = (classes = '', variant = 'default') => {
+    const { file, width, height, alt } = shots[variant];
+    return `<figure class="app-shot ${classes}"><img src="${assets}/${file}.png" width="${width}" height="${height}" alt="${alt}"></figure>`;
+  };
   const icon = (classes = '') => `<img class="vela-icon ${classes}" src="${assets}/icon.png" width="1024" height="1024" alt="Vela">`;
   const mark = (classes = '') => `<svg class="vela-mark ${classes}" viewBox="0 0 200 160" aria-hidden="true"><path fill="#adedd9" d="M36 8 100 92 31 154 0 139Z"/><path fill="#62c4ad" d="M36 8 100 92 31 154 67 120Z"/><path fill="#b5f4dc" d="m164 8 36 131-31 15-69-62Z"/><path fill="#389d8e" d="m164 8 36 131-31 15-36-34Z"/><path fill="#18786f" d="m164 8-31 112-33-28Z"/></svg>`;
   const copy = (title, description = 'Your editor, OpenCode agents, terminal, and live diffs. Together in one desktop workspace.') => `<div class="hero-copy"><h1>${title}</h1><p>${description}</p>${cta()}</div>`;

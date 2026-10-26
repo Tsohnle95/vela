@@ -4,10 +4,10 @@ Open [the collection](index.html) directly from disk. It contains **30 new
 iterations** and retains **#1 and #2 as references**. The earlier 20-design
 collection remains available from the directory.
 
-- **Reference #1** is the exact original saved design from commit `7c0a724b`,
-  including its original title sizing, spacing, image perspective, frames,
-  folded mark, and orbits. **Reference #2** retains the corrected title sizing
-  and screenshot cleanup.
+- **Reference #1** keeps its original layout, title sizing, spacing, folded
+  mark, and orbits from commit `7c0a724b`, updated with the current light and
+  dark product screenshots and a larger hero image. **Reference #2** retains
+  the corrected title sizing and screenshot cleanup.
 - **1.01–1.15** are new split-layout iterations of #1 (URL IDs 21–35).
 - **2.01–2.15** are new centered, wide-product iterations of #2 (IDs 36–50).
 - Use Left/Right outside interactive controls to browse. The iteration
@@ -29,21 +29,23 @@ The actual Cloudroom headline scale was checked in its public stylesheet:
 The shared refinements use an 80px desktop cap, weight 550, line-height 1.04,
 and -4px tracking, with the source’s 1080px, 800px, and 640px responsive
 breakpoints. Individual iterations do not override the primary type scale.
-Reference #1 is intentionally exempt so it stays identical to the original.
+Reference #1 keeps its original 110px desktop cap.
 
-Screenshots are the unmodified real Vela image. Reference #1 retains its exact
-original image frames, perspective, folded mark, and orbit artwork. The 30 new
-iterations and reference #2 keep their unframed screenshot treatment. Their
-presentation effects are neutral elevation, spacing, and occasional slight
-perspective. Palettes change page colors and actions; they do not recolor
-the screenshot or the existing app icon. The previous prohibition on
-decorative labels, annotations, and design commentary still applies.
+Screenshots are unmodified real Vela product images. Reference #1 uses the
+current light and dark screenshots, with its hero image enlarged and unframed;
+its folded mark and orbit artwork remain. The 30 new iterations and reference
+#2 keep their corrected unframed screenshot treatment. Their presentation
+effects are neutral elevation, spacing, and occasional slight perspective.
+Palettes change page colors and actions; they do not recolor the screenshot or
+the existing app icon. The previous prohibition on decorative labels,
+annotations, and design commentary still applies.
 
 `palettes.js` owns the color tokens. `model.js` owns shared factual fragments
 and the two references. `layouts-a/b/c` own the 30 compositions. `app.js` owns
 selection, independent palette choices, keyboard navigation, and history.
-The parent `refinements.css` explicitly excludes #1 from later refinements, so
-the original #1 URL and its palette-enabled reference use the original styles.
+The parent `refinements.css` explicitly excludes #1 from the later type and
+screenshot refinements, so the #1 URL and its palette-enabled reference keep
+their own layout styles.
 
 Run `node design/vela-product/cloudroom/iterations/verify.mjs` under Node
 22.23.2 from the repository root. Add `--refresh-previews` to explicitly
@@ -52,4 +54,6 @@ The check otherwise writes only into a fresh temporary directory and uses
 an isolated Electron profile. See [QA.md](QA.md).
 
 `node design/vela-product/cloudroom/iterations/verify-reference.mjs` independently
-extracts the original from Git and checks #1 pixel-for-pixel at six widths.
+extracts the original from Git and checks that #1 keeps its original type and
+spacing at six widths, uses the current light hero and dark product screenshots,
+and renders the secondary image without a frame.

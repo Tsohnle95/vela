@@ -1,6 +1,6 @@
 # Local verification
 
-Validated October 23, 2026 using Node 22.23.2 and an isolated Electron profile.
+Validated October 25, 2026 using Node 22.23.2 and an isolated Electron profile.
 
 - All 20 new designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
   100 layouts, zero horizontal-overflow failures, no offscreen primary

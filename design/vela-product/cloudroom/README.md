@@ -1,8 +1,8 @@
 # Vela release directions
 
-Reference #1 exactly reproduces its original design from commit `7c0a724b`,
-including the original type, perspective, spacing, artwork, and frames.
-Reference #2 and the [thirty further iterations with 24 palettes](iterations/index.html)
+Reference #1 keeps its original layout and type from commit `7c0a724b`,
+updated with the current light and dark product screenshots and a larger hero
+image. Reference #2 and the [thirty further iterations with 24 palettes](iterations/index.html)
 retain their corrected Cloudroom-scale typography and screenshot treatments.
 keep both as references, with fifteen new compositions from each direction.
 

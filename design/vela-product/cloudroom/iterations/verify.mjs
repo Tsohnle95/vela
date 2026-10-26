@@ -73,8 +73,8 @@ const watchdog=setTimeout(()=>app.exit(1),240000);
     const expected=innerWidth>1080?Math.max(54,Math.min(80,innerWidth*.058)):innerWidth>800?Math.max(54,Math.min(68,innerWidth*.063)):innerWidth>640?72:Math.max(50,Math.min(72,innerWidth*.12));
     const outside=[...document.querySelectorAll('main h1,main .button,main .app-shot img,.iteration-controls')].filter(el=>{const r=el.getBoundingClientRect();return r.left < -1||r.right>innerWidth+1}).map(e=>e.className);
     const frames=[...document.querySelectorAll('.app-shot')].filter(el=>{const s=getComputedStyle(el),i=getComputedStyle(el.querySelector('img'));return parseFloat(s.borderTopWidth)>0||parseFloat(s.paddingLeft)>0||s.backgroundColor!=='rgba(0, 0, 0, 0)'||parseFloat(i.borderTopWidth)>0||i.filter!=='none'}).length;
-    return {width:innerWidth,title:document.title,overflow:document.documentElement.scrollWidth-innerWidth,outside,frames,fontSize:parseFloat(c.fontSize),fontWeight:c.fontWeight,typeMatches:Math.abs(parseFloat(c.fontSize)-expected)<.05&&c.fontWeight==='550'&&Math.abs(parseFloat(c.lineHeight)-expected*1.04)<.06,images:[...document.querySelectorAll('main img')].every(i=>i.naturalWidth===1420),headings:document.querySelectorAll('h1').length,ornaments:document.querySelectorAll('main svg,.home-orbit,.home-art>.vela-mark').length};
-   }).toString()+')()');
+    return {width:innerWidth,title:document.title,overflow:document.documentElement.scrollWidth-innerWidth,outside,frames,fontSize:parseFloat(c.fontSize),fontWeight:c.fontWeight,typeMatches:Math.abs(parseFloat(c.fontSize)-expected)<.05&&c.fontWeight==='550'&&Math.abs(parseFloat(c.lineHeight)-expected*1.04)<.06,images:[...document.querySelectorAll('main img')].every(i=>i.naturalWidth===IMAGE_WIDTH),headings:document.querySelectorAll('h1').length,ornaments:document.querySelectorAll('main svg,.home-orbit,.home-art>.vela-mark').length};
+   }).toString().replace('IMAGE_WIDTH', id===1?'1619':'1420')+')()');
    measurements.push({id,...m});
    await fs.writeFile(OUTPUT+'/results.json',JSON.stringify({measurements,errors},null,2));
    if(width===1440||width===390){
