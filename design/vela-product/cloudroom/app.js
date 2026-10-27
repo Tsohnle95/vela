@@ -28,7 +28,7 @@
   }
   function render(push = false, focus = false) {
     const direction = directions.find(d => d.id === current);
-    document.body.className = `d${current}`;
+    document.body.className = direction.bodyClass || `d${current}`;
     site.innerHTML = direction.standalone
       ? direction.body()
       : `${header()}<main id="main" tabindex="-1">${direction.body()}</main>${footer()}`;

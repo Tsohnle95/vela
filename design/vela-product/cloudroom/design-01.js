@@ -78,7 +78,28 @@
     ['How do I start?', 'Install OpenCode V2, open Vela, and open a folder or file. The setup guide on GitHub covers running from source and packaging the desktop app.'],
   ];
 
-  const body = () => `
+  const defaultDescription = `A desktop IDE for coding with an agent. Keep
+    <span class="ob-inline">${inline('code')} your editor</span>,
+    <span class="ob-inline">${inline('agent')} OpenCode</span>,
+    <span class="ob-inline">${inline('terminal')} the terminal</span> and
+    <span class="ob-inline">${inline('diff')} live diffs</span>
+    in one window. Use the models you already run.`;
+
+  const build = (options = {}) => {
+    const preview = options.shot === 'light'
+      ? {
+        file: '../assets/vela-light.png',
+        width: 1619,
+        height: 971,
+        alt: 'Vela in a light theme, with the file tree, Monaco editor, OpenCode conversation and live changes in one window.',
+      }
+      : {
+        file: '../assets/vela-dark.png',
+        width: 1619,
+        height: 971,
+        alt: 'Vela showing the file tree, Monaco editor, OpenCode conversation and live changes in one window.',
+      };
+    return `
     <header class="ob-header">
       <div class="ob-header-inner">
         <a class="ob-brand" href="#workspace" aria-label="Vela home">
@@ -114,12 +135,7 @@
             <span class="ob-title-logo"><img src="../assets/icon.png" width="1024" height="1024" alt=""></span>
             <span>Vela</span>
           </h1>
-          <p class="ob-description">A desktop IDE for coding with an agent. Keep
-            <span class="ob-inline">${inline('code')} your editor</span>,
-            <span class="ob-inline">${inline('agent')} OpenCode</span>,
-            <span class="ob-inline">${inline('terminal')} the terminal</span> and
-            <span class="ob-inline">${inline('diff')} live diffs</span>
-            in one window. Use the models you already run.</p>
+          <p class="ob-description">${options.description || defaultDescription}</p>
           <div class="ob-actions">
             <div class="ob-download-split">
               <a class="ob-btn ob-btn-primary ob-btn-lg ob-download-main" href="${releases}" target="_blank" rel="noopener">${icon.apple} Download for macOS</a>
@@ -137,7 +153,7 @@
         </div>
 
         <figure class="ob-preview">
-          <img src="../assets/vela-dark.png" width="1619" height="971" alt="Vela showing the file tree, Monaco editor, OpenCode conversation and live changes in one window.">
+          <img src="${preview.file}" width="${preview.width}" height="${preview.height}" alt="${preview.alt}">
           <figcaption class="ob-sr">Vela workspace preview</figcaption>
         </figure>
       </section>
@@ -504,6 +520,8 @@
       </div>
     </footer>
   `;
+  };
 
-  window.velaDesignOne = { name: 'Meet Vela', body };
+  window.velaMeet = { build };
+  window.velaDesignOne = { name: 'Meet Vela', body: () => build() };
 })();
