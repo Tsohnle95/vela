@@ -26,17 +26,6 @@
   const button = (href, label, kind = 'primary', size = '', suffix = '') =>
     `<a class="ob-btn ob-btn-${kind}${size ? ` ob-btn-${size}` : ''}" href="${href}" target="_blank" rel="noopener">${label}${suffix}</a>`;
 
-  const availability = () => `
-    <p class="ob-availability">
-      <span class="ob-new">NEW</span>
-      <span class="ob-availability-copy">Available on</span>
-      <span class="ob-platform">${icon.apple} macOS</span>
-      <span class="ob-separator" aria-hidden="true">·</span>
-      <span class="ob-platform">${icon.windows} Windows</span>
-      <span class="ob-separator" aria-hidden="true">·</span>
-      <span class="ob-platform">${icon.terminal} Linux</span>
-    </p>`;
-
   const honeycomb = () => {
     const art = new Map([
       ['0-2', ['{ }', 'lilac']], ['0-9', ['=>', 'mint']],
@@ -123,13 +112,8 @@
     <main id="main" tabindex="-1">
       <section class="ob-hero" id="workspace">
         <div class="ob-hero-grid" aria-hidden="true"></div>
-        <div class="ob-beam" aria-hidden="true">
-          <span class="ob-beam-column"></span>
-          <span class="ob-beam-core"></span>
-          <span class="ob-beam-flare"></span>
-        </div>
+        ${options.flow === 'none' ? '' : `<canvas class="ob-flow-canvas" data-flow="${options.flow || 'ribbon'}" data-tone="${options.tone || 'mint'}" data-x="${options.flowX ?? 64}" aria-hidden="true"></canvas>`}
         <div class="ob-hero-copy">
-          ${availability()}
           <h1 class="ob-title">
             <span>Vela</span>
             <span class="ob-title-logo"><img src="../assets/icon.png" width="1024" height="1024" alt=""></span>

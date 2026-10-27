@@ -4,12 +4,13 @@ Validated October 27, 2026 using Node 22.23.2 and an isolated Electron profile.
 
 - Design 01 is the standalone Vela IDE composition. Three OpenBot-inspired
   takes extend it: Aurora (a cool split hero), Paper (a light editorial
-  treatment), and Studio (a monochrome tool-like treatment). Each keeps one
-  primary heading, avoids horizontal overflow at 1440, 1024, 768, 390 and 320
-  CSS pixels, loads all in-page product images, and preserves working platform,
-  FAQ, download, source and navigation actions.
-- All 23 designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
-  115 layouts, zero horizontal-overflow failures, no offscreen primary
+  treatment), and Studio (a monochrome tool-like treatment). Five flow
+  treatments add working animated heroes: Ribbon, Beam, Curtain, Pulse and
+  Circuit. Each keeps one primary heading, avoids horizontal overflow at 1440,
+  1024, 768, 390 and 320 CSS pixels, loads all in-page product images, and
+  preserves working platform, FAQ, download, source and navigation actions.
+- All 28 designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
+  140 layouts, zero horizontal-overflow failures, no offscreen primary
   headings/actions/product images, one primary heading per design, all
   product images decoded, and zero renderer errors.
 - Reviewed actual-render contact sheets of every desktop and mobile design.
