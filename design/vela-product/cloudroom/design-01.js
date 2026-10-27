@@ -131,9 +131,9 @@
         <div class="ob-hero-copy">
           ${availability()}
           <h1 class="ob-title">
-            <span>Meet</span>
-            <span class="ob-title-logo"><img src="../assets/icon.png" width="1024" height="1024" alt=""></span>
             <span>Vela</span>
+            <span class="ob-title-logo"><img src="../assets/icon.png" width="1024" height="1024" alt=""></span>
+            <span>IDE</span>
           </h1>
           <p class="ob-description">${options.description || defaultDescription}</p>
           <div class="ob-actions">
@@ -523,5 +523,5 @@
   };
 
   window.velaMeet = { build };
-  window.velaDesignOne = { name: 'Meet Vela', body: () => build() };
+  window.velaDesignOne = { name: 'Vela IDE', body: () => build() };
 })();

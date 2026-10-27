@@ -34,7 +34,7 @@
       : `${header()}<main id="main" tabindex="-1">${direction.body()}</main>${footer()}`;
     if (!site.querySelector('#workspace')) site.querySelector('.app-shot')?.setAttribute('id', 'workspace');
     select.value = String(current);
-    document.title = `Vela — ${direction.name}`;
+    document.title = direction.name.startsWith('Vela') ? direction.name : `Vela — ${direction.name}`;
     const url = new URL(location.href);
     url.searchParams.set('design', String(current));
     url.hash = '';

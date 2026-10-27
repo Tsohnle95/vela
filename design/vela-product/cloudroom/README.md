@@ -40,7 +40,7 @@ fake metrics, design rationale, or commentary. Keep meaningful headings,
 useful product descriptions, real imagery, and functional actions. Design
 names and navigation belong in the separate collection controls only.
 
-The collection includes Meet Vela; Aurora; Paper; Studio; Everything in view;
+The collection includes Vela IDE; Aurora; Paper; Studio; Everything in view;
 Close to the code; A place to build; One working space; The big picture; Folded
 space; Code, together; The shared workspace; In plain view; In orbit; The
 wordmark; Good company; The working view; A new angle; After hours; Still

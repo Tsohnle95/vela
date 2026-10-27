@@ -2,7 +2,7 @@
 
 Validated October 27, 2026 using Node 22.23.2 and an isolated Electron profile.
 
-- Design 01 is the standalone Meet Vela composition. Three OpenBot-inspired
+- Design 01 is the standalone Vela IDE composition. Three OpenBot-inspired
   takes extend it: Aurora (a cool split hero), Paper (a light editorial
   treatment), and Studio (a monochrome tool-like treatment). Each keeps one
   primary heading, avoids horizontal overflow at 1440, 1024, 768, 390 and 320
