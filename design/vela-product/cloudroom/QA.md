@@ -1,8 +1,12 @@
 # Local verification
 
-Validated October 25, 2026 using Node 22.23.2 and an isolated Electron profile.
+Validated October 27, 2026 using Node 22.23.2 and an isolated Electron profile.
 
-- All 20 new designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
+- Design 01 is the standalone Meet Vela composition. It keeps one primary
+  heading, avoids horizontal overflow at 1440, 1024, 768, 390 and 320 CSS
+  pixels, loads all in-page product images, and preserves working platform,
+  FAQ, download, source and navigation actions.
+- All 20 designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
   100 layouts, zero horizontal-overflow failures, no offscreen primary
   headings/actions/product images, one primary heading per design, all
   product images decoded, and zero renderer errors.

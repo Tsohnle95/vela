@@ -1,23 +1,27 @@
 # Vela release directions
 
-Reference #1 keeps its original layout and type from commit `7c0a724b`,
-updated with the current light and dark product screenshots and a larger hero
-image. Reference #2 and the [thirty further iterations with 24 palettes](iterations/index.html)
+Reference #1 is a standalone OpenBot-inspired release page for Vela: a dark
+canvas, mint beam, floating navigation, a full-width workspace preview, an
+asymmetric feature grid, a metal `$0`, a four-step workflow, FAQs, platform
+downloads, and a honeycomb closing section. Its content is specific to Vela's
+desktop IDE, editor, OpenCode sessions, terminal, and live diffs. Reference #2
+and the [thirty further iterations with 24 palettes](iterations/index.html)
 retain their corrected Cloudroom-scale typography and screenshot treatments.
-keep both as references, with fifteen new compositions from each direction.
 
 Open [the collection](index.html) directly from disk. Twenty standalone
 compositions share Vela’s real screenshot, current folded mint mark, and
 factual product content. No server, build, remote fonts, or external assets
 are required.
 
-The visual reference is [Cloudroom](https://www.cloudroom.dev/), reviewed live
-on October 23, 2026: black canvas, very large sans-serif type, crisp primary
-actions, a sparse navigation bar, bright accent color, geometric product
-artwork, and substantial breathing room. The layouts adapt that approach to
-Vela’s own identity. Cloudroom’s illustration, logo, source, and copy are not
-included. Its cloud hosting, sandbox, pricing, model-support, and usage claims
-are not claims about Vela.
+The visual references are [Cloudroom](https://www.cloudroom.dev/) for the
+original collection and [OpenBot](https://openbot.run/) for reference #1, both
+reviewed live. Reference #1 adapts OpenBot's dark canvas, centered hero, light
+beam, bento feature grid, metal pricing, stacked workflow cards, FAQ, platform
+downloads, and honeycomb closing section. The other compositions retain the
+Cloudroom-scale typography and screenshot treatments. Both references are
+adapted to Vela's own identity. Cloudroom's and OpenBot's illustrations, logos,
+source, and copy are not included. Their hosting, sandbox, pricing,
+model-support, agent-team, and usage claims are not claims about Vela.
 
 Use the bottom selector or Left/Right keys outside interactive controls.
 **All designs** opens the thumbnail directory. Escape closes it. The × hides
@@ -32,11 +36,11 @@ fake metrics, design rationale, or commentary. Keep meaningful headings,
 useful product descriptions, real imagery, and functional actions. Design
 names and navigation belong in the separate collection controls only.
 
-The collection includes Home for the work; Everything in view; Close to the
-code; A place to build; One working space; The big picture; Folded space;
-Code, together; The shared workspace; In plain view; In orbit; The wordmark;
-Good company; The working view; A new angle; After hours; Still point;
-First look; Green room; and On your desktop.
+The collection includes Meet Vela; Everything in view; Close to the code; A
+place to build; One working space; The big picture; Folded space; Code,
+together; The shared workspace; In plain view; In orbit; The wordmark; Good
+company; The working view; A new angle; After hours; Still point; First look;
+Green room; and On your desktop.
 
 Run `node design/vela-product/cloudroom/verify.mjs` from the repository root
 under Node 22.23.2. The isolated Electron check renders all 20 layouts at five

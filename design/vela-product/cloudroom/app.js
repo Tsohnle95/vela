@@ -29,7 +29,9 @@
   function render(push = false, focus = false) {
     const direction = directions.find(d => d.id === current);
     document.body.className = `d${current}`;
-    site.innerHTML = `${header()}<main id="main" tabindex="-1">${direction.body()}</main>${footer()}`;
+    site.innerHTML = direction.standalone
+      ? direction.body()
+      : `${header()}<main id="main" tabindex="-1">${direction.body()}</main>${footer()}`;
     if (!site.querySelector('#workspace')) site.querySelector('.app-shot')?.setAttribute('id', 'workspace');
     select.value = String(current);
     document.title = `Vela — ${direction.name}`;

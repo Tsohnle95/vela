@@ -3,8 +3,7 @@
   const faq = () => `<section class="questions"><h2>A few good questions.</h2><div><details><summary>What is Vela?</summary><p>A desktop workspace that brings a Monaco editor, OpenCode sessions, an integrated terminal, and live file changes into one window.</p></details><details><summary>What do I need to run it?</summary><p>Have OpenCode V2 available on your PATH before starting an agent session. The source setup guide is available on GitHub.</p></details><details><summary>Can I follow more than one task?</summary><p>Agent mode tiles up to eight sessions. Each panel keeps its own conversation and context.</p></details></div></section>`;
   window.velaDirections.push(
     {
-      id: 1, name: 'Home for the work',
-      body: () => `<section class="home-hero">${copy('Your code.<br> Your agents.<br> <em>One home.</em>', 'Keep the editor, the conversation, and the changes in one desktop workspace.')}<div class="home-art"><div class="home-orbit orbit-one"></div><div class="home-orbit orbit-two"></div>${mark()}<div class="home-screen">${shot('window-shot', 'light')}</div></div></section><section class="home-product"><h2>Stay with the work.</h2><p>Open a repository. Give OpenCode a task. Follow the changes beside your code.</p>${shot('window-shot', 'dark')}</section>${featureRow()}${faq()}`
+      id: 1, name: window.velaDesignOne.name, standalone: true, body: window.velaDesignOne.body
     },
     {
       id: 2, name: 'Everything in view',
