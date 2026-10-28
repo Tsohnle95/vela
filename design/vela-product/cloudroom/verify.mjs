@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import electron from 'electron';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const output = await mkdtemp(path.join(os.tmpdir(), 'vela-cloudroom-38-'));
+const output = await mkdtemp(path.join(os.tmpdir(), 'vela-cloudroom-28-'));
 const runner = path.join(output, 'runner.cjs');
 const source = String.raw`
 const {app,BrowserWindow}=require('electron');
@@ -25,8 +25,8 @@ const watchdog=setTimeout(()=>app.exit(1),180000);
   win.setContentSize(width,width<701?1050:1000);
   await win.loadFile(ROOT+'/index.html',{query:{design:'1'}});
   await settle();
-  assert.equal(await js('window.velaDirections.length'),38);
-  for(let version=1;version<=38;version++){
+  assert.equal(await js('window.velaDirections.length'),28);
+  for(let version=1;version<=28;version++){
    await js('document.querySelector("#design").value="'+version+'";document.querySelector("#design").dispatchEvent(new Event("change"))');
    await settle();
    await js('Promise.all([...document.querySelectorAll("main img")].map(i=>i.decode()))');
@@ -58,9 +58,9 @@ const watchdog=setTimeout(()=>app.exit(1),180000);
    }
   }
  }
- win.setContentSize(320,1000); await win.loadFile(ROOT+'/index.html',{query:{design:'38'}});await settle();
+ win.setContentSize(320,1000); await win.loadFile(ROOT+'/index.html',{query:{design:'28'}});await settle();
  await js('document.querySelector("#next").click()');assert.equal(await js('document.querySelector("#design").value'),'1');
- await js('document.querySelector("#previous").click()');assert.equal(await js('document.querySelector("#design").value'),'38');
+ await js('document.querySelector("#previous").click()');assert.equal(await js('document.querySelector("#design").value'),'28');
  await js('document.querySelector("#hide-controls").click()');assert.equal(await js('document.querySelector(".design-controls").hidden'),true);
  await js('document.querySelector("#restore-controls").click()');assert.equal(await js('document.querySelector(".design-controls").hidden'),false);
  await js('document.querySelector("#browse").click(); document.querySelectorAll(".gallery-card img").forEach(i=>i.loading="eager")'); await js('Promise.all([...document.querySelectorAll(".gallery-card img")].map(i=>i.decode()))'); assert.equal(await js('document.querySelector("dialog").open'),true); await fs.writeFile(OUTPUT+'/directory-mobile.png',(await win.webContents.capturePage()).toPNG()); win.setContentSize(1440,1000); await settle(); await fs.writeFile(OUTPUT+'/directory-desktop.png',(await win.webContents.capturePage()).toPNG()); win.setContentSize(320,1000);await settle();
@@ -74,13 +74,13 @@ const watchdog=setTimeout(()=>app.exit(1),180000);
  await fs.writeFile(OUTPUT+'/results.json',JSON.stringify({results,errors,failures,interactions:'passed'},null,2));
  // Raster contact sheets of actual rendered desktop and mobile compositions.
  for(const width of [1440,390]){
-  const cards=Array.from({length:38},(_,i)=>'<figure><img src="'+width+'-'+String(i+1).padStart(2,'0')+'.png"><figcaption>'+String(i+1).padStart(2,'0')+'</figcaption></figure>').join('');
+  const cards=Array.from({length:28},(_,i)=>'<figure><img src="'+width+'-'+String(i+1).padStart(2,'0')+'.png"><figcaption>'+String(i+1).padStart(2,'0')+'</figcaption></figure>').join('');
   await fs.writeFile(OUTPUT+'/sheet-'+width+'.html','<html><style>*{box-sizing:border-box}body{margin:0;padding:15px;background:#d8e0d3;display:grid;grid-template-columns:repeat(4,1fr);gap:15px}figure{margin:0;background:white;overflow:hidden}img{display:block;width:100%}figcaption{font:16px monospace;padding:8px}</style>'+cards+'</html>');
   win.setContentSize(width===1440?1600:800,width===1440?1660:3000);
   await win.loadFile(OUTPUT+'/sheet-'+width+'.html');await js('Promise.all([...document.images].map(i=>i.decode()))');await settle();
   await fs.writeFile(OUTPUT+'/contact-'+width+'.png',(await win.webContents.capturePage()).toPNG());
  }
- console.log(JSON.stringify({compositions:38,viewports:5,measurements:results.length,failures,errors,output:OUTPUT}));
+ console.log(JSON.stringify({compositions:28,viewports:5,measurements:results.length,failures,errors,output:OUTPUT}));
  assert.deepEqual(failures,[]);assert.deepEqual(errors,[]);
  clearTimeout(watchdog);win.close();setImmediate(()=>app.quit());
 })().catch(e=>{console.error(e);clearTimeout(watchdog);app.exit(1)});
