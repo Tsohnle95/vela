@@ -5,11 +5,12 @@ body.d1 main {
 body.d1 .ob-beam-canvas {
   position: absolute;
   top: -76px;
-  left: 0;
+  left: 50%;
   z-index: 0;
-  width: 100%;
+  width: 100vw;
   height: calc(100% + 76px);
   pointer-events: none;
+  transform: translateX(-50%);
 }
 
 [data-beam-source] {
