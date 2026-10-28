@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Fifteen angled Lumen light casts for the Vela product page, each delayed half a second and lit by a continuous photon stream.">
+  <title>Vela — Lumen lab</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="gallery.css">
+  <link rel="stylesheet" href="lumen.css">
+</head>
+<body>
+  <div class="lab-shell">
+    <header class="lab-header">
+      <a class="lab-brand" href="lumen-index.html">
+        <img src="../assets/icon.png" width="1024" height="1024" alt="">
+        <span>Vela <b>/ Lumen lab</b></span>
+      </a>
+      <nav aria-label="Related">
+        <a href="index.html">Animation lab ↗</a>
+        <a href="effects.html?effect=lumen">Original Lumen ↗</a>
+      </nav>
+    </header>
+
+    <section class="lab-hero">
+      <div>
+        <p class="lab-kicker">Lumen lab · 15 casts</p>
+        <h1>Fifteen ways to <em>break the dark.</em></h1>
+        <p class="lab-intro">
+          Each study waits half a second, then a channeled beam falls across the page
+          and finds the Vela screenshot. The photon stream keeps moving after the first strike.
+        </p>
+      </div>
+      <div class="lab-stats" aria-label="Collection summary">
+        <div class="lab-stat is-saved"><b>15</b><span>Casts</span></div>
+        <div class="lab-stat"><b>0.5s</b><span>Delay</span></div>
+        <div class="lab-stat"><b>1</b><span>Object lit</span></div>
+      </div>
+    </section>
+
+    <section class="lab-section" aria-labelledby="casts-title">
+      <div class="lab-section-head">
+        <div>
+          <p class="lab-kicker">The studies</p>
+          <h2 id="casts-title">Choose a light</h2>
+        </div>
+        <p>Every card is a live shader still with the screenshot it lights. Open a card to see the 0.5s cast in motion.</p>
+      </div>
+      <div class="lab-grid is-new" id="lumen-grid"></div>
+    </section>
+
+    <div class="lab-note">
+      <span>Tips</span>
+      <span>← / → switch casts · H hides controls · each cast waits 0.5s before it lands</span>
+    </div>
+
+    <footer class="lab-footer">
+      <span>Lumen lab · fifteen angled WebGL2 light casts</span>
+      <nav aria-label="Footer">
+        <a href="index.html">Animation lab</a>
+        <a href="lumen.html?cast=cathedral">First cast</a>
+        <a href="effects.html?effect=lumen">Original Lumen</a>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="lumen-engine.js"></script>
+  <script src="lumen-gallery.js"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+body.lumen-page {
+  background: #050608;
+}
+
+body.lumen-page .ob-effect-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+body.lumen-page .ob-effect-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 38%, transparent 0, transparent 42%, #0506084d 76%, #050608b3 100%),
+    linear-gradient(180deg, #05060833 0%, transparent 24%, transparent 82%, #050608cc 100%);
+}
+
+body.lumen-page main,
+body.lumen-page .ob-footer {
+  position: relative;
+  z-index: 2;
+}
+
+body.lumen-page .ob-hero-grid,
+body.lumen-page .ob-hero:after {
+  display: none;
+}
+
+body.lumen-page .ob-title,
+body.lumen-page .ob-description {
+  text-shadow: 0 2px 30px #000000b3, 0 0 90px #0000008c;
+}
+
+body.lumen-page .ob-title-logo {
+  filter: drop-shadow(0 0 24px #000000a6);
+}
+
+body.lumen-page .ob-heading h2,
+body.lumen-page .ob-network-heading h2,
+body.lumen-page .ob-flow-intro h2,
+body.lumen-page .ob-faq-intro h2,
+body.lumen-page .ob-post-copy h2,
+body.lumen-page .ob-pricing .ob-price {
+  text-shadow: 0 2px 30px #00000099, 0 0 70px #00000073;
+}
+
+/* The screenshot starts as a dark object, then the beam finds it. */
+body.lumen-page .ob-preview {
+  box-shadow:
+    inset 0 1px #ffffff1a,
+    0 50px 140px -40px #000000e6,
+    0 0 0 0 transparent;
+  transition: box-shadow 1.3s ease;
+}
+
+body.lumen-page .ob-preview img {
+  filter: brightness(0.38) saturate(0.82) contrast(1.05);
+  transition: filter 1.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+body.lumen-page.is-lit .ob-preview img {
+  filter: brightness(var(--lumen-brightness, 1.12)) saturate(1.04) contrast(1.01);
+}
+
+body.lumen-page.is-lit .ob-preview {
+  box-shadow:
+    inset 0 1px #ffffff2e,
+    0 50px 140px -40px #000000e6,
+    0 0 120px -28px var(--lumen-warm, #ffe6b8),
+    0 0 42px -10px var(--lumen-hot, #ffffff);
+}
+
+body.lumen-page .ob-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--lumen-angle, 120deg), transparent 20%, var(--lumen-hot, #ffffff) 44%, transparent 64%),
+    radial-gradient(ellipse 78% 100% at var(--lumen-x, 50%) var(--lumen-y, 16%), var(--lumen-warm, #ffe6b8) 0%, transparent 68%),
+    radial-gradient(circle at var(--lumen-x, 50%) var(--lumen-y, 16%), #ffffff 0%, transparent 22%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 1.15s ease;
+}
+
+body.lumen-page.is-lit .ob-preview::after {
+  opacity: var(--lumen-opacity, 0.55);
+}
+
+.lumen-meta {
+  padding: 0 8px;
+  color: #8d98a2;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+/* Gallery thumbnail: the shader field with a small lit Vela screenshot. */
+.lumen-thumb::after {
+  z-index: 1;
+}
+
+.lumen-mini {
+  position: absolute;
+  right: 15%;
+  bottom: 8%;
+  left: 15%;
+  z-index: 2;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid #ffffff33;
+  border-radius: 6px;
+  background: #06080b;
+  box-shadow:
+    0 16px 38px -14px #000000e6,
+    0 0 58px -12px var(--tone-a, #c9a45e);
+}
+
+.lumen-mini img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  filter: brightness(0.9) saturate(0.95);
+}
+
+.lumen-mini::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(var(--card-angle, 120deg), transparent 22%, #ffffff 46%, transparent 68%),
+    radial-gradient(ellipse 80% 100% at 50% 0%, var(--tone-b, #fff4d8) 0%, transparent 64%);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
+.lumen-thumb .lab-number,
+.lumen-thumb .lab-open {
+  z-index: 3;
+}
+
+@media (max-width: 1080px) {
+  .lumen-mini {
+    right: 12%;
+    left: 12%;
+  }
+}
+
+@media (max-width: 720px) {
+  body.lumen-page .ob-effect-scrim {
+    background:
+      radial-gradient(ellipse at 50% 40%, transparent 0, transparent 34%, #05060866 72%, #050608cc 100%),
+      linear-gradient(180deg, #05060855 0%, #05060826 26%, transparent 48%, #05060899 100%);
+  }
+
+  .lumen-meta {
+    display: none;
+  }
+
+  .lumen-mini {
+    right: 10%;
+    left: 10%;
+    bottom: 7%;
+  }
+}
+
+@media (max-width: 520px) {
+  .lumen-bar .lab-pure {
+    display: none;
+  }
+
+  .lumen-bar select {
+    width: 132px;
+  }
+
+  .lumen-bar .lab-home {
+    padding: 6px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.lumen-page .ob-preview,
+  body.lumen-page .ob-preview img,
+  body.lumen-page .ob-preview::after {
+    transition: none;
+  }
+}
