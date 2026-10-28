@@ -14,9 +14,10 @@ same shaders and marks the five saved picks.
 ## Lumen lab
 
 [lumen-index.html](lumen-index.html) is a focused iteration on the Lumen
-direction: fifteen angled light casts, each delayed half a second, with a
-continuous photon stream that lands on and lights the Vela screenshot. Open
-`lumen.html?cast=<slug>` for a cast.
+direction: fifteen angled spotlights, each delayed half a second. Every cast
+hits the top edge of the Vela screenshot, spills light down both sides, and
+lights the screen with its own pattern. Open `lumen.html?cast=<slug>` for a
+cast.
 
 ## Collection
 
