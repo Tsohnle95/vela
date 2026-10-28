@@ -34,6 +34,9 @@
       : `${header()}<main id="main" tabindex="-1">${direction.body()}</main>${footer()}`;
     if (!site.querySelector('#workspace')) site.querySelector('.app-shot')?.setAttribute('id', 'workspace');
     window.velaBeam?.mount(site);
+    window.velaBackground?.destroy();
+    const effectCanvas = site.querySelector('.ob-effect-canvas');
+    if (effectCanvas) window.velaBackground?.mount(effectCanvas, effectCanvas.dataset.effect);
     select.value = String(current);
     document.title = direction.name.startsWith('Vela') ? direction.name : `Vela — ${direction.name}`;
     const url = new URL(location.href);

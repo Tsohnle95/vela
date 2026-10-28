@@ -1,0 +1,69 @@
+body.d1.effect-page {
+  background: #07090c;
+}
+
+body.d1 .ob-effect-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+body.d1 .ob-effect-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 32%, transparent 0, transparent 30%, #07090c66 68%, #07090cd9 100%),
+    linear-gradient(180deg, #07090c1a 0%, #07090c0a 24%, #07090ccc 58%, #07090cf2 100%);
+}
+
+body.effect-page main {
+  position: relative;
+  z-index: 2;
+}
+
+body.effect-page .ob-footer {
+  position: relative;
+  z-index: 2;
+}
+
+body.effect-page .ob-hero-grid,
+body.effect-page .ob-hero:after {
+  display: none;
+}
+
+body.effect-page .ob-title,
+body.effect-page .ob-description {
+  text-shadow: 0 2px 30px #000000b3, 0 0 90px #0000008c;
+}
+
+body.effect-page .ob-title-logo {
+  filter: drop-shadow(0 0 24px #000000a6);
+}
+
+body.effect-page .ob-heading h2,
+body.effect-page .ob-network-heading h2,
+body.effect-page .ob-flow-intro h2,
+body.effect-page .ob-faq-intro h2,
+body.effect-page .ob-post-copy h2,
+body.effect-page .ob-pricing .ob-price {
+  text-shadow: 0 2px 30px #00000099, 0 0 70px #00000073;
+}
+
+body.effect-page .ob-preview {
+  box-shadow:
+    inset 0 1px #ffffff1a,
+    0 50px 140px -40px #000000e6,
+    0 0 110px -30px #ffffff1a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.effect-page .ob-effect-canvas {
+    opacity: 0.9;
+  }
+}

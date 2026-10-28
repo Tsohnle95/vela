@@ -9,11 +9,13 @@ sessions, terminal, and live diffs. Three further takes extend it: Aurora (a
 cool split hero), Paper (a light editorial treatment), and Studio (a monochrome
 tool-like treatment). Five beam studies reuse the reference WebGL engine with
 different sources, palettes, presets, and timing: Mint Drop, Brand Mark,
-Signal, Deep Haze, and CTA Bloom. Reference #2 and the
+Signal, Deep Haze, and CTA Bloom. Ten Vela-page background treatments use the
+full-screen effects as fixed backdrops: Aurora, Ink, Nebula, Caustics, Vortex,
+Prism, Smoke, Silk, Grid, and Particles. Reference #2 and the
 [thirty further iterations with 24 palettes](iterations/index.html) retain
 their corrected Cloudroom-scale typography and screenshot treatments.
 
-Open [the collection](index.html) directly from disk. Twenty-eight standalone
+Open [the collection](index.html) directly from disk. Thirty-eight standalone
 compositions share Vela’s real screenshot, folded mint mark, and factual
 product content. No server, build, remote fonts, or external assets are
 required.
@@ -44,14 +46,15 @@ useful product descriptions, real imagery, and functional actions. Design
 names and navigation belong in the separate collection controls only.
 
 The collection includes Vela IDE; Aurora; Paper; Studio; Mint Drop; Brand Mark;
-Signal; Deep Haze; CTA Bloom; Everything in view; Close to the code;
+Signal; Deep Haze; CTA Bloom; Aurora; Ink; Nebula; Caustics; Vortex; Prism;
+Smoke; Silk; Grid; Particles; Everything in view; Close to the code;
 A place to build; One working space; The big picture; Folded space; Code,
 together; The shared workspace; In plain view; In orbit; The wordmark; Good
 company; The working view; A new angle; After hours; Still point; First look;
 Green room; and On your desktop.
 
 Run `node design/vela-product/cloudroom/verify.mjs` from the repository root
-under Node 22.23.2. The isolated Electron check renders all 28 layouts at five
+under Node 22.23.2. The isolated Electron check renders all 38 layouts at five
 widths, checks interactions, and verifies metadata removal across the prior
 55 designs at desktop and phone widths. Output goes into a fresh temporary
 directory. It never opens the installed app profile or contacts OpenCode.

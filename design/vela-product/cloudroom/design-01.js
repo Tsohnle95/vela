@@ -103,6 +103,8 @@
       ? `${beamAttrs ? ` ${beamAttrs}` : ''} data-surface="${options.energyMode === 'field' ? 'field' : 'shape'}" data-origin="none" data-native="true"`
       : '';
     return `
+    ${options.effect ? `<canvas class="ob-effect-canvas" data-effect="${options.effect}" aria-hidden="true"></canvas>
+    <div class="ob-effect-scrim" aria-hidden="true"></div>` : ''}
     <header class="ob-header">
       <div class="ob-header-inner">
         <a class="ob-brand" href="#workspace" aria-label="Vela home">
