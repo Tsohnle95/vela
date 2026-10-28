@@ -616,7 +616,11 @@ void main() {
     destroy();
     const canvas = root.querySelector('.ob-beam-canvas');
     if (!canvas) return;
-    const surface = root.querySelector('.ob-preview');
+    const surfaceKey = canvas.dataset.surface || 'preview';
+    const field = surfaceKey === 'field';
+    const surface = field
+      ? null
+      : root.querySelector(surfaceKey === 'shape' ? '.ob-energy-shape' : '.ob-preview');
     const origin = canvas.dataset.origin || 'header';
     const sources = {
       header: '.ob-header .ob-btn-primary',
@@ -641,7 +645,7 @@ void main() {
       stencil: false,
       failIfMajorPerformanceCaveat: false,
     });
-    if (!surface || !gl) return;
+    if ((!field && !surface) || !gl) return;
     const program = createProgram(gl);
     if (!program) return;
     const uniforms = getUniforms(gl, program);
@@ -725,7 +729,9 @@ void main() {
       const width = state.width;
       const height = state.height;
       const scale = clamp(Math.min(width / 585, height / 507), 0.2, MAX_SCALE);
-      let surfaceBox = surfaceRect();
+      let surfaceBox = field
+        ? { left: -width * 2, top: height, right: width * 3, bottom: height * 3, radius: 0, real: false }
+        : surfaceRect();
       const canvasBox = canvas.getBoundingClientRect();
       let beamX = beamPosition * width;
       let sourceBox;
@@ -748,7 +754,7 @@ void main() {
         }
       }
 
-      if (surfaceBox.real) {
+      if (surfaceBox.real && surfaceKey !== 'shape') {
         const safe = surfaceBox.radius + SURFACE_PAD;
         if (beamX > surfaceBox.right - safe) {
           gl.clearColor(0, 0, 0, 0);

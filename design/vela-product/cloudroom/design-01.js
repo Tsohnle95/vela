@@ -99,6 +99,9 @@
       options.beamRise != null ? `data-rise="${options.beamRise}"` : '',
       options.beamPace != null ? `data-pace="${options.beamPace}"` : '',
     ].filter(Boolean).join(' ');
+    const energyAttrs = options.energy
+      ? `${beamAttrs ? ` ${beamAttrs}` : ''} data-surface="${options.energyMode === 'field' ? 'field' : 'shape'}" data-origin="none" data-native="true"`
+      : '';
     return `
     <header class="ob-header">
       <div class="ob-header-inner">
@@ -123,7 +126,12 @@
     <main id="main" tabindex="-1">
       <section class="ob-hero" id="workspace">
         <div class="ob-hero-grid" aria-hidden="true"></div>
-        ${options.beam === false ? '' : `<canvas class="ob-beam-canvas"${beamAttrs ? ` ${beamAttrs}` : ''} aria-hidden="true"></canvas>`}
+        ${options.energy
+          ? `<div class="ob-energy-stage${options.energyMode === 'field' ? ' ob-energy-field' : ''}" aria-hidden="true"><canvas class="ob-beam-canvas"${energyAttrs}></canvas></div>
+        ${options.energyMode === 'field' ? '' : `<div class="ob-energy-shape energy-shape-${options.energy}" aria-hidden="true"></div>`}`
+          : options.beam === false
+            ? ''
+            : `<canvas class="ob-beam-canvas"${beamAttrs ? ` ${beamAttrs}` : ''} aria-hidden="true"></canvas>`}
         <div class="ob-hero-copy">
           <h1 class="ob-title">
             <span>Vela</span>
@@ -147,10 +155,10 @@
           </div>
         </div>
 
-        <figure class="ob-preview">
+        ${options.preview === false ? '' : `<figure class="ob-preview">
           <img src="${preview.file}" width="${preview.width}" height="${preview.height}" alt="${preview.alt}">
           <figcaption class="ob-sr">Vela workspace preview</figcaption>
-        </figure>
+        </figure>`}
       </section>
 
       <section class="ob-section ob-network" id="network">

@@ -9,12 +9,15 @@ Validated October 27, 2026 using Node 22.23.2 and an isolated Electron profile.
   control, wrap around the preview, edge spill, fog, dust, and pointer lens.
   Five beam studies reuse the same engine with different sources, palettes,
   presets, and timing: Mint Drop, Brand Mark, Signal, Deep Haze, and CTA Bloom.
+  Ten energy studies reuse the same shader around new objects and compositions:
+  Orb, Ring, Monolith, Portal, Prism, Ribbon, Horizon, Capsule, Halo, and
+  Eclipse.
   The animation and source rim were checked in Electron at 1440 and 390 CSS
   pixels. Each design keeps one primary heading, avoids horizontal overflow at
   1440, 1024, 768, 390 and 320 CSS pixels, loads all in-page product images, and
   preserves working platform, FAQ, download, source and navigation actions.
-- All 28 designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
-  140 layouts, zero horizontal-overflow failures, no offscreen primary
+- All 38 designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
+  190 layouts, zero horizontal-overflow failures, no offscreen primary
   headings/actions/product images, one primary heading per design, all
   product images decoded, and zero renderer errors.
 - Reviewed actual-render contact sheets of every desktop and mobile design.
