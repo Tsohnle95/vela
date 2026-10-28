@@ -278,14 +278,14 @@ body.take-paper .ob-beam {
 body.take-paper .ob-hero:before {
   content: "";
   position: absolute;
-  top: -140px;
-  right: -120px;
+  top: -60px;
+  right: 52px;
   z-index: 0;
-  width: 640px;
-  height: 640px;
+  width: 520px;
+  height: 520px;
   border-radius: 50%;
   background: radial-gradient(circle, #d9c9a633, transparent 65%);
-  filter: blur(40px);
+  filter: blur(30px);
   pointer-events: none;
 }
 

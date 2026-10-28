@@ -112,7 +112,7 @@
     <main id="main" tabindex="-1">
       <section class="ob-hero" id="workspace">
         <div class="ob-hero-grid" aria-hidden="true"></div>
-        ${options.flow === 'none' ? '' : `<canvas class="ob-flow-canvas" data-flow="${options.flow || 'ribbon'}" data-tone="${options.tone || 'mint'}" data-x="${options.flowX ?? 64}" aria-hidden="true"></canvas>`}
+        ${options.beam === false ? '' : '<canvas class="ob-beam-canvas" aria-hidden="true"></canvas>'}
         <div class="ob-hero-copy">
           <h1 class="ob-title">
             <span>Vela</span>
