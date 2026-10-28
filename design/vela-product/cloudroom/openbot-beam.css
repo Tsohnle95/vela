@@ -32,6 +32,26 @@ body.d1 .ob-beam-canvas {
   opacity: 1;
 }
 
+[data-beam-source].ob-title-logo {
+  overflow: visible;
+}
+
+[data-beam-source].ob-title-logo img {
+  border-radius: inherit;
+}
+
+body.beam-center .ob-title {
+  text-shadow: 0 2px 22px #0a0a0a, 0 0 50px #0a0a0a;
+}
+
+body.beam-center .ob-description {
+  text-shadow: 0 1px 12px #0a0a0a, 0 0 24px #0a0a0a;
+}
+
+body.beam-center .ob-title-logo {
+  filter: drop-shadow(0 0 18px #0a0a0a);
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-beam-source]:after {
     transition: none;

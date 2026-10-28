@@ -416,6 +416,53 @@ void main() {
     seed: 3,
   };
 
+  const PRESETS = {
+    default: SETTINGS,
+    soft: {
+      ...SETTINGS,
+      intensity: 1.3,
+      beamWidth: 4.2,
+      flare: 3,
+      spread: 4.2,
+      fall: 1.6,
+      fog: 0.5,
+      dust: 0.6,
+      streaks: 0.4,
+      dots: 0.5,
+      pulse: 0.8,
+      speed: 1.2,
+    },
+    laser: {
+      ...SETTINGS,
+      intensity: 1.8,
+      beamWidth: 1.2,
+      flare: 1.5,
+      spread: 3.2,
+      fall: 2.6,
+      fog: 0.15,
+      dust: 1,
+      streaks: 1.6,
+      dots: 1,
+      pulse: 1.6,
+      speed: 2.2,
+    },
+    haze: {
+      ...SETTINGS,
+      intensity: 1.5,
+      beamWidth: 3,
+      flare: 2.8,
+      spread: 4,
+      fall: 2,
+      fog: 0.6,
+      dust: 1.9,
+      streaks: 1,
+      dots: 1.2,
+      pulse: 1.2,
+      speed: 1.6,
+      seed: 16,
+    },
+  };
+
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const easeOut = (value) => 1 - (1 - clamp(value, 0, 1)) ** 3;
   const impactCurve = (value) => {
@@ -472,12 +519,15 @@ void main() {
     return [((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255];
   };
 
-  const createTints = (color, hueSpread) => {
+  const createTints = (color, hueSpread, nativeHue = false) => {
     const [hue, saturation] = rgbToHsl(color);
     const tints = new Float32Array(STOPS.length * 3);
     STOPS.forEach(([offset, multiplier], index) => {
       tints.set(
-        hslToRgb(clampHue(hue + offset * hueSpread), clamp(saturation * multiplier, 0, 1)),
+        hslToRgb(
+          nativeHue ? hue + offset * hueSpread : clampHue(hue + offset * hueSpread),
+          clamp(saturation * multiplier, 0, 1),
+        ),
         index * 3,
       );
     });
@@ -567,7 +617,22 @@ void main() {
     const canvas = root.querySelector('.ob-beam-canvas');
     if (!canvas) return;
     const surface = root.querySelector('.ob-preview');
-    const source = root.querySelector('.ob-header .ob-btn-primary');
+    const origin = canvas.dataset.origin || 'header';
+    const sources = {
+      header: '.ob-header .ob-btn-primary',
+      title: '.ob-title-logo',
+      primary: '.ob-download-split',
+      secondary: '.ob-actions > .ob-btn-secondary',
+    };
+    const source = origin === 'none' ? null : root.querySelector(sources[origin] || sources.header);
+    const settings = PRESETS[canvas.dataset.settings] || PRESETS.default;
+    const beamColor = canvas.dataset.color || BEAM_COLOR;
+    const nativeHue = canvas.dataset.native === 'true';
+    const beamPosition = Number(canvas.dataset.position ?? BEAM_POSITION);
+    const introDuration = Number(canvas.dataset.intro ?? INTRO_DURATION);
+    const introRise = Number(canvas.dataset.rise ?? 1.4);
+    const introDelay = Number(canvas.dataset.delay ?? INTRO_DELAY);
+    const pace = Number(canvas.dataset.pace ?? 1);
     const gl = canvas.getContext('webgl2', {
       alpha: true,
       premultipliedAlpha: true,
@@ -590,7 +655,7 @@ void main() {
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
     gl.bindVertexArray(null);
 
-    const tints = createTints(hexToRgb(BEAM_COLOR), 1);
+    const tints = createTints(hexToRgb(beamColor), 1, nativeHue);
     const rim = Array.from(tints.subarray(0, 3), (value) => Math.round(value * 255)).join(', ');
     source?.setAttribute('data-beam-source', '');
     source?.style.setProperty('--landing-beam-rim', rim);
@@ -662,7 +727,7 @@ void main() {
       const scale = clamp(Math.min(width / 585, height / 507), 0.2, MAX_SCALE);
       let surfaceBox = surfaceRect();
       const canvasBox = canvas.getBoundingClientRect();
-      let beamX = BEAM_POSITION * width;
+      let beamX = beamPosition * width;
       let sourceBox;
       if (source) {
         const box = source.getBoundingClientRect();
@@ -711,14 +776,14 @@ void main() {
       const startY = -0.15 * height;
       const dropLength = surfaceBox.top - startY + 0.3 * height;
       const intro = state.introTime;
-      const settled = intro >= INTRO_DURATION;
+      const settled = intro >= introDuration;
       const front = settled
         ? surfaceBox.top + 0.3 * height
-        : startY + dropLength * clamp(intro / 1.4, 0, 1) ** 1.3;
-      const elapsed = intro - 1.4 * (Math.max(0, surfaceBox.top - startY) / dropLength) ** (1 / 1.3);
+        : startY + dropLength * clamp(intro / introRise, 0, 1) ** 1.3;
+      const elapsed = intro - introRise * (Math.max(0, surfaceBox.top - startY) / dropLength) ** (1 / 1.3);
       const bloom = settled ? 1 : elapsed <= 0 ? 0 : impactCurve(elapsed);
       const impact = settled || elapsed <= 0 ? 0 : Math.exp(-elapsed / 0.35) * (1 - Math.exp(-elapsed / 0.05));
-      const spillLimit = SETTINGS.spread * 250 * 1.3 + 80;
+      const spillLimit = settings.spread * 250 * 1.3 + 80;
       const runTime = elapsed;
       const run = settled ? 1e5 : elapsed <= 0 ? -40 : spillLimit * (1 - Math.exp(-1.15 * runTime));
       const runStrength = settled || elapsed <= 0 ? 0 : Math.exp(-1.15 * runTime) * (1 - Math.exp(-runTime / 0.08));
@@ -739,7 +804,7 @@ void main() {
       const [pourLeft, pourLeftEdge] = spillRun((beamX - surfaceBox.left) / scale);
       const [pourRight, pourRightEdge] = spillRun((surfaceBox.right - beamX) / scale);
       const sourceImpact = sourceBox
-        ? 1.4 * clamp((sourceBox.top - startY) / dropLength, 0, 1) ** (1 / 1.3)
+        ? introRise * clamp((sourceBox.top - startY) / dropLength, 0, 1) ** (1 / 1.3)
         : 0;
       const wrapLength = settled ? 1e5 : Math.max(0, intro - sourceImpact) * 420;
       const struck = settled || intro >= sourceImpact;
@@ -751,7 +816,7 @@ void main() {
       const atmosphere = settled
         ? 1
         : elapsed <= 0
-          ? 0.3 * easeOut(intro / 1.4)
+          ? 0.3 * easeOut(intro / introRise)
           : 0.3 + 0.7 * (1 - Math.exp(-1.3 * runTime));
 
       gl.viewport(0, 0, canvas.width, canvas.height);
@@ -771,7 +836,7 @@ void main() {
         sourceBox?.bottom ?? 0,
       );
       gl.uniform3f(uniforms.uWrap, sourceBox?.radius ?? 0, wrapLength, sourceBox ? 1 : 0);
-      gl.uniform1f(uniforms.uFall, SETTINGS.fall);
+      gl.uniform1f(uniforms.uFall, settings.fall);
       gl.uniform4f(uniforms.uSurface, surfaceBox.left, surfaceBox.top, surfaceBox.right, surfaceBox.bottom);
       gl.uniform1f(uniforms.uRadius, surfaceBox.radius);
       gl.uniform3f(uniforms.uIntro, front, bloom, impact);
@@ -779,23 +844,23 @@ void main() {
       gl.uniform2f(uniforms.uRun, run, runStrength);
       gl.uniform4f(uniforms.uLens, state.lens.x, state.lens.y, 95 * scale, state.lens.strength);
       gl.uniform1f(uniforms.uAtmosphere, atmosphere);
-      gl.uniform4f(uniforms.uAmount, SETTINGS.intensity, SETTINGS.fog, SETTINGS.dust, SETTINGS.streaks);
-      gl.uniform4f(uniforms.uShape, SETTINGS.beamWidth, SETTINGS.flare, SETTINGS.spread, SETTINGS.spill);
+      gl.uniform4f(uniforms.uAmount, settings.intensity, settings.fog, settings.dust, settings.streaks);
+      gl.uniform4f(uniforms.uShape, settings.beamWidth, settings.flare, settings.spread, settings.spill);
       gl.uniform4f(
         uniforms.uExtra,
-        SETTINGS.pulse,
-        SETTINGS.dots,
-        34.34 + SETTINGS.seed * 7.31,
-        11.58 + SETTINGS.seed * 3.17,
+        settings.pulse,
+        settings.dots,
+        34.34 + settings.seed * 7.31,
+        11.58 + settings.seed * 3.17,
       );
       gl.uniform4f(
         uniforms.uSmoke,
-        SETTINGS.smokeSize,
-        SETTINGS.smokeDetail,
-        SETTINGS.smokeEdge,
-        SETTINGS.smokeSwirl,
+        settings.smokeSize,
+        settings.smokeDetail,
+        settings.smokeEdge,
+        settings.smokeSwirl,
       );
-      gl.uniform1f(uniforms.uSmokeDrift, SETTINGS.smokeDrift);
+      gl.uniform1f(uniforms.uSmokeDrift, settings.smokeDrift);
       gl.uniform3fv(uniforms.uTint, tints);
       gl.bindVertexArray(vao);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -812,9 +877,9 @@ void main() {
       if (!last) last = now;
       const delta = Math.min(0.05, (now - last) / 1000) || 1 / 60;
       last = now;
-      state.time += delta * SETTINGS.speed;
-      if (state.delayOver && state.introTime < INTRO_DURATION) {
-        state.introTime = Math.min(INTRO_DURATION, state.introTime + delta);
+      state.time += delta * settings.speed * pace;
+      if (state.delayOver && state.introTime < introDuration) {
+        state.introTime = Math.min(introDuration, state.introTime + delta);
       }
 
       const pointer = state.pointer;
@@ -885,7 +950,7 @@ void main() {
     const delayTimer = setTimeout(() => {
       state.delayOver = true;
       start();
-    }, INTRO_DELAY);
+    }, introDelay);
 
     const ro = new ResizeObserver(() => {
       resize();
