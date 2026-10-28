@@ -88,23 +88,7 @@
         height: 971,
         alt: 'Vela showing the file tree, Monaco editor, OpenCode conversation and live changes in one window.',
       };
-    const beamAttrs = options.beam === false ? '' : [
-      options.beamOrigin ? `data-origin="${options.beamOrigin}"` : '',
-      options.beamColor ? `data-color="${options.beamColor}"` : '',
-      options.beamNative ? 'data-native="true"' : '',
-      options.beamSettings ? `data-settings="${options.beamSettings}"` : '',
-      options.beamPosition != null ? `data-position="${options.beamPosition}"` : '',
-      options.beamDelay != null ? `data-delay="${options.beamDelay}"` : '',
-      options.beamIntro != null ? `data-intro="${options.beamIntro}"` : '',
-      options.beamRise != null ? `data-rise="${options.beamRise}"` : '',
-      options.beamPace != null ? `data-pace="${options.beamPace}"` : '',
-    ].filter(Boolean).join(' ');
-    const energyAttrs = options.energy
-      ? `${beamAttrs ? ` ${beamAttrs}` : ''} data-surface="${options.energyMode === 'field' ? 'field' : 'shape'}" data-origin="none" data-native="true"`
-      : '';
     return `
-    ${options.effect ? `<canvas class="ob-effect-canvas" data-effect="${options.effect}" aria-hidden="true"></canvas>
-    <div class="ob-effect-scrim" aria-hidden="true"></div>` : ''}
     <header class="ob-header">
       <div class="ob-header-inner">
         <a class="ob-brand" href="#workspace" aria-label="Vela home">
@@ -128,12 +112,7 @@
     <main id="main" tabindex="-1">
       <section class="ob-hero" id="workspace">
         <div class="ob-hero-grid" aria-hidden="true"></div>
-        ${options.energy
-          ? `<div class="ob-energy-stage${options.energyMode === 'field' ? ' ob-energy-field' : ''}" aria-hidden="true"><canvas class="ob-beam-canvas"${energyAttrs}></canvas></div>
-        ${options.energyMode === 'field' ? '' : `<div class="ob-energy-shape energy-shape-${options.energy}" aria-hidden="true"></div>`}`
-          : options.beam === false
-            ? ''
-            : `<canvas class="ob-beam-canvas"${beamAttrs ? ` ${beamAttrs}` : ''} aria-hidden="true"></canvas>`}
+        ${options.beam === false ? '' : '<canvas class="ob-beam-canvas" aria-hidden="true"></canvas>'}
         <div class="ob-hero-copy">
           <h1 class="ob-title">
             <span>Vela</span>
@@ -157,10 +136,10 @@
           </div>
         </div>
 
-        ${options.preview === false ? '' : `<figure class="ob-preview">
+        <figure class="ob-preview">
           <img src="${preview.file}" width="${preview.width}" height="${preview.height}" alt="${preview.alt}">
           <figcaption class="ob-sr">Vela workspace preview</figcaption>
-        </figure>`}
+        </figure>
       </section>
 
       <section class="ob-section ob-network" id="network">

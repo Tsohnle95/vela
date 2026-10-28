@@ -7,17 +7,12 @@ Validated October 27, 2026 using Node 22.23.2 and an isolated Electron profile.
   treatment), and Studio (a monochrome tool-like treatment). Design 01 mounts
   the reference WebGL beam: delayed intro, drop from the header download
   control, wrap around the preview, edge spill, fog, dust, and pointer lens.
-  Five beam studies reuse the same engine with different sources, palettes,
-  presets, and timing: Mint Drop, Brand Mark, Signal, Deep Haze, and CTA Bloom.
-  Ten Vela-page background treatments reuse the full-screen Aurora, Ink, Nebula,
-  Caustics, Vortex, Prism, Smoke, Silk, Grid, and Particles shaders behind the
-  product page and preview. The animation and source rim were checked in
-  Electron at 1440 and 390 CSS pixels. Each design keeps one primary heading,
-  avoids horizontal overflow at 1440, 1024, 768, 390 and 320 CSS pixels, loads
-  all in-page product images, and preserves working platform, FAQ, download,
-  source and navigation actions.
-- All 38 designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
-  190 layouts, zero horizontal-overflow failures, no offscreen primary
+  The animation and source rim were checked in Electron at 1440 and 390 CSS
+  pixels. Each design keeps one primary heading, avoids horizontal overflow at
+  1440, 1024, 768, 390 and 320 CSS pixels, loads all in-page product images, and
+  preserves working platform, FAQ, download, source and navigation actions.
+- All 23 designs rendered at 1440, 1024, 768, 390, and 320 CSS pixels:
+  115 layouts, zero horizontal-overflow failures, no offscreen primary
   headings/actions/product images, one primary heading per design, all
   product images decoded, and zero renderer errors.
 - Reviewed actual-render contact sheets of every desktop and mobile design.

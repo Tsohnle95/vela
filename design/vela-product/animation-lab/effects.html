@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Pure full-screen animation studies from the Vela animation lab.">
+  <title>Vela — Animation lab</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="effects.css">
+</head>
+<body data-layout="bottom-left">
+  <canvas id="effect-canvas" aria-hidden="true"></canvas>
+  <div class="effect-vignette" aria-hidden="true"></div>
+  <div class="effect-grain" aria-hidden="true"></div>
+
+  <header class="effect-header">
+    <a class="effect-brand" href="index.html">
+      <img src="../assets/icon.png" width="1024" height="1024" alt="">
+      <span>Animation lab</span>
+    </a>
+    <div class="effect-controls">
+      <button id="previous" type="button" aria-label="Previous animation">←</button>
+      <label class="effect-sr" for="effect-select">Animation</label>
+      <select id="effect-select"></select>
+      <button id="next" type="button" aria-label="Next animation">→</button>
+    </div>
+    <nav class="effect-links" aria-label="Views">
+      <a id="to-vela" href="vela.html">Vela page ↗</a>
+      <a href="index.html">All 20</a>
+    </nav>
+  </header>
+
+  <main class="effect-overlay">
+    <p class="effect-index" id="effect-index">01 / 20</p>
+    <p class="effect-badge" id="effect-badge" hidden>Saved pick</p>
+    <h1 class="effect-title" id="effect-title">Silk</h1>
+    <p class="effect-line" id="effect-line">A smoother current.</p>
+    <p class="effect-product">Pure animation study — no product page, just the full-screen field.</p>
+  </main>
+
+  <footer class="effect-footer">
+    <span>Vela animation lab</span>
+    <span id="effect-footer-name">Silk</span>
+  </footer>
+
+  <script src="effect-engine.js"></script>
+  <script src="effects.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Twenty full-screen animation studies for Vela, each as a product page and a pure animation.">
+  <title>Vela — Animation lab</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+  <div class="lab-shell">
+    <header class="lab-header">
+      <a class="lab-brand" href="index.html">
+        <img src="../assets/icon.png" width="1024" height="1024" alt="">
+        <span>Vela <b>/ Animation lab</b></span>
+      </a>
+      <nav aria-label="Related">
+        <a href="effects.html?effect=silk">Pure animation ↗</a>
+        <a href="../cloudroom/index.html">Cloudroom designs ↗</a>
+      </nav>
+    </header>
+
+    <section class="lab-hero">
+      <div>
+        <p class="lab-kicker">Animation lab · 20 studies</p>
+        <h1>Twenty ways to <em>set the room.</em></h1>
+        <p class="lab-intro">
+          Five saved picks and fifteen new directions. Every animation opens twice: once as a
+          pure full-screen field, and once behind the complete Vela product page.
+        </p>
+      </div>
+      <div class="lab-stats" aria-label="Collection summary">
+        <div class="lab-stat is-saved"><b>5</b><span>Saved</span></div>
+        <div class="lab-stat"><b>15</b><span>New</span></div>
+        <div class="lab-stat"><b>2</b><span>Views each</span></div>
+      </div>
+    </section>
+
+    <section class="lab-section" aria-labelledby="saved-title">
+      <div class="lab-section-head">
+        <div>
+          <p class="lab-kicker">The shortlist</p>
+          <h2 id="saved-title">Saved five</h2>
+        </div>
+        <p>Kept from the first background pass. These are the references the new directions are measured against.</p>
+      </div>
+      <div class="lab-grid is-saved" id="saved-grid"></div>
+    </section>
+
+    <section class="lab-section" aria-labelledby="new-title">
+      <div class="lab-section-head">
+        <div>
+          <p class="lab-kicker">The comparison set</p>
+          <h2 id="new-title">Fifteen new directions</h2>
+        </div>
+        <p>New motion, palettes and structures — not variations of the saved five. Open both views and judge them in place.</p>
+      </div>
+      <div class="lab-grid is-new" id="new-grid"></div>
+    </section>
+
+    <div class="lab-note">
+      <span>Tips</span>
+      <span>← / → switch animations · H hides controls on the Vela page · thumbnails are rendered from the real shaders</span>
+    </div>
+
+    <footer class="lab-footer">
+      <span>Vela animation lab · WebGL2 fragment shaders</span>
+      <nav aria-label="Footer">
+        <a href="../cloudroom/index.html">Cloudroom</a>
+        <a href="effects.html?effect=silk">Pure animation</a>
+        <a href="vela.html?effect=silk">Vela page</a>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="effect-engine.js"></script>
+  <script src="gallery.js"></script>
+</body>
+</html>

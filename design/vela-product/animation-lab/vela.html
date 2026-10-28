@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Vela product page with a full-screen animation background from the animation lab.">
+  <title>Vela — Silk</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="vela-base.css">
+  <link rel="stylesheet" href="vela-product.css">
+  <link rel="stylesheet" href="vela-effect.css">
+  <link rel="stylesheet" href="lab-controls.css">
+</head>
+<body class="d1 effect-page effect-silk">
+  <div id="site"></div>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <aside class="lab-bar" id="lab-bar" aria-label="Animation lab controls">
+    <a class="lab-home" href="index.html">Lab</a>
+    <button id="lab-previous" type="button" aria-label="Previous animation">←</button>
+    <label class="lab-sr" for="lab-select">Animation</label>
+    <select id="lab-select"></select>
+    <button id="lab-next" type="button" aria-label="Next animation">→</button>
+    <span class="lab-sep" aria-hidden="true"></span>
+    <span class="lab-status" id="lab-status">Saved pick</span>
+    <a class="lab-pure" id="lab-pure" href="effects.html?effect=silk">Pure animation ↗</a>
+  </aside>
+  <button class="lab-restore" id="lab-restore" type="button" hidden aria-label="Show animation lab controls">Lab</button>
+
+  <script src="fragments.js"></script>
+  <script src="vela-page.js"></script>
+  <script src="effect-engine.js"></script>
+  <script src="vela.js"></script>
+</body>
+</html>
