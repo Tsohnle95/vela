@@ -26,7 +26,7 @@
   const nebulaGrid = document.getElementById('nebula-grid');
   nebulaGrid.innerHTML = `
     <article class="lab-card is-saved lumen-nebula-card">
-      <a class="lab-thumb lumen-thumb" href="vela.html?effect=nebula" aria-label="Open the saved Nebula Vela page">
+      <a class="lab-thumb lumen-thumb" href="nebula.html" aria-label="Open the saved Nebula Vela page">
         <canvas class="lumen-nebula-live" data-live-effect="nebula" aria-hidden="true"></canvas>
         <span class="lab-number">REF</span>
         <span class="lab-pick">Saved reference</span>
@@ -39,8 +39,8 @@
         </div>
         <p class="lab-line">A field of quiet light, with its clouds and gas kept in motion.</p>
         <div class="lab-card-links">
-          <a href="vela.html?effect=nebula">Vela page</a>
-          <a href="effects.html?effect=nebula">Pure animation →</a>
+          <a href="nebula.html">Vela page</a>
+          <a href="nebula-pure.html">Pure animation →</a>
         </div>
       </div>
     </article>`;

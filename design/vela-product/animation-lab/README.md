@@ -19,9 +19,10 @@ stays lit while only the screenshot sits dark. When the beam lands, the
 screenshot returns to its normal lighting, then light beads off both corners
 and runs down the sides. Open `lumen.html?cast=<slug>` for a cast.
 
-The saved **Nebula** direction is kept as a live animated reference in the
-Lumen gallery, with links to its Vela page and pure animation. Its clouds and
-gas are animated; it is not part of the 15 beam casts.
+The saved **Nebula** direction is kept as a live animated reference at the top
+of the Lumen gallery, with dedicated [Vela](nebula.html) and
+[Pure](nebula-pure.html) pages. Its clouds and gas are animated; it is not
+part of the 15 beam casts.
 
 ## Collection
 

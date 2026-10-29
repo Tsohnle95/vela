@@ -6,8 +6,8 @@
   <meta name="description" content="Fifteen angled Lumen light casts for the Vela product page, each delayed half a second and lit by a continuous photon stream.">
   <title>Vela — Lumen lab</title>
   <link rel="icon" href="../assets/icon.png">
-  <link rel="stylesheet" href="gallery.css">
-  <link rel="stylesheet" href="lumen.css">
+  <link rel="stylesheet" href="gallery.css?v=nebula2">
+  <link rel="stylesheet" href="lumen.css?v=nebula2">
 </head>
 <body>
   <div class="lab-shell">
@@ -24,19 +24,31 @@
 
     <section class="lab-hero">
       <div>
-        <p class="lab-kicker">Lumen lab · 15 casts</p>
+        <p class="lab-kicker">Lumen lab · 15 casts + saved reference</p>
         <h1>Fifteen ways to <em>break the dark.</em></h1>
         <p class="lab-intro">
-          Fifteen channeled light casts, plus the saved Nebula reference. The hero stays lit;
-          only the screenshot sits dark until the beam lands, then light beads off both corners
-          and runs down the sides. The saved Nebula keeps its clouds and gas in motion.
+          Fifteen channeled light casts, plus the saved Nebula reference at the top. The hero
+          stays lit; only the screenshot sits dark until the beam lands, then light beads off
+          both corners and runs down the sides. Nebula keeps its clouds and gas in motion.
         </p>
       </div>
       <div class="lab-stats" aria-label="Collection summary">
         <div class="lab-stat is-saved"><b>15</b><span>Casts</span></div>
+        <div class="lab-stat"><b>1</b><span>Saved ref</span></div>
         <div class="lab-stat"><b>0.5s</b><span>Delay</span></div>
         <div class="lab-stat"><b>1</b><span>Object lit</span></div>
       </div>
+    </section>
+
+    <section class="lab-section" aria-labelledby="nebula-title">
+      <div class="lab-section-head">
+        <div>
+          <p class="lab-kicker">Saved reference</p>
+          <h2 id="nebula-title">Nebula</h2>
+        </div>
+        <p>The saved atmospheric direction, now part of the Lumen lab. Its clouds and gas animate live here, with a dedicated Vela page and pure view.</p>
+      </div>
+      <div class="lab-grid is-reference" id="nebula-grid"></div>
     </section>
 
     <section class="lab-section" aria-labelledby="casts-title">
@@ -50,24 +62,13 @@
       <div class="lab-grid is-new" id="lumen-grid"></div>
     </section>
 
-    <section class="lab-section" aria-labelledby="nebula-title">
-      <div class="lab-section-head">
-        <div>
-          <p class="lab-kicker">Saved reference</p>
-          <h2 id="nebula-title">Nebula</h2>
-        </div>
-        <p>The saved atmospheric direction, kept as a reference. Its clouds and gas are animated live here; open either view for the full field.</p>
-      </div>
-      <div class="lab-grid is-reference" id="nebula-grid"></div>
-    </section>
-
     <div class="lab-note">
       <span>Tips</span>
       <span>← / → switch casts · H hides controls · each cast waits 0.5s before it lands</span>
     </div>
 
     <footer class="lab-footer">
-      <span>Lumen lab · fifteen angled WebGL2 light casts</span>
+      <span>Lumen lab · fifteen casts + the saved Nebula reference</span>
       <nav aria-label="Footer">
         <a href="index.html">Animation lab</a>
         <a href="lumen.html?cast=cathedral">First cast</a>
@@ -76,8 +77,8 @@
     </footer>
   </div>
 
-  <script src="effect-engine.js"></script>
-  <script src="lumen-engine.js"></script>
-  <script src="lumen-gallery.js"></script>
+  <script src="effect-engine.js?v=nebula2"></script>
+  <script src="lumen-engine.js?v=nebula2"></script>
+  <script src="lumen-gallery.js?v=nebula2"></script>
 </body>
 </html>

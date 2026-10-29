@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="The saved Nebula pure animation from the Vela Lumen lab.">
+  <title>Vela — Nebula</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="effects.css?v=nebula2">
+</head>
+<body data-layout="center">
+  <canvas id="effect-canvas" aria-hidden="true"></canvas>
+  <div class="effect-vignette" aria-hidden="true"></div>
+  <div class="effect-grain" aria-hidden="true"></div>
+
+  <header class="effect-header">
+    <a class="effect-brand" href="nebula.html">
+      <img src="../assets/icon.png" width="1024" height="1024" alt="">
+      <span>Nebula</span>
+    </a>
+    <nav class="effect-links" aria-label="Views">
+      <a href="nebula.html">Vela page ↗</a>
+      <a href="lumen-index.html">All options</a>
+    </nav>
+  </header>
+
+  <main class="effect-overlay">
+    <p class="effect-index">Saved reference · pure animation</p>
+    <h1 class="effect-title">Nebula</h1>
+    <p class="effect-line">A field of quiet light.</p>
+    <p class="effect-product">Pure animation study — clouds and gas kept in motion.</p>
+  </main>
+
+  <footer class="effect-footer">
+    <span>Vela Lumen lab</span>
+    <span>Nebula</span>
+  </footer>
+
+  <script src="effect-engine.js?v=nebula2"></script>
+  <script>
+    window.VelaLab.mount(document.getElementById('effect-canvas'), 'nebula');
+  </script>
+</body>
+</html>
