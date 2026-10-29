@@ -7,7 +7,6 @@ uniform float uTime;
 uniform float uReveal;
 uniform float uCast;
 uniform float uImpact;
-uniform float uSpread;
 uniform vec2 uCastOrigin;
 uniform float uHitFrac;
 uniform vec2 uPointer;
@@ -99,13 +98,6 @@ float spotCone(vec2 uv, vec2 origin, vec2 target, float sourceRadius, float targ
   return body * reach;
 }
 
-float topSpill(vec2 uv, vec2 hit, float halfWidth, float thickness, float reach) {
-  float dx = abs(uv.x - hit.x);
-  float line = exp(-abs(uv.y - hit.y) * thickness);
-  float spread = 1.0 - smoothstep(0.0, max(halfWidth, 0.05) * reach * (0.18 + 0.82 * uSpread), dx);
-  return line * spread * uImpact;
-}
-
 float sideSpill(vec2 uv, vec2 hit, float halfWidth, float side, float t, float width, float falloff) {
   float down = hit.y - uv.y;
   float edgeX = uHit.x + side * (halfWidth + 0.012)
@@ -116,7 +108,7 @@ float sideSpill(vec2 uv, vec2 hit, float halfWidth, float side, float t, float w
   float flow = smoothstep(-0.02, 0.06, down) * exp(-max(down, 0.0) * falloff);
   float ripple = 0.7 + 0.3 * sin(down * 28.0 - t * 2.2 + side * 1.7);
   float breakup = 0.6 + 0.4 * fbm(vec2(x * 2.0 + side * 2.0, down * 7.0 - t * 1.2));
-  return edge * flow * ripple * breakup * uImpact * smoothstep(0.65, 0.95, uSpread) * 1.35;
+  return edge * flow * ripple * breakup * uImpact * 1.35;
 }
 
 float impact(vec2 uv, vec2 hit, float rx, float ry) {
@@ -137,14 +129,13 @@ float sideSheet(vec2 uv, vec2 hit, float halfWidth, float side, float t) {
   float breakup = 0.55 + 0.45 * fbm(vec2(x * 1.8 + side * 2.0, down * 7.0 - t * 1.2));
   float dropPhase = fract(down * 9.0 - t * 1.8 + side * 0.3);
   float drops = smoothstep(0.0, 0.06, dropPhase) * (1.0 - smoothstep(0.06, 0.16, dropPhase));
-  return (edge + core + edge * drops * 0.8) * flow * ripple * breakup * uImpact * smoothstep(0.65, 0.95, uSpread) * 1.6;
+  return (edge + core + edge * drops * 0.8) * flow * ripple * breakup * uImpact * 1.6;
 }
 
 float collisionLight(vec2 uv, vec2 hit, float halfWidth, float t) {
-  float top = topSpill(uv, hit, halfWidth, 45.0, 1.34);
   float sides = sideSheet(uv, hit, halfWidth, -1.0, t) + sideSheet(uv, hit, halfWidth, 1.0, t);
-  float bloom = impact(uv, hit, 0.3, 0.08);
-  return top * 0.9 + sides * 0.85 + bloom * 0.3;
+  float bloom = impact(uv, hit, 0.26, 0.055);
+  return sides * 0.9 + bloom * 0.18;
 }
 `;
 
@@ -187,7 +178,6 @@ vec3 scene(vec2 uv, float t) {
   col += warm * pow(fog, 3.0) * cone * 0.25;
   vec2 dp = vec2(across * 9.0, along * 11.0 - t * 0.5);
   col += warm * stars(dp, 2.0, t * 0.7) * cone * 0.7;
-  col += warm * topSpill(uv, hit, uHit.z, 55.0, 1.05) * 0.5;
   col += warm * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.2) * 0.5;
   col += warm * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.2) * 0.5;
   col += warm * impact(uv, hit, 0.22, 0.07) * 0.3;
@@ -215,7 +205,6 @@ vec3 scene(vec2 uv, float t) {
   float gate = step(0.4, hash(vec2(floor(q), 9.0)));
   col += cool * exp(-across * across * 120.0) * dash * gate * 0.55;
   col += cool * spotCone(uv, o, trail, 0.03, 0.26, 0.3) * 0.1;
-  col += cool * topSpill(uv, hit, uHit.z, 70.0, 0.4) * 0.55;
   col += cool * sideSpill(uv, hit, uHit.z, -1.0, t, 0.04, 3.0) * 0.38;
   col += cool * sideSpill(uv, hit, uHit.z, 1.0, t, 0.04, 3.0) * 0.38;
   col += cool * impact(uv, hit, 0.1, 0.05) * 0.35;
@@ -240,7 +229,6 @@ vec3 scene(vec2 uv, float t) {
   col += c * pow(fold, 4.0) * curtain * 0.2;
   float q = uv.y * 9.0 + t * 0.8;
   col += c * exp(-abs(fract(q) - 0.5) * 20.0) * curtain * 0.08;
-  col += c * topSpill(uv, hit, uHit.z, 50.0, 1.1) * 0.4;
   col += c * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 1.8) * 0.45;
   col += c * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 1.8) * 0.45;
   col += c * impact(uv, hit, 0.35, 0.06) * 0.2;
@@ -289,7 +277,6 @@ vec3 scene(vec2 uv, float t) {
   vec2 dp = vec2(across * 12.0, along * 16.0 - t * 0.3);
   col += cool * stars(dp, 2.5, t * 1.4) * cone * 0.7;
   col += cool * exp(-length(uv - o) * 9.0) * 0.28;
-  col += cool * topSpill(uv, hit, uHit.z, 38.0, 1.2) * 0.45;
   col += cool * sideSpill(uv, hit, uHit.z, -1.0, t, 0.09, 1.4) * 0.4;
   col += cool * sideSpill(uv, hit, uHit.z, 1.0, t, 0.09, 1.4) * 0.4;
   col += cool * impact(uv, hit, 0.4, 0.09) * 0.3;
@@ -318,7 +305,6 @@ vec3 scene(vec2 uv, float t) {
   float dash = smoothstep(0.0, 0.06, fract(q)) * (1.0 - smoothstep(0.06, 0.18, fract(q)));
   col += cyan * exp(-across * across * 160.0) * dash * step(0.45, h) * 0.8;
   float stripes = 0.55 + 0.45 * step(0.5, fract(uv.x * 38.0 + t * 0.1));
-  col += cyan * topSpill(uv, hit, uHit.z, 60.0, 1.0) * stripes * 0.5;
   col += cyan * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * stripes * 0.4;
   col += cyan * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * stripes * 0.4;
   col += cyan * impact(uv, hit, 0.3, 0.06) * 0.25;
@@ -348,7 +334,6 @@ vec3 scene(vec2 uv, float t) {
     vec3 tint = i == 1 ? vec3(1.0, 0.55, 0.25) : (i == 2 ? vec3(1.0, 0.8, 0.45) : vec3(0.7, 0.85, 1.0));
     col += tint * exp(-length(uv - p) * 34.0) * 0.12;
   }
-  col += hot * topSpill(uv, hit, uHit.z, 55.0, 0.9) * 0.5;
   col += hot * sideSpill(uv, hit, uHit.z, -1.0, t, 0.035, 2.6) * 0.35;
   col += hot * sideSpill(uv, hit, uHit.z, 1.0, t, 0.035, 2.6) * 0.35;
   col += vec3(1.0, 0.85, 0.6) * impact(uv, hit, 0.16, 0.04) * 0.35;
@@ -376,11 +361,6 @@ vec3 scene(vec2 uv, float t) {
   col += amber * spotCone(uv, o, h3, 0.02, 0.06, 0.1) * 0.4;
   col += violet * spotCone(uv, o, h4, 0.02, 0.06, 0.1) * 0.4;
   col += vec3(0.9, 0.95, 1.0) * spotCone(uv, o, h2, 0.01, 0.03, 0.06) * 0.45;
-  col += red * topSpill(uv, h0, uHit.z, 60.0, 0.35) * 0.3;
-  col += green * topSpill(uv, h1, uHit.z, 60.0, 0.35) * 0.3;
-  col += blue * topSpill(uv, h2, uHit.z, 60.0, 0.4) * 0.35;
-  col += amber * topSpill(uv, h3, uHit.z, 60.0, 0.35) * 0.3;
-  col += violet * topSpill(uv, h4, uHit.z, 60.0, 0.35) * 0.3;
   col += violet * sideSpill(uv, h4, uHit.z, 1.0, t, 0.05, 2.0) * 0.35;
   col += red * sideSpill(uv, h0, uHit.z, -1.0, t, 0.05, 2.0) * 0.35;
   col += blue * impact(uv, h2, 0.25, 0.06) * 0.25;
@@ -408,7 +388,6 @@ vec3 scene(vec2 uv, float t) {
   col += blue * exp(-across * across * 120.0) * dash * step(0.35, h) * 0.9;
   float mist = fbm(uv * 4.0 + vec2(t * 0.1, -t * 0.08));
   col += blue * pow(mist, 3.0) * exp(-length(uv - hit) * 5.0) * 0.25;
-  col += blue * topSpill(uv, hit, uHit.z, 45.0, 1.15) * 0.45;
   col += blue * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.4;
   col += blue * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.4;
   col += vec3(0.9, 0.97, 1.0) * impact(uv, hit, 0.4, 0.08) * 0.28;
@@ -431,7 +410,6 @@ vec3 scene(vec2 uv, float t) {
   col += mix(blue, gold, 0.5 + 0.5 * sin(along * 4.0 + t * 0.2)) * cone * (0.1 + rings * 0.28);
   col += gold * core * 0.35;
   float topRings = 0.6 + 0.4 * sin((uv.x - hit.x) * 50.0 - t * 2.0);
-  col += gold * topSpill(uv, hit, uHit.z, 50.0, 1.0) * topRings * 0.45;
   col += gold * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * 0.4;
   col += gold * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * 0.4;
   col += mix(blue, gold, 0.5) * impact(uv, hit, 0.3, 0.07) * 0.3;
@@ -457,7 +435,6 @@ vec3 scene(vec2 uv, float t) {
   float dash = smoothstep(0.0, 0.04, fract(q)) * (1.0 - smoothstep(0.04, 0.16, fract(q)));
   float laneGlow = exp(-pow(fract(across * 26.0) - 0.5, 2.0) * 90.0);
   col += mix(vec3(0.5, 0.7, 1.0), vec3(1.0, 0.92, 0.75), h) * laneGlow * dash * step(0.45, h) * 1.1;
-  col += vec3(0.8, 0.9, 1.0) * topSpill(uv, hit, uHit.z, 45.0, 1.1) * 0.45;
   col += vec3(0.6, 0.8, 1.0) * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * 0.42;
   col += vec3(0.6, 0.8, 1.0) * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * 0.42;
   col += vec3(1.0, 0.9, 0.7) * impact(uv, hit, 0.35, 0.07) * 0.3;
@@ -484,8 +461,6 @@ vec3 scene(vec2 uv, float t) {
   col += warm * coreR * 0.3;
   float fog = fbm(vec2(uv.x * 3.0 + t * 0.05, uv.y * 4.0 - t * 0.1));
   col += mix(teal, warm, 0.5) * fog * (coneL + coneR) * 0.16;
-  col += teal * topSpill(uv, hL, uHit.z, 50.0, 0.5) * 0.4;
-  col += warm * topSpill(uv, hR, uHit.z, 50.0, 0.5) * 0.4;
   col += teal * sideSpill(uv, hL, uHit.z, -1.0, t, 0.05, 2.0) * 0.4;
   col += warm * sideSpill(uv, hR, uHit.z, 1.0, t, 0.05, 2.0) * 0.4;
   col += mix(teal, warm, 0.5) * impact(uv, mix(hL, hR, 0.5), 0.3, 0.08) * 0.2;
@@ -510,7 +485,6 @@ vec3 scene(vec2 uv, float t) {
   col += mix(violet, cyan, 0.5 + 0.5 * sin(along * 6.0 + t * 0.5)) * core * 0.45 * beat;
   float rings = pow(max(0.0, 1.0 - abs(fract(along * 7.0 - t * 1.8) - 0.5) * 2.0), 12.0);
   col += cyan * rings * exp(-across * across * 80.0) * 0.5;
-  col += violet * topSpill(uv, hit, uHit.z, 45.0, 1.15) * beat * 0.55;
   col += cyan * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * beat * 0.45;
   col += cyan * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * beat * 0.45;
   col += cyan * impact(uv, hit, 0.35, 0.08) * beat * 0.35;
@@ -535,7 +509,6 @@ vec3 scene(vec2 uv, float t) {
   col += indigo * stars(dp, 2.5, t * 2.0) * cone * 1.1;
   float sparkle = pow(stars(dp * 0.8, 2.0, t * 1.4), 2.0);
   col += vec3(1.0) * sparkle * cone * 0.9;
-  col += indigo * topSpill(uv, hit, uHit.z, 45.0, 1.1) * 0.45;
   col += indigo * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.42;
   col += indigo * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.42;
   col += vec3(0.9, 0.95, 1.0) * impact(uv, hit, 0.32, 0.07) * 0.25;
@@ -563,7 +536,6 @@ vec3 scene(vec2 uv, float t) {
   float ember = (1.0 - smoothstep(0.0, 0.08, length(f))) * step(0.55, h);
   col += mix(vec3(1.0, 0.25, 0.05), vec3(1.0, 0.85, 0.45), h) * ember * (cone + 0.1) * 1.5;
   float broken = 0.65 + 0.35 * sin((uv.x - hit.x) * 45.0 + fbm(vec2(uv.x * 6.0, t * 0.3)) * 4.0);
-  col += warm * topSpill(uv, hit, uHit.z, 45.0, 1.1) * broken * 0.55;
   col += warm * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.42;
   col += warm * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.42;
   col += warm * impact(uv, hit, 0.32, 0.07) * 0.3;
@@ -672,7 +644,6 @@ vec3 scene(vec2 uv, float t) {
       reveal: gl.getUniformLocation(program, 'uReveal'),
       cast: gl.getUniformLocation(program, 'uCast'),
       impact: gl.getUniformLocation(program, 'uImpact'),
-      spread: gl.getUniformLocation(program, 'uSpread'),
       castOrigin: gl.getUniformLocation(program, 'uCastOrigin'),
       hitFrac: gl.getUniformLocation(program, 'uHitFrac'),
       hit: gl.getUniformLocation(program, 'uHit'),
@@ -682,6 +653,7 @@ vec3 scene(vec2 uv, float t) {
     const startTime = performance.now();
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let raf = 0;
+    let impactFired = false;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -700,9 +672,12 @@ vec3 scene(vec2 uv, float t) {
       if (!active || (document.hidden && !reduced)) return;
       const elapsed = reduced ? delay + 3 : (now - startTime) / 1000;
       const cast = reduced ? 1.6 : Math.max(0, Math.min(1.6, (elapsed - delay) / 0.7));
-      const impact = reduced ? 1 : Math.max(0, Math.min(1, (cast - 0.9) / 0.15));
-      const spread = reduced ? 1 : Math.max(0, Math.min(1, (elapsed - delay - 0.7) / 0.7));
+      const impact = reduced || cast >= 1.0 ? 1 : 0;
       const reveal = reduced || elapsed >= delay ? 1 : 0;
+      if (!impactFired && cast >= 1.0) {
+        impactFired = true;
+        options.onImpact?.();
+      }
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.useProgram(program);
       if (uniforms.resolution) gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
@@ -710,7 +685,6 @@ vec3 scene(vec2 uv, float t) {
       if (uniforms.reveal) gl.uniform1f(uniforms.reveal, reveal);
       if (uniforms.cast) gl.uniform1f(uniforms.cast, cast);
       if (uniforms.impact) gl.uniform1f(uniforms.impact, impact);
-      if (uniforms.spread) gl.uniform1f(uniforms.spread, spread);
       const castOrigin = active?.castOrigin || [0.0, 0.9];
       if (uniforms.castOrigin) gl.uniform2f(uniforms.castOrigin, castOrigin[0], castOrigin[1]);
       if (uniforms.hitFrac) gl.uniform1f(uniforms.hitFrac, active?.hitFrac ?? 0.5);
@@ -796,7 +770,6 @@ vec3 scene(vec2 uv, float t) {
     const reveal = gl.getUniformLocation(program, 'uReveal');
     const cast = gl.getUniformLocation(program, 'uCast');
     const impact = gl.getUniformLocation(program, 'uImpact');
-    const spread = gl.getUniformLocation(program, 'uSpread');
     const castOrigin = gl.getUniformLocation(program, 'uCastOrigin');
     const hitFrac = gl.getUniformLocation(program, 'uHitFrac');
     const hit = gl.getUniformLocation(program, 'uHit');
@@ -805,7 +778,6 @@ vec3 scene(vec2 uv, float t) {
     if (reveal) gl.uniform1f(reveal, 1.0);
     if (cast) gl.uniform1f(cast, 1.6);
     if (impact) gl.uniform1f(impact, 1.0);
-    if (spread) gl.uniform1f(spread, 1.0);
     if (castOrigin) gl.uniform2f(castOrigin, 0.0, 0.9);
     if (hitFrac) gl.uniform1f(hitFrac, 0.5);
     if (hit) gl.uniform4f(hit, 0.0, -0.12, 0.34, 0.18);

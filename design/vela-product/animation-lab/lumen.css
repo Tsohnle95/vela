@@ -51,20 +51,6 @@ body.lumen-page .ob-pricing .ob-price {
   text-shadow: 0 2px 30px #00000099, 0 0 70px #00000073;
 }
 
-/* The page is dark until the light arrives. */
-body.lumen-page .ob-header,
-body.lumen-page main,
-body.lumen-page .ob-footer {
-  filter: brightness(0.3) saturate(0.86);
-  transition: filter 1.15s ease;
-}
-
-body.lumen-page.is-lit .ob-header,
-body.lumen-page.is-lit main,
-body.lumen-page.is-lit .ob-footer {
-  filter: brightness(1) saturate(1);
-}
-
 /* The screenshot starts as a dark object, then the beam finds it. */
 body.lumen-page .ob-preview {
   box-shadow:
@@ -75,149 +61,12 @@ body.lumen-page .ob-preview {
 }
 
 body.lumen-page .ob-preview img {
-  filter: brightness(0.38) saturate(0.82) contrast(1.05);
-  transition: filter 1.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+  filter: brightness(0.22) saturate(0.55) contrast(1.08);
+  transition: filter 0.1s linear;
 }
 
 body.lumen-page.is-lit .ob-preview img {
-  filter: brightness(var(--lumen-brightness, 1.12)) saturate(1.04) contrast(1.01);
-}
-
-body.lumen-page.is-lit .ob-preview {
-  box-shadow:
-    inset 0 1px #ffffff2e,
-    0 50px 140px -40px #000000e6,
-    0 0 80px -30px var(--lumen-warm, #ffe6b8),
-    0 0 26px -12px var(--lumen-hot, #ffffff);
-}
-
-body.lumen-page .ob-preview::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background:
-    linear-gradient(var(--lumen-angle, 120deg), transparent 20%, var(--lumen-hot, #ffffff) 44%, transparent 64%),
-    radial-gradient(ellipse 78% 100% at var(--lumen-x, 50%) var(--lumen-y, 16%), var(--lumen-warm, #ffe6b8) 0%, transparent 68%),
-    radial-gradient(circle at var(--lumen-x, 50%) var(--lumen-y, 16%), #ffffff 0%, transparent 22%);
-  mix-blend-mode: screen;
-  opacity: 0;
-  transition: opacity 1.15s ease;
-}
-
-body.lumen-page.is-lit .ob-preview::after {
-  opacity: var(--lumen-opacity, 0.55);
-}
-
-body.lumen-page .ob-preview::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  right: -2%;
-  left: -2%;
-  z-index: 3;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--lumen-hot, #ffffff) 35%, var(--lumen-warm, #ffe6b8) 55%, transparent);
-  filter: blur(1.5px);
-  opacity: 0;
-  transition: opacity 1s ease;
-  pointer-events: none;
-}
-
-body.lumen-page.is-lit .ob-preview::before {
-  opacity: 0.6;
-}
-
-body.lumen-page[data-style="sweep"] .ob-preview::after {
-  background:
-    radial-gradient(ellipse 24% 52% at var(--lumen-x, 50%) 5%, #ffffff 0%, var(--lumen-hot, #ffffff) 28%, transparent 72%),
-    linear-gradient(var(--lumen-angle, 135deg), transparent 38%, var(--lumen-hot, #ffffff) 47%, transparent 57%);
-}
-
-body.lumen-page[data-style="curtain"] .ob-preview::after {
-  background:
-    repeating-linear-gradient(90deg, transparent 0 7%, var(--lumen-hot, #ffffff) 9%, transparent 12% 16%),
-    linear-gradient(180deg, var(--lumen-warm, #ffe6b8) 0%, transparent 66%);
-}
-
-body.lumen-page[data-style="grazing"] .ob-preview::after {
-  background:
-    linear-gradient(90deg, var(--lumen-warm, #ffe6b8) 0%, var(--lumen-hot, #ffffff) 34%, transparent 78%),
-    linear-gradient(180deg, var(--lumen-warm, #ffe6b8) 0%, transparent 48%);
-}
-
-body.lumen-page[data-style="grid"] .ob-preview::after {
-  background:
-    repeating-linear-gradient(0deg, transparent 0 8%, #ffffff26 8.5% 9%, transparent 9.5% 16%),
-    repeating-linear-gradient(90deg, transparent 0 8%, #ffffff26 8.5% 9%, transparent 9.5% 16%),
-    radial-gradient(ellipse at var(--lumen-x, 50%) 0%, var(--lumen-warm, #ffe6b8) 0%, transparent 72%);
-}
-
-body.lumen-page[data-style="flare"] .ob-preview::after {
-  background:
-    linear-gradient(90deg, transparent 2%, var(--lumen-hot, #ffffff) 48%, transparent 98%),
-    radial-gradient(circle at var(--lumen-x, 50%) 8%, #ffffff 0%, var(--lumen-hot, #ffffff) 14%, transparent 42%);
-}
-
-body.lumen-page[data-style="prism"] .ob-preview::after {
-  background:
-    linear-gradient(90deg, #ff5a6e40 0%, #ffd16640 24%, #6ee7b740 48%, #5aa9ff40 72%, #b06fd840 100%),
-    radial-gradient(ellipse at var(--lumen-x, 50%) 0%, var(--lumen-hot, #ffffff) 0%, transparent 68%);
-}
-
-body.lumen-page[data-style="cascade"] .ob-preview::after {
-  background:
-    linear-gradient(180deg, var(--lumen-hot, #ffffff) 0%, transparent 52%),
-    repeating-linear-gradient(90deg, transparent 0 9%, #ffffff24 10%, transparent 11.5% 19%);
-}
-
-body.lumen-page[data-style="rings"] .ob-preview::after {
-  background:
-    repeating-radial-gradient(circle at var(--lumen-x, 50%) 0%, var(--lumen-hot, #ffffff) 0 1.2%, transparent 2% 7%),
-    radial-gradient(ellipse at var(--lumen-x, 50%) 0%, var(--lumen-warm, #ffe6b8) 0%, transparent 72%);
-}
-
-body.lumen-page[data-style="streaks"] .ob-preview::after {
-  background:
-    repeating-linear-gradient(var(--lumen-angle, 135deg), transparent 0 4%, var(--lumen-hot, #ffffff) 4.7% 5.2%, transparent 5.9% 9%),
-    radial-gradient(ellipse at var(--lumen-x, 50%) 0%, var(--lumen-warm, #ffe6b8) 0%, transparent 76%);
-}
-
-body.lumen-page[data-style="twin"] .ob-preview::after {
-  background:
-    radial-gradient(ellipse 48% 100% at 32% 4%, var(--lumen-warm, #ffe6b8) 0%, transparent 66%),
-    radial-gradient(ellipse 48% 100% at 68% 4%, var(--lumen-hot, #ffffff) 0%, transparent 66%),
-    linear-gradient(180deg, var(--lumen-warm, #ffe6b8) 0%, transparent 58%);
-}
-
-body.lumen-page[data-style="pulse"] .ob-preview::after {
-  background:
-    radial-gradient(circle at var(--lumen-x, 50%) 8%, #ffffff 0%, var(--lumen-hot, #ffffff) 10%, transparent 42%),
-    radial-gradient(ellipse at var(--lumen-x, 50%) 0%, var(--lumen-warm, #ffe6b8) 0%, transparent 70%);
-  animation: lumen-pulse 2.8s ease-in-out infinite;
-}
-
-body.lumen-page[data-style="stars"] .ob-preview::after {
-  background:
-    radial-gradient(circle at 18% 18%, #ffffff 0 1px, transparent 2px),
-    radial-gradient(circle at 42% 34%, #ffffff 0 1px, transparent 2px),
-    radial-gradient(circle at 72% 20%, #ffffff 0 1px, transparent 2px),
-    radial-gradient(circle at 86% 48%, #ffffff 0 1px, transparent 2px),
-    radial-gradient(ellipse at var(--lumen-x, 50%) 0%, var(--lumen-warm, #ffe6b8) 0%, transparent 70%);
-}
-
-body.lumen-page[data-style="embers"] .ob-preview::after {
-  background:
-    radial-gradient(circle at 28% 38%, #ffb15e 0 1px, transparent 2px),
-    radial-gradient(circle at 54% 22%, #ffd08a 0 1px, transparent 2px),
-    radial-gradient(circle at 78% 44%, #ff9a4a 0 1px, transparent 2px),
-    radial-gradient(ellipse at var(--lumen-x, 50%) 0%, var(--lumen-warm, #ffe6b8) 0%, transparent 72%);
-}
-
-@keyframes lumen-pulse {
-  0%, 100% { filter: brightness(0.8); }
-  50% { filter: brightness(1.3); }
+  filter: brightness(1) saturate(1) contrast(1);
 }
 
 .lumen-meta {
@@ -227,6 +76,28 @@ body.lumen-page[data-style="embers"] .ob-preview::after {
   font-size: 9px;
   letter-spacing: 0.08em;
   white-space: nowrap;
+}
+
+/* Saved Nebula reference, animated live in the gallery. */
+.lab-grid.is-reference {
+  grid-template-columns: minmax(0, 680px);
+}
+
+.lumen-nebula-card .lab-thumb {
+  background:
+    radial-gradient(circle at 32% 30%, #6b3fa0 0%, transparent 55%),
+    radial-gradient(circle at 72% 62%, #1c6f74 0%, transparent 55%),
+    #080a10;
+}
+
+.lumen-nebula-live {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 /* Gallery thumbnail: the shader field with a small lit Vela screenshot. */
@@ -256,18 +127,11 @@ body.lumen-page[data-style="embers"] .ob-preview::after {
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  filter: brightness(0.9) saturate(0.95);
+  filter: brightness(0.98) saturate(1);
 }
 
 .lumen-mini::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(var(--card-angle, 120deg), transparent 22%, #ffffff 46%, transparent 68%),
-    radial-gradient(ellipse 80% 100% at 50% 0%, var(--tone-b, #fff4d8) 0%, transparent 64%);
-  mix-blend-mode: screen;
-  opacity: 0.35;
+  display: none;
 }
 
 .lumen-thumb .lab-number,
@@ -315,9 +179,7 @@ body.lumen-page[data-style="embers"] .ob-preview::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.lumen-page .ob-preview,
-  body.lumen-page .ob-preview img,
-  body.lumen-page .ob-preview::after {
+  body.lumen-page .ob-preview img {
     transition: none;
   }
 }

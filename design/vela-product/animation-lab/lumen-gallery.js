@@ -23,6 +23,34 @@
       </div>
     </article>`).join('');
 
+  const nebulaGrid = document.getElementById('nebula-grid');
+  nebulaGrid.innerHTML = `
+    <article class="lab-card is-saved lumen-nebula-card">
+      <a class="lab-thumb lumen-thumb" href="vela.html?effect=nebula" aria-label="Open the saved Nebula Vela page">
+        <canvas class="lumen-nebula-live" data-live-effect="nebula" aria-hidden="true"></canvas>
+        <span class="lab-number">REF</span>
+        <span class="lab-pick">Saved reference</span>
+        <span class="lab-open">Open Vela page</span>
+      </a>
+      <div class="lab-card-body">
+        <div class="lab-card-head">
+          <h3>Nebula</h3>
+          <span>Saved reference</span>
+        </div>
+        <p class="lab-line">A field of quiet light, with its clouds and gas kept in motion.</p>
+        <div class="lab-card-links">
+          <a href="vela.html?effect=nebula">Vela page</a>
+          <a href="effects.html?effect=nebula">Pure animation →</a>
+        </div>
+      </div>
+    </article>`;
+
+  const live = document.querySelector('[data-live-effect]');
+  if (live && window.VelaLab) {
+    const mounted = window.VelaLab.mount(live, live.dataset.liveEffect);
+    if (!mounted) live.closest('.lab-thumb')?.classList.add('is-fallback');
+  }
+
   const thumbs = Array.from(document.querySelectorAll('[data-thumb]'));
   const paint = (img) => {
     const url = snapshot(img.dataset.thumb);

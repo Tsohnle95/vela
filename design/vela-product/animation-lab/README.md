@@ -14,10 +14,14 @@ same shaders and marks the five saved picks.
 ## Lumen lab
 
 [lumen-index.html](lumen-index.html) is a focused iteration on the Lumen
-direction: fifteen angled spotlights, each delayed half a second. The page
-stays dim while the beam descends; only after it reaches the screenshot does
-light pool over the top edge, run down both sides, and gently light the screen
-with its own pattern. Open `lumen.html?cast=<slug>` for a cast.
+direction: fifteen angled spotlights, each delayed half a second. The hero
+stays lit while only the screenshot sits dark. When the beam lands, the
+screenshot returns to its normal lighting, then light beads off both corners
+and runs down the sides. Open `lumen.html?cast=<slug>` for a cast.
+
+The saved **Nebula** direction is kept as a live animated reference in the
+Lumen gallery, with links to its Vela page and pure animation. Its clouds and
+gas are animated; it is not part of the 15 beam casts.
 
 ## Collection
 

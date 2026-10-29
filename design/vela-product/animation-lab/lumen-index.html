@@ -27,9 +27,9 @@
         <p class="lab-kicker">Lumen lab · 15 casts</p>
         <h1>Fifteen ways to <em>break the dark.</em></h1>
         <p class="lab-intro">
-          Each study waits half a second, then one beam descends through the dark. The page
-          stays dim until it reaches the screenshot; only then does light pool over the top,
-          run down both sides, and gently light the face below.
+          Fifteen channeled light casts, plus the saved Nebula reference. The hero stays lit;
+          only the screenshot sits dark until the beam lands, then light beads off both corners
+          and runs down the sides. The saved Nebula keeps its clouds and gas in motion.
         </p>
       </div>
       <div class="lab-stats" aria-label="Collection summary">
@@ -50,6 +50,17 @@
       <div class="lab-grid is-new" id="lumen-grid"></div>
     </section>
 
+    <section class="lab-section" aria-labelledby="nebula-title">
+      <div class="lab-section-head">
+        <div>
+          <p class="lab-kicker">Saved reference</p>
+          <h2 id="nebula-title">Nebula</h2>
+        </div>
+        <p>The saved atmospheric direction, kept as a reference. Its clouds and gas are animated live here; open either view for the full field.</p>
+      </div>
+      <div class="lab-grid is-reference" id="nebula-grid"></div>
+    </section>
+
     <div class="lab-note">
       <span>Tips</span>
       <span>← / → switch casts · H hides controls · each cast waits 0.5s before it lands</span>
@@ -65,6 +76,7 @@
     </footer>
   </div>
 
+  <script src="effect-engine.js"></script>
   <script src="lumen-engine.js"></script>
   <script src="lumen-gallery.js"></script>
 </body>
