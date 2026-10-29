@@ -5,6 +5,11 @@ out vec4 outColor;
 uniform vec2 uResolution;
 uniform float uTime;
 uniform float uReveal;
+uniform float uCast;
+uniform float uImpact;
+uniform float uSpread;
+uniform vec2 uCastOrigin;
+uniform float uHitFrac;
 uniform vec2 uPointer;
 uniform vec4 uHit;
 #define PI 3.14159265359
@@ -97,53 +102,49 @@ float spotCone(vec2 uv, vec2 origin, vec2 target, float sourceRadius, float targ
 float topSpill(vec2 uv, vec2 hit, float halfWidth, float thickness, float reach) {
   float dx = abs(uv.x - hit.x);
   float line = exp(-abs(uv.y - hit.y) * thickness);
-  float spread = 1.0 - smoothstep(0.0, max(halfWidth, 0.05) * reach, dx);
-  return line * spread;
+  float spread = 1.0 - smoothstep(0.0, max(halfWidth, 0.05) * reach * (0.18 + 0.82 * uSpread), dx);
+  return line * spread * uImpact;
 }
 
 float sideSpill(vec2 uv, vec2 hit, float halfWidth, float side, float t, float width, float falloff) {
-  float x = uHit.x + side * (halfWidth + 0.045);
-  float q = (uv.x - x) / max(width, 0.01);
-  float glow = exp(-q * q);
-  float below = smoothstep(hit.y + 0.03, hit.y - 0.08, uv.y);
-  float fall = exp(-max(0.0, hit.y - uv.y) * falloff);
-  float flow = 0.55 + 0.45 * sin((hit.y - uv.y) * 35.0 - t * 3.0 + side * 1.7);
-  return glow * below * fall * flow;
+  float down = hit.y - uv.y;
+  float edgeX = uHit.x + side * (halfWidth + 0.012)
+    + 0.018 * sin(down * 6.0 - t * 1.4 + side * 2.0) * smoothstep(0.0, 0.4, down);
+  float spread = max(width, 0.02) + max(down, 0.0) * 0.12;
+  float x = (uv.x - edgeX) / spread;
+  float edge = exp(-x * x);
+  float flow = smoothstep(-0.02, 0.06, down) * exp(-max(down, 0.0) * falloff);
+  float ripple = 0.7 + 0.3 * sin(down * 28.0 - t * 2.2 + side * 1.7);
+  float breakup = 0.6 + 0.4 * fbm(vec2(x * 2.0 + side * 2.0, down * 7.0 - t * 1.2));
+  return edge * flow * ripple * breakup * uImpact * smoothstep(0.65, 0.95, uSpread) * 1.35;
 }
 
 float impact(vec2 uv, vec2 hit, float rx, float ry) {
   vec2 d = (uv - hit) / vec2(max(rx, 0.01), max(ry, 0.01));
-  return exp(-dot(d, d));
+  return exp(-dot(d, d)) * uImpact;
 }
 
-float spillJet(vec2 uv, vec2 hit, float halfWidth, float side, float t) {
-  float x = uHit.x + side * (halfWidth + 0.02);
+float sideSheet(vec2 uv, vec2 hit, float halfWidth, float side, float t) {
   float down = hit.y - uv.y;
-  float width = 0.02 + max(down, 0.0) * 0.12;
-  float jet = exp(-pow((uv.x - x) / width, 2.0));
-  float mask = smoothstep(-0.02, 0.03, down) * exp(-max(down, 0.0) * 1.6);
-  float packets = 0.5 + 0.5 * sin(down * 60.0 - t * 5.0 + side * 2.0);
-  return jet * mask * packets;
+  float edgeX = uHit.x + side * (halfWidth + 0.012)
+    + 0.018 * sin(down * 6.0 - t * 1.4 + side * 2.0) * smoothstep(0.0, 0.4, down);
+  float width = 0.03 + max(down, 0.0) * 0.2;
+  float x = (uv.x - edgeX) / width;
+  float edge = exp(-x * x);
+  float core = exp(-x * x * 18.0) * 0.55;
+  float flow = smoothstep(-0.02, 0.06, down) * exp(-max(down, 0.0) * 1.3);
+  float ripple = 0.7 + 0.3 * sin(down * 30.0 - t * 2.2 + x * 1.8 + side);
+  float breakup = 0.55 + 0.45 * fbm(vec2(x * 1.8 + side * 2.0, down * 7.0 - t * 1.2));
+  float dropPhase = fract(down * 9.0 - t * 1.8 + side * 0.3);
+  float drops = smoothstep(0.0, 0.06, dropPhase) * (1.0 - smoothstep(0.06, 0.16, dropPhase));
+  return (edge + core + edge * drops * 0.8) * flow * ripple * breakup * uImpact * smoothstep(0.65, 0.95, uSpread) * 1.6;
 }
 
 float collisionLight(vec2 uv, vec2 hit, float halfWidth, float t) {
   float top = topSpill(uv, hit, halfWidth, 45.0, 1.34);
-  float sides = spillJet(uv, hit, halfWidth, -1.0, t) + spillJet(uv, hit, halfWidth, 1.0, t);
-  float bloom = exp(-length((uv - hit) * vec2(0.7, 2.0)) * 2.6);
-  return top * 0.9 + sides * 1.15 + bloom * 0.3;
-}
-
-float castHead(vec2 uv, vec2 origin, vec2 target, float delay) {
-  vec2 d = target - origin;
-  float len = max(length(d), 0.001);
-  vec2 dir = d / len;
-  vec2 rel = uv - origin;
-  float along = dot(rel, dir) / len;
-  float across = abs(dot(rel, vec2(-dir.y, dir.x)));
-  float head = clamp((uTime - delay) / 0.75, 0.0, 1.0);
-  float pulse = exp(-pow((along - head) / 0.09, 2.0)) * exp(-across * across * 26.0);
-  float isLive = smoothstep(delay, delay + 0.08, uTime) * (1.0 - smoothstep(delay + 1.0, delay + 1.7, uTime));
-  return pulse * isLive;
+  float sides = sideSheet(uv, hit, halfWidth, -1.0, t) + sideSheet(uv, hit, halfWidth, 1.0, t);
+  float bloom = impact(uv, hit, 0.3, 0.08);
+  return top * 0.9 + sides * 0.85 + bloom * 0.3;
 }
 `;
 
@@ -158,6 +159,11 @@ vec3 scene(vec2 uv, float t);
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
   vec3 col = scene(uv, uTime);
+  vec2 castSource = beamOrigin(uCastOrigin.x, uCastOrigin.y);
+  vec2 hitCenter = hitPoint(uHitFrac);
+  float distanceFromSource = length(uv - castSource) / max(length(hitCenter - castSource), 0.001);
+  float front = 1.0 - smoothstep(uCast, uCast + 0.12, distanceFromSource);
+  col *= front;
   col *= 1.0 - smoothstep(0.62, 1.25, length(uv * vec2(0.55, 1.0)));
   col *= uReveal;
   outColor = vec4(col, 1.0);
@@ -185,7 +191,6 @@ vec3 scene(vec2 uv, float t) {
   col += warm * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.2) * 0.5;
   col += warm * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.2) * 0.5;
   col += warm * impact(uv, hit, 0.22, 0.07) * 0.3;
-  col += warm * castHead(uv, o, hit, 0.5) * 1.6;
   col += warm * collisionLight(uv, hit, uHit.z, t) * 0.55;
   return col;
 }`,
@@ -214,7 +219,6 @@ vec3 scene(vec2 uv, float t) {
   col += cool * sideSpill(uv, hit, uHit.z, -1.0, t, 0.04, 3.0) * 0.38;
   col += cool * sideSpill(uv, hit, uHit.z, 1.0, t, 0.04, 3.0) * 0.38;
   col += cool * impact(uv, hit, 0.1, 0.05) * 0.35;
-  col += cool * castHead(uv, o, hit, 0.5) * 1.5;
   col += cool * collisionLight(uv, hit, uHit.z, t) * 0.5;
   return col;
 }`,
@@ -263,7 +267,6 @@ vec3 scene(vec2 uv, float t) {
   col += gold * sideSpill(uv, hit, uHit.z, 1.0, t, 0.07, 1.8) * 0.5;
   col += gold * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.4) * 0.15;
   col += gold * impact(uv, hit, 0.3, 0.06) * 0.25;
-  col += gold * castHead(uv, o, hit, 0.5) * 1.4;
   col += gold * collisionLight(uv, hit, uHit.z, t) * 0.55;
   return col;
 }`,
@@ -290,7 +293,6 @@ vec3 scene(vec2 uv, float t) {
   col += cool * sideSpill(uv, hit, uHit.z, -1.0, t, 0.09, 1.4) * 0.4;
   col += cool * sideSpill(uv, hit, uHit.z, 1.0, t, 0.09, 1.4) * 0.4;
   col += cool * impact(uv, hit, 0.4, 0.09) * 0.3;
-  col += cool * castHead(uv, o, hit, 0.5) * 1.2;
   col += cool * collisionLight(uv, hit, uHit.z, t) * 0.5;
   return col;
 }`,
@@ -320,7 +322,6 @@ vec3 scene(vec2 uv, float t) {
   col += cyan * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * stripes * 0.4;
   col += cyan * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * stripes * 0.4;
   col += cyan * impact(uv, hit, 0.3, 0.06) * 0.25;
-  col += cyan * castHead(uv, o, hit, 0.5) * 1.4;
   col += cyan * collisionLight(uv, hit, uHit.z, t) * 0.5;
   return col;
 }`,
@@ -351,7 +352,6 @@ vec3 scene(vec2 uv, float t) {
   col += hot * sideSpill(uv, hit, uHit.z, -1.0, t, 0.035, 2.6) * 0.35;
   col += hot * sideSpill(uv, hit, uHit.z, 1.0, t, 0.035, 2.6) * 0.35;
   col += vec3(1.0, 0.85, 0.6) * impact(uv, hit, 0.16, 0.04) * 0.35;
-  col += hot * castHead(uv, o, hit, 0.5) * 1.8;
   col += hot * collisionLight(uv, hit, uHit.z, t) * 0.55;
   return col;
 }`,
@@ -384,7 +384,6 @@ vec3 scene(vec2 uv, float t) {
   col += violet * sideSpill(uv, h4, uHit.z, 1.0, t, 0.05, 2.0) * 0.35;
   col += red * sideSpill(uv, h0, uHit.z, -1.0, t, 0.05, 2.0) * 0.35;
   col += blue * impact(uv, h2, 0.25, 0.06) * 0.25;
-  col += vec3(1.0, 0.95, 0.9) * castHead(uv, o, h2, 0.5) * 1.4;
   col += vec3(1.0, 0.85, 0.7) * collisionLight(uv, h2, uHit.z, t) * 0.45;
   return col;
 }`,
@@ -399,9 +398,7 @@ vec3 scene(vec2 uv, float t) {
   float across = beamAcross(uv, o, hit);
   vec3 blue = vec3(0.55, 0.82, 1.0);
   vec3 col = vec3(0.004, 0.007, 0.013);
-  float cord = exp(-abs(uv.x - o.x) * 220.0) * smoothstep(o.y, o.y + 0.22, uv.y);
-  col += vec3(0.18, 0.2, 0.22) * cord;
-  col += vec3(1.0, 0.86, 0.62) * exp(-length((uv - o) * vec2(1.0, 1.0)) * 26.0) * 0.7;
+  col += vec3(1.0, 0.86, 0.62) * exp(-length((uv - o) * vec2(1.0, 1.0)) * 18.0) * 0.3;
   col += blue * cone * 0.14;
   col += blue * core * 0.4;
   float lane = floor(across * 20.0);
@@ -415,7 +412,6 @@ vec3 scene(vec2 uv, float t) {
   col += blue * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.4;
   col += blue * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.4;
   col += vec3(0.9, 0.97, 1.0) * impact(uv, hit, 0.4, 0.08) * 0.28;
-  col += blue * castHead(uv, o, hit, 0.5) * 1.3;
   col += blue * collisionLight(uv, hit, uHit.z, t) * 0.5;
   return col;
 }`,
@@ -439,7 +435,6 @@ vec3 scene(vec2 uv, float t) {
   col += gold * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * 0.4;
   col += gold * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * 0.4;
   col += mix(blue, gold, 0.5) * impact(uv, hit, 0.3, 0.07) * 0.3;
-  col += gold * castHead(uv, o, hit, 0.5) * 1.3;
   col += gold * collisionLight(uv, hit, uHit.z, t) * 0.55;
   return col;
 }`,
@@ -466,7 +461,6 @@ vec3 scene(vec2 uv, float t) {
   col += vec3(0.6, 0.8, 1.0) * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * 0.42;
   col += vec3(0.6, 0.8, 1.0) * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * 0.42;
   col += vec3(1.0, 0.9, 0.7) * impact(uv, hit, 0.35, 0.07) * 0.3;
-  col += vec3(1.0, 0.9, 0.7) * castHead(uv, o, hit, 0.5) * 1.4;
   col += vec3(0.8, 0.9, 1.0) * collisionLight(uv, hit, uHit.z, t) * 0.5;
   return col;
 }`,
@@ -495,8 +489,6 @@ vec3 scene(vec2 uv, float t) {
   col += teal * sideSpill(uv, hL, uHit.z, -1.0, t, 0.05, 2.0) * 0.4;
   col += warm * sideSpill(uv, hR, uHit.z, 1.0, t, 0.05, 2.0) * 0.4;
   col += mix(teal, warm, 0.5) * impact(uv, mix(hL, hR, 0.5), 0.3, 0.08) * 0.2;
-  col += teal * castHead(uv, oL, hL, 0.5) * 1.1;
-  col += warm * castHead(uv, oR, hR, 0.5) * 1.1;
   col += teal * collisionLight(uv, hL, uHit.z, t) * 0.35;
   col += warm * collisionLight(uv, hR, uHit.z, t) * 0.35;
   return col;
@@ -522,7 +514,6 @@ vec3 scene(vec2 uv, float t) {
   col += cyan * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * beat * 0.45;
   col += cyan * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * beat * 0.45;
   col += cyan * impact(uv, hit, 0.35, 0.08) * beat * 0.35;
-  col += violet * castHead(uv, o, hit, 0.5) * 1.5;
   col += mix(violet, cyan, 0.5) * collisionLight(uv, hit, uHit.z, t) * 0.55;
   return col;
 }`,
@@ -548,7 +539,6 @@ vec3 scene(vec2 uv, float t) {
   col += indigo * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.42;
   col += indigo * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.42;
   col += vec3(0.9, 0.95, 1.0) * impact(uv, hit, 0.32, 0.07) * 0.25;
-  col += indigo * castHead(uv, o, hit, 0.5) * 1.4;
   col += indigo * collisionLight(uv, hit, uHit.z, t) * 0.5;
   return col;
 }`,
@@ -577,28 +567,27 @@ vec3 scene(vec2 uv, float t) {
   col += warm * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.42;
   col += warm * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.42;
   col += warm * impact(uv, hit, 0.32, 0.07) * 0.3;
-  col += warm * castHead(uv, o, hit, 0.5) * 1.5;
   col += warm * collisionLight(uv, hit, uHit.z, t) * 0.55;
   return col;
 }`,
   };
 
   const VARIANTS = [
-    { slug: 'cathedral', name: 'Cathedral', line: 'A warm shaft for a quiet room.', toneA: '#c9a45e', toneB: '#f0ddb8', angle: '45deg', y: '14%', brightness: '1.1', opacity: '0.46', style: 'soft', hit: 0.42 },
-    { slug: 'searchlight', name: 'Searchlight', line: 'A moving spot, finding the object.', toneA: '#7fa8c9', toneB: '#bcd9ee', angle: '135deg', y: '16%', brightness: '1.06', opacity: '0.34', style: 'sweep', hit: 0.5 },
-    { slug: 'aurora-fall', name: 'Aurora Fall', line: 'A curtain of colour ending on the glass.', toneA: '#2fb89d', toneB: '#8c6bf0', angle: '90deg', y: '10%', brightness: '1.09', opacity: '0.44', style: 'curtain', hit: 0.52 },
-    { slug: 'golden-hour', name: 'Golden Hour', line: 'A low sun raking across the object.', toneA: '#d18a3d', toneB: '#ffdf9e', angle: '0deg', y: '12%', brightness: '1.12', opacity: '0.5', style: 'grazing', hit: 0.22 },
-    { slug: 'moonbeam', name: 'Moonbeam', line: 'A soft cool wash from above.', toneA: '#6f8fc9', toneB: '#d3e7ff', angle: '135deg', y: '12%', brightness: '1.08', opacity: '0.42', style: 'soft', hit: 0.58 },
-    { slug: 'datafall', name: 'Datafall', line: 'A grid of signals landing on the screen.', toneA: '#2fb7b0', toneB: '#b8fff2', angle: '45deg', y: '12%', brightness: '1.1', opacity: '0.44', style: 'grid', hit: 0.48 },
-    { slug: 'solar-flare', name: 'Solar Flare', line: 'A hard burst with nowhere to hide.', toneA: '#e08b3a', toneB: '#ffd9a0', angle: '135deg', y: '10%', brightness: '1.08', opacity: '0.38', style: 'flare', hit: 0.56 },
-    { slug: 'prism-split', name: 'Prism Split', line: 'A fan of colours striking the surface.', toneA: '#b06fd8', toneB: '#ffe3c0', angle: '45deg', y: '12%', brightness: '1.08', opacity: '0.4', style: 'prism', hit: 0.5 },
-    { slug: 'cascade', name: 'Cascade', line: 'A pendant of light emptying onto the object.', toneA: '#5a90c9', toneB: '#d8f4ff', angle: '90deg', y: '14%', brightness: '1.1', opacity: '0.42', style: 'cascade', hit: 0.44 },
-    { slug: 'halo-shaft', name: 'Halo Shaft', line: 'Rings of light breaking on the top edge.', toneA: '#b89a5c', toneB: '#cfe0ff', angle: '135deg', y: '12%', brightness: '1.09', opacity: '0.44', style: 'rings', hit: 0.6 },
-    { slug: 'meteor-stream', name: 'Meteor Stream', line: 'A shower of light with a wide impact.', toneA: '#5d75b8', toneB: '#ffe8c2', angle: '135deg', y: '14%', brightness: '1.1', opacity: '0.44', style: 'streaks', hit: 0.55 },
-    { slug: 'sanctuary', name: 'Sanctuary', line: 'Two soft sources meeting on the object.', toneA: '#3b8f87', toneB: '#bdeee6', angle: '90deg', y: '12%', brightness: '1.1', opacity: '0.46', style: 'twin', hit: 0.5 },
-    { slug: 'pulse', name: 'Pulse', line: 'A steady beam with a measured heartbeat.', toneA: '#7b5ec9', toneB: '#8fd8ff', angle: '90deg', y: '12%', brightness: '1.1', opacity: '0.44', style: 'pulse', hit: 0.5 },
-    { slug: 'starfall', name: 'Starfall', line: 'A soft beam carrying a sky of sparks.', toneA: '#6b78c9', toneB: '#dbe9ff', angle: '45deg', y: '14%', brightness: '1.08', opacity: '0.42', style: 'stars', hit: 0.48 },
-    { slug: 'emberlight', name: 'Emberlight', line: 'A smoky warm cast with embers in the beam.', toneA: '#c96632', toneB: '#ffc98c', angle: '135deg', y: '12%', brightness: '1.12', opacity: '0.5', style: 'embers', hit: 0.55 },
+    { slug: 'cathedral', name: 'Cathedral', line: 'A warm shaft for a quiet room.', toneA: '#c9a45e', toneB: '#f0ddb8', angle: '45deg', y: '14%', brightness: '1.04', opacity: '0.22', style: 'soft', hit: 0.42 , castOrigin: [-0.72, 0.82] },
+    { slug: 'searchlight', name: 'Searchlight', line: 'A moving spot, finding the object.', toneA: '#7fa8c9', toneB: '#bcd9ee', angle: '135deg', y: '16%', brightness: '1.03', opacity: '0.18', style: 'sweep', hit: 0.5 , castOrigin: [0.72, 0.84] },
+    { slug: 'aurora-fall', name: 'Aurora Fall', line: 'A curtain of colour ending on the glass.', toneA: '#2fb89d', toneB: '#8c6bf0', angle: '90deg', y: '10%', brightness: '1.03', opacity: '0.20', style: 'curtain', hit: 0.52 , castOrigin: [0.0, 0.95] },
+    { slug: 'golden-hour', name: 'Golden Hour', line: 'A low sun raking across the object.', toneA: '#d18a3d', toneB: '#ffdf9e', angle: '0deg', y: '12%', brightness: '1.05', opacity: '0.22', style: 'grazing', hit: 0.22 , castOrigin: [-0.85, 0.02] },
+    { slug: 'moonbeam', name: 'Moonbeam', line: 'A soft cool wash from above.', toneA: '#6f8fc9', toneB: '#d3e7ff', angle: '135deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'soft', hit: 0.58 , castOrigin: [0.72, 0.88] },
+    { slug: 'datafall', name: 'Datafall', line: 'A grid of signals landing on the screen.', toneA: '#2fb7b0', toneB: '#b8fff2', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.20', style: 'grid', hit: 0.48 , castOrigin: [-0.62, 0.92] },
+    { slug: 'solar-flare', name: 'Solar Flare', line: 'A hard burst with nowhere to hide.', toneA: '#e08b3a', toneB: '#ffd9a0', angle: '135deg', y: '10%', brightness: '1.04', opacity: '0.18', style: 'flare', hit: 0.56 , castOrigin: [0.6, 0.82] },
+    { slug: 'prism-split', name: 'Prism Split', line: 'A fan of colours striking the surface.', toneA: '#b06fd8', toneB: '#ffe3c0', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'prism', hit: 0.5 , castOrigin: [-0.72, 0.86] },
+    { slug: 'cascade', name: 'Cascade', line: 'A pendant of light emptying onto the object.', toneA: '#5a90c9', toneB: '#d8f4ff', angle: '90deg', y: '14%', brightness: '1.03', opacity: '0.20', style: 'cascade', hit: 0.44 , castOrigin: [-0.3, 0.78] },
+    { slug: 'halo-shaft', name: 'Halo Shaft', line: 'Rings of light breaking on the top edge.', toneA: '#b89a5c', toneB: '#cfe0ff', angle: '135deg', y: '12%', brightness: '1.03', opacity: '0.20', style: 'rings', hit: 0.6 , castOrigin: [0.64, 0.84] },
+    { slug: 'meteor-stream', name: 'Meteor Stream', line: 'A shower of light with a wide impact.', toneA: '#5d75b8', toneB: '#ffe8c2', angle: '135deg', y: '14%', brightness: '1.03', opacity: '0.18', style: 'streaks', hit: 0.55 , castOrigin: [0.7, 0.9] },
+    { slug: 'sanctuary', name: 'Sanctuary', line: 'Two soft sources meeting on the object.', toneA: '#3b8f87', toneB: '#bdeee6', angle: '90deg', y: '12%', brightness: '1.04', opacity: '0.22', style: 'twin', hit: 0.5 , castOrigin: [0.0, 0.9] },
+    { slug: 'pulse', name: 'Pulse', line: 'A steady beam with a measured heartbeat.', toneA: '#7b5ec9', toneB: '#8fd8ff', angle: '90deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'pulse', hit: 0.5 , castOrigin: [0.0, 0.95] },
+    { slug: 'starfall', name: 'Starfall', line: 'A soft beam carrying a sky of sparks.', toneA: '#6b78c9', toneB: '#dbe9ff', angle: '45deg', y: '14%', brightness: '1.03', opacity: '0.18', style: 'stars', hit: 0.48 , castOrigin: [-0.62, 0.9] },
+    { slug: 'emberlight', name: 'Emberlight', line: 'A smoky warm cast with embers in the beam.', toneA: '#c96632', toneB: '#ffc98c', angle: '135deg', y: '12%', brightness: '1.05', opacity: '0.22', style: 'embers', hit: 0.55 , castOrigin: [0.56, 0.86] },
   ];
 
   const compile = (gl, type, source) => {
@@ -681,6 +670,11 @@ vec3 scene(vec2 uv, float t) {
       resolution: gl.getUniformLocation(program, 'uResolution'),
       time: gl.getUniformLocation(program, 'uTime'),
       reveal: gl.getUniformLocation(program, 'uReveal'),
+      cast: gl.getUniformLocation(program, 'uCast'),
+      impact: gl.getUniformLocation(program, 'uImpact'),
+      spread: gl.getUniformLocation(program, 'uSpread'),
+      castOrigin: gl.getUniformLocation(program, 'uCastOrigin'),
+      hitFrac: gl.getUniformLocation(program, 'uHitFrac'),
       hit: gl.getUniformLocation(program, 'uHit'),
       pointer: gl.getUniformLocation(program, 'uPointer'),
     };
@@ -704,14 +698,22 @@ vec3 scene(vec2 uv, float t) {
     const draw = (now) => {
       raf = 0;
       if (!active || (document.hidden && !reduced)) return;
-      const elapsed = reduced ? delay + 2 : (now - startTime) / 1000;
-      const reveal = reduced ? 1 : Math.max(0, Math.min(1, (elapsed - delay) / 0.55));
-      const smoothReveal = reveal * reveal * (3 - 2 * reveal);
+      const elapsed = reduced ? delay + 3 : (now - startTime) / 1000;
+      const cast = reduced ? 1.6 : Math.max(0, Math.min(1.6, (elapsed - delay) / 0.7));
+      const impact = reduced ? 1 : Math.max(0, Math.min(1, (cast - 0.9) / 0.15));
+      const spread = reduced ? 1 : Math.max(0, Math.min(1, (elapsed - delay - 0.7) / 0.7));
+      const reveal = reduced || elapsed >= delay ? 1 : 0;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.useProgram(program);
       if (uniforms.resolution) gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
       if (uniforms.time) gl.uniform1f(uniforms.time, reduced ? 8 : elapsed);
-      if (uniforms.reveal) gl.uniform1f(uniforms.reveal, smoothReveal);
+      if (uniforms.reveal) gl.uniform1f(uniforms.reveal, reveal);
+      if (uniforms.cast) gl.uniform1f(uniforms.cast, cast);
+      if (uniforms.impact) gl.uniform1f(uniforms.impact, impact);
+      if (uniforms.spread) gl.uniform1f(uniforms.spread, spread);
+      const castOrigin = active?.castOrigin || [0.0, 0.9];
+      if (uniforms.castOrigin) gl.uniform2f(uniforms.castOrigin, castOrigin[0], castOrigin[1]);
+      if (uniforms.hitFrac) gl.uniform1f(uniforms.hitFrac, active?.hitFrac ?? 0.5);
       const hit = active?.hit || [0.0, -0.12, 0.34, 0.18];
       if (uniforms.hit) gl.uniform4f(uniforms.hit, hit[0], hit[1], hit[2], hit[3]);
       if (uniforms.pointer) gl.uniform2f(uniforms.pointer, 0.5, 0.5);
@@ -743,6 +745,8 @@ vec3 scene(vec2 uv, float t) {
       raf: 0,
       canvas,
       hit: options.hit || [0.0, -0.12, 0.34, 0.18],
+      hitFrac: options.hitFrac ?? 0.5,
+      castOrigin: options.castOrigin || [0.0, 0.9],
       vao,
       buffer,
       program,
@@ -790,10 +794,20 @@ vec3 scene(vec2 uv, float t) {
     const resolution = gl.getUniformLocation(program, 'uResolution');
     const time = gl.getUniformLocation(program, 'uTime');
     const reveal = gl.getUniformLocation(program, 'uReveal');
+    const cast = gl.getUniformLocation(program, 'uCast');
+    const impact = gl.getUniformLocation(program, 'uImpact');
+    const spread = gl.getUniformLocation(program, 'uSpread');
+    const castOrigin = gl.getUniformLocation(program, 'uCastOrigin');
+    const hitFrac = gl.getUniformLocation(program, 'uHitFrac');
     const hit = gl.getUniformLocation(program, 'uHit');
     if (resolution) gl.uniform2f(resolution, canvas.width, canvas.height);
     if (time) gl.uniform1f(time, 8.0);
     if (reveal) gl.uniform1f(reveal, 1.0);
+    if (cast) gl.uniform1f(cast, 1.6);
+    if (impact) gl.uniform1f(impact, 1.0);
+    if (spread) gl.uniform1f(spread, 1.0);
+    if (castOrigin) gl.uniform2f(castOrigin, 0.0, 0.9);
+    if (hitFrac) gl.uniform1f(hitFrac, 0.5);
     if (hit) gl.uniform4f(hit, 0.0, -0.12, 0.34, 0.18);
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);

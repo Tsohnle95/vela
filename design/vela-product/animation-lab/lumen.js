@@ -50,7 +50,7 @@
   const armLight = () => {
     clearTimeout(lightTimer);
     document.body.classList.remove('is-lit');
-    lightTimer = setTimeout(() => document.body.classList.add('is-lit'), 500);
+    lightTimer = setTimeout(() => document.body.classList.add('is-lit'), 1200);
   };
 
   const stopSweep = () => {
@@ -90,7 +90,7 @@
     site.innerHTML = window.velaMeet.build({ effect: variant.slug, beam: false });
     const preview = site.querySelector('.ob-preview');
     const canvas = site.querySelector('.ob-effect-canvas');
-    mount(canvas, variant.slug, { delay: 0.5, hit: rectFor(preview) });
+    mount(canvas, variant.slug, { delay: 0.5, hit: rectFor(preview), hitFrac: variant.hit, castOrigin: variant.castOrigin });
     document.title = `Vela — ${variant.name} light`;
     select.value = variant.slug;
     meta.textContent = `${String(current + 1).padStart(2, '0')} / ${String(VARIANTS.length).padStart(2, '0')}`;
