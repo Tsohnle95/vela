@@ -7,7 +7,6 @@ uniform float uTime;
 uniform float uReveal;
 uniform float uCast;
 uniform float uImpact;
-uniform float uRunoff;
 uniform vec2 uCastOrigin;
 uniform float uHitFrac;
 uniform vec2 uPointer;
@@ -99,52 +98,222 @@ float spotCone(vec2 uv, vec2 origin, vec2 target, float sourceRadius, float targ
   return body * reach;
 }
 
-float sideSpill(vec2 uv, vec2 hit, float halfWidth, float side, float t, float width, float falloff) {
-  float down = hit.y - uv.y;
-  float edgeX = uHit.x + side * (halfWidth + 0.012)
-    + 0.018 * sin(down * 6.0 - t * 1.4 + side * 2.0) * smoothstep(0.0, 0.4, down);
-  float spread = max(width, 0.02) + max(down, 0.0) * 0.12;
-  float x = (uv.x - edgeX) / spread;
-  float edge = exp(-x * x);
-  float flow = smoothstep(-0.02, 0.06, down) * exp(-max(down, 0.0) * falloff);
-  float ripple = 0.7 + 0.3 * sin(down * 28.0 - t * 2.2 + side * 1.7);
-  float breakup = 0.6 + 0.4 * fbm(vec2(x * 2.0 + side * 2.0, down * 7.0 - t * 1.2));
-  return edge * flow * ripple * breakup * uImpact * smoothstep(0.94, 1.0, uRunoff) * 1.35;
+float beadAt(vec2 uv, vec2 p, float sx, float sy) {
+  return 0.0;
 }
 
-float runoffTop(vec2 uv, vec2 hit, float halfWidth, float t) {
-  float front = uRunoff;
+float edgeFlow(vec2 uv, float edgeX, float topY, float s, float width, float falloff, float speed) {
+  float down = topY - uv.y;
+  float w = width + max(down, 0.0) * 0.12;
+  float wobble = 0.015 * sin(down * 9.0 - s * 3.0);
+  float x = (uv.x - edgeX - wobble) / w;
+  float travel = s * speed * 1.2;
+  float head = 1.0 - smoothstep(travel, travel + 0.08, down);
+  float mask = smoothstep(-0.005, 0.025, down) * head * exp(-max(down, 0.0) * falloff);
+  float drops = 0.6 + 0.4 * sin(down * 40.0 - s * speed);
+  return exp(-x * x) * mask * drops;
+}
+
+float topRibbon(vec2 uv, vec2 hit, float front, float halfWidth) {
+  return 0.0;
+}
+
+float collisionNave(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float front = min(1.0, s * 3.5);
   float dx = uv.x - hit.x;
-  float side = dx >= 0.0 ? 1.0 : -1.0;
-  float beadX = hit.x + side * front * halfWidth;
-  float bead = exp(-pow((uv.x - beadX) / 0.04, 2.0)) * exp(-abs(uv.y - hit.y) * 70.0);
-  float dist = abs(dx) / max(halfWidth, 0.01);
-  float behind = smoothstep(0.0, front, dist) * (1.0 - smoothstep(front, front + 0.025, dist));
-  float trail = behind * exp(-abs(uv.y - hit.y) * 180.0) * 0.12;
-  return (bead * 1.15 + trail) * uImpact;
+  float beadX = hit.x + sign(dx) * front * uHit.z;
+  float bead = beadAt(uv, vec2(beadX, hit.y), 0.1, 0.018);
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.06, 1.1, 2.0);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.06, 1.1, 2.0);
+  float gate = 1.0;
+  return (bead * 0.9 + topRibbon(uv, hit, front, uHit.z) + (left + right) * gate * 0.55) * uImpact;
 }
 
-float sideSheet(vec2 uv, vec2 hit, float halfWidth, float side, float t) {
+float collisionSweep(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
   float down = hit.y - uv.y;
-  float edgeX = uHit.x + side * (halfWidth + 0.012)
-    + 0.018 * sin(down * 6.0 - t * 1.4 + side * 2.0) * smoothstep(0.0, 0.4, down);
-  float width = 0.03 + max(down, 0.0) * 0.2;
-  float x = (uv.x - edgeX) / width;
-  float edge = exp(-x * x);
-  float core = exp(-x * x * 18.0) * 0.55;
-  float flow = smoothstep(-0.02, 0.06, down) * exp(-max(down, 0.0) * 1.3);
-  float ripple = 0.7 + 0.3 * sin(down * 30.0 - t * 2.2 + x * 1.8 + side);
-  float breakup = 0.55 + 0.45 * fbm(vec2(x * 1.8 + side * 2.0, down * 7.0 - t * 1.2));
-  float dropPhase = fract(down * 9.0 - t * 1.8 + side * 0.3);
-  float drops = smoothstep(0.0, 0.06, dropPhase) * (1.0 - smoothstep(0.06, 0.16, dropPhase));
-  return (edge + core + edge * drops * 0.8) * flow * ripple * breakup * uImpact * smoothstep(0.94, 1.0, uRunoff) * 1.6;
+  float local = exp(-pow((uv.x - hit.x) / (0.05 + max(down, 0.0) * 0.16), 2.0));
+  local *= smoothstep(0.0, 0.05, down) * exp(-max(down, 0.0) * 1.8);
+  float bead = beadAt(uv, hit, 0.07, 0.018);
+  return (local * (0.7 + 0.3 * sin(down * 50.0 - s * 8.0)) + bead * 0.3) * uImpact;
 }
 
-float collisionLight(vec2 uv, vec2 hit, float halfWidth, float t) {
-  float sides = sideSheet(uv, hit, halfWidth, -1.0, t) + sideSheet(uv, hit, halfWidth, 1.0, t);
-  float bead = runoffTop(uv, hit, halfWidth, t);
-  return sides * 0.9 + bead * 0.85;
+float collisionCurtain(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float down = hit.y - uv.y;
+  float mask = smoothstep(0.0, 0.08, down) * exp(-max(down, 0.0) * 1.1);
+  float ribbons = 0.55 + 0.45 * sin((uv.x - hit.x) * 16.0 + s * 3.0 + down * 4.0);
+  float left = exp(-pow((uv.x - (uHit.x - uHit.z)) / (0.07 + max(down, 0.0) * 0.16), 2.0));
+  float right = exp(-pow((uv.x - (uHit.x + uHit.z)) / (0.07 + max(down, 0.0) * 0.16), 2.0));
+  return (left + right) * mask * ribbons * uImpact * 1.2;
 }
+
+float collisionGraze(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float rightEdge = uHit.x + uHit.z;
+  float front = min(1.0, s * 3.5);
+  float beadX = hit.x + front * (rightEdge - hit.x);
+  float bead = beadAt(uv, vec2(beadX, hit.y), 0.08, 0.018);
+  float right = edgeFlow(uv, rightEdge, hit.y, s, 0.06, 1.6, 2.0);
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.03, 3.0, 1.0) * 0.2;
+  float gate = 1.0;
+  return (bead * 0.8 + right * gate * 0.6 + left * gate + topRibbon(uv, hit, front, uHit.z)) * uImpact;
+}
+
+float collisionSoft(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float down = hit.y - uv.y;
+  float soft = smoothstep(0.0, 0.5, s) * (0.35 + 0.65 * smoothstep(0.0, 0.25, down));
+  soft *= exp(-max(down, 0.0) * 0.9);
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.09, 0.8, 1.2);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.09, 0.8, 1.2);
+  return (left + right) * soft * 0.35 * uImpact;
+}
+
+float collisionData(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float front = min(1.0, s * 4.0);
+  float dx = uv.x - hit.x;
+  float beadX = hit.x + sign(dx) * front * uHit.z;
+  float packet = step(abs(fract(uv.x * 30.0) - 0.5), 0.06) * step(abs(uv.y - hit.y), 0.012);
+  packet *= step(abs(uv.x - beadX), 0.06);
+  float lane = floor(uv.x * 60.0);
+  float dash = step(0.5, fract((hit.y - uv.y) * 40.0 - s * 10.0 + hash(vec2(lane, 1.0))));
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.05, 1.8, 3.0) * dash;
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.05, 1.8, 3.0) * dash;
+  float gate = 1.0;
+  return (packet + topRibbon(uv, hit, front, uHit.z) + (left + right) * gate * 0.5) * uImpact;
+}
+
+float collisionFlare(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float front = min(1.0, s * 6.0);
+  float dx = uv.x - hit.x;
+  float beadX = hit.x + sign(dx) * front * uHit.z;
+  float bead = beadAt(uv, vec2(beadX, hit.y), 0.1, 0.015);
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.025, 3.0, 8.0);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.025, 3.0, 8.0);
+  float burst = exp(-length((uv - hit) * vec2(10.0, 35.0))) * exp(-s * 2.0);
+  float gate = 1.0;
+  return (bead * 1.2 + topRibbon(uv, hit, front, uHit.z) + (left + right) * gate * 0.5 + burst * 0.4) * uImpact;
+}
+
+vec3 collisionPrism(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float down = hit.y - uv.y;
+  float x0 = uHit.x + (0.18 - 0.5) * uHit.z * 2.0;
+  float x1 = uHit.x + (0.34 - 0.5) * uHit.z * 2.0;
+  float x2 = uHit.x + (0.50 - 0.5) * uHit.z * 2.0;
+  float x3 = uHit.x + (0.66 - 0.5) * uHit.z * 2.0;
+  float x4 = uHit.x + (0.82 - 0.5) * uHit.z * 2.0;
+  float front = min(1.0, s * 2.2);
+  vec3 c = vec3(0.0);
+  c += vec3(1.0, 0.3, 0.35) * beadAt(uv, vec2(x0 + (uHit.x - uHit.z - x0) * front, hit.y), 0.05, 0.014) * 0.5;
+  c += vec3(0.3, 1.0, 0.55) * beadAt(uv, vec2(x1, hit.y), 0.05, 0.014) * 0.5;
+  c += vec3(0.35, 0.55, 1.0) * beadAt(uv, vec2(x2, hit.y), 0.05, 0.014) * 0.5;
+  c += vec3(1.0, 0.7, 0.25) * beadAt(uv, vec2(x3, hit.y), 0.05, 0.014) * 0.5;
+  c += vec3(0.7, 0.35, 1.0) * beadAt(uv, vec2(x4 + (uHit.x + uHit.z - x4) * front, hit.y), 0.05, 0.014) * 0.5;
+  float gate = 1.0;
+  c += vec3(1.0, 0.3, 0.35) * edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.035, 2.0, 3.0) * gate * 0.35;
+  c += vec3(0.7, 0.35, 1.0) * edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.035, 2.0, 3.0) * gate * 0.35;
+  c += vec3(1.0, 0.8, 0.6) * topRibbon(uv, hit, front, uHit.z) * 0.3;
+  return c * uImpact;
+}
+
+float collisionCascade(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float down = hit.y - uv.y;
+  float sheet = exp(-pow((uv.x - hit.x) / (0.12 + max(down, 0.0) * 0.3), 2.0));
+  sheet *= smoothstep(0.0, 0.08, down) * exp(-max(down, 0.0) * 1.0);
+  float drops = 0.5 + 0.5 * sin(down * 35.0 - s * 6.0 + uv.x * 20.0);
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.07, 1.2, 4.0);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.07, 1.2, 4.0);
+  float gate = 1.0;
+  return (sheet * drops + (left + right) * gate * 0.5) * uImpact;
+}
+
+float collisionRings(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float down = hit.y - uv.y;
+  float r = length((uv - hit) * vec2(1.0, 1.1));
+  float rings = pow(max(0.0, 1.0 - abs(sin(r * 55.0 - s * 6.0))), 10.0);
+  rings *= smoothstep(0.0, 0.06, down) * exp(-max(down, 0.0) * 1.1);
+  return rings * uImpact;
+}
+
+float collisionMeteors(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float sum = 0.0;
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    float x = uHit.x + (hash(vec2(fi, 3.0)) - 0.5) * uHit.z * 1.8;
+    float phase = fract(s * 1.5 + fi * 0.2);
+    float beadX = x + sign(hit.x - x) * phase * uHit.z * 0.7;
+    sum += beadAt(uv, vec2(beadX, hit.y), 0.03, 0.012);
+  }
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.05, 1.8, 3.0);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.05, 1.8, 3.0);
+  float front = min(1.0, s * 2.4);
+  float gate = 1.0;
+  float ribbon = topRibbon(uv, hit, front, uHit.z);
+  return (sum + ribbon + (left + right) * gate * 0.6) * uImpact;
+}
+
+vec3 collisionTwin(vec2 uv, vec2 leftHit, vec2 rightHit, float t) {
+  float s = max(0.0, t - 1.2);
+  float leftEdge = uHit.x - uHit.z;
+  float rightEdge = uHit.x + uHit.z;
+  float front = min(1.0, s * 2.2);
+  float beadL = beadAt(uv, vec2(leftHit.x + (leftEdge - leftHit.x) * front, leftHit.y), 0.07, 0.016);
+  float beadR = beadAt(uv, vec2(rightHit.x + (rightEdge - rightHit.x) * front, rightHit.y), 0.07, 0.016);
+  float left = edgeFlow(uv, leftEdge, leftHit.y, s, 0.06, 1.4, 2.5);
+  float right = edgeFlow(uv, rightEdge, rightHit.y, s, 0.06, 1.4, 2.5);
+  float gate = 1.0;
+  vec3 c = vec3(0.35, 0.85, 0.78) * (beadL * 0.6 + left * gate * 0.5 + topRibbon(uv, leftHit, front, uHit.z) * 0.7)
+    + vec3(1.0, 0.78, 0.5) * (beadR * 0.6 + right * gate * 0.5 + topRibbon(uv, rightHit, front, uHit.z) * 0.7);
+  return c * uImpact;
+}
+
+float collisionPulse(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float beat = 0.5 + 0.5 * sin(t * 4.0);
+  float front = min(1.0, s * 3.0);
+  float dx = uv.x - hit.x;
+  float beadX = hit.x + sign(dx) * front * uHit.z;
+  float bead = beadAt(uv, vec2(beadX, hit.y), 0.08, 0.016);
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.06, 1.8, 4.0);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.06, 1.8, 4.0);
+  float gate = 1.0;
+  return (bead * 0.7 + topRibbon(uv, hit, front, uHit.z) + (left + right) * gate * 0.5) * beat * uImpact;
+}
+
+float collisionStars(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float front = min(1.0, s * 3.2);
+  float dx = uv.x - hit.x;
+  float beadX = hit.x + sign(dx) * front * uHit.z;
+  float bead = beadAt(uv, vec2(beadX, hit.y), 0.08, 0.016);
+  float sparkle = pow(bead, 1.5) * (0.6 + 0.4 * sin(uv.x * 80.0 + uv.y * 60.0 + s * 20.0));
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.05, 1.8, 3.0);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.05, 1.8, 3.0);
+  float gate = 1.0;
+  return ((bead + sparkle) * 0.5 + topRibbon(uv, hit, front, uHit.z) + (left + right) * gate * 0.5) * uImpact;
+}
+
+float collisionEmbers(vec2 uv, vec2 hit, float t) {
+  float s = max(0.0, t - 1.2);
+  float front = min(1.0, s * 3.0);
+  float dx = uv.x - hit.x;
+  float beadX = hit.x + sign(dx) * front * uHit.z;
+  float bead = beadAt(uv, vec2(beadX, hit.y), 0.09, 0.018);
+  float left = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.06, 1.8, 2.0);
+  float right = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.06, 1.8, 2.0);
+  float ember = 0.4 + 0.6 * sin((uv.y - hit.y) * 70.0 - s * 7.0 + uv.x * 20.0);
+  float gate = 1.0;
+  return (bead * 0.6 + topRibbon(uv, hit, front, uHit.z) + (left + right) * gate * 0.5 + ember * 0.2) * uImpact;
+}
+
 `;
 
   const VERTEX = `#version 300 es
@@ -186,9 +355,7 @@ vec3 scene(vec2 uv, float t) {
   col += warm * pow(fog, 3.0) * cone * 0.25;
   vec2 dp = vec2(across * 9.0, along * 11.0 - t * 0.5);
   col += warm * stars(dp, 2.0, t * 0.7) * cone * 0.7;
-  col += warm * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.2) * 0.5;
-  col += warm * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.2) * 0.5;
-  col += warm * collisionLight(uv, hit, uHit.z, t) * 0.55;
+  col += warm * collisionNave(uv, hit, t) * 0.65;
   return col;
 }`,
 
@@ -212,9 +379,7 @@ vec3 scene(vec2 uv, float t) {
   float gate = step(0.4, hash(vec2(floor(q), 9.0)));
   col += cool * exp(-across * across * 120.0) * dash * gate * 0.55;
   col += cool * spotCone(uv, o, trail, 0.03, 0.26, 0.3) * 0.1;
-  col += cool * sideSpill(uv, hit, uHit.z, -1.0, t, 0.04, 3.0) * 0.38;
-  col += cool * sideSpill(uv, hit, uHit.z, 1.0, t, 0.04, 3.0) * 0.38;
-  col += cool * collisionLight(uv, hit, uHit.z, t) * 0.5;
+  col += cool * collisionSweep(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -235,9 +400,7 @@ vec3 scene(vec2 uv, float t) {
   col += c * pow(fold, 4.0) * curtain * 0.2;
   float q = uv.y * 9.0 + t * 0.8;
   col += c * exp(-abs(fract(q) - 0.5) * 20.0) * curtain * 0.08;
-  col += c * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 1.8) * 0.45;
-  col += c * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 1.8) * 0.45;
-  col += c * collisionLight(uv, hit, uHit.z, t) * 0.5;
+  col += c * collisionCurtain(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -257,9 +420,7 @@ vec3 scene(vec2 uv, float t) {
   float dx = uv.x - hit.x;
   float reach = 1.0 - smoothstep(0.0, uHit.z * 2.4, max(dx, 0.0));
   col += gold * exp(-abs(uv.y - hit.y) * 40.0) * reach * 0.6;
-  col += gold * sideSpill(uv, hit, uHit.z, 1.0, t, 0.07, 1.8) * 0.5;
-  col += gold * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.4) * 0.15;
-  col += gold * collisionLight(uv, hit, uHit.z, t) * 0.55;
+  col += gold * collisionGraze(uv, hit, t) * 0.65;
   return col;
 }`,
 
@@ -281,9 +442,7 @@ vec3 scene(vec2 uv, float t) {
   vec2 dp = vec2(across * 12.0, along * 16.0 - t * 0.3);
   col += cool * stars(dp, 2.5, t * 1.4) * cone * 0.7;
   col += cool * exp(-length(uv - o) * 9.0) * 0.28;
-  col += cool * sideSpill(uv, hit, uHit.z, -1.0, t, 0.09, 1.4) * 0.4;
-  col += cool * sideSpill(uv, hit, uHit.z, 1.0, t, 0.09, 1.4) * 0.4;
-  col += cool * collisionLight(uv, hit, uHit.z, t) * 0.5;
+  col += cool * collisionSoft(uv, hit, t) * 0.55;
   return col;
 }`,
 
@@ -308,9 +467,7 @@ vec3 scene(vec2 uv, float t) {
   float dash = smoothstep(0.0, 0.06, fract(q)) * (1.0 - smoothstep(0.06, 0.18, fract(q)));
   col += cyan * exp(-across * across * 160.0) * dash * step(0.45, h) * 0.8;
   float stripes = 0.55 + 0.45 * step(0.5, fract(uv.x * 38.0 + t * 0.1));
-  col += cyan * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * stripes * 0.4;
-  col += cyan * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * stripes * 0.4;
-  col += cyan * collisionLight(uv, hit, uHit.z, t) * 0.5;
+  col += cyan * collisionData(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -336,9 +493,7 @@ vec3 scene(vec2 uv, float t) {
     vec3 tint = i == 1 ? vec3(1.0, 0.55, 0.25) : (i == 2 ? vec3(1.0, 0.8, 0.45) : vec3(0.7, 0.85, 1.0));
     col += tint * exp(-length(uv - p) * 34.0) * 0.12;
   }
-  col += hot * sideSpill(uv, hit, uHit.z, -1.0, t, 0.035, 2.6) * 0.35;
-  col += hot * sideSpill(uv, hit, uHit.z, 1.0, t, 0.035, 2.6) * 0.35;
-  col += hot * collisionLight(uv, hit, uHit.z, t) * 0.55;
+  col += hot * collisionFlare(uv, hit, t) * 0.65;
   return col;
 }`,
 
@@ -362,9 +517,7 @@ vec3 scene(vec2 uv, float t) {
   col += amber * spotCone(uv, o, h3, 0.02, 0.06, 0.1) * 0.4;
   col += violet * spotCone(uv, o, h4, 0.02, 0.06, 0.1) * 0.4;
   col += vec3(0.9, 0.95, 1.0) * spotCone(uv, o, h2, 0.01, 0.03, 0.06) * 0.45;
-  col += violet * sideSpill(uv, h4, uHit.z, 1.0, t, 0.05, 2.0) * 0.35;
-  col += red * sideSpill(uv, h0, uHit.z, -1.0, t, 0.05, 2.0) * 0.35;
-  col += vec3(1.0, 0.85, 0.7) * collisionLight(uv, h2, uHit.z, t) * 0.45;
+  col += collisionPrism(uv, h2, t) * 0.6;
   return col;
 }`,
 
@@ -388,9 +541,7 @@ vec3 scene(vec2 uv, float t) {
   col += blue * exp(-across * across * 120.0) * dash * step(0.35, h) * 0.9;
   float mist = fbm(uv * 4.0 + vec2(t * 0.1, -t * 0.08));
   col += blue * pow(mist, 3.0) * exp(-length(uv - hit) * 5.0) * 0.25;
-  col += blue * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.4;
-  col += blue * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.4;
-  col += blue * collisionLight(uv, hit, uHit.z, t) * 0.5;
+  col += blue * collisionCascade(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -409,9 +560,7 @@ vec3 scene(vec2 uv, float t) {
   col += mix(blue, gold, 0.5 + 0.5 * sin(along * 4.0 + t * 0.2)) * cone * (0.1 + rings * 0.28);
   col += gold * core * 0.35;
   float topRings = 0.6 + 0.4 * sin((uv.x - hit.x) * 50.0 - t * 2.0);
-  col += gold * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * 0.4;
-  col += gold * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * 0.4;
-  col += gold * collisionLight(uv, hit, uHit.z, t) * 0.55;
+  col += gold * collisionRings(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -433,9 +582,7 @@ vec3 scene(vec2 uv, float t) {
   float dash = smoothstep(0.0, 0.04, fract(q)) * (1.0 - smoothstep(0.04, 0.16, fract(q)));
   float laneGlow = exp(-pow(fract(across * 26.0) - 0.5, 2.0) * 90.0);
   col += mix(vec3(0.5, 0.7, 1.0), vec3(1.0, 0.92, 0.75), h) * laneGlow * dash * step(0.45, h) * 1.1;
-  col += vec3(0.6, 0.8, 1.0) * sideSpill(uv, hit, uHit.z, -1.0, t, 0.05, 2.0) * 0.42;
-  col += vec3(0.6, 0.8, 1.0) * sideSpill(uv, hit, uHit.z, 1.0, t, 0.05, 2.0) * 0.42;
-  col += vec3(0.8, 0.9, 1.0) * collisionLight(uv, hit, uHit.z, t) * 0.5;
+  col += vec3(0.8, 0.9, 1.0) * collisionMeteors(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -458,10 +605,7 @@ vec3 scene(vec2 uv, float t) {
   col += warm * coreR * 0.3;
   float fog = fbm(vec2(uv.x * 3.0 + t * 0.05, uv.y * 4.0 - t * 0.1));
   col += mix(teal, warm, 0.5) * fog * (coneL + coneR) * 0.16;
-  col += teal * sideSpill(uv, hL, uHit.z, -1.0, t, 0.05, 2.0) * 0.4;
-  col += warm * sideSpill(uv, hR, uHit.z, 1.0, t, 0.05, 2.0) * 0.4;
-  col += teal * collisionLight(uv, hL, uHit.z, t) * 0.35;
-  col += warm * collisionLight(uv, hR, uHit.z, t) * 0.35;
+  col += collisionTwin(uv, hL, hR, t) * 0.55;
   return col;
 }`,
 
@@ -481,9 +625,7 @@ vec3 scene(vec2 uv, float t) {
   col += mix(violet, cyan, 0.5 + 0.5 * sin(along * 6.0 + t * 0.5)) * core * 0.45 * beat;
   float rings = pow(max(0.0, 1.0 - abs(fract(along * 7.0 - t * 1.8) - 0.5) * 2.0), 12.0);
   col += cyan * rings * exp(-across * across * 80.0) * 0.5;
-  col += cyan * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * beat * 0.45;
-  col += cyan * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * beat * 0.45;
-  col += mix(violet, cyan, 0.5) * collisionLight(uv, hit, uHit.z, t) * 0.55;
+  col += mix(violet, cyan, 0.5) * collisionPulse(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -504,9 +646,7 @@ vec3 scene(vec2 uv, float t) {
   col += indigo * stars(dp, 2.5, t * 2.0) * cone * 1.1;
   float sparkle = pow(stars(dp * 0.8, 2.0, t * 1.4), 2.0);
   col += vec3(1.0) * sparkle * cone * 0.9;
-  col += indigo * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.42;
-  col += indigo * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.42;
-  col += indigo * collisionLight(uv, hit, uHit.z, t) * 0.5;
+  col += indigo * collisionStars(uv, hit, t) * 0.6;
   return col;
 }`,
 
@@ -530,9 +670,7 @@ vec3 scene(vec2 uv, float t) {
   float ember = (1.0 - smoothstep(0.0, 0.08, length(f))) * step(0.55, h);
   col += mix(vec3(1.0, 0.25, 0.05), vec3(1.0, 0.85, 0.45), h) * ember * (cone + 0.1) * 1.5;
   float broken = 0.65 + 0.35 * sin((uv.x - hit.x) * 45.0 + fbm(vec2(uv.x * 6.0, t * 0.3)) * 4.0);
-  col += warm * sideSpill(uv, hit, uHit.z, -1.0, t, 0.06, 2.0) * 0.42;
-  col += warm * sideSpill(uv, hit, uHit.z, 1.0, t, 0.06, 2.0) * 0.42;
-  col += warm * collisionLight(uv, hit, uHit.z, t) * 0.55;
+  col += warm * collisionEmbers(uv, hit, t) * 0.6;
   return col;
 }`,
   };
@@ -637,7 +775,6 @@ vec3 scene(vec2 uv, float t) {
       reveal: gl.getUniformLocation(program, 'uReveal'),
       cast: gl.getUniformLocation(program, 'uCast'),
       impact: gl.getUniformLocation(program, 'uImpact'),
-      runoff: gl.getUniformLocation(program, 'uRunoff'),
       castOrigin: gl.getUniformLocation(program, 'uCastOrigin'),
       hitFrac: gl.getUniformLocation(program, 'uHitFrac'),
       hit: gl.getUniformLocation(program, 'uHit'),
@@ -667,7 +804,6 @@ vec3 scene(vec2 uv, float t) {
       const elapsed = reduced ? delay + 3 : (now - startTime) / 1000;
       const cast = reduced ? 1.6 : Math.max(0, Math.min(1.6, (elapsed - delay) / 0.7));
       const impact = reduced || cast >= 1.0 ? 1 : 0;
-      const runoff = reduced ? 1 : Math.max(0, Math.min(1, (elapsed - delay - 0.7) / 0.28));
       const reveal = reduced || elapsed >= delay ? 1 : 0;
       if (!impactFired && cast >= 1.0) {
         impactFired = true;
@@ -680,7 +816,6 @@ vec3 scene(vec2 uv, float t) {
       if (uniforms.reveal) gl.uniform1f(uniforms.reveal, reveal);
       if (uniforms.cast) gl.uniform1f(uniforms.cast, cast);
       if (uniforms.impact) gl.uniform1f(uniforms.impact, impact);
-      if (uniforms.runoff) gl.uniform1f(uniforms.runoff, runoff);
       const castOrigin = active?.castOrigin || [0.0, 0.9];
       if (uniforms.castOrigin) gl.uniform2f(uniforms.castOrigin, castOrigin[0], castOrigin[1]);
       if (uniforms.hitFrac) gl.uniform1f(uniforms.hitFrac, active?.hitFrac ?? 0.5);
@@ -766,7 +901,6 @@ vec3 scene(vec2 uv, float t) {
     const reveal = gl.getUniformLocation(program, 'uReveal');
     const cast = gl.getUniformLocation(program, 'uCast');
     const impact = gl.getUniformLocation(program, 'uImpact');
-    const runoff = gl.getUniformLocation(program, 'uRunoff');
     const castOrigin = gl.getUniformLocation(program, 'uCastOrigin');
     const hitFrac = gl.getUniformLocation(program, 'uHitFrac');
     const hit = gl.getUniformLocation(program, 'uHit');
@@ -775,7 +909,6 @@ vec3 scene(vec2 uv, float t) {
     if (reveal) gl.uniform1f(reveal, 1.0);
     if (cast) gl.uniform1f(cast, 1.6);
     if (impact) gl.uniform1f(impact, 1.0);
-    if (runoff) gl.uniform1f(runoff, 1.0);
     if (castOrigin) gl.uniform2f(castOrigin, 0.0, 0.9);
     if (hitFrac) gl.uniform1f(hitFrac, 0.5);
     if (hit) gl.uniform4f(hit, 0.0, -0.12, 0.34, 0.18);

@@ -28,9 +28,14 @@ body.lumen-page .ob-footer {
   z-index: 2;
 }
 
-body.lumen-page .ob-hero-grid,
 body.lumen-page .ob-hero:after {
   display: none;
+}
+
+body.lumen-page .ob-hero-grid {
+  display: block;
+  z-index: 1;
+  opacity: 0.9;
 }
 
 body.lumen-page .ob-title,
@@ -53,8 +58,9 @@ body.lumen-page .ob-pricing .ob-price {
 
 /* The screenshot starts as a dark object, then the beam finds it. */
 body.lumen-page .ob-preview {
+  border-color: #ffffff08;
   box-shadow:
-    inset 0 1px #ffffff1a,
+    inset 0 1px #ffffff0a,
     0 50px 140px -40px #000000e6,
     0 0 0 0 transparent;
   transition: box-shadow 1.3s ease;

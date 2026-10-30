@@ -1,0 +1,5 @@
+body.nebula-page .ob-hero-grid {
+  display: block;
+  z-index: 1;
+  opacity: 0.9;
+}
