@@ -17,6 +17,7 @@
   let clean = params.get('clean') === '1';
   let lightTimer = 0;
   let sweepRaf = 0;
+  let hasRendered = false;
 
   const rectFor = (preview) => {
     const rect = preview.getBoundingClientRect();
@@ -95,7 +96,9 @@
     site.innerHTML = window.velaMeet.build({ effect: variant.slug, beam: false });
     const preview = site.querySelector('.ob-preview');
     const canvas = site.querySelector('.ob-effect-canvas');
-    mount(canvas, variant.slug, { delay: 0.5, hit: rectFor(preview), hitFrac: variant.hit, castOrigin: variant.castOrigin, onImpact: lightNow });
+    const startAt = hasRendered ? performance.now() : 0;
+    hasRendered = true;
+    mount(canvas, variant.slug, { delay: 0.5, startAt, hit: rectFor(preview), hitFrac: variant.hit, castOrigin: variant.castOrigin, onImpact: lightNow });
     document.title = `Vela — ${variant.name} light`;
     select.value = variant.slug;
     meta.textContent = `${String(current + 1).padStart(2, '0')} / ${String(VARIANTS.length).padStart(2, '0')}`;
