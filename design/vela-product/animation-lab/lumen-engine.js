@@ -126,7 +126,8 @@ float edgeFlow(vec2 uv, float edgeX, float topY, float s, float width, float fal
   float head = 1.0 - smoothstep(travel, travel + 0.08, down);
   float mask = smoothstep(-0.005, 0.025, down) * head * exp(-max(down, 0.0) * falloff);
   float drops = 0.6 + 0.4 * sin(down * 40.0 - s * speed);
-  return exp(-x * x) * mask * drops;
+  float core = exp(-pow(x * 3.5, 2.0)) * 1.15;
+  return (exp(-x * x) * 0.55 + core) * mask * drops;
 }
 
 float topRibbon(vec2 uv, vec2 hit, float front, float halfWidth) {
@@ -232,8 +233,11 @@ vec3 collisionPrism(vec2 uv, vec2 hit, float t) {
   c += vec3(1.0, 0.7, 0.25) * beadAt(uv, vec2(x3, hit.y), 0.05, 0.014) * 0.5;
   c += vec3(0.7, 0.35, 1.0) * beadAt(uv, vec2(x4 + (uHit.x + uHit.z - x4) * front, hit.y), 0.05, 0.014) * 0.5;
   float gate = smoothstep(0.75, 1.0, front);
-  c += vec3(1.0, 0.3, 0.35) * edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.035, 2.0, 3.0) * gate * 0.35;
-  c += vec3(0.7, 0.35, 1.0) * edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.035, 2.0, 3.0) * gate * 0.35;
+  float streamL = edgeFlow(uv, uHit.x - uHit.z, hit.y, s, 0.045, 1.0, 3.0) * gate;
+  float streamR = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.045, 1.0, 3.0) * gate;
+  c += vec3(1.0, 0.3, 0.35) * streamL * 0.85;
+  c += vec3(0.7, 0.35, 1.0) * streamR * 0.85;
+  c += vec3(1.0, 0.9, 0.8) * (streamL + streamR) * 0.3;
   c += vec3(1.0, 0.8, 0.6) * topRibbon(uv, hit, front, uHit.z) * 0.3;
   return c * uImpact;
 }
