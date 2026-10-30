@@ -98,7 +98,7 @@
     const canvas = site.querySelector('.ob-effect-canvas');
     const startAt = hasRendered ? performance.now() : 0;
     hasRendered = true;
-    mount(canvas, variant.slug, { delay: 0.5, startAt, hit: rectFor(preview), hitFrac: variant.hit, castOrigin: variant.castOrigin, onImpact: lightNow });
+    mount(canvas, variant.slug, { delay: 0.5, startAt, hit: rectFor(preview), hitFrac: variant.hit, castOrigin: variant.castOrigin, runoffSide: variant.runoffSide || 0, onImpact: lightNow });
     document.title = `Vela — ${variant.name} light`;
     select.value = variant.slug;
     meta.textContent = `${String(current + 1).padStart(2, '0')} / ${String(VARIANTS.length).padStart(2, '0')}`;
