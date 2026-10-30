@@ -348,6 +348,14 @@ vec3 scene(vec2 uv, float t);
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
   vec3 col = scene(uv, uTime);
+  float filmTime = max(0.0, uTime - 1.2);
+  vec2 filmHit = hitPoint(uHitFrac);
+  float filmFront = min(1.0, filmTime * 3.0);
+  float filmD = abs(uv.x - filmHit.x) / max(uHit.z, 0.01);
+  float film = 1.0 - smoothstep(filmFront, filmFront + 0.02, filmD);
+  film *= exp(-abs(uv.y - filmHit.y) * 220.0);
+  film *= 0.65 + 0.35 * sin((uv.x - filmHit.x) * 34.0 - filmTime * 6.0);
+  col += vec3(1.0, 0.92, 0.8) * film * uImpact * 0.6;
   col *= 1.0 - smoothstep(0.62, 1.25, length(uv * vec2(0.55, 1.0)));
   col *= uReveal;
   outColor = vec4(col, 1.0);
