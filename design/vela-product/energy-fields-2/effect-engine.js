@@ -141,22 +141,6 @@ void main() {
 }`,
 
     nebulaStorm: `
-float boltPath(vec2 p, float seed) {
-  float x = (hash(vec2(seed, 3.1)) - 0.5) * 0.9;
-  x += 0.10 * sin(p.y * 6.0 + seed * 2.3);
-  x += 0.035 * sin(p.y * 31.0 - seed * 1.7);
-  x += (noise(vec2(p.y * 4.0 + seed * 8.0, seed * 2.0)) - 0.5) * 0.16;
-  return abs(p.x - x);
-}
-
-float strike(float t, float seed) {
-  float period = 4.0 + hash(vec2(seed, 7.0)) * 3.5;
-  float local = mod(t + seed * 2.3, period);
-  float on = smoothstep(0.0, 0.04, local) * (1.0 - smoothstep(0.12, 0.62, local));
-  on *= 0.7 + 0.3 * sin(local * 70.0 + seed * 5.0);
-  return max(on, 0.0);
-}
-
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
   float t = uTime * 0.12;
@@ -169,27 +153,6 @@ void main() {
   col += vec3(0.12, 0.68, 0.78) * smoothstep(0.55, 0.95, n1 * n2) * 0.85;
   col += vec3(0.9, 0.8, 1.0) * core * 0.7;
   col += vec3(0.7, 0.85, 1.0) * stars(uv * 1.5 + vec2(0.0, t * 0.01), 18.0, uTime) * 0.9;
-
-  float seed = floor(uTime / 7.0);
-  float f1 = strike(uTime, seed);
-  float f2 = strike(uTime + 2.7, seed + 3.0) * 0.55;
-  vec2 q1 = uv - vec2(-0.12, 0.06);
-  float mask1 = smoothstep(1.15, 0.25, length(q1 * vec2(0.75, 1.15)));
-  float d1 = boltPath(q1 * vec2(2.4, 1.0), seed);
-  float b1 = (exp(-d1 * 160.0) + exp(-d1 * 24.0) * 0.24) * f1 * mask1;
-  vec2 q2 = uv - vec2(0.3, -0.02);
-  float mask2 = smoothstep(0.8, 0.15, length(q2 * vec2(1.0, 1.4)));
-  float d2 = boltPath(q2 * vec2(3.0, 1.0), seed + 5.0);
-  float b2 = (exp(-d2 * 170.0) + exp(-d2 * 40.0) * 0.22) * f2 * mask2;
-  float db = boltPath(vec2(q1.x * 3.4 + 0.22 - q1.y * 0.5, q1.y), seed + 9.0);
-  float b3 = (exp(-db * 210.0) + exp(-db * 44.0) * 0.16) * f1 * mask1 * smoothstep(0.35, -0.15, q1.y) * 0.55;
-  col += vec3(0.82, 0.86, 1.0) * b1 * 1.45;
-  col += vec3(0.9, 0.84, 1.0) * b3;
-  col += vec3(0.95, 0.8, 1.0) * b2 * 0.7;
-
-  float sheet = (f1 + f2) * (0.55 + 0.45 * n1);
-  col += vec3(0.4, 0.35, 0.85) * sheet * exp(-length(q1 * vec2(0.55, 1.0)) * 1.7) * 0.55;
-  col += vec3(0.7, 0.3, 0.55) * sheet * exp(-length(q2 * vec2(0.7, 1.0)) * 2.0) * 0.4;
   col *= 1.0 - smoothstep(0.6, 1.3, length(uv * vec2(0.55, 1.0)));
   outColor = vec4(col, 1.0);
 }`,
