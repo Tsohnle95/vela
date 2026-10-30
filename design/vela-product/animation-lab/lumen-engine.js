@@ -125,10 +125,12 @@ float edgeFlow(vec2 uv, float edgeX, float topY, float s, float width, float fal
   float x = (uv.x - edgeX - wobble) / w;
   float travel = max(0.0, s - 0.3) * speed * 1.2;
   float head = 1.0 - smoothstep(travel, travel + 0.08, down);
-  float mask = smoothstep(-0.005, 0.025, down) * head * exp(-max(down, 0.0) * falloff);
-  float drops = 0.6 + 0.4 * sin(down * 40.0 - s * speed);
+  float surfaceBottom = uHit.y - uHit.w;
+  float surfaceClip = smoothstep(surfaceBottom - 0.008, surfaceBottom + 0.018, uv.y);
+  float mask = smoothstep(-0.005, 0.025, down) * head * exp(-max(down, 0.0) * falloff) * surfaceClip;
+  float streak = 0.72 + 0.55 * noise(vec2(down * 32.0, s * 2.2));
   float core = exp(-pow(x * 3.5, 2.0)) * 1.15;
-  return (exp(-x * x) * 0.55 + core) * mask * drops;
+  return (exp(-x * x) * 0.55 + core) * mask * streak;
 }
 
 float topRibbon(vec2 uv, vec2 hit, float front, float halfWidth) {
@@ -243,7 +245,7 @@ vec3 collisionPrism(vec2 uv, vec2 hit, float t) {
   float streamFront = max(0.0, s - 0.45) * 0.9;
   float lineDown = hit.y - uv.y;
   float lineMask = (1.0 - smoothstep(streamFront, streamFront + 0.06, lineDown)) * smoothstep(0.0, 0.025, lineDown);
-  c += vec3(1.0) * exp(-pow((uv.x - edgeX) / 0.003, 2.0)) * lineMask * 1.5;
+  c += vec3(1.0) * exp(-pow((uv.x - edgeX) / 0.003, 2.0)) * lineMask * 0.75;
   vec2 cornerC = vec2(uHit.x + uHit.z - cornerR, hit.y - cornerR);
   vec2 q = uv - cornerC;
   float arc = exp(-abs(length(q) - cornerR) * 220.0);
