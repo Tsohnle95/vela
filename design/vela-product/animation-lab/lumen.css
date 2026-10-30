@@ -72,7 +72,7 @@ body.lumen-page .ob-preview img {
 }
 
 body.lumen-page.is-lit .ob-preview img {
-  filter: brightness(1) saturate(1) contrast(1);
+  filter: brightness(1.12) saturate(1.04) contrast(1.01);
 }
 
 .lumen-meta {
