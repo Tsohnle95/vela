@@ -242,10 +242,6 @@ vec3 collisionPrism(vec2 uv, vec2 hit, float t) {
   vec3 streamTint = mix(vec3(1.0, 0.3, 0.35), vec3(0.7, 0.35, 1.0), smoothstep(0.0, 0.35, down));
   c += streamTint * streamR * 1.1;
   c += vec3(1.0, 0.97, 0.92) * streamR * 1.0;
-  float streamFront = max(0.0, s - 0.45) * 0.9;
-  float lineDown = hit.y - uv.y;
-  float lineMask = (1.0 - smoothstep(streamFront, streamFront + 0.06, lineDown)) * smoothstep(0.0, 0.025, lineDown);
-  c += vec3(1.0) * exp(-pow((uv.x - edgeX) / 0.003, 2.0)) * lineMask * 0.75;
   vec2 cornerC = vec2(uHit.x + uHit.z - cornerR, hit.y - cornerR);
   vec2 q = uv - cornerC;
   float arc = exp(-abs(length(q) - cornerR) * 220.0);
@@ -572,6 +568,7 @@ vec3 scene(vec2 uv, float t) {
   col += collisionPrism(uv, h2, t) * 0.6;
   float reveal = max(max(descentMask(uv, o, h0, uCast), descentMask(uv, o, h2, uCast)), descentMask(uv, o, h4, uCast));
   col *= reveal;
+  col *= smoothstep(-0.5, -0.25, uv.x);
   return col;
 }`,
 
