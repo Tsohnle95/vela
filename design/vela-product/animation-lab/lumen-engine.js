@@ -235,15 +235,21 @@ vec3 collisionPrism(vec2 uv, vec2 hit, float t) {
   c += vec3(0.7, 0.35, 1.0) * beadAt(uv, vec2(x4 + (uHit.x + uHit.z - x4) * front, hit.y), 0.05, 0.014) * 0.5;
   float gate = smoothstep(0.75, 1.0, front);
   float cornerR = 0.022;
-  float streamR = edgeFlow(uv, uHit.x + uHit.z, hit.y - cornerR, s, 0.01, 1.0, 3.0) * gate;
-  c += vec3(1.0, 0.35, 0.75) * streamR * 0.9;
-  c += vec3(1.0, 0.95, 0.9) * streamR * 0.8;
+  float edgeX = uHit.x + uHit.z + 0.006;
+  float streamR = edgeFlow(uv, edgeX, hit.y - cornerR, s, 0.007, 0.8, 3.0) * gate;
+  vec3 streamTint = mix(vec3(1.0, 0.3, 0.35), vec3(0.7, 0.35, 1.0), smoothstep(0.0, 0.35, down));
+  c += streamTint * streamR * 1.1;
+  c += vec3(1.0, 0.97, 0.92) * streamR * 1.0;
+  float streamFront = max(0.0, s - 0.45) * 0.9;
+  float lineDown = hit.y - uv.y;
+  float lineMask = (1.0 - smoothstep(streamFront, streamFront + 0.06, lineDown)) * smoothstep(0.0, 0.025, lineDown);
+  c += vec3(1.0) * exp(-pow((uv.x - edgeX) / 0.003, 2.0)) * lineMask * 1.5;
   vec2 cornerC = vec2(uHit.x + uHit.z - cornerR, hit.y - cornerR);
   vec2 q = uv - cornerC;
   float arc = exp(-abs(length(q) - cornerR) * 220.0);
   arc *= smoothstep(-0.004, 0.012, q.x) * smoothstep(-0.004, 0.012, q.y);
   c += vec3(1.0, 0.85, 0.95) * arc * 1.1;
-  float cornerBead = beadAt(uv, vec2(uHit.x + uHit.z, hit.y - cornerR), 0.035, 0.014);
+  float cornerBead = beadAt(uv, vec2(edgeX, hit.y - cornerR), 0.035, 0.014);
   c += vec3(1.0, 0.85, 0.95) * cornerBead * 0.6;
   c += vec3(1.0, 0.8, 0.6) * topRibbon(uv, hit, front, uHit.z) * 0.3;
   return c * uImpact;
@@ -543,12 +549,12 @@ vec3 scene(vec2 uv, float t) {
 
     'prism-split': `
 vec3 scene(vec2 uv, float t) {
-  vec2 o = beamOrigin(-0.05, 0.8);
-  vec2 h0 = hitPoint(0.48);
-  vec2 h1 = hitPoint(0.58);
-  vec2 h2 = hitPoint(0.68);
-  vec2 h3 = hitPoint(0.78);
-  vec2 h4 = hitPoint(0.88);
+  vec2 o = beamOrigin(-0.72, 0.86);
+  vec2 h0 = hitPoint(0.18);
+  vec2 h1 = hitPoint(0.34);
+  vec2 h2 = hitPoint(0.50);
+  vec2 h3 = hitPoint(0.66);
+  vec2 h4 = hitPoint(0.82);
   vec3 red = vec3(1.0, 0.3, 0.35);
   vec3 green = vec3(0.3, 1.0, 0.55);
   vec3 blue = vec3(0.35, 0.55, 1.0);
@@ -562,7 +568,6 @@ vec3 scene(vec2 uv, float t) {
   col += violet * spotCone(uv, o, h4, 0.02, 0.06, 0.1) * 0.4;
   col += vec3(0.9, 0.95, 1.0) * spotCone(uv, o, h2, 0.01, 0.03, 0.06) * 0.45;
   col += collisionPrism(uv, h2, t) * 0.6;
-  col *= smoothstep(-0.5, -0.25, uv.x);
   float reveal = max(max(descentMask(uv, o, h0, uCast), descentMask(uv, o, h2, uCast)), descentMask(uv, o, h4, uCast));
   col *= reveal;
   return col;
@@ -737,7 +742,7 @@ vec3 scene(vec2 uv, float t) {
     { slug: 'moonbeam', name: 'Moonbeam', line: 'A soft cool wash from above.', toneA: '#6f8fc9', toneB: '#d3e7ff', angle: '135deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'soft', hit: 0.58 , castOrigin: [0.72, 0.88] },
     { slug: 'datafall', name: 'Datafall', line: 'A grid of signals landing on the screen.', toneA: '#2fb7b0', toneB: '#b8fff2', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.20', style: 'grid', hit: 0.48 , castOrigin: [-0.62, 0.92] },
     { slug: 'solar-flare', name: 'Solar Flare', line: 'A hard burst with nowhere to hide.', toneA: '#e08b3a', toneB: '#ffd9a0', angle: '135deg', y: '10%', brightness: '1.04', opacity: '0.18', style: 'flare', hit: 0.56 , castOrigin: [0.6, 0.82] },
-    { slug: 'prism-split', name: 'Prism Split', line: 'A fan of colours striking the surface.', toneA: '#b06fd8', toneB: '#ffe3c0', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'prism', hit: 0.72 , runoffSide: 1, castOrigin: [-0.05, 0.8] },
+    { slug: 'prism-split', name: 'Prism Split', line: 'A fan of colours striking the surface.', toneA: '#b06fd8', toneB: '#ffe3c0', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'prism', hit: 0.5 , runoffSide: 1, castOrigin: [-0.72, 0.86] },
     { slug: 'cascade', name: 'Cascade', line: 'A pendant of light emptying onto the object.', toneA: '#5a90c9', toneB: '#d8f4ff', angle: '90deg', y: '14%', brightness: '1.03', opacity: '0.20', style: 'cascade', hit: 0.44 , castOrigin: [-0.3, 0.78] },
     { slug: 'halo-shaft', name: 'Halo Shaft', line: 'Rings of light breaking on the top edge.', toneA: '#b89a5c', toneB: '#cfe0ff', angle: '135deg', y: '12%', brightness: '1.03', opacity: '0.20', style: 'rings', hit: 0.6 , castOrigin: [0.64, 0.84] },
     { slug: 'meteor-stream', name: 'Meteor Stream', line: 'A shower of light with a wide impact.', toneA: '#5d75b8', toneB: '#ffe8c2', angle: '135deg', y: '14%', brightness: '1.03', opacity: '0.18', style: 'streaks', hit: 0.55 , castOrigin: [0.7, 0.9] },
