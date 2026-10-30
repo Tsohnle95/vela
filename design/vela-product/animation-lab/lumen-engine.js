@@ -221,11 +221,11 @@ float collisionFlare(vec2 uv, vec2 hit, float t) {
 vec3 collisionPrism(vec2 uv, vec2 hit, float t) {
   float s = max(0.0, t - 1.2);
   float down = hit.y - uv.y;
-  float x0 = uHit.x + (0.18 - 0.5) * uHit.z * 2.0;
-  float x1 = uHit.x + (0.34 - 0.5) * uHit.z * 2.0;
-  float x2 = uHit.x + (0.50 - 0.5) * uHit.z * 2.0;
-  float x3 = uHit.x + (0.66 - 0.5) * uHit.z * 2.0;
-  float x4 = uHit.x + (0.82 - 0.5) * uHit.z * 2.0;
+  float x0 = uHit.x + (0.48 - 0.5) * uHit.z * 2.0;
+  float x1 = uHit.x + (0.58 - 0.5) * uHit.z * 2.0;
+  float x2 = uHit.x + (0.68 - 0.5) * uHit.z * 2.0;
+  float x3 = uHit.x + (0.78 - 0.5) * uHit.z * 2.0;
+  float x4 = uHit.x + (0.88 - 0.5) * uHit.z * 2.0;
   float front = min(1.0, s * 2.2);
   vec3 c = vec3(0.0);
   c += vec3(1.0, 0.3, 0.35) * beadAt(uv, vec2(x0 + (uHit.x - uHit.z - x0) * front, hit.y), 0.05, 0.014) * 0.5;
@@ -234,9 +234,11 @@ vec3 collisionPrism(vec2 uv, vec2 hit, float t) {
   c += vec3(1.0, 0.7, 0.25) * beadAt(uv, vec2(x3, hit.y), 0.05, 0.014) * 0.5;
   c += vec3(0.7, 0.35, 1.0) * beadAt(uv, vec2(x4 + (uHit.x + uHit.z - x4) * front, hit.y), 0.05, 0.014) * 0.5;
   float gate = smoothstep(0.75, 1.0, front);
-  float streamR = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.045, 1.0, 3.0) * gate;
+  float streamR = edgeFlow(uv, uHit.x + uHit.z, hit.y, s, 0.01, 1.0, 3.0) * gate;
+  float corner = beadAt(uv, vec2(uHit.x + uHit.z, hit.y), 0.04, 0.018);
   c += vec3(1.0, 0.35, 0.75) * streamR * 1.0;
   c += vec3(1.0, 0.9, 0.8) * streamR * 0.35;
+  c += vec3(1.0, 0.85, 0.95) * corner * 0.5;
   c += vec3(1.0, 0.8, 0.6) * topRibbon(uv, hit, front, uHit.z) * 0.3;
   return c * uImpact;
 }
@@ -356,6 +358,7 @@ void main() {
   if (uRunoffSide > 0.5) filmSide = step(0.0, uv.x - filmHit.x);
   if (uRunoffSide < -0.5) filmSide = step(uv.x - filmHit.x, 0.0);
   film *= filmSide;
+  film *= step(uv.x, uHit.x + uHit.z + 0.002);
   film *= exp(-abs(uv.y - filmHit.y) * 220.0);
   film *= 0.65 + 0.35 * sin((uv.x - filmHit.x) * 34.0 - filmTime * 6.0);
   col += vec3(1.0, 0.92, 0.8) * film * uImpact * 0.6;
@@ -726,7 +729,7 @@ vec3 scene(vec2 uv, float t) {
     { slug: 'moonbeam', name: 'Moonbeam', line: 'A soft cool wash from above.', toneA: '#6f8fc9', toneB: '#d3e7ff', angle: '135deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'soft', hit: 0.58 , castOrigin: [0.72, 0.88] },
     { slug: 'datafall', name: 'Datafall', line: 'A grid of signals landing on the screen.', toneA: '#2fb7b0', toneB: '#b8fff2', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.20', style: 'grid', hit: 0.48 , castOrigin: [-0.62, 0.92] },
     { slug: 'solar-flare', name: 'Solar Flare', line: 'A hard burst with nowhere to hide.', toneA: '#e08b3a', toneB: '#ffd9a0', angle: '135deg', y: '10%', brightness: '1.04', opacity: '0.18', style: 'flare', hit: 0.56 , castOrigin: [0.6, 0.82] },
-    { slug: 'prism-split', name: 'Prism Split', line: 'A fan of colours striking the surface.', toneA: '#b06fd8', toneB: '#ffe3c0', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'prism', hit: 0.68 , runoffSide: 1, castOrigin: [-0.72, 0.86] },
+    { slug: 'prism-split', name: 'Prism Split', line: 'A fan of colours striking the surface.', toneA: '#b06fd8', toneB: '#ffe3c0', angle: '45deg', y: '12%', brightness: '1.03', opacity: '0.18', style: 'prism', hit: 0.72 , runoffSide: 1, castOrigin: [-0.72, 0.86] },
     { slug: 'cascade', name: 'Cascade', line: 'A pendant of light emptying onto the object.', toneA: '#5a90c9', toneB: '#d8f4ff', angle: '90deg', y: '14%', brightness: '1.03', opacity: '0.20', style: 'cascade', hit: 0.44 , castOrigin: [-0.3, 0.78] },
     { slug: 'halo-shaft', name: 'Halo Shaft', line: 'Rings of light breaking on the top edge.', toneA: '#b89a5c', toneB: '#cfe0ff', angle: '135deg', y: '12%', brightness: '1.03', opacity: '0.20', style: 'rings', hit: 0.6 , castOrigin: [0.64, 0.84] },
     { slug: 'meteor-stream', name: 'Meteor Stream', line: 'A shower of light with a wide impact.', toneA: '#5d75b8', toneB: '#ffe8c2', angle: '135deg', y: '14%', brightness: '1.03', opacity: '0.18', style: 'streaks', hit: 0.55 , castOrigin: [0.7, 0.9] },
