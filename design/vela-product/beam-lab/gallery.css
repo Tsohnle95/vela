@@ -1,0 +1,497 @@
+@font-face {
+  font-family: Geist;
+  src: url(../assets/geist.woff2) format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --ink: #06080b;
+  --panel: #0b0e13;
+  --text: #f4f6f8;
+  --muted: #929ca6;
+  --line: #ffffff16;
+  --mint: #9fe8d3;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1000px 520px at 12% -8%, #13332c 0%, transparent 58%),
+    radial-gradient(900px 460px at 94% 0%, #211438 0%, transparent 54%),
+    var(--ink);
+  color: var(--text);
+  font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.leaf-shell {
+  width: min(1280px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.leaf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 25px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.leaf-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.leaf-brand img {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+}
+
+.leaf-brand b {
+  color: var(--mint);
+  font-weight: 500;
+}
+
+.leaf-header nav {
+  display: flex;
+  gap: 22px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.leaf-header nav a:hover {
+  color: var(--text);
+}
+
+.leaf-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 48px;
+  align-items: end;
+  padding: clamp(54px, 8vw, 102px) 0 58px;
+}
+
+.leaf-kicker {
+  margin: 0 0 20px;
+  color: var(--mint);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.leaf-hero h1 {
+  max-width: 920px;
+  margin: 0;
+  font-size: clamp(50px, 8vw, 108px);
+  font-weight: 450;
+  letter-spacing: -0.07em;
+  line-height: 0.91;
+  text-wrap: balance;
+}
+
+.leaf-hero h1 em {
+  color: var(--mint);
+  font-style: normal;
+}
+
+.leaf-intro {
+  max-width: 600px;
+  margin: 24px 0 0;
+  color: #b3bcc5;
+  font-size: clamp(13px, 1.2vw, 16px);
+  line-height: 1.65;
+}
+
+.leaf-stats {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+
+.leaf-stat {
+  min-width: 96px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #0a0d11b8;
+}
+
+.leaf-stat b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.leaf-stat span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.leaf-section {
+  padding: 28px 0 70px;
+  border-top: 1px solid var(--line);
+}
+
+.leaf-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 24px;
+}
+
+.leaf-section-head h2 {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 450;
+  letter-spacing: -0.045em;
+}
+
+.leaf-section-head p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.leaf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.leaf-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #10151b 0%, #0a0d11 100%);
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.leaf-card:hover {
+  border-color: #ffffff36;
+  box-shadow: 0 26px 52px -30px #000;
+  transform: translateY(-2px);
+}
+
+.beam-mini {
+  position: relative;
+  flex: 0 0 auto;
+  height: 245px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, #b3f6d60a 1px, transparent 1px),
+    linear-gradient(#b3f6d60a 1px, transparent 1px),
+    radial-gradient(ellipse at 30% 20%, #163c32 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, #281740 0%, transparent 55%),
+    #05070a;
+  background-size: 32px 32px, 32px 32px, auto, auto, auto;
+}
+
+.beam-mini::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, #05070ac9 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.beam-mini-surface {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  border: 1px solid #ffffff2b;
+  border-radius: 4px;
+  background: #080b0f;
+  box-shadow: 0 14px 26px -16px #000;
+}
+
+.beam-mini-surface img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.beam-mini-beam {
+  position: absolute;
+  top: -8%;
+  left: 50%;
+  z-index: 1;
+  width: 2px;
+  height: 74%;
+  background: linear-gradient(180deg, transparent, var(--tone-a, #a46cf5));
+  filter: blur(1px);
+  transform: translateX(-50%) rotate(var(--beam-angle, 0deg));
+  transform-origin: top center;
+  opacity: 0.8;
+}
+
+.beam-mini[data-layout="center"] .beam-mini-surface {
+  right: 16%;
+  bottom: 10%;
+  left: 16%;
+  height: 47%;
+}
+
+.beam-mini[data-layout="right-tower"] .beam-mini-surface {
+  top: 14%;
+  right: 8%;
+  width: 33%;
+  height: 70%;
+}
+
+.beam-mini[data-layout="right-tower"] .beam-mini-beam {
+  left: 45%;
+}
+
+.beam-mini[data-layout="left-float"] .beam-mini-surface {
+  top: 21%;
+  left: 8%;
+  width: 52%;
+  height: 56%;
+}
+
+.beam-mini[data-layout="left-float"] .beam-mini-beam {
+  left: 34%;
+}
+
+.beam-mini[data-layout="palette"] .beam-mini-surface {
+  top: 34%;
+  right: 26%;
+  left: 26%;
+  height: 34%;
+}
+
+.beam-mini[data-layout="terminal"] .beam-mini-surface {
+  right: 7%;
+  bottom: 9%;
+  width: 48%;
+  height: 48%;
+}
+
+.beam-mini[data-layout="terminal"] .beam-mini-beam {
+  left: 64%;
+}
+
+.beam-mini[data-layout="wide"] .beam-mini-surface {
+  right: 6%;
+  bottom: 10%;
+  left: 6%;
+  height: 39%;
+}
+
+.beam-mini[data-layout="orb"] .beam-mini-surface {
+  top: 18%;
+  right: 16%;
+  width: 34%;
+  height: 62%;
+  border-radius: 50%;
+}
+
+.beam-mini[data-layout="split"] .beam-mini-surface {
+  right: 6%;
+  bottom: 10%;
+  left: 6%;
+  height: 44%;
+}
+
+.beam-mini[data-layout="split"] .beam-mini-surface::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: #ffffff2e;
+  content: "";
+}
+
+.beam-mini[data-layout="reverse"] .beam-mini-surface {
+  top: 20%;
+  left: 7%;
+  width: 54%;
+  height: 56%;
+}
+
+.beam-mini[data-layout="reverse"] .beam-mini-beam {
+  left: 36%;
+}
+
+.beam-mini[data-layout="strip"] .beam-mini-surface {
+  right: 6%;
+  bottom: 15%;
+  left: 6%;
+  height: 31%;
+}
+
+.leaf-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 15px 16px 14px;
+}
+
+.leaf-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.leaf-card h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.leaf-card-head span {
+  color: #7d8892;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.leaf-card-line {
+  flex: 1;
+  margin: 6px 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.leaf-card-note {
+  margin: 0 0 14px;
+  color: #66717b;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.leaf-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #ffffff0f;
+  font-size: 11px;
+}
+
+.leaf-card-foot span {
+  color: #7d8892;
+}
+
+.leaf-card-foot a {
+  color: var(--mint);
+}
+
+.leaf-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 26px 0 42px;
+  border-top: 1px solid var(--line);
+  color: #707b85;
+  font-size: 10px;
+}
+
+.leaf-footer nav {
+  display: flex;
+  gap: 20px;
+}
+
+.leaf-footer a:hover {
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .leaf-hero {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  .leaf-stats {
+    padding-bottom: 0;
+  }
+
+  .leaf-section-head {
+    display: block;
+  }
+
+  .leaf-section-head p {
+    margin-top: 10px;
+    text-align: left;
+  }
+}
+
+@media (max-width: 650px) {
+  .leaf-shell {
+    width: calc(100% - 30px);
+  }
+
+  .leaf-header {
+    padding: 18px 0;
+  }
+
+  .leaf-header nav {
+    gap: 12px;
+    font-size: 10px;
+  }
+
+  .leaf-brand span {
+    display: none;
+  }
+
+  .leaf-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .beam-mini {
+    height: 210px;
+  }
+
+  .leaf-footer {
+    display: block;
+  }
+
+  .leaf-footer nav {
+    margin-top: 10px;
+  }
+}

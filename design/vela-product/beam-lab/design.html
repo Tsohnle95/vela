@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A ten-part beam study for Vela, built on the OpenBot beam and runoff model.">
+  <title>Vela — Beam lab</title>
+  <link rel="icon" href="../assets/icon.png">
+  <link rel="stylesheet" href="openbot-beam.css">
+  <link rel="stylesheet" href="beam.css">
+</head>
+<body class="beam-page">
+  <div class="beam-stage" id="stage">
+    <canvas class="ob-beam-canvas" id="beam-canvas" aria-hidden="true"></canvas>
+
+    <header class="ob-header beam-header">
+      <a class="ob-brand beam-brand" href="index.html">
+        <img src="../assets/icon.png" width="1024" height="1024" alt="">
+        <span>Vela</span>
+      </a>
+      <nav class="beam-nav" aria-label="Primary">
+        <a href="#workspace">Workspace</a>
+        <a href="#features">Features</a>
+        <a href="#workflow">Workflow</a>
+        <a href="https://github.com/Tsohnle95/vela" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="ob-header-actions beam-header-actions">
+        <a class="ob-btn ob-btn-primary" href="https://github.com/Tsohnle95/vela/releases" target="_blank" rel="noopener">Download</a>
+      </div>
+    </header>
+
+    <main class="beam-main">
+      <section class="beam-hero" id="workspace">
+        <div class="beam-copy">
+          <p class="beam-kicker" id="beam-index">Beam lab · 01 / 10</p>
+          <h1 class="beam-title">
+            <span class="ob-title-logo beam-logo"><img src="../assets/icon.png" width="1024" height="1024" alt=""></span>
+            <span id="beam-name">Header Drop</span>
+          </h1>
+          <p class="beam-lede" id="beam-line">The beam leaves the header action and lands on the workspace.</p>
+          <div class="beam-actions ob-actions">
+            <div class="ob-download-split"><a class="ob-btn ob-btn-primary" href="https://github.com/Tsohnle95/vela/releases" target="_blank" rel="noopener">Download for macOS</a></div>
+            <a class="ob-btn ob-btn-secondary" href="https://github.com/Tsohnle95/vela#setup" target="_blank" rel="noopener">Setup</a>
+          </div>
+          <p class="beam-note" id="beam-note"></p>
+        </div>
+
+        <div class="ob-preview beam-surface" id="surface">
+          <div class="beam-surface-chrome" aria-hidden="true">
+            <i></i><i></i><i></i>
+            <span id="surface-label">workspace</span>
+          </div>
+          <div class="beam-surface-media">
+            <img src="../assets/vela-dark.png" width="1619" height="971" alt="Vela workspace with editor and agent">
+            <img src="../assets/vela-dark.png" width="1619" height="971" alt="" class="beam-surface-second">
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="beam-bar">
+      <a href="index.html">← All ten</a>
+      <span id="beam-bar-name">Header Drop</span>
+      <a id="beam-next" href="design.html?design=logo-strike">Next →</a>
+    </div>
+
+    <footer class="beam-footer">
+      <span>Vela beam lab · OpenBot-derived beam and runoff model</span>
+      <span>WebGL2</span>
+    </footer>
+  </div>
+
+  <script src="beam-designs.js"></script>
+  <script src="openbot-beam.js"></script>
+  <script src="design.js"></script>
+</body>
+</html>

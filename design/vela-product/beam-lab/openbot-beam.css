@@ -1,0 +1,59 @@
+body.d1 main {
+  overflow: visible;
+}
+
+body.d1 .ob-beam-canvas {
+  position: absolute;
+  top: -76px;
+  left: 50%;
+  z-index: 0;
+  width: 100vw;
+  height: calc(100% + 76px);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+[data-beam-source] {
+  position: relative;
+}
+
+[data-beam-source]:after {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 8px 1px rgba(var(--landing-beam-rim, 164, 108, 245), 0.55);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+[data-beam-struck]:after {
+  opacity: 1;
+}
+
+[data-beam-source].ob-title-logo {
+  overflow: visible;
+}
+
+[data-beam-source].ob-title-logo img {
+  border-radius: inherit;
+}
+
+body.beam-center .ob-title {
+  text-shadow: 0 2px 22px #0a0a0a, 0 0 50px #0a0a0a;
+}
+
+body.beam-center .ob-description {
+  text-shadow: 0 1px 12px #0a0a0a, 0 0 24px #0a0a0a;
+}
+
+body.beam-center .ob-title-logo {
+  filter: drop-shadow(0 0 18px #0a0a0a);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-beam-source]:after {
+    transition: none;
+  }
+}
