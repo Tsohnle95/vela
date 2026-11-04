@@ -1,0 +1,36 @@
+# Environment blocker: macOS FSEvents stall
+
+`end_to_end_replay_stream_prompt_and_permission` is the only test not passing in
+the task-tool-card validation run. It is an engine/Sass integration test and
+does not touch the transcript changes.
+
+Isolated reruns fail with `wait_for` timeouts at the Sass watcher checkpoints.
+A `sample` of the hung test process showed the host's FSEvents service blocked:
+
+- `notify-rs fsevents loop` in
+  `FSEventStreamStop -> dispose_f2d_private_port -> f2d_unregister_rpc -> mach_msg`
+- a second `notify-rs fsevents loop` in
+  `FSEventStreamStart -> register_with_server -> f2d_register_rpc -> mach_msg`
+- an observation watcher thread joining notify's FSEvents thread
+- the test thread waiting on the engine's oneshot reply
+
+The stall persists across isolated reruns and reproduces without the
+task-tool-card changes. The rest of the workspace suite passes:
+
+- `task-tool-cards-final-workspace-tests.txt`: 620 passed, 0 failed, 1 optional
+  perf test ignored, with this one test skipped.
+- `task-tool-cards-final-clippy.txt` and `task-tool-cards-final-build.txt`: exit 0.
+- `task-tool-cards-fsevents-blocker.txt`: isolated failure output.
+
+## Recovery
+
+Restart macOS (or restart `fseventsd` with administrator privileges), then run:
+
+```sh
+bash scripts/migration-cargo.sh test --workspace
+bash scripts/migration-cargo.sh clippy --workspace --all-targets -- -D warnings
+bash scripts/migration-cargo.sh build -p vela
+```
+
+The expected restored gate is 621 passed, zero failures, one optional perf test
+ignored.

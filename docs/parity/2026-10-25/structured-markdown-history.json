@@ -1,0 +1,41 @@
+[
+  {
+    "info": {
+      "id": "msg_markdown_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_000",
+        "type": "text",
+        "text": "Keep the complete formatted response."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_markdown_001",
+      "role": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture",
+        "providerID": "mock"
+      },
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_001",
+        "type": "text",
+        "text": "## Native Markdown\n\n**Bold and *nested italic***, ~~removed~~, `literal **code**`, and [a link](https://example.com).\n\n- First item\n- Second item\n  - Nested item\n\n> Preserve the quote.\n>\n> Keep its second paragraph.\n\n| Name | State |\n| :--- | ---: |\n| Unicode 🌍 | Retained |\n\n```text\nClipboard fixture 🌍\nretain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column \n\nLast line.\n```\n\nNothing is truncated."
+      }
+    ]
+  }
+]

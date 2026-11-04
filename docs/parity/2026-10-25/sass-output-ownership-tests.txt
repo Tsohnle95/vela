@@ -1,0 +1,15 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.56s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-2b8f2aa34662d861)
+
+running 7 tests
+test sass_state::tests::same_root_shares_worker_until_last_owner_closes ... ok
+test sass_state::tests::replacement_root_serializes_output_without_blocking_other_roots_or_state_reads ... ok
+test sass_state::tests::roots_toggle_independently_but_all_owners_of_one_root_follow ... ok
+test sass_state::tests::relocation_and_reopen_reject_old_workers_and_output ... ok
+test sass_state::tests::failed_watcher_keeps_enabled_error_state_but_allows_an_explicit_restart ... ok
+test sass_state::tests::shared_status_distinguishes_start_error_recovery_and_off_without_erasing_history ... ok
+test sass_state::tests::log_limits_match_reference_utf16_slicing_and_keep_the_last_hundred_rows ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 88 filtered out; finished in 0.06s
+

@@ -1,0 +1,19 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+warning: unused import: `Path`
+ --> crates/vela-engine/src/engine.rs:2:17
+  |
+2 | use std::path::{Path, PathBuf};
+  |                 ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vela-engine` (lib) generated 1 warning (run `cargo fix --lib -p vela-engine` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.64s
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-0d2ddc61355c0625)
+
+running 2 tests
+test canonical_history_client_accepts_raw_arrays_and_continuation_pages ... ok
+test end_to_end_replay_stream_prompt_and_permission ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.92s
+

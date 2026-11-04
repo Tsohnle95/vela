@@ -1,0 +1,39 @@
+{
+  "captured_utc": "2026-10-25T08:51:03.116588+00:00",
+  "surface": "original",
+  "window": {
+    "bounds": {
+      "Height": 800,
+      "Width": 1280,
+      "X": -1367,
+      "Y": 217
+    },
+    "id": 13063,
+    "owner": "Vela",
+    "pid": 36807,
+    "title": "Vela"
+  },
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    2560,
+    1600
+  ],
+  "point_size": [
+    1280,
+    800
+  ],
+  "sha256": "edecc1495c58756675373ee24614097ecbd81df5717ce01aacda23536ceabc87",
+  "head": "f25a025f1d19acc26e20dfd3a0d22a1363155804",
+  "tracked_diff_sha256": "081404bfc5fb3ee4f740c91ed7c15b16eb58756b4c6ffd824a03018066cb3025",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "13063"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false
+}

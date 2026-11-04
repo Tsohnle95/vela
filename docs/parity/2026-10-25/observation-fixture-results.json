@@ -1,0 +1,35 @@
+{
+  "recorded_utc": "2026-10-27T07:01:31.692382+00:00",
+  "reference_head": "3157a41357f28137874d7298af6177e657df5afc",
+  "workspace": "/private/tmp/vela-test-workspace/native-observation-fixture",
+  "qa_window": 26792,
+  "qa_pid": 34451,
+  "checks": {
+    "manual_save_behavior": "Typing in both apps left disk unchanged.",
+    "clean_reload": "Both apps rendered External disk update after the external write.",
+    "dirty_conflict": "Both apps retained Local unsaved edit and exposed Reload, Merge and Overwrite controls.",
+    "reload_undo": "Native Reload displayed the new disk version; undo recovered the local edit; redo restored the clean disk version.",
+    "unicode_external_rename": "Both apps moved the dirty buffer/tab to renamed 🌍.txt and kept the conflict controls.",
+    "rename_undo": "Native undo/redo remained attached to the new path.",
+    "save_merged_renamed_path": "Native Save merged content wrote the new path; old rename.txt remained absent.",
+    "own_save_echo": "Native stayed clean without a new conflict after the save notifications settled.",
+    "expanded_explorer": "second-created.txt appeared without collapsing/reopening nested; two moved-out files disappeared.",
+    "clean_deletion": "Both apps retained clean entry.txt text and displayed a deleted-on-disk banner.",
+    "recreation": "Both apps loaded Recreated external file and cleared their deletion notices.",
+    "app_exit": "Observation-enabled QA closed cleanly and logged engine stopped.",
+    "regressions": "117 workspace tests passed, one performance measurement ignored; real native watcher notifications included."
+  },
+  "remaining": "Full tree/editor visuals, agent-input capture, baseline-aware Changes, close/quit guards, journaling and full migration remain unfinished. No page accepted.",
+  "decoration_recheck": {
+    "recorded_utc": "2026-10-27T07:19:08.337307+00:00",
+    "qa_pid": 68753,
+    "window": 28304,
+    "observed_blue_dot": "shown after actual external file creation",
+    "unsaved_orange_dot": "shown beside observed dot while disk remained unchanged",
+    "save": "disk updated; orange dot cleared, blue remained; no false conflict",
+    "captures": [
+      "native/observation-status-dots-dirty.png",
+      "native/observation-status-dots-saved.png"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+<!-- Geometry from Vela components/icons.tsx, IconAgentMode. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="9" height="8" rx="2" />
+      <path d="M8.5 5.5V2.5H6.5" />
+      <path d="M1.5 7.5v3M14.5 7.5v3" />
+      <path d="M6.5 8.5v2M9.5 8.5v2" /></svg>

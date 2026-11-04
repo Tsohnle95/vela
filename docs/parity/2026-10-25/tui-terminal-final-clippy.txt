@@ -1,0 +1,66 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Checking vela-terminal v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-terminal)
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+error: variant name ends with the enum's name
+   --> crates/vela-engine/src/engine.rs:440:5
+    |
+440 | /     StartTerminalCommand {
+441 | |         id: String,
+442 | |         cwd: String,
+443 | |         program: String,
+...   |
+447 | |         rows: u16,
+448 | |     },
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#enum_variant_names
+    = note: `-D clippy::enum-variant-names` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::enum_variant_names)]`
+
+error: this function has too many arguments (8/7)
+    --> crates/vela-engine/src/engine.rs:1064:5
+     |
+1064 | /     pub fn start_terminal_command(
+1065 | |         &self,
+1066 | |         id: impl Into<String>,
+1067 | |         cwd: impl Into<String>,
+...    |
+1072 | |         rows: u16,
+1073 | |     ) {
+     | |_____^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+     = note: `-D clippy::too-many-arguments` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::too_many_arguments)]`
+
+error: this function has too many arguments (8/7)
+    --> crates/vela-engine/src/engine.rs:3423:1
+     |
+3423 | / fn start_terminal_command(
+3424 | |     inner: &Arc<Inner>,
+3425 | |     id: String,
+3426 | |     cwd: String,
+...    |
+3431 | |     rows: u16,
+3432 | | ) {
+     | |_^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+error: very complex type used. Consider factoring parts into `type` definitions
+    --> crates/vela-engine/src/engine.rs:3442:14
+     |
+3442 |     command: Option<(String, Vec<String>, Vec<(String, String)>)>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#type_complexity
+     = note: `-D clippy::type-complexity` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::type_complexity)]`
+
+error: could not compile `vela-engine` (lib) due to 4 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `vela-engine` (lib test) due to 4 previous errors
+EXIT:101

@@ -1,0 +1,10 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.68s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-2b8f2aa34662d861)
+
+running 2 tests
+test sass_watch::tests::notifications_ignore_css_access_and_dependencies_but_include_partials_config_and_directories ... ok
+test sass_watch::tests::actual_file_events_wake_once_after_a_burst_and_cancellation_stops_waiting ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 91 filtered out; finished in 4.05s
+

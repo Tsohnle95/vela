@@ -1,0 +1,23 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0308]: mismatched types
+    --> crates/vela-ui/src/editor.rs:1239:57
+     |
+1239 |                 assert!(editor.bounds.unwrap().contains(position), "{position:?}");
+     |                                                -------- ^^^^^^^^ expected `&Point<Pixels>`, found `Point<Pixels>`
+     |                                                |
+     |                                                arguments to this method are incorrect
+     |
+     = note: expected reference `&Point<_>`
+                   found struct `Point<_>`
+note: method defined here
+    --> /Users/tdawg/code-repositories/vela-native/target/migration-cache/rust/cargo/git/checkouts/zui-05467652636d6f6d/361ff20/crates/gpui/src/geometry.rs:1465:12
+     |
+1465 |     pub fn contains(&self, point: &Point<T>) -> bool {
+     |            ^^^^^^^^
+help: consider borrowing here
+     |
+1239 |                 assert!(editor.bounds.unwrap().contains(&position), "{position:?}");
+     |                                                         +
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `vela-ui` (lib test) due to 1 previous error

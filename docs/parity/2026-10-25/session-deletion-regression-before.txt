@@ -1,0 +1,22 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.09s
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-2ca414e6e9caa9cd)
+
+running 1 test
+test end_to_end_replay_stream_prompt_and_permission ... FAILED
+
+failures:
+
+---- end_to_end_replay_stream_prompt_and_permission stdout ----
+
+thread 'end_to_end_replay_stream_prompt_and_permission' (19689007) panicked at crates/vela-engine/tests/engine_flow.rs:1158:5:
+condition not met within 3s
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    end_to_end_replay_stream_prompt_and_permission
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 8.67s
+
+error: test failed, to rerun pass `-p vela-engine --test engine_flow`

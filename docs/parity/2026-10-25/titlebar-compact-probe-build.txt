@@ -1,0 +1,23 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0308]: mismatched types
+ --> crates/vela-ui/src/window_chrome.rs:8:9
+  |
+8 |     let Ok(handle) = window.window_handle() else { return };
+  |         ^^^^^^^^^^   ---------------------- this expression has type `AnyWindowHandle`
+  |         |
+  |         expected `AnyWindowHandle`, found `Result<_, _>`
+  |
+  = note: expected struct `AnyWindowHandle`
+               found enum `std::result::Result<_, _>`
+
+warning: unused import: `HasWindowHandle`
+ --> crates/vela-ui/src/window_chrome.rs:6:29
+  |
+6 |     use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+  |                             ^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `vela-ui` (lib) generated 1 warning
+error: could not compile `vela-ui` (lib) due to 1 previous error; 1 warning emitted

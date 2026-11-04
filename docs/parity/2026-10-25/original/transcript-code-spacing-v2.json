@@ -1,0 +1,101 @@
+{
+  "captured_utc": "2026-10-30T16:06:19.364135+00:00",
+  "surface": "original",
+  "window": {
+    "active": true,
+    "bounds": {
+      "Height": 700,
+      "Width": 900,
+      "X": 2430,
+      "Y": 217
+    },
+    "id": 52512,
+    "layer": 0,
+    "owner": "Vela Reference QA",
+    "pid": 95177,
+    "title": "Vela"
+  },
+  "requested_window": {
+    "active": true,
+    "bounds": {
+      "Height": 700,
+      "Width": 900,
+      "X": 2430,
+      "Y": 217
+    },
+    "id": 52512,
+    "layer": 0,
+    "owner": "Vela Reference QA",
+    "pid": 95177,
+    "title": "Vela"
+  },
+  "capture_surface": "window",
+  "capture_window_inventory": [
+    {
+      "active": true,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2430,
+        "Y": 217
+      },
+      "id": 52512,
+      "layer": 0,
+      "owner": "Vela Reference QA",
+      "pid": 95177,
+      "title": "Vela"
+    }
+  ],
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    900,
+    700
+  ],
+  "point_size": [
+    900,
+    700
+  ],
+  "sha256": "62483a2ef417aa0496e893cd42095b316635c1b59bca270520f837f123ceab2a",
+  "head": "8d47b50e7f226dd2320f5eac77eb53d10b32f0f8",
+  "tracked_diff_sha256": "081404bfc5fb3ee4f740c91ed7c15b16eb58756b4c6ffd824a03018066cb3025",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "52512"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "capture_stable": true,
+  "capture_window_inventory_after": [
+    {
+      "active": true,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2430,
+        "Y": 217
+      },
+      "id": 52512,
+      "layer": 0,
+      "owner": "Vela Reference QA",
+      "pid": 95177,
+      "title": "Vela"
+    }
+  ],
+  "source_tree_sha256": "a0ef509a62e3513c6aec148dbf1b3621adbe8714713c7ab5ae5e54e0eca31a84",
+  "source_tree_files": 590,
+  "source_tree_roots": [
+    "src",
+    "resources",
+    "package.json",
+    "package-lock.json",
+    "electron-vite.config.ts"
+  ],
+  "source_tree_includes_untracked": true,
+  "reference_bundle_sha256": "8bbf08f31a5469da8a724debb918a80b95921c9f71f6ed377d4aa707a65506a9",
+  "reference_bundle_files": 784
+}

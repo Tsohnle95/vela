@@ -1,0 +1,9 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.97s
+     Running unittests src/lib.rs (target/debug/deps/vela_core-459787b0242eb816)
+
+running 1 test
+test document::tests::detachment_retains_tabs_dirty_undo_and_neighbors_and_marks_deleted_only_on_success ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.00s
+

@@ -1,0 +1,46 @@
+   Compiling serde_core v1.0.229
+   Compiling smallvec v1.16.4
+   Compiling aho-corasick v1.1.5
+   Compiling syn v3.0.9
+   Compiling tracing v0.1.44
+   Compiling parking_lot_core v0.9.12
+   Compiling regex-automata v0.4.18
+   Compiling parking_lot v0.12.5
+   Compiling serde_derive v1.0.229
+   Compiling tokio-macros v2.7.2
+   Compiling tokio v1.54.1
+   Compiling bitflags v2.13.2
+   Compiling rustix v1.1.5
+   Compiling serde v1.0.229
+   Compiling rustix-openpty v0.2.0
+   Compiling polling v3.11.0
+   Compiling vte v0.15.0
+   Compiling alacritty_terminal v0.26.0
+   Compiling vela-terminal v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-terminal)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 13.87s
+     Running unittests src/lib.rs (target/debug/deps/vela_terminal-81af071b9635cd4d)
+
+running 7 tests
+test input::tests::paste_matches_xterm_line_endings_and_preserves_unicode_and_literal_characters ... ok
+test emulator::tests::applies_sgr_foreground_color ... ok
+test emulator::tests::writes_text_and_advances_cursor ... ok
+test emulator::tests::handles_carriage_return_and_newline ... ok
+test emulator::tests::supports_alternate_screen_and_clear ... ok
+test input::tests::paste_framing_tracks_the_terminal_mode ... ok
+test emulator::tests::resize_preserves_a_usable_grid ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/pty_flow.rs (target/debug/deps/pty_flow-932cfa23f91cfb87)
+
+running 1 test
+test pty_output_reaches_the_emulator ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+   Doc-tests vela_terminal
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

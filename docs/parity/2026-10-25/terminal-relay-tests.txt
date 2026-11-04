@@ -1,0 +1,11 @@
+    Blocking waiting for file lock on build directory
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.01s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-53443e6c52063261)
+
+running 2 tests
+test terminal_relay::tests::exit_cannot_overtake_queued_final_output ... ok
+test terminal_relay::tests::output_eof_still_waits_for_exit_and_cancellation_is_bounded ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s
+

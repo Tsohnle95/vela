@@ -1,0 +1,74 @@
+{
+  "status": "Native picker/staging/removal/file-only delivery passed; full attachment parity and visual acceptance incomplete",
+  "fixture": "http://127.0.0.1:49564",
+  "checks": [
+    "Native system picker selected notes \ud83c\udf0d.txt and image \ud83c\udf0d.png from disposable attachment fixtures",
+    "Multi-select retained one copy per full path, with a visible image thumbnail",
+    "Remove notes preserved the staged image and focused the composer",
+    "Send with empty text reached the loopback fixture with only the staged image path and cleared staging",
+    "Original Vela staged the same two files in the same order for a paired full-window capture",
+    "Long agent menu scrolled to entry 044; fresh keyboard path revealed entry 044 and Enter acknowledged it",
+    "Window-owned native sheet matched original sheet ownership; selection and Cancel preserved staged files",
+    "Menu Quit from an open native file sheet closed the picker and presented the dirty-document guard",
+    "Cancel kept the dirty editor text; a second Quit and Discard exited successfully without changing the fixture file on disk"
+  ],
+  "validation": {
+    "workspace": "135 passed, 1 ignored performance test; includes immediate and queued file-only engine delivery",
+    "clippy": "workspace all-targets -D warnings passed after sheet ownership/chip/footer follow-ups"
+  },
+  "paired_capture": {
+    "page": "composer-attachments-two-files",
+    "original": {
+      "size": [
+        900,
+        700
+      ],
+      "encoding": "PNG",
+      "lossless": true,
+      "sha256": "b70778deb3a3d875ce03e4f509a464dd543d2e392022c4e738354c5bfe4b85fd",
+      "icc_profile_sha256": "cf5618f45e287258e3087a1246342aa566c7f6ef39564a1d9867f7243311a98b",
+      "capture_manifest_valid": true,
+      "capture_stable": true,
+      "capture_surface": "window",
+      "point_size": [
+        900,
+        700
+      ],
+      "window_active": false
+    },
+    "native": {
+      "size": [
+        900,
+        700
+      ],
+      "encoding": "PNG",
+      "lossless": true,
+      "sha256": "ec796bd7518e96ac78cb64ad2c31fcf75d581909e4841f2de9c0f0e85a6a59c2",
+      "icc_profile_sha256": "cf5618f45e287258e3087a1246342aa566c7f6ef39564a1d9867f7243311a98b",
+      "capture_manifest_valid": true,
+      "capture_stable": true,
+      "capture_surface": "window",
+      "point_size": [
+        900,
+        700
+      ],
+      "window_active": false
+    },
+    "status": "different",
+    "exact_changed_pixels": 181518,
+    "changed_pixels_above_threshold": 31366,
+    "changed_fraction_above_threshold": 0.04978730158730159,
+    "mean_absolute_channel_error": 2.815432142857143,
+    "lossless_pixel_match": false,
+    "comparison_issues": [],
+    "eligible_for_visual_review": true
+  },
+  "remaining": [
+    "Real external drag/drop and its complete source hover overlay",
+    "All image preview formats, bounded native preview decoding and failure behavior",
+    "Attachment display in authoritative/optimistic transcript and queued-item editing/restoration",
+    "Workspace-switch/late-dialog ownership GUI checks",
+    "Exact visual equality across themes and viewport matrix",
+    "Revised chips and grouped file-sheet captures retain activation mismatch and are not accepted"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "status": "Favorites, visibility, restart persistence and composer shortcut checks passed; full visual acceptance incomplete",
+  "fixture": "http://127.0.0.1:49563",
+  "checks": [
+    "Add Catalog model 003 to favorites left selected Catalog model 029 unchanged and kept menu open",
+    "Hide Catalog model 004 removed it from the list while retaining it in visibility settings",
+    "Hide mock provider retained the selected model and independent favorite list",
+    "Full native app quit and restart restored favorite_models, hidden_models and hidden_providers",
+    "Shift+P changed Catalog model 029 to favorite Catalog model 003, then to second favorite Fixture",
+    "Ctrl+Tab advanced Fixture from Auto to Low to High with acknowledged labels and no draft insertion",
+    "Original Vela isolated catalog profile verified the same favorite and provider hiding behavior"
+  ],
+  "captures": [
+    "native/model-preferences-hidden-provider.png",
+    "original/model-preferences-hidden-provider.png",
+    "native/model-preferences-matched-v2.png",
+    "original/model-preferences-matched-v2.png"
+  ],
+  "validation": {
+    "workspace": "134 passed, 1 ignored performance test before final spacing/shortcut/footer follow-ups",
+    "clippy": "workspace all-targets -D warnings passed after follow-ups"
+  },
+  "remaining": [
+    "Final visual equality: paired v2 capture has activation mismatch and remains ineligible",
+    "Final agent menu/footer GUI checks",
+    "Legacy Electron localStorage preference import",
+    "Complete appearance/keyboard/Retina matrix"
+  ]
+}

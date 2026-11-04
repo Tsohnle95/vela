@@ -1,0 +1,41 @@
+[
+  {
+    "info": {
+      "id": "msg_markdown_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_000",
+        "type": "text",
+        "text": "Check every table column, including the far edge."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_markdown_001",
+      "role": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture",
+        "providerID": "mock"
+      },
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_001",
+        "type": "text",
+        "text": "## Wide table\n\n| Identifier | State | Last column |\n| --- | --- | --- |\n| WIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDE🌍 | **Retained** | END_OF_TABLE_🌍 |\n| Second row | Pending | Final cell |\n\nAfter the table."
+      }
+    ]
+  }
+]

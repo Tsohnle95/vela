@@ -1,0 +1,96 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.41s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 63 tests
+test app::composer::tests::strength_labels_match_reference_auto_and_ascii_word_formatting ... ok
+test app::close::tests::long_close_paths_match_reference_utf16_tail_limit ... ok
+test app::inbox::tests::queue_preview_is_a_first_line_with_bounded_unicode_text ... ok
+test app::composer::tests::model_search_matches_name_id_provider_and_unicode ... ok
+test app::attachments::tests::staging_deduplicates_full_paths_and_preserves_unicode_and_same_names ... ok
+test app::markdown_images::tests::intrinsic_images_fit_both_axes_without_upscaling ... ok
+test app::close::tests::clean_pending_save_is_not_safe_and_conflicting_edits_remain_unsaved ... ok
+test app::close::tests::close_waits_for_all_workspace_snapshots_and_rejects_intervening_edits ... ok
+test app::markdown_images::tests::images_preserve_encoded_files_svg_data_and_reference_csp ... ok
+test app::markdown_view::tests::nested_inline_styles_are_scoped_and_link_ranges_use_utf8_bytes ... ok
+test app::markdown_view::tests::image_projection_preserves_surrounding_styles_alt_text_and_link_targets ... ok
+test app::inline_flow::tests::trailing_code_space_does_not_push_a_fitting_word_to_the_next_line ... ok
+test app::markdown_view::tests::task_states_survive_tight_loose_and_nested_lists_without_text_symbols ... ok
+test app::inline_flow::tests::inline_code_uses_its_own_size_padding_and_unicode_safe_wrapping ... ok
+test app::close::tests::global_quit_reaches_owner_without_a_focused_child_and_preserves_guard ... ok
+test app::markdown_view::tests::user_document_collapses_source_block_margins_without_flattening_structure ... ok
+test app::model_picker::tests::visibility_preserves_current_model_but_qualifies_provider_and_favorites_are_independent ... ok
+test app::markdown_view::tests::user_bubble_retains_intrinsic_width_and_wraps_into_normal_lines ... ok
+test app::attachments::tests::external_drag_exit_clears_attachment_owner_without_another_mouse_event ... ok
+test app::tabs::tests::overflow_always_leaves_access_to_every_file_and_browser ... ok
+test app::attachments::tests::escape_cancels_external_drag_before_a_focused_child_can_consume_it ... ok
+test app::markdown_view::tests::code_control_enter_and_space_activate_exactly_once ... ok
+test app::tests::terminal_key_encoding_covers_control_and_arrows ... ok
+test app::tool_view::tests::activity_summaries_match_reference_tool_kinds_and_terminal_states ... ok
+test app::tests::terminal_rows_have_byte_exact_runs ... ok
+test app::transcript_view::tests::final_text_survives_work_folding_and_footer_uses_turn_duration ... ok
+test app::composer::tests::replacing_picker_restores_owner_and_keeps_escape_and_quit_reachable ... ok
+test app::transcript_view::tests::reasoning_defaults_open_while_streaming_and_manual_choice_is_retained ... ok
+test app::transcript_view::tests::virtual_blocks_collapse_reference_margins_at_their_actual_boundaries ... ok
+test editor::tests::expanded_tabs_preserve_unicode_source_offsets ... ok
+test app::tabs::tests::keyboard_overflow_activation_toggles_once_per_press_release ... ok
+test app::transcript_view::tests::streamed_spacing_revisions_replace_rows_and_session_changes_release_old_text ... ok
+test app::transcript_view::tests::copy_preserves_full_original_markdown_after_last_tool_and_long_answers_stay_rows ... ok
+test input::tests::length_limits_apply_to_utf16_replacements_and_committed_composition ... ok
+test focus::tests::pointer_motion_preserves_keyboard_outline_until_pointer_down ... ok
+test input::tests::password_input_masks_unicode_and_blocks_copy_cut_and_platform_context_leaks ... ok
+test multiple_selection::tests::ranges_keep_their_anchor_and_toggles_preserve_option_order ... ok
+test provider_validation::tests::constraints_use_utf16_browser_step_base_and_do_not_validate_unused_metadata ... ok
+test input::tests::input_invalidates_cached_paint_on_focus_loss_and_regain ... ok
+test input::tests::native_fields_traverse_tabs_and_preserve_submit_newline_and_composition_intent ... ok
+test providers::tests::late_catalog_cannot_replace_another_workspace_or_a_newer_refresh ... ok
+test providers::tests::numeric_conditions_match_browser_numbers_without_string_coercion ... ok
+test input::tests::long_single_line_unicode_input_keeps_caret_inside_its_content_viewport ... ok
+test app::markdown_view::tests::structured_user_bubble_retains_intrinsic_width_and_block_height ... ok
+test scroll::tests::gutter_follows_overflow_after_content_removal_and_viewport_resize ... ok
+test scroll::tests::horizontal_gutter_stays_present_during_parent_width_probes ... ok
+test scroll::tests::overflow_probe_requests_a_followup_frame_without_another_input ... ok
+test scroll::tests::recorded_parent_gutter_probes_do_not_clear_positive_horizontal_overflow ... ok
+test scroll::tests::horizontal_overflow_reserves_height_drags_and_releases_gutter_after_resize ... ok
+test app::markdown_view::tests::table_wraps_breakable_prose_instead_of_forcing_max_content_overflow ... FAILED
+test scroll::tests::transcript_wheel_observer_reads_tail_after_list_releases_its_mutable_borrow ... ok
+test toasts::tests::overlapping_expiry_never_removes_a_newer_toast ... ok
+test app::explorer::tests::large_tree_scroll_reaches_last_file_and_new_batches_without_painting_every_row ... ok
+test app::markdown_view::tests::actual_code_surface_exposes_intrinsic_width_and_resets_scroll_when_wrapped ... ok
+test scroll::tests::keyboard_focus_reveals_offscreen_controls_without_trapping_manual_scroll ... ok
+test app::markdown_view::tests::virtual_code_row_remeasures_when_its_horizontal_gutter_appears_and_disappears ... ok
+test app::transcript_view::tests::transcript_keyboard_navigation_pages_and_stays_out_of_text_inputs ... ok
+test scroll::tests::virtual_transcript_gutter_tracks_overflow_removal_and_resize ... ok
+test app::markdown_view::tests::table_horizontal_keyboard_navigation_clamps_and_resets_after_reflow ... FAILED
+test editor::tests::document_end_reveals_last_line_without_rendering_the_whole_file ... ok
+test provider_validation::tests::html_patterns_use_unicode_sets_backreferences_and_literal_data ... ok
+test providers::tests::invalid_dynamic_fields_block_submission_and_hidden_fields_do_not ... ok
+test settings::tests::settings_content_stays_inside_viewport_with_long_update_copy ... ok
+
+failures:
+
+---- app::markdown_view::tests::table_wraps_breakable_prose_instead_of_forcing_max_content_overflow stdout ----
+
+thread 'app::markdown_view::tests::table_wraps_breakable_prose_instead_of_forcing_max_content_overflow' (17385102) panicked at crates/vela-ui/src/markdown_view.rs:1626:9:
+assertion `left == right` failed: a paragraph must wrap at word boundaries
+  left: 4px
+ right: 0px
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- app::markdown_view::tests::table_horizontal_keyboard_navigation_clamps_and_resets_after_reflow stdout ----
+
+thread 'app::markdown_view::tests::table_horizontal_keyboard_navigation_clamps_and_resets_after_reflow' (17385101) panicked at crates/vela-ui/src/markdown_view.rs:1607:9:
+assertion `left == right` failed
+  left: 4px
+ right: 0px
+
+
+failures:
+    app::markdown_view::tests::table_horizontal_keyboard_navigation_clamps_and_resets_after_reflow
+    app::markdown_view::tests::table_wraps_breakable_prose_instead_of_forcing_max_content_overflow
+
+test result: FAILED. 61 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.38s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

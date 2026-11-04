@@ -1,0 +1,119 @@
+    Checking serde_core v1.0.229
+   Compiling serde_fmt v1.1.0
+   Compiling erased-serde v0.4.10
+   Compiling serde v1.0.229
+   Compiling indexmap v2.14.2
+    Checking tracing-core v0.1.36
+    Checking httpdate v1.0.3
+   Compiling embed-resource v3.0.12
+   Compiling convert_case v0.11.0
+    Checking wait-timeout v0.2.1
+    Checking quick-error v1.2.3
+    Checking bit-vec v0.8.0
+    Checking fnv v1.0.7
+    Checking hyper v1.12.0
+   Compiling uuid v1.29.0
+    Checking bit-set v0.8.0
+    Checking rand_xorshift v0.4.0
+    Checking unarray v0.1.4
+    Checking mime v0.3.17
+   Compiling proptest-macro v0.5.0 (https://github.com/proptest-rs/proptest?rev=3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b#3dca198a)
+   Compiling value-bag-serde1 v1.14.1
+   Compiling serde_spanned v0.6.9
+   Compiling serde_json v1.0.154
+    Checking bitflags v2.13.2
+   Compiling toml_datetime v0.6.11
+   Compiling value-bag v1.14.1
+   Compiling chrono v0.4.45
+   Compiling serde_urlencoded v0.7.1
+   Compiling accesskit v0.24.1
+    Checking rustix v1.1.5
+    Checking core-graphics-types v0.2.0
+    Checking objc2-core-foundation v0.3.2
+   Compiling toml_edit v0.22.27
+    Checking core-graphics2 v0.5.2
+   Compiling log v0.4.34
+    Checking core-graphics v0.24.0
+    Checking cocoa-foundation v0.2.0
+    Checking objc2-foundation v0.3.2
+    Checking png v0.18.1
+    Checking tempfile v3.27.0
+    Checking polling v3.11.0
+   Compiling bindgen v0.71.1
+   Compiling gpui_util v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling metal v0.33.0
+   Compiling simplecss v0.2.2
+   Compiling toml v0.8.23
+   Compiling rustybuzz v0.20.1
+   Compiling fontdb v0.23.0
+    Checking rustix-openpty v0.2.0
+   Compiling collections v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking rusty-fork v0.3.1
+    Checking core-text v21.0.0
+    Checking tracing v0.1.44
+   Compiling cbindgen v0.28.0
+   Compiling perf v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking vte v0.15.0
+    Checking hyper-util v0.1.21
+    Checking tower v0.5.3
+   Compiling util_macros v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking portable-pty v0.8.1
+    Checking alacritty_terminal v0.26.0
+    Checking tower-http v0.6.11
+   Compiling usvg v0.46.0
+    Checking tiny-skia v0.11.4
+    Checking objc2-app-kit v0.3.2
+    Checking pathfinder_geometry v0.5.1
+    Checking hyper-rustls v0.27.10
+   Compiling core-video v0.5.2
+    Checking vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Checking schemars v1.2.3
+    Checking reqwest v0.12.28
+    Checking zed-font-kit v0.14.1-zed (https://github.com/zed-industries/font-kit?rev=94b0f28166665e8fd2f53ff6d268a14955c82269#94b0f281)
+    Checking resvg v0.46.0
+   Compiling media v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking proptest v1.10.0 (https://github.com/proptest-rs/proptest?rev=3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b#3dca198a)
+    Checking gpui_shared_string v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking postage v0.5.0
+    Checking http_client v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling gpui v0.2.2 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking sum_tree v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking scheduler v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking image v0.25.10
+    Checking cocoa v0.26.0
+    Checking vela-terminal v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-terminal)
+    Checking grass_compiler v0.13.4
+    Checking notify-types v2.1.0
+    Checking objc2-foundation v0.2.2
+    Checking objc2-web-kit v0.3.2
+    Checking vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+    Checking objc2-core-location v0.3.2
+    Checking accesskit_consumer v0.38.0
+    Checking notify v8.2.0
+    Checking dispatch2 v0.3.1
+    Checking semver v1.0.28
+    Checking axum-core v0.5.6
+    Checking wry v0.56.1
+    Checking tracing-log v0.2.0
+    Checking objc2-user-notifications v0.3.2
+    Checking objc2-app-kit v0.2.2
+    Checking serde_path_to_error v0.1.20
+    Checking sharded-slab v0.1.7
+    Checking matchers v0.2.0
+    Checking thread_local v1.1.10
+    Checking grass v0.13.4
+    Checking nu-ansi-term v0.50.3
+    Checking matchit v0.8.4
+    Checking tokio-stream v0.1.19
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking tracing-subscriber v0.3.23
+    Checking axum v0.8.9
+    Checking accesskit_macos v0.26.3
+    Checking vela-browser v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-browser)
+   Compiling gpui_macos v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking gpui_platform v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Checking vela v0.1.0 (/Users/tdawg/code-repositories/vela-native/apps/vela)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 34.14s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 5`

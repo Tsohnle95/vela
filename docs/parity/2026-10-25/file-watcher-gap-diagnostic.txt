@@ -1,0 +1,17 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.52s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-2b8f2aa34662d861)
+
+running 1 test
+startup reconciliation: 0 changes []
+startup reconciliation: 1 changes [("file.txt", Some("changed before watching"))]
+test observation::tests::watcher_readiness_reconciles_edits_that_happened_during_startup ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 99 filtered out; finished in 3.78s
+
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-778ad0b90109e03c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+

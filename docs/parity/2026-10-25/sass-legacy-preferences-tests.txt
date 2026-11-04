@@ -1,0 +1,13 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.18s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-2b8f2aa34662d861)
+
+running 5 tests
+test sass_preferences::tests::invalid_or_unwritable_preferences_are_not_silently_overwritten ... ok
+test sass_preferences::tests::legacy_backup_recovery_and_invalid_source_leave_existing_bytes_intact ... ok
+test sass_preferences::tests::legacy_import_preserves_source_and_never_overrides_native_choices ... ok
+test sass_preferences::tests::roots_survive_restart_and_toggles_preserve_other_roots ... ok
+test sass_preferences::tests::corrupt_primary_recovers_without_destroying_valid_backup ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 84 filtered out; finished in 0.05s
+

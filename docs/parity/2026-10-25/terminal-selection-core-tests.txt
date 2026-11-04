@@ -1,0 +1,10 @@
+   Compiling vela-terminal v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-terminal)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.09s
+     Running unittests src/lib.rs (target/debug/deps/vela_terminal-81af071b9635cd4d)
+
+running 2 tests
+test emulator::tests::selection_copies_combining_wide_and_wrapped_text_without_spacers ... ok
+test emulator::tests::selection_supports_words_lines_reverse_block_and_scrollback ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+

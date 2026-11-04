@@ -1,0 +1,30 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Checking vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Checking vela-browser v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-browser)
+    Checking vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+error: an array of `Range` that is only one element
+   --> crates/vela-core/src/search.rs:340:63
+    |
+340 |         assert_eq!(pattern.matches(text).collect::<Vec<_>>(), [15..21]);
+    |                                                               ^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#single_range_in_vec_init
+    = note: `-D clippy::single-range-in-vec-init` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::single_range_in_vec_init)]`
+help: if you wanted a `Vec` that contains the entire range, try
+    |
+340 -         assert_eq!(pattern.matches(text).collect::<Vec<_>>(), [15..21]);
+340 +         assert_eq!(pattern.matches(text).collect::<Vec<_>>(), (15..21).collect::<std::vec::Vec<usize>>());
+    |
+help: if you wanted an array of len 21, try
+    |
+340 -         assert_eq!(pattern.matches(text).collect::<Vec<_>>(), [15..21]);
+340 +         assert_eq!(pattern.matches(text).collect::<Vec<_>>(), [15; 21]);
+    |
+
+error: could not compile `vela-core` (lib test) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+EXIT:101

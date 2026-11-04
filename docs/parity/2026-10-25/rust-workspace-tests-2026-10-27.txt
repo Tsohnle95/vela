@@ -1,0 +1,226 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.77s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 3`
+     Running unittests src/main.rs (target/debug/deps/vela-b87f435b0ec05202)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_browser-f7a97c6cb5257f6b)
+
+running 2 tests
+test tests::navigation_policy_rejects_privileged_and_credentialed_urls ... ok
+test tests::address_field_matches_original_search_host_and_policy_behavior ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_core-10b3aa4c9f7bc044)
+
+running 37 tests
+test document::tests::reloading_external_text_preserves_local_edits_in_undo_and_rejects_unreadable_snapshots ... ok
+test document::tests::conflicting_save_pauses_queue_and_requires_explicit_resolution ... ok
+test document::tests::save_echo_requires_write_identity_and_late_ack_keeps_newer_disk_state ... ok
+test document::tests::external_updates_reload_clean_buffers_and_preserve_dirty_deleted_edits ... ok
+test document::tests::external_rename_moves_dirty_buffer_undo_and_tabs_without_overwriting_open_destination ... ok
+test document::tests::late_reads_cannot_replace_newer_selection_or_same_name_in_another_workspace ... ok
+test document::tests::document_workspace_lease_covers_pending_saves_and_reopen_reads_fresh_after_close ... ok
+test document::tests::save_acknowledges_exact_snapshot_and_serializes_writes_across_navigation ... ok
+test document::tests::late_overwrite_ack_cannot_clear_a_newer_external_conflict ... ok
+test document::tests::switching_files_sessions_and_closing_views_preserves_dirty_buffer_and_undo ... ok
+test event::tests::accepts_legacy_properties_envelope ... ok
+test event::tests::permission_payload_normalizes ... ok
+test event::tests::strips_numbered_event_suffix ... ok
+test document::tests::unsaved_files_follow_workspace_and_tab_order_including_retained_closed_edits ... ok
+test event::tests::parses_stream_delta_and_derives_part_id ... ok
+test layout::tests::offsets_and_hit_testing ... ok
+test layout::tests::content_change_invalidates_one_height ... ok
+test markdown::tests::a_long_paragraph_is_one_block ... ok
+test markdown::tests::handles_unclosed_fence_while_streaming ... ok
+test markdown::tests::keeps_fenced_code_whole_even_with_blank_lines ... ok
+test markdown::tests::splits_paragraphs_and_headings ... ok
+test markdown::tests::trims_blank_edges ... ok
+test text::tests::ime_replaces_marked_text_and_undoes_as_one_transaction ... ok
+test appearance::tests::preserves_all_original_palettes_and_required_tokens ... ok
+test text::tests::moving_and_deleting_respect_multiline_graphemes ... ok
+test text::tests::selection_replacement_undo_and_redo_preserve_unicode ... ok
+test text::tests::utf16_ranges_and_reversed_selections_are_byte_safe ... ok
+test transcript::tests::completed_text_replaces_streamed_text ... ok
+test transcript::tests::streams_text_without_rebuilding_completed_blocks ... ok
+test document::tests::failed_save_keeps_dirty_state_and_still_releases_the_next_request ... ok
+test transcript::tests::hydrates_replay_messages ... ok
+test document::tests::editing_pins_a_preview_even_after_undo_but_selection_does_not ... ok
+test transcript::tests::tool_lifecycle_is_terminal_and_non_regressing ... ok
+test warm::tests::evicts_least_recently_used_by_count ... ok
+test warm::tests::evicts_by_byte_budget ... ok
+test warm::tests::keeps_drafts_and_scroll_across_touches ... ok
+test text::tests::large_documents_store_edit_deltas_and_restore_selection ... ok
+
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/perf.rs (target/debug/deps/perf-1c1eef2f5c1aa868)
+
+running 1 test
+test transcript_and_warm_navigation ... ignored, performance measurement; run with --release --ignored --nocapture
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-ad9cb31fae60e688)
+
+running 42 tests
+test files::tests::safe_rel_matches_validation ... ok
+test migration::tests::refuses_a_future_schema_instead_of_guessing ... ok
+test migration::tests::accepts_the_legacy_array_shape ... ok
+test migration::tests::tolerates_missing_and_corrupt_legacy_files ... ok
+test migration::tests::imports_v2_bookmarks_idempotently_and_leaves_the_source_untouched ... ok
+test files::tests::rejects_symlinks ... ok
+test files::tests::creates_new_files_without_overwriting ... ok
+test files::tests::rejects_traversal_absolute_and_backslashes ... ok
+test files::tests::lists_directories_first_and_hides_metadata ... ok
+test persist::tests::future_schema_is_not_downgraded_silently ... ok
+test persist::tests::corrupt_file_falls_back_without_deleting_it ... ok
+test persist::tests::round_trips_atomically ... ok
+test persist::tests::shell_preference_defaults_to_codex_and_round_trips ... ok
+test observation::tests::notification_queue_is_bounded_and_overflow_rescan_deadline_does_not_starve ... ok
+test preview::tests::html_targets_match_reference_search_depth_entries_and_confinement ... ok
+test provider_oauth::tests::automatic_authorization_finishes_or_cleans_up_expiry ... ok
+test provider_oauth::tests::cancelled_late_start_is_cleaned_up_without_publishing_an_attempt ... ok
+test observation::tests::rename_correlation_survives_separate_batches_and_rejects_ambiguous_hardlinks_and_symlinks ... ok
+test provider_oauth::tests::code_authorization_retries_redacted_errors_then_finishes ... ok
+test files::tests::reads_and_writes_files_atomically ... ok
+test preview::tests::application_quit_kills_preview_and_helpers_without_polling_async_cleanup ... ok
+test recovery::tests::changed_source_is_restored_without_overwrite_and_editor_proposal_survives ... ok
+test recovery::tests::external_creation_after_hold_is_never_clobbered ... ok
+test recovery::tests::failed_install_restores_original_and_preserves_proposal ... ok
+test recovery::tests::interrupted_source_hold_recovers_after_restart_but_preserves_new_external_file ... ok
+test recovery::tests::recovery_rejects_symlink_directories_and_does_not_follow_manifest_traversal ... ok
+test preview::tests::previews_serve_encoded_entries_toggle_independently_and_release_ports ... ok
+test recovery::tests::explicit_overwrite_preserves_the_external_original_and_can_recreate_a_deleted_file ... ok
+test git::tests::rejects_paths_outside_the_workspace ... ok
+test window_state::tests::accepts_reference_formats_without_clamping_small_windows ... ok
+test runtime::tests::cli_probe_uses_successful_first_line_and_bounds_a_hung_process ... ok
+test recovery::tests::save_preserves_mode_and_independent_proposed_copy ... ok
+test window_state::tests::legacy_import_never_overwrites_native_dimensions_and_resizes_round_trip ... ok
+test runtime::tests::runtime_profile_alias_requires_complete_identity_and_cli_errors_are_bounded ... ok
+test git::tests::reports_modified_and_untracked_files ... ok
+test git::tests::produces_tracked_and_untracked_diffs ... ok
+test preview::tests::preview_readiness_failures_exit_diagnostics_and_shutdown_clean_up_children ... ok
+test recovery::tests::observation_receipt_identifies_the_held_original_and_deleted_recreation ... ok
+test files::tests::directory_inventory_does_not_silently_drop_entries_after_one_thousand ... ok
+test observation::tests::observations_preserve_known_and_unknown_baselines_refresh_git_and_ignore_unsafe_or_large_files ... ok
+test runtime::tests::runtime_sync_scopes_cli_to_connected_profile_and_rebinds_updated_service ... ok
+test observation::tests::native_events_follow_external_writes_save_echoes_multiple_owners_and_new_generations ... ok
+
+test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.25s
+
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-d2c008816e965ab6)
+
+running 1 test
+test end_to_end_replay_stream_prompt_and_permission ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.15s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_opencode-c87644daad6514cc)
+
+running 13 tests
+test client::tests::permission_decisions_match_protocol ... ok
+test client::tests::parses_session_location_and_title ... ok
+test service::tests::recognizes_v2_versions ... ok
+test providers::tests::typed_fields_preserve_conditions_options_defaults_and_constraints ... ok
+test providers::tests::catalog_matches_reference_order_aliases_and_connection_sources_without_secrets ... ok
+test providers::tests::malformed_optional_metadata_does_not_hide_valid_fields ... ok
+test stream::tests::handles_crlf_and_multiple_frames ... ok
+test stream::tests::parses_multiline_frames_with_comments ... ok
+test stream::tests::handles_bom_mixed_line_endings_and_preserves_data_whitespace_at_every_boundary ... ok
+test client::tests::base_url_keeps_a_trailing_slash_for_joining ... ok
+test service::tests::discovery_validates_reported_major_when_registration_omits_version ... ok
+test stream::tests::unicode_delta_survives_http_chunks_that_split_every_utf8_codepoint ... ok
+test service::tests::starting_service_uses_the_selected_profile_and_configured_binary ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_terminal-b6ade6cb3524e6e8)
+
+running 5 tests
+test emulator::tests::applies_sgr_foreground_color ... ok
+test emulator::tests::writes_text_and_advances_cursor ... ok
+test emulator::tests::handles_carriage_return_and_newline ... ok
+test emulator::tests::supports_alternate_screen_and_clear ... ok
+test emulator::tests::resize_preserves_a_usable_grid ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/pty_flow.rs (target/debug/deps/pty_flow-a69cff9b3f09629f)
+
+running 1 test
+test pty_output_reaches_the_emulator ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-2d20f761eceab5df)
+
+running 25 tests
+test app::tabs::tests::overflow_always_leaves_access_to_every_file_and_browser ... ok
+test editor::tests::expanded_tabs_preserve_unicode_source_offsets ... ok
+test app::close::tests::long_close_paths_match_reference_utf16_tail_limit ... ok
+test app::tests::terminal_key_encoding_covers_control_and_arrows ... ok
+test app::close::tests::clean_pending_save_is_not_safe_and_conflicting_edits_remain_unsaved ... ok
+test app::close::tests::close_waits_for_all_workspace_snapshots_and_rejects_intervening_edits ... ok
+test multiple_selection::tests::ranges_keep_their_anchor_and_toggles_preserve_option_order ... ok
+test provider_validation::tests::constraints_use_utf16_browser_step_base_and_do_not_validate_unused_metadata ... ok
+test providers::tests::numeric_conditions_match_browser_numbers_without_string_coercion ... ok
+test providers::tests::late_catalog_cannot_replace_another_workspace_or_a_newer_refresh ... ok
+test app::tests::terminal_rows_have_byte_exact_runs ... ok
+test input::tests::length_limits_apply_to_utf16_replacements_and_committed_composition ... ok
+test scroll::tests::overflow_probe_requests_a_followup_frame_without_another_input ... ok
+test toasts::tests::overlapping_expiry_never_removes_a_newer_toast ... ok
+test input::tests::password_input_masks_unicode_and_blocks_copy_cut_and_platform_context_leaks ... ok
+test app::tabs::tests::keyboard_overflow_activation_toggles_once_per_press_release ... ok
+test input::tests::native_fields_traverse_tabs_and_preserve_submit_newline_and_composition_intent ... ok
+test scroll::tests::gutter_follows_overflow_after_content_removal_and_viewport_resize ... ok
+test input::tests::long_single_line_unicode_input_keeps_caret_inside_its_content_viewport ... ok
+test scroll::tests::keyboard_focus_reveals_offscreen_controls_without_trapping_manual_scroll ... ok
+test app::explorer::tests::large_tree_scroll_reaches_last_file_and_new_batches_without_painting_every_row ... ok
+test editor::tests::document_end_reveals_last_line_without_rendering_the_whole_file ... ok
+test provider_validation::tests::html_patterns_use_unicode_sets_backreferences_and_literal_data ... ok
+test providers::tests::invalid_dynamic_fields_block_submission_and_hidden_fields_do_not ... ok
+test settings::tests::settings_content_stays_inside_viewport_with_long_update_copy ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.02s
+
+   Doc-tests vela_browser
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vela_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vela_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vela_opencode
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vela_terminal
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vela_ui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

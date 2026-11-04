@@ -1,0 +1,12 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.96s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-53443e6c52063261)
+
+running 2 tests
+test detach::tests::invalid_store_and_parent_failure_preserve_the_source ... ok
+test detach::tests::detaching_file_and_folder_retains_disk_bytes_and_rejects_unsafe_paths ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.02s
+

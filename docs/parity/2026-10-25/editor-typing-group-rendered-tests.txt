@@ -1,0 +1,146 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0433]: cannot find type `Rc` in this scope
+    --> crates/vela-ui/src/editor.rs:1240:25
+     |
+1240 |         let documents = Rc::new(RefCell::new(Documents::default()));
+     |                         ^^ use of undeclared type `Rc`
+     |
+help: consider importing one of these structs
+     |
+1236 +     use crate::editor::Rc;
+     |
+1236 +     use std::rc::Rc;
+     |
+
+error[E0433]: cannot find type `RefCell` in this scope
+    --> crates/vela-ui/src/editor.rs:1240:33
+     |
+1240 |         let documents = Rc::new(RefCell::new(Documents::default()));
+     |                                 ^^^^^^^ use of undeclared type `RefCell`
+     |
+help: consider importing one of these structs
+     |
+1236 +     use crate::editor::RefCell;
+     |
+1236 +     use std::cell::RefCell;
+     |
+
+error[E0433]: cannot find type `CodeEditor` in this scope
+    --> crates/vela-ui/src/editor.rs:1247:26
+     |
+1247 |             let editor = CodeEditor::new(key.clone(), documents, cx);
+     |                          ^^^^^^^^^^ use of undeclared type `CodeEditor`
+     |
+help: consider importing this struct
+     |
+1236 +     use crate::editor::CodeEditor;
+     |
+
+error[E0433]: cannot find type `DocumentKey` in this scope
+    --> crates/vela-ui/src/editor.rs:1239:19
+     |
+1239 |         let key = DocumentKey::new("/fixture".into(), "undo.txt".into());
+     |                   ^^^^^^^^^^^ use of undeclared type `DocumentKey`
+
+error[E0433]: cannot find type `Documents` in this scope
+    --> crates/vela-ui/src/editor.rs:1240:46
+     |
+1240 |         let documents = Rc::new(RefCell::new(Documents::default()));
+     |                                              ^^^^^^^^^ use of undeclared type `Documents`
+
+error[E0425]: cannot find function `px` in this scope
+    --> crates/vela-ui/src/editor.rs:1251:33
+     |
+1251 |         cx.simulate_resize(size(px(675.), px(500.)));
+     |                                 ^^
+     |
+help: a local variable with a similar name exists
+     |
+1251 -         cx.simulate_resize(size(px(675.), px(500.)));
+1251 +         cx.simulate_resize(size(cx(675.), px(500.)));
+     |
+
+error[E0425]: cannot find function `px` in this scope
+    --> crates/vela-ui/src/editor.rs:1251:43
+     |
+1251 |         cx.simulate_resize(size(px(675.), px(500.)));
+     |                                           ^^
+     |
+help: a local variable with a similar name exists
+     |
+1251 -         cx.simulate_resize(size(px(675.), px(500.)));
+1251 +         cx.simulate_resize(size(px(675.), cx(500.)));
+     |
+
+error[E0425]: cannot find function `size` in this scope
+    --> crates/vela-ui/src/editor.rs:1251:28
+     |
+1251 |         cx.simulate_resize(size(px(675.), px(500.)));
+     |                            ^^^^ not found in this scope
+
+error[E0425]: cannot find function `px` in this scope
+    --> crates/vela-ui/src/editor.rs:1253:27
+     |
+1253 |             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+     |                           ^^
+     |
+help: a local variable with a similar name exists
+     |
+1253 -             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+1253 +             cx.draw(point(cx(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+     |
+
+error[E0425]: cannot find function `px` in this scope
+    --> crates/vela-ui/src/editor.rs:1253:35
+     |
+1253 |             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+     |                                   ^^
+     |
+help: a local variable with a similar name exists
+     |
+1253 -             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+1253 +             cx.draw(point(px(0.), cx(0.)), size(px(675.), px(500.)), |_, _| {
+     |
+
+error[E0425]: cannot find function `point` in this scope
+    --> crates/vela-ui/src/editor.rs:1253:21
+     |
+1253 |             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+     |                     ^^^^^ not found in this scope
+
+error[E0425]: cannot find function `px` in this scope
+    --> crates/vela-ui/src/editor.rs:1253:49
+     |
+1253 |             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+     |                                                 ^^
+     |
+help: a local variable with a similar name exists
+     |
+1253 -             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+1253 +             cx.draw(point(px(0.), px(0.)), size(cx(675.), px(500.)), |_, _| {
+     |
+
+error[E0425]: cannot find function `px` in this scope
+    --> crates/vela-ui/src/editor.rs:1253:59
+     |
+1253 |             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+     |                                                           ^^
+     |
+help: a local variable with a similar name exists
+     |
+1253 -             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+1253 +             cx.draw(point(px(0.), px(0.)), size(px(675.), cx(500.)), |_, _| {
+     |
+
+error[E0425]: cannot find function `size` in this scope
+    --> crates/vela-ui/src/editor.rs:1253:44
+     |
+1253 |             cx.draw(point(px(0.), px(0.)), size(px(675.), px(500.)), |_, _| {
+     |                                            ^^^^ not found in this scope
+
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+error: could not compile `vela-ui` (lib test) due to 14 previous errors

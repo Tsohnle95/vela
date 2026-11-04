@@ -1,0 +1,31 @@
+   Compiling getrandom v0.2.17
+   Compiling ring v0.17.14
+   Compiling rustls-webpki v0.103.16
+   Compiling rustls v0.23.46
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.97s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-2b8f2aa34662d861)
+
+running 15 tests
+test sass_sources::tests::symlink_sources_and_roots_are_not_followed ... ok
+test sass_output::tests::symlink_output_parent_or_changed_root_cannot_modify_external_bytes ... ok
+test sass_state::tests::relocation_and_reopen_reject_old_workers_and_output ... ok
+test sass_state::tests::roots_toggle_independently_but_all_owners_of_one_root_follow ... ok
+test sass_preferences::tests::invalid_or_unwritable_preferences_are_not_silently_overwritten ... ok
+test sass_state::tests::same_root_shares_worker_until_last_owner_closes ... ok
+test sass_sources::tests::partial_add_edit_and_delete_change_inventory_without_becoming_outputs ... ok
+test sass_sources::tests::configuration_edits_trigger_a_pass_without_becoming_entrypoints ... ok
+test sass_output::tests::complete_output_replaces_old_css_without_leaving_staging_files ... ok
+test sass_output::tests::mapped_output_directories_and_maps_are_installed_inside_the_root ... ok
+test sass_compiler::tests::cancellation_kills_the_owned_compiler_process ... ok
+test sass_preferences::tests::roots_survive_restart_and_toggles_preserve_other_roots ... ok
+test sass_preferences::tests::corrupt_primary_recovers_without_destroying_valid_backup ... ok
+test sass_sources::tests::source_ignore_rules_preserve_hidden_project_sources_and_deep_entries ... ok
+test sass_compiler::tests::pinned_compiler_returns_modern_sass_maps_and_diagnostics_without_writing_outputs ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.18s
+

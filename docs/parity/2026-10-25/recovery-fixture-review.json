@@ -1,0 +1,207 @@
+[
+  {
+    "transaction": {
+      "version": 1,
+      "id": "1792916493181-b9c927a1-87d6-4769-84ad-6c9a39d63edd",
+      "operation": "save",
+      "originalPath": "conflict.txt",
+      "createdAt": 1792916493181,
+      "phase": "complete",
+      "acknowledged": [
+        "temporary",
+        "original",
+        "proposed"
+      ],
+      "reason": "saved"
+    },
+    "files": [
+      {
+        "artifact": "original",
+        "bytes": 32,
+        "sha256": "db179cef1632bed21fe24076b7f3ce61d0112d8d60963d4b05d59259a21e34ed"
+      },
+      {
+        "artifact": "temporary",
+        "bytes": 41,
+        "sha256": "1010e4b082af424c01eb9a96771090e2b757ac6184cb226acdb80f56d811fbb4"
+      },
+      {
+        "artifact": "proposed",
+        "bytes": 55,
+        "sha256": "9a3aaaae00b660f5f0b1462200888a39fc64541dca21e6f57f9304967422c235"
+      }
+    ]
+  },
+  {
+    "transaction": {
+      "version": 1,
+      "id": "1792916757939-c6ed43aa-d1a2-4f8d-b11b-615ad02242f0",
+      "operation": "save",
+      "originalPath": "conflict.txt",
+      "createdAt": 1792916757939,
+      "phase": "failed",
+      "acknowledged": [],
+      "reason": "save-failed"
+    },
+    "files": [
+      {
+        "artifact": "original",
+        "bytes": 41,
+        "sha256": "1010e4b082af424c01eb9a96771090e2b757ac6184cb226acdb80f56d811fbb4"
+      },
+      {
+        "artifact": "temporary",
+        "bytes": 80,
+        "sha256": "d7a115b0cdf67ae555eb67d90756c0d95234f468135a89dac94466483e998d0a"
+      },
+      {
+        "artifact": "proposed",
+        "bytes": 80,
+        "sha256": "d7a115b0cdf67ae555eb67d90756c0d95234f468135a89dac94466483e998d0a"
+      }
+    ]
+  },
+  {
+    "transaction": {
+      "version": 1,
+      "id": "1792917987471-21c288f7-8221-45da-8806-924a89c65c92",
+      "operation": "save",
+      "originalPath": "conflict.txt",
+      "createdAt": 1792917987471,
+      "phase": "failed",
+      "acknowledged": [],
+      "reason": "save-failed"
+    },
+    "files": [
+      {
+        "artifact": "original",
+        "bytes": 41,
+        "sha256": "1010e4b082af424c01eb9a96771090e2b757ac6184cb226acdb80f56d811fbb4"
+      },
+      {
+        "artifact": "temporary",
+        "bytes": 59,
+        "sha256": "e22337d31e4c3cda3e44105cc7b51ec91444ae91ca8fb9e7cd0c8de08c877148"
+      },
+      {
+        "artifact": "proposed",
+        "bytes": 59,
+        "sha256": "e22337d31e4c3cda3e44105cc7b51ec91444ae91ca8fb9e7cd0c8de08c877148"
+      }
+    ]
+  },
+  {
+    "transaction": {
+      "version": 1,
+      "id": "1792918019495-2215edd3-da7b-4293-8840-a0fd711cc2e5",
+      "operation": "save",
+      "originalPath": "conflict.txt",
+      "createdAt": 1792918019495,
+      "phase": "complete",
+      "acknowledged": [
+        "temporary",
+        "original",
+        "proposed"
+      ],
+      "reason": "saved"
+    },
+    "files": [
+      {
+        "artifact": "original",
+        "bytes": 41,
+        "sha256": "1010e4b082af424c01eb9a96771090e2b757ac6184cb226acdb80f56d811fbb4"
+      },
+      {
+        "artifact": "temporary",
+        "bytes": 27,
+        "sha256": "5243a15f32374f1976b7cb1dc06c8eea18abb9c760972e064f44f207a013fcd3"
+      },
+      {
+        "artifact": "proposed",
+        "bytes": 81,
+        "sha256": "d86912326097836ad5869af9adcc04a466f2581092b93e3212bebdda185ee1fa"
+      }
+    ]
+  },
+  {
+    "transaction": {
+      "version": 1,
+      "id": "1792918037001-d2e562a7-a041-4d6b-9b91-d063c0183214",
+      "operation": "save",
+      "originalPath": "conflict.txt",
+      "createdAt": 1792918037001,
+      "phase": "failed",
+      "acknowledged": [],
+      "reason": "save-failed"
+    },
+    "files": [
+      {
+        "artifact": "original",
+        "bytes": 27,
+        "sha256": "5243a15f32374f1976b7cb1dc06c8eea18abb9c760972e064f44f207a013fcd3"
+      },
+      {
+        "artifact": "temporary",
+        "bytes": 107,
+        "sha256": "f856dead02e903d4a80758d5ef074f62651753bcc5d7fd80fef14d22c17c76de"
+      },
+      {
+        "artifact": "proposed",
+        "bytes": 107,
+        "sha256": "f856dead02e903d4a80758d5ef074f62651753bcc5d7fd80fef14d22c17c76de"
+      }
+    ]
+  },
+  {
+    "transaction": {
+      "version": 1,
+      "id": "1792918076551-980bb9a7-fde3-46dd-9a89-fc423b890ec0",
+      "operation": "save",
+      "originalPath": "conflict.txt",
+      "createdAt": 1792918076551,
+      "phase": "failed",
+      "acknowledged": [],
+      "reason": "save-failed"
+    },
+    "files": [
+      {
+        "artifact": "temporary",
+        "bytes": 52,
+        "sha256": "301577fb81521b8b24cad13f5e6a6d2c617bbc0999c47f1324d88ec4d1c3be36"
+      },
+      {
+        "artifact": "proposed",
+        "bytes": 52,
+        "sha256": "301577fb81521b8b24cad13f5e6a6d2c617bbc0999c47f1324d88ec4d1c3be36"
+      }
+    ]
+  },
+  {
+    "transaction": {
+      "version": 1,
+      "id": "1792918088393-94e24d45-1ba3-46b3-bfcb-90fa19ddd2fa",
+      "operation": "save",
+      "originalPath": "conflict.txt",
+      "createdAt": 1792918088393,
+      "phase": "complete",
+      "acknowledged": [
+        "temporary",
+        "original",
+        "proposed"
+      ],
+      "reason": "saved"
+    },
+    "files": [
+      {
+        "artifact": "temporary",
+        "bytes": 52,
+        "sha256": "301577fb81521b8b24cad13f5e6a6d2c617bbc0999c47f1324d88ec4d1c3be36"
+      },
+      {
+        "artifact": "proposed",
+        "bytes": 52,
+        "sha256": "301577fb81521b8b24cad13f5e6a6d2c617bbc0999c47f1324d88ec4d1c3be36"
+      }
+    ]
+  }
+]

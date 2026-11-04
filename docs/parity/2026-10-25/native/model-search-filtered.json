@@ -1,0 +1,100 @@
+{
+  "captured_utc": "2026-10-28T03:37:57.709183+00:00",
+  "surface": "native",
+  "window": {
+    "active": true,
+    "bounds": {
+      "Height": 700,
+      "Width": 900,
+      "X": 2108,
+      "Y": 163
+    },
+    "id": 34990,
+    "layer": 0,
+    "owner": "Vela Native QA",
+    "pid": 8550,
+    "title": "Vela"
+  },
+  "requested_window": {
+    "active": true,
+    "bounds": {
+      "Height": 700,
+      "Width": 900,
+      "X": 2108,
+      "Y": 163
+    },
+    "id": 34990,
+    "layer": 0,
+    "owner": "Vela Native QA",
+    "pid": 8550,
+    "title": "Vela"
+  },
+  "capture_surface": "window",
+  "capture_window_inventory": [
+    {
+      "active": true,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2108,
+        "Y": 163
+      },
+      "id": 34990,
+      "layer": 0,
+      "owner": "Vela Native QA",
+      "pid": 8550,
+      "title": "Vela"
+    }
+  ],
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    900,
+    700
+  ],
+  "point_size": [
+    900,
+    700
+  ],
+  "sha256": "b7e82df2eebd89996543873422dd1c51e912dce30240dfc1536df1606fabfb1b",
+  "head": "e882e09c9813301d33811ebc3f6099e88163da16",
+  "tracked_diff_sha256": "f2bcb4521643d24bbfe596a98bd382088c2cd80e8f50ff87406d9aea9c9a0df0",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "34990"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "capture_stable": true,
+  "capture_window_inventory_after": [
+    {
+      "active": true,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2108,
+        "Y": 163
+      },
+      "id": 34990,
+      "layer": 0,
+      "owner": "Vela Native QA",
+      "pid": 8550,
+      "title": "Vela"
+    }
+  ],
+  "source_tree_sha256": "71a29fdb0cbfaae5fdb88859692b8a7eb93e4e512340abb24125d4f67c538f1d",
+  "source_tree_files": 92,
+  "source_tree_roots": [
+    "crates",
+    "apps",
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "source_tree_includes_untracked": true,
+  "binary_path": "target/debug/Vela Native QA.app/Contents/MacOS/Vela Native QA",
+  "binary_sha256": "6cac7e8ee578874dd943779543aa37043bbb7baf68d5d30d8611dc72859f635e"
+}

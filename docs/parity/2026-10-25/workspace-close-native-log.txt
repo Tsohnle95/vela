@@ -1,0 +1,15 @@
+2026-10-31T18:59:31.279865Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:33.541234Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:35.801990Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:38.065212Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:40.322191Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:42.583099Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:44.841980Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:47.102459Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:49.360838Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:51.621270Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:53.877943Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:56.136935Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T18:59:58.398116Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T19:00:00.655687Z  WARN vela_engine::engine: OpenCode connection failed; retrying error=opencode serve --service exited with exit status: 1
+2026-10-31T19:00:02.663906Z  WARN vela_engine::engine: engine error This session has no workspace directory

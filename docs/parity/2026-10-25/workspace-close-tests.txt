@@ -1,0 +1,15 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.43s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-5c12963d3a4790e1)
+
+running 2 tests
+test app::workspace_close::tests::conflicts_new_edits_and_failed_writes_cannot_close_a_workspace ... ok
+test app::workspace_close::tests::captured_close_requires_exact_acknowledged_edits_and_ignores_other_workspaces ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 94 filtered out; finished in 0.00s
+

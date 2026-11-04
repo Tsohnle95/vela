@@ -1,0 +1,58 @@
+Window: "Vela", App: Vela.
+0 standard window Vela, Secondary Actions: Raise
+	1 HTML content Vela, URL: file:///Users/tdawg/code-repositories/vela/out/renderer/index.html
+		2 container
+			3 toggle button Description: Hide left panel, Value: 1
+			4 tab group Open editor tabs
+			5 toggle button Description: Enter Agent Mode, Help: Agent Mode — collapse the sidebar and split models across the workspace, Value: 0
+			6 button Description: Add model panel, Help: Add agent panel (choose a folder)
+			7 toggle button Description: Hide agent panel, Value: 1
+			8 container Workspace views
+				9 toggle button Description: Sessions, Value: 0
+				10 toggle button Description: Files, Value: 0
+				11 button Description: Terminal, Help: Show terminal (⌥O)
+				12 toggle button Description: Changes, Value: 0
+				13 button Open a browser tab
+				14 toggle button Description: Settings, Help: Close settings, Value: 1
+			15 container
+				16 text PREFERENCES Settings
+			17 container Settings sections
+				18 button Appearance
+				19 button Providers
+				20 button Voice
+				21 button Model
+				22 button Servers
+				23 button Mobile Setup
+				24 button About
+			25 container
+				26 text VELA PREFERENCES
+				27 heading About, Value: 1
+					28 text About
+				29 text Version and product information for this installation.
+				30 button Back to workspace
+				31 heading Vela, Value: 2
+					32 text Vela
+				33 container
+					34 text Version  0.1.0  ·  Development/test build
+				35 text A native desktop cockpit for coding agents.
+				36 heading APP UPDATES, Value: 2
+					37 text APP UPDATES
+				38 text Development build
+				39 text GitHub app updates are disabled here. Develop and test this local checkout; source edits do not update the installed app through the release updater.
+				40 text Updater disabled
+	41 close button
+	42 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	43 minimize button
+44 menu bar
+	45 Vela
+	46 File
+	47 Edit
+	48 View
+	49 Window
+	50 Help
+
+Selected text: ```
+￼
+```
+
+Note: Pay special attention to the content selected by the user. If the user asks a question or refers to the content they are looking at on-screen, they might be referring to the selected content (but they might be referring to something else that's visible, too).

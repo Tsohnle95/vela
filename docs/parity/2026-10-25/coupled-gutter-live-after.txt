@@ -1,0 +1,37 @@
+Native QA session74252 metadata-only output after axis-specific gutter fix; tool output follows. If truncated, the raw tool output identifies that explicitly.
+
+2026-10-30T03:01:39.679048Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:39.680168Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:39.751963Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:39.752895Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:51.758877Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:51.759730Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:51.771864Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:51.772622Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:51.793373Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:51.794112Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:52.269311Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:52.270087Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:52.281975Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:52.282768Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:56.602343Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:56.603486Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:57.258668Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:57.259449Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:57.272767Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:57.273785Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:57.293157Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:57.293969Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:57.305765Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:57.306580Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:57.327777Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:57.328576Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:01:58.251409Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:01:58.252189Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:02:28.577649Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:02:28.578389Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:02:28.588821Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:02:28.589536Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T03:02:28.604642Z TRACE vela_ui::app::markdown_view: code scroll layout unwrapped_width=1854.4923px gutter=8px wrap=false
+2026-10-30T03:02:28.605399Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 453px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+

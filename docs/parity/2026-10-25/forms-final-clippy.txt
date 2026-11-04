@@ -1,0 +1,66 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Checking vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error: usage of `contains_key` followed by `insert` on a `HashMap`
+  --> crates/vela-ui/src/forms.rs:76:29
+   |
+76 | / ...                   if !state.inputs.contains_key(&key) {
+77 | | ...                       let placeholder = field
+78 | | ...                           .placeholder
+79 | | ...                           .clone()
+...  |
+90 | | ...                       state.inputs.insert(key, input);
+91 | | ...                   }
+   | |_______________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#map_entry
+   = note: `-D clippy::map-entry` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::map_entry)]`
+help: try
+   |
+76 ~                             state.inputs.entry(key).or_insert_with(|| {
+77 +                                 let placeholder = field
+78 +                                     .placeholder
+79 +                                     .clone()
+80 +                                     .or_else(|| field.title.clone())
+81 +                                     .unwrap_or_else(|| field.key.clone());
+82 +                                 let default = text_default(field);
+83 +                                 let input = cx.new(|cx| {
+84 +                                     let mut input = TextInput::new(false, &placeholder, cx);
+85 +                                     if !default.is_empty() {
+86 +                                         input.set_text(default, cx);
+87 +                                     }
+88 +                                     input
+89 +                                 });
+90 +                                 input
+91 +                             });
+   |
+
+error: this `if` statement can be collapsed
+   --> crates/vela-ui/src/forms.rs:209:25
+    |
+209 | /                         if let Ok(value) = text.trim().parse::<f64>() {
+210 | |                             if let Some(number) = serde_json::Number::from_f64(value) {
+211 | |                                 answers.insert(field.key.clone(), serde_json::Value::Number(number));
+212 | |                             }
+213 | |                         }
+    | |_________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `-D clippy::collapsible-if` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::collapsible_if)]`
+help: collapse nested if block
+    |
+209 ~                         if let Ok(value) = text.trim().parse::<f64>()
+210 ~                             && let Some(number) = serde_json::Number::from_f64(value) {
+211 |                                 answers.insert(field.key.clone(), serde_json::Value::Number(number));
+212 ~                             }
+    |
+
+error: could not compile `vela-ui` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `vela-ui` (lib test) due to 2 previous errors
+EXIT:101

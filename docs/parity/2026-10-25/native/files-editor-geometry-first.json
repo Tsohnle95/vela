@@ -1,0 +1,156 @@
+{
+  "captured_utc": "2026-10-27T16:57:37.554264+00:00",
+  "surface": "native",
+  "window": {
+    "active": false,
+    "bounds": {
+      "Height": 800,
+      "Width": 1280,
+      "X": 2108,
+      "Y": 163
+    },
+    "id": 29402,
+    "layer": 0,
+    "owner": "Vela Native QA",
+    "pid": 66516,
+    "title": "Vela"
+  },
+  "requested_window": {
+    "active": false,
+    "bounds": {
+      "Height": 800,
+      "Width": 1280,
+      "X": 2108,
+      "Y": 163
+    },
+    "id": 29402,
+    "layer": 0,
+    "owner": "Vela Native QA",
+    "pid": 66516,
+    "title": "Vela"
+  },
+  "capture_surface": "window",
+  "capture_window_inventory": [
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 2108,
+        "Y": 163
+      },
+      "id": 29402,
+      "layer": 0,
+      "owner": "Vela Native QA",
+      "pid": 66516,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 2268,
+        "Y": 219
+      },
+      "id": 23361,
+      "layer": 0,
+      "owner": "Vela",
+      "pid": 70424,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 2258,
+        "Y": 314
+      },
+      "id": 17990,
+      "layer": 0,
+      "owner": "Vela Native",
+      "pid": 62971,
+      "title": "Vela"
+    }
+  ],
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    1280,
+    800
+  ],
+  "point_size": [
+    1280,
+    800
+  ],
+  "sha256": "aea6b294ab1895fdd2fa5af75b405f1591d8a2893bed29b240b5abf6d7cca499",
+  "head": "e882e09c9813301d33811ebc3f6099e88163da16",
+  "tracked_diff_sha256": "542080734d72f0bf43e4706a3ba74929c0e6ce94a7ff127ce83e99e0a1d87263",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "29402"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "capture_stable": true,
+  "capture_window_inventory_after": [
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 2108,
+        "Y": 163
+      },
+      "id": 29402,
+      "layer": 0,
+      "owner": "Vela Native QA",
+      "pid": 66516,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 2268,
+        "Y": 219
+      },
+      "id": 23361,
+      "layer": 0,
+      "owner": "Vela",
+      "pid": 70424,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 2258,
+        "Y": 314
+      },
+      "id": 17990,
+      "layer": 0,
+      "owner": "Vela Native",
+      "pid": 62971,
+      "title": "Vela"
+    }
+  ],
+  "source_tree_sha256": "54cabb38a4065a87e00f81f5f601a4227bbcb188d92f38f29b7bb17b65566d32",
+  "source_tree_files": 89,
+  "source_tree_roots": [
+    "crates",
+    "apps",
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "source_tree_includes_untracked": true,
+  "binary_path": "target/debug/Vela Native QA.app/Contents/MacOS/Vela Native QA",
+  "binary_sha256": "3f582d501e753fc1ed58998cc8afaac84c3c1f9f1dfef857ebf66d9a2437d962"
+}

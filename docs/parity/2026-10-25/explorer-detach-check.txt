@@ -1,0 +1,12 @@
+    Checking vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Checking vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0616]: field `return_focus` of struct `explorer_rename::Menu` is private
+  --> crates/vela-ui/src/explorer_detach.rs:55:79
+   |
+55 |                     let focus = app.explorer_menu.take().and_then(|menu| menu.return_focus);
+   |                                                                               ^^^^^^^^^^^^ private field
+
+For more information about this error, try `rustc --explain E0616`.
+error: could not compile `vela-ui` (lib) due to 1 previous error

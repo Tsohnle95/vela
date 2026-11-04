@@ -1,0 +1,41 @@
+[
+  {
+    "info": {
+      "id": "msg_markdown_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_000",
+        "type": "text",
+        "text": "Check wrapped tabs and the final code sentinel."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_markdown_001",
+      "role": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture",
+        "providerID": "mock"
+      },
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_001",
+        "type": "text",
+        "text": "## Wrapped tabs\n\n```text\nA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tA\tEND_OF_TABS\nAB\tWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDEWIDE🌍END_OF_CODE\n\tindented\tvalue\n\nlast\tcell\n```\n\nAfter code."
+      }
+    ]
+  }
+]

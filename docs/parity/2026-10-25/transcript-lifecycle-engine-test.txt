@@ -1,0 +1,11 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.05s
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-67649d2441fcf86d)
+
+running 1 test
+test end_to_end_replay_stream_prompt_and_permission ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.05s
+

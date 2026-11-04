@@ -1,0 +1,8 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.20s
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-2ca414e6e9caa9cd)
+
+running 1 test
+test end_to_end_replay_stream_prompt_and_permission ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 6.22s
+

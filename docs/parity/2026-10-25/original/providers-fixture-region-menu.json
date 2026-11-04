@@ -1,0 +1,53 @@
+{
+  "captured_utc": "2026-10-26T07:00:54.813224+00:00",
+  "surface": "original",
+  "window": {
+    "active": false,
+    "bounds": {
+      "Height": 106,
+      "Width": 384,
+      "X": -613,
+      "Y": 688
+    },
+    "id": 21205,
+    "layer": 101,
+    "owner": "Vela",
+    "pid": 22474,
+    "title": ""
+  },
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    768,
+    212
+  ],
+  "point_size": [
+    384,
+    106
+  ],
+  "sha256": "463824cdb998f324c70ddf033ba6f6a7434473d758afd67bca3e434d390f1133",
+  "head": "3157a41357f28137874d7298af6177e657df5afc",
+  "tracked_diff_sha256": "081404bfc5fb3ee4f740c91ed7c15b16eb58756b4c6ffd824a03018066cb3025",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "21205"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "source_tree_sha256": "a0ef509a62e3513c6aec148dbf1b3621adbe8714713c7ab5ae5e54e0eca31a84",
+  "source_tree_files": 590,
+  "source_tree_roots": [
+    "src",
+    "resources",
+    "package.json",
+    "package-lock.json",
+    "electron-vite.config.ts"
+  ],
+  "source_tree_includes_untracked": true,
+  "reference_bundle_sha256": "3a0c646eca0c06543bf2d8a0d0eecfaf351303df9eef743ffc51b72e5b78763d",
+  "reference_bundle_files": 786
+}

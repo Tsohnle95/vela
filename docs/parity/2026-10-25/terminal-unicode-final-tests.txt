@@ -1,0 +1,19 @@
+   Compiling vela-terminal v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-terminal)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.96s
+     Running unittests src/lib.rs (target/debug/deps/vela_terminal-81af071b9635cd4d)
+
+running 11 tests
+test input::tests::paste_matches_xterm_line_endings_and_preserves_unicode_and_literal_characters ... ok
+test size::tests::viewport_fitting_matches_source_padding_ruler_and_spare_column ... ok
+test size::tests::hidden_or_unmeasurable_viewports_do_not_resize_the_shell ... ok
+test emulator::tests::applies_sgr_foreground_color ... ok
+test emulator::tests::handles_carriage_return_and_newline ... ok
+test emulator::tests::writes_text_and_advances_cursor ... ok
+test emulator::tests::preserves_combining_marks_across_output_chunks_and_resize ... ok
+test emulator::tests::supports_alternate_screen_and_clear ... ok
+test input::tests::paste_framing_tracks_the_terminal_mode ... ok
+test emulator::tests::applications_can_hide_and_restore_the_cursor ... ok
+test emulator::tests::resize_preserves_a_usable_grid ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,104 @@
+[
+  {
+    "info": {
+      "id": "msg_tools_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_tools_000",
+        "type": "text",
+        "text": "Inspect saved tool results."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_tools_001",
+      "role": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture",
+        "providerID": "mock"
+      },
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_tools_001",
+        "type": "tool",
+        "callID": "call_tools_001",
+        "tool": "bash",
+        "state": {
+          "status": "completed",
+          "input": {
+            "command": "printf hello"
+          },
+          "output": "hello 🌍\nsecond line",
+          "time": {
+            "created": 1200,
+            "ran": 1300,
+            "completed": 2200
+          }
+        }
+      },
+      {
+        "id": "prt_tools_002",
+        "type": "tool",
+        "callID": "call_tools_002",
+        "tool": "read",
+        "state": {
+          "status": "success",
+          "input": {
+            "filePath": "/fixture/example.txt"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "saved file contents"
+            }
+          ],
+          "time": {
+            "created": 2300,
+            "completed": 2800
+          }
+        }
+      },
+      {
+        "id": "prt_tools_003",
+        "type": "tool",
+        "callID": "call_tools_003",
+        "tool": "bash",
+        "state": {
+          "status": "failed",
+          "input": {
+            "command": "fixture fail"
+          },
+          "error": {
+            "code": "fixture.tool",
+            "message": "Saved tool failure"
+          },
+          "time": {
+            "created": 2900,
+            "completed": 3200
+          }
+        }
+      },
+      {
+        "id": "prt_tools_004",
+        "type": "text",
+        "text": "Saved tool history is restored.",
+        "time": {
+          "end": 4200
+        }
+      }
+    ]
+  }
+]

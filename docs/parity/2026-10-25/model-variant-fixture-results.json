@@ -1,0 +1,117 @@
+{
+  "status": "functional fixture checks passed; visual acceptance and Retina accessibility remain unfinished",
+  "fixture": {
+    "service": "http://127.0.0.1:49562",
+    "native_profile": "/private/tmp/vela-variant-native",
+    "reference_profile": "/private/tmp/vela-variant-reference",
+    "directory": "/private/tmp/vela-close-workspaces/many",
+    "model": "fixture",
+    "variants": [
+      "low",
+      "high",
+      "extra_high",
+      "reject-variant"
+    ]
+  },
+  "changes": [
+    "Catalog preserves ordered string/object variant IDs and excludes disabled/incomplete models",
+    "Models without variants omit the former no-op Default control",
+    "Models with variants expose Auto and formatted advertised choices",
+    "Runtime acknowledgement owns the selected label; rejection retains prior selection",
+    "Choosing the same model preserves its selected strength",
+    "Auto omits variant in the API request",
+    "Strength menu supports click, focus traversal, Escape, outside dismissal, and Back to model list; not all keyboard paths were exercised live",
+    "Composer extracted into its own native UI module"
+  ],
+  "checks": [
+    {
+      "case": "parser and labels",
+      "result": "passed unit regressions; array order, string/object IDs, malformed optional values, Auto and ASCII word capitalization"
+    },
+    {
+      "case": "engine selection flow",
+      "result": "passed full engine flow; selected high enriched with low/high catalog, disabled/incomplete models omitted, Auto API request has no variant, selected metadata retained and high restored",
+      "log": "model-variant-engine-flow.txt"
+    },
+    {
+      "case": "plain model without variants",
+      "result": "passed rebuilt GUI; strength control absent",
+      "capture": "native/composer-no-strength-control.png"
+    },
+    {
+      "case": "select High",
+      "result": "passed rebuilt GUI; label changed after runtime acknowledgement and reopened menu selected High"
+    },
+    {
+      "case": "reject variant",
+      "result": "passed rebuilt GUI; deliberate HTTP400 produced global feedback, High remained selected"
+    },
+    {
+      "case": "Auto reset",
+      "result": "passed rebuilt GUI; label became Auto and fixture selection became only id/providerID"
+    },
+    {
+      "case": "Escape",
+      "result": "passed rebuilt GUI; strength menu dismissed"
+    },
+    {
+      "case": "restart selection",
+      "result": "passed GUI on working comparison display; Auto restored from session and advertised choices retained"
+    },
+    {
+      "case": "source menu",
+      "result": "original app loaded the same fixture and showed Auto, Low, High, Extra High and Reject Variant"
+    },
+    {
+      "case": "matched-display screenshot",
+      "result": "paired raw 900x700 PNGs saved; visual differences remain",
+      "captures": [
+        "original/composer-strength-matched-display.png",
+        "native/composer-strength-matched-display.png"
+      ],
+      "eligible_for_visual_review": false,
+      "comparison_issues": [
+        "window activation mismatch"
+      ]
+    },
+    {
+      "case": "Retina/negative-origin attempt",
+      "result": "Native frame rendered but AX exposed only window chrome and coordinate clicks did not activate strength; keyboard Quit still worked. Unresolved automation/accessibility issue. Native returned to working 24G1WG4 display. Original moved through Window > Move to 24G1WG4; no OS scripting used",
+      "reference_capture": "original/composer-strength-auto.png"
+    },
+    {
+      "case": "source renderer availability",
+      "result": "reference initially hit ERR_FILE_NOT_FOUND during a concurrent renderer rebuild; source file was present again and native CmdR reload recovered it; original checkout was not edited"
+    },
+    {
+      "case": "activation-matched strength pair",
+      "captures": [
+        "original/composer-strength-neutral.png",
+        "native/composer-strength-neutral.png"
+      ],
+      "result": "fresh raw captures with both windows inactive; no model or file state changed",
+      "eligible_for_visual_review": true,
+      "comparison_issues": []
+    }
+  ],
+  "validation": {
+    "workspace_tests": {
+      "passed": 128,
+      "ignored": 1,
+      "log": "rust-workspace-tests-variants-2026-10-27.txt"
+    },
+    "clippy": "workspace all-targets -D warnings passed",
+    "format": "passed",
+    "diff_check": "passed",
+    "comparison_capture_names": 107,
+    "lossless_pixel_matches": 0
+  },
+  "remaining": [
+    "Source menu dimensions/anchor and full composer geometry",
+    "Empty editor text must wrap inside narrow pane",
+    "Retina/negative-origin accessibility and input investigation",
+    "Live Back/keyboard traversal, long catalog/variants scrolling, rapid selection races, and high-strength restart checks",
+    "Attachments and remaining composer/model menu functionality",
+    "All-page visual and feature acceptance"
+  ]
+}

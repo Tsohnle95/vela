@@ -1,0 +1,52 @@
+{
+  "captured_utc": "2026-10-27T07:35:16.822114+00:00",
+  "surface": "native",
+  "window": {
+    "active": false,
+    "bounds": {
+      "Height": 800,
+      "Width": 1280,
+      "X": 2108,
+      "Y": 163
+    },
+    "id": 28304,
+    "layer": 0,
+    "owner": "Vela Native QA",
+    "pid": 68753,
+    "title": "Vela"
+  },
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    1280,
+    800
+  ],
+  "point_size": [
+    1280,
+    800
+  ],
+  "sha256": "f12bad65afe1bf5aa927e9e921c1ca006de92c7a79720060088d8f4643a0a139",
+  "head": "e882e09c9813301d33811ebc3f6099e88163da16",
+  "tracked_diff_sha256": "2e4a0e8d45a2b7aaea6e7c1e9d586ad85cbffe8c45a5955673367d5bf872cc93",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "28304"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "source_tree_sha256": "b29de8735e0374432ae991d2ca82fc1beace42bab50709c01826fa89df332931",
+  "source_tree_files": 83,
+  "source_tree_roots": [
+    "crates",
+    "apps",
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "source_tree_includes_untracked": true,
+  "binary_path": "target/debug/Vela Native QA.app/Contents/MacOS/Vela Native QA",
+  "binary_sha256": "8aef9af4a1f84e47b9307145132f31a0f9dfbafd46765076fa219bb7c4150fdb"
+}

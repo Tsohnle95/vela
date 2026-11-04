@@ -1,0 +1,20 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.60s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 3`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-6342ef03737d5a25)
+
+running 1 test
+
+thread 'app::explorer::tests::large_tree_scroll_reaches_last_file_and_new_batches_without_painting_every_row' (10363532) panicked at crates/vela-ui/src/explorer.rs:403:13:
+last file unreachable: scroll=ListOffset { item_ix: 6, offset_in_item: 20px }, painted=[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test app::explorer::tests::large_tree_scroll_reaches_last_file_and_new_batches_without_painting_every_row ... FAILED
+
+failures:
+
+failures:
+    app::explorer::tests::large_tree_scroll_reaches_last_file_and_new_batches_without_painting_every_row
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

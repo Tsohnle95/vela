@@ -1,0 +1,36 @@
+[
+  {
+    "info": {
+      "id": "msg_images_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_images_000",
+        "type": "text",
+        "text": "Verify image presentation."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_images_001",
+      "role": "assistant",
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_images_001",
+        "type": "text",
+        "text": "Landscape PNG\n\n![Landscape colors](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAABkCAIAAAAnqfEgAAABgUlEQVR4nO3UMQ2EQAAAQXgXqKBAygvBAtbQgwEqggW6yyYzCrbaed2viW/O5T86IWN77tEJGcd1jk7I+I0OAPjKsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwIyDAvIMCwgw7CADMMCMgwLyDAsIMOwgAzDAjIMC8gwLCDDsIAMwwKmihfkbwfT2iRFLgAAAABJRU5ErkJggg==)\n\nPortrait SVG\n\n![Portrait shapes](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iNDAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2VlZjNmYSIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzJmNmZlYiIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMzAwIiByPSI0MCIgZmlsbD0iI2YwODgzZSIvPjwvc3ZnPg==)\n\nLocal encoded file\n\n![Local image 🌍](file:///private/tmp/vela-image-corpus/image%20%F0%9F%8C%8D.png)\n\nBlocked remote image\n\n![Remote fallback](https://example.com/fixture.png)\n\nEnd of image fixture."
+      }
+    ]
+  }
+]

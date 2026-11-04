@@ -1,0 +1,35 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+warning: unused variable: `total`
+   --> crates/vela-ui/src/markdown_view.rs:747:9
+    |
+747 |     let total = factors.iter().sum::<f32>();
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_total`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vela-ui` (lib test) generated 1 warning (run `cargo fix --lib -p vela-ui --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.23s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 1 test
+test app::markdown_view::tests::table_distributes_all_negative_space_for_recorded_live_column_ranges ... FAILED
+
+failures:
+
+---- app::markdown_view::tests::table_distributes_all_negative_space_for_recorded_live_column_ranges stdout ----
+
+thread 'app::markdown_view::tests::table_distributes_all_negative_space_for_recorded_live_column_ranges' (17474759) panicked at crates/vela-ui/src/markdown_view.rs:1601:9:
+assertion `left == right` failed
+  left: 3037.5px
+ right: 3022px
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    app::markdown_view::tests::table_distributes_all_negative_space_for_recorded_live_column_ranges
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

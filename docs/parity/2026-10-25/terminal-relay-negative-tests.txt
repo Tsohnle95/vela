@@ -1,0 +1,36 @@
+   Compiling ring v0.17.14
+   Compiling rustls v0.23.46
+   Compiling rustls-webpki v0.103.16
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.28s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-53443e6c52063261)
+
+running 2 tests
+test terminal_relay::tests::exit_cannot_overtake_queued_final_output ... FAILED
+test terminal_relay::tests::output_eof_still_waits_for_exit_and_cancellation_is_bounded ... FAILED
+
+failures:
+
+---- terminal_relay::tests::exit_cannot_overtake_queued_final_output stdout ----
+
+thread 'terminal_relay::tests::exit_cannot_overtake_queued_final_output' (21292806) panicked at crates/vela-engine/src/terminal_relay.rs:38:9:
+exit must wait for the reader's final data
+
+---- terminal_relay::tests::output_eof_still_waits_for_exit_and_cancellation_is_bounded stdout ----
+
+thread 'terminal_relay::tests::output_eof_still_waits_for_exit_and_cancellation_is_bounded' (21292807) panicked at crates/vela-engine/src/terminal_relay.rs:59:9:
+output EOF must not drop the exit receiver
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    terminal_relay::tests::exit_cannot_overtake_queued_final_output
+    terminal_relay::tests::output_eof_still_waits_for_exit_and_cancellation_is_bounded
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p vela-engine --lib`

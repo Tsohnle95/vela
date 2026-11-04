@@ -1,0 +1,12 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.27s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-5c12963d3a4790e1)
+
+running 2 tests
+test app::terminal_selection::tests::selection_autoscroll_matches_xterm_distance_rounding_and_clamps ... ok
+test app::terminal_selection::tests::outside_drag_scrolls_history_extends_selection_and_preserves_block_columns ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 89 filtered out; finished in 0.01s
+

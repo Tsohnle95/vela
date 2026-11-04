@@ -1,0 +1,138 @@
+[
+  {
+    "info": {
+      "id": "msg_tools2_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_tools2_000",
+        "type": "text",
+        "text": "Inspect saved tool results."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_tools2_001",
+      "role": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture",
+        "providerID": "mock"
+      },
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_tools2_001",
+        "type": "tool",
+        "callID": "call_tools2_001",
+        "tool": "bash",
+        "state": {
+          "status": "completed",
+          "input": {
+            "command": "printf hello"
+          },
+          "output": "hello 🌍\nsecond line",
+          "time": {
+            "created": 1200,
+            "ran": 1300,
+            "completed": 2200
+          }
+        }
+      },
+      {
+        "id": "prt_tools2_002",
+        "type": "tool",
+        "callID": "call_tools2_002",
+        "tool": "read",
+        "state": {
+          "status": "success",
+          "input": {
+            "filePath": "/fixture/example.txt"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "saved file contents"
+            }
+          ],
+          "time": {
+            "created": 2300,
+            "completed": 2800
+          }
+        }
+      },
+      {
+        "id": "prt_tools2_003",
+        "type": "tool",
+        "callID": "call_tools2_003",
+        "tool": "bash",
+        "state": {
+          "status": "failed",
+          "input": {
+            "command": "fixture fail"
+          },
+          "error": {
+            "code": "fixture.tool",
+            "message": "Saved tool failure"
+          },
+          "time": {
+            "created": 2900,
+            "completed": 3200
+          }
+        }
+      },
+      {
+        "id": "prt_tools2_004",
+        "callID": "call_tools2_004",
+        "type": "tool",
+        "name": "edit",
+        "time": {
+          "created": 3300,
+          "completed": 3500
+        },
+        "state": {
+          "status": "completed",
+          "input": {
+            "filePath": "src/example.rs"
+          },
+          "output": "@@ -1,4 +1,4 @@\n unchanged\n-old value\n+new value 🌍\n unchanged"
+        }
+      },
+      {
+        "id": "prt_tools2_005",
+        "callID": "call_tools2_005",
+        "type": "tool",
+        "name": "bash",
+        "time": {
+          "created": 3600,
+          "completed": 4000
+        },
+        "state": {
+          "status": "completed",
+          "input": {
+            "command": "fixture large-output"
+          },
+          "output": "line 000 long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output long horizontal output \nline 001 retained fixture output\nline 002 retained fixture output\nline 003 retained fixture output\nline 004 retained fixture output\nline 005 retained fixture output\nline 006 retained fixture output\nline 007 retained fixture output\nline 008 retained fixture output\nline 009 retained fixture output\nline 010 retained fixture output\nline 011 retained fixture output\nline 012 retained fixture output\nline 013 retained fixture output\nline 014 retained fixture output\nline 015 retained fixture output\nline 016 retained fixture output\nline 017 retained fixture output\nline 018 retained fixture output\nline 019 retained fixture output\nline 020 retained fixture output\nline 021 retained fixture output\nline 022 retained fixture output\nline 023 retained fixture output\nline 024 retained fixture output\nline 025 retained fixture output\nline 026 retained fixture output\nline 027 retained fixture output\nline 028 retained fixture output\nline 029 retained fixture output\nline 030 retained fixture output\nline 031 retained fixture output\nline 032 retained fixture output\nline 033 retained fixture output\nline 034 retained fixture output\nline 035 retained fixture output\nline 036 retained fixture output\nline 037 retained fixture output\nline 038 retained fixture output\nline 039 retained fixture output\nline 040 retained fixture output\nline 041 retained fixture output\nline 042 retained fixture output\nline 043 retained fixture output\nline 044 retained fixture output\nline 045 retained fixture output\nline 046 retained fixture output\nline 047 retained fixture output\nline 048 retained fixture output\nline 049 retained fixture output\nline 050 retained fixture output\nline 051 retained fixture output\nline 052 retained fixture output\nline 053 retained fixture output\nline 054 retained fixture output\nline 055 retained fixture output\nline 056 retained fixture output\nline 057 retained fixture output\nline 058 retained fixture output\nline 059 retained fixture output\nline 060 retained fixture output\nline 061 retained fixture output\nline 062 retained fixture output\nline 063 retained fixture output\nline 064 retained fixture output\nline 065 retained fixture output\nline 066 retained fixture output\nline 067 retained fixture output\nline 068 retained fixture output\nline 069 retained fixture output\nline 070 retained fixture output\nline 071 retained fixture output\nline 072 retained fixture output\nline 073 retained fixture output\nline 074 retained fixture output\nline 075 retained fixture output\nline 076 retained fixture output\nline 077 retained fixture output\nline 078 retained fixture output\nline 079 retained fixture output\nline 080 retained fixture output\nline 081 retained fixture output\nline 082 retained fixture output\nline 083 retained fixture output\nline 084 retained fixture output\nline 085 retained fixture output\nline 086 retained fixture output\nline 087 retained fixture output\nline 088 retained fixture output\nline 089 retained fixture output\nline 090 retained fixture output\nline 091 retained fixture output\nline 092 retained fixture output\nline 093 retained fixture output\nline 094 retained fixture output\nline 095 retained fixture output\nline 096 retained fixture output\nline 097 retained fixture output\nline 098 retained fixture output\nline 099 retained fixture output\nline 100 retained fixture output\nline 101 retained fixture output\nline 102 retained fixture output\nline 103 retained fixture output\nline 104 retained fixture output\nline 105 retained fixture output\nline 106 retained fixture output\nline 107 retained fixture output\nline 108 retained fixture output\nline 109 retained fixture output\nline 110 retained fixture output\nline 111 retained fixture output\nline 112 retained fixture output\nline 113 retained fixture output\nline 114 retained fixture output\nline 115 retained fixture output\nline 116 retained fixture output\nline 117 retained fixture output\nline 118 retained fixture output\nline 119 retained fixture output\nline 120 retained fixture output\nline 121 retained fixture output\nline 122 retained fixture output\nline 123 retained fixture output\nline 124 retained fixture output\nline 125 retained fixture output\nline 126 retained fixture output\nline 127 retained fixture output\nline 128 retained fixture output\nline 129 retained fixture output\nline 130 retained fixture output\nline 131 retained fixture output\nline 132 retained fixture output\nline 133 retained fixture output\nline 134 retained fixture output\nline 135 retained fixture output\nline 136 retained fixture output\nline 137 retained fixture output\nline 138 retained fixture output\nline 139 retained fixture output\nline 140 retained fixture output\nline 141 retained fixture output\nline 142 retained fixture output\nline 143 retained fixture output\nline 144 retained fixture output\nline 145 retained fixture output\nline 146 retained fixture output\nline 147 retained fixture output\nline 148 retained fixture output\nline 149 retained fixture output\nline 150 retained fixture output\nline 151 retained fixture output\nline 152 retained fixture output\nline 153 retained fixture output\nline 154 retained fixture output\nline 155 retained fixture output\nline 156 retained fixture output\nline 157 retained fixture output\nline 158 retained fixture output\nline 159 retained fixture output\nline 160 retained fixture output\nline 161 retained fixture output\nline 162 retained fixture output\nline 163 retained fixture output\nline 164 retained fixture output\nline 165 retained fixture output\nline 166 retained fixture output\nline 167 retained fixture output\nline 168 retained fixture output\nline 169 retained fixture output\nline 170 retained fixture output\nline 171 retained fixture output\nline 172 retained fixture output\nline 173 retained fixture output\nline 174 retained fixture output\nline 175 retained fixture output\nline 176 retained fixture output\nline 177 retained fixture output\nline 178 retained fixture output\nline 179 retained fixture output\nline 180 retained fixture output\nline 181 retained fixture output\nline 182 retained fixture output\nline 183 retained fixture output\nline 184 retained fixture output\nline 185 retained fixture output\nline 186 retained fixture output\nline 187 retained fixture output\nline 188 retained fixture output\nline 189 retained fixture output\nline 190 retained fixture output\nline 191 retained fixture output\nline 192 retained fixture output\nline 193 retained fixture output\nline 194 retained fixture output\nline 195 retained fixture output\nline 196 retained fixture output\nline 197 retained fixture output\nline 198 retained fixture output\nline 199 retained fixture output\nline 200 retained fixture output\nline 201 retained fixture output\nline 202 retained fixture output\nline 203 retained fixture output\nline 204 retained fixture output\nline 205 retained fixture output\nline 206 retained fixture output\nline 207 retained fixture output\nline 208 retained fixture output\nline 209 retained fixture output\nline 210 retained fixture output\nline 211 retained fixture output\nline 212 retained fixture output\nline 213 retained fixture output\nline 214 retained fixture output\nline 215 retained fixture output\nline 216 retained fixture output\nline 217 retained fixture output\nline 218 retained fixture output\nline 219 retained fixture output\nline 220 retained fixture output\nline 221 retained fixture output\nline 222 retained fixture output\nline 223 retained fixture output\nline 224 retained fixture output\nline 225 retained fixture output\nline 226 retained fixture output\nline 227 retained fixture output\nline 228 retained fixture output\nline 229 retained fixture output\nline 230 retained fixture output\nline 231 retained fixture output\nline 232 retained fixture output\nline 233 retained fixture output\nline 234 retained fixture output\nline 235 retained fixture output\nline 236 retained fixture output\nline 237 retained fixture output\nline 238 retained fixture output\nline 239 retained fixture output"
+        }
+      },
+      {
+        "id": "prt_tools2_006",
+        "type": "text",
+        "text": "Saved tool history is restored.",
+        "time": {
+          "end": 4200
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,30 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Checking vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error: useless conversion to the same type: `gpui::SharedString`
+   --> crates/vela-ui/src/transcript_view.rs:731:17
+    |
+731 |             .id(SharedString::from(key))
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^ help: consider removing `SharedString::from()`: `key`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#useless_conversion
+    = note: `-D clippy::useless-conversion` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::useless_conversion)]`
+
+error: using `clone` on type `Option<SessionUsage>` which implements the `Copy` trait
+    --> crates/vela-ui/src/app.rs:3628:21
+     |
+3628 |         let usage = self.usage.clone();
+     |                     ^^^^^^^^^^^^^^^^^^ help: try removing the `clone` call: `self.usage`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#clone_on_copy
+     = note: `-D clippy::clone-on-copy` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::clone_on_copy)]`
+
+error: could not compile `vela-ui` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `vela-ui` (lib test) due to 2 previous errors
+EXIT:101

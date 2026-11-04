@@ -1,0 +1,14 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0282]: type annotations needed
+    --> crates/vela-ui/src/markdown_view.rs:1465:27
+     |
+1465 |         cx.update_window(|window, cx| window.focus(&focus, cx)).unwrap();
+     |                           ^^^^^^      ------ type must be known at this point
+     |
+help: consider giving this closure parameter an explicit type
+     |
+1465 |         cx.update_window(|window: /* Type */, cx| window.focus(&focus, cx)).unwrap();
+     |                                 ++++++++++++
+
+For more information about this error, try `rustc --explain E0282`.
+error: could not compile `vela-ui` (lib test) due to 1 previous error

@@ -1,0 +1,63 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.76s
+     Running unittests src/lib.rs (target/debug/deps/vela_core-d769550ca0417314)
+
+running 42 tests
+test document::tests::document_workspace_lease_covers_pending_saves_and_reopen_reads_fresh_after_close ... ok
+test document::tests::late_reads_cannot_replace_newer_selection_or_same_name_in_another_workspace ... ok
+test document::tests::editing_pins_a_preview_even_after_undo_but_selection_does_not ... ok
+test document::tests::conflicting_save_pauses_queue_and_requires_explicit_resolution ... ok
+test document::tests::reloading_external_text_preserves_local_edits_in_undo_and_rejects_unreadable_snapshots ... ok
+test document::tests::external_rename_moves_dirty_buffer_undo_and_tabs_without_overwriting_open_destination ... ok
+test document::tests::late_overwrite_ack_cannot_clear_a_newer_external_conflict ... ok
+test document::tests::failed_save_keeps_dirty_state_and_still_releases_the_next_request ... ok
+test document::tests::save_echo_requires_write_identity_and_late_ack_keeps_newer_disk_state ... ok
+test document::tests::save_acknowledges_exact_snapshot_and_serializes_writes_across_navigation ... ok
+test document::tests::external_updates_reload_clean_buffers_and_preserve_dirty_deleted_edits ... ok
+test document::tests::switching_files_sessions_and_closing_views_preserves_dirty_buffer_and_undo ... ok
+test event::tests::accepts_legacy_properties_envelope ... ok
+test event::tests::permission_payload_normalizes ... ok
+test document::tests::unsaved_files_follow_workspace_and_tab_order_including_retained_closed_edits ... ok
+test event::tests::parses_stream_delta_and_derives_part_id ... ok
+test layout::tests::offsets_and_hit_testing ... ok
+test event::tests::strips_numbered_event_suffix ... ok
+test markdown::tests::handles_unclosed_fence_while_streaming ... ok
+test event::tests::runtime_failure_copy_preserves_source_codes_markers_nested_errors_and_details ... ok
+test layout::tests::content_change_invalidates_one_height ... ok
+test markdown::tests::a_long_paragraph_is_one_block ... ok
+test markdown::tests::keeps_fenced_code_whole_even_with_blank_lines ... ok
+test markdown::tests::splits_paragraphs_and_headings ... ok
+test markdown::tests::trims_blank_edges ... ok
+test text::tests::ime_replaces_marked_text_and_undoes_as_one_transaction ... ok
+test text::tests::utf16_ranges_and_reversed_selections_are_byte_safe ... ok
+test text::tests::selection_replacement_undo_and_redo_preserve_unicode ... ok
+test text::tests::moving_and_deleting_respect_multiline_graphemes ... ok
+test transcript::tests::hydrates_replay_messages ... ok
+test transcript::tests::completed_text_replaces_streamed_text ... ok
+test appearance::tests::preserves_all_original_palettes_and_required_tokens ... ok
+test transcript::tests::quiet_settlement_matches_source_thresholds_and_near_future_retry_exception ... ok
+test transcript::tests::streams_text_without_rebuilding_completed_blocks ... ok
+test transcript::tests::tool_lifecycle_is_terminal_and_non_regressing ... ok
+test transcript::tests::v2_retry_keeps_deadline_and_replay_state_then_clears_on_restart_or_interrupt ... ok
+test transcript::tests::v2_execution_events_drive_busy_and_terminal_state_without_step_events ... ok
+test warm::tests::evicts_by_byte_budget ... ok
+test warm::tests::keeps_drafts_and_scroll_across_touches ... ok
+test warm::tests::evicts_least_recently_used_by_count ... ok
+test transcript::tests::terminal_execution_completes_latest_assistant_and_updates_cached_stream_blocks ... ok
+test text::tests::large_documents_store_edit_deltas_and_restore_selection ... ok
+
+test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/perf.rs (target/debug/deps/perf-68d50ece03b30dd3)
+
+running 1 test
+test transcript_and_warm_navigation ... ignored, performance measurement; run with --release --ignored --nocapture
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vela_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

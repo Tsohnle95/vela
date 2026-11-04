@@ -1,0 +1,15 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0599]: no method named `role` found for struct `gpui::Div` in the current scope
+   --> crates/vela-ui/src/markdown_view.rs:823:22
+    |
+822 |                   return div()
+    |  ________________________-
+823 | |                     .role(gpui::Role::Label)
+    | |                     -^^^^ method not found in `gpui::Div`
+    | |_____________________|
+    |
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `vela-ui` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `vela-ui` (lib test) due to 1 previous error

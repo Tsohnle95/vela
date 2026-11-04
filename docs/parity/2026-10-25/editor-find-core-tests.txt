@@ -1,0 +1,19 @@
+   Compiling regex-automata v0.4.18
+   Compiling regex v1.13.1
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.70s
+     Running unittests src/lib.rs (target/debug/deps/vela_core-459787b0242eb816)
+
+running 3 tests
+test search::tests::whole_words_follow_editor_separators_and_navigation_wraps ... ok
+test search::tests::literal_unicode_matches_preserve_byte_ranges_and_case_options ... ok
+test search::tests::highlight_limit_does_not_truncate_navigation_or_replace_all_and_undo ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 50 filtered out; finished in 0.03s
+
+     Running tests/perf.rs (target/debug/deps/perf-99821340b7fbe00a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+

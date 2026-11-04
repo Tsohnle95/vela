@@ -1,0 +1,66 @@
+{
+  "requests": [
+    {
+      "operation": "select-agent",
+      "session": "ses_provider_fixture",
+      "agent": "build"
+    },
+    {
+      "operation": "select-model",
+      "session": "ses_provider_fixture",
+      "model": {
+        "id": "wide",
+        "providerID": "mock"
+      }
+    },
+    {
+      "operation": "model-rejected",
+      "session": "ses_provider_fixture",
+      "model": {
+        "id": "reject-selection",
+        "providerID": "mock"
+      }
+    },
+    {
+      "operation": "model-rejected",
+      "session": "ses_provider_fixture",
+      "model": {
+        "id": "reject-selection",
+        "providerID": "mock"
+      }
+    },
+    {
+      "operation": "model-rejected",
+      "session": "ses_provider_fixture",
+      "model": {
+        "id": "reject-selection",
+        "providerID": "mock"
+      }
+    },
+    {
+      "operation": "model-rejected",
+      "session": "ses_provider_fixture",
+      "model": {
+        "id": "reject-selection",
+        "providerID": "mock"
+      }
+    },
+    {
+      "operation": "model-rejected",
+      "session": "ses_provider_fixture",
+      "model": {
+        "id": "reject-selection",
+        "providerID": "mock"
+      }
+    }
+  ],
+  "credentials": {},
+  "attempts": {},
+  "selection": {
+    "agent": "build",
+    "model": {
+      "id": "wide",
+      "providerID": "mock"
+    }
+  }
+}

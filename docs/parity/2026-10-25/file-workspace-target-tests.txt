@@ -1,0 +1,10 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.44s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-2b8f2aa34662d861)
+
+running 2 tests
+test file_workspace::tests::selected_file_opens_its_canonical_parent_and_exact_unicode_name ... ok
+test file_workspace::tests::selected_symlink_uses_the_real_file_parent_without_moving_or_copying_it ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.00s
+

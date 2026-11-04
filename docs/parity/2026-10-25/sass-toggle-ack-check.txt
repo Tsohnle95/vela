@@ -1,0 +1,19 @@
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0599]: no method named `aria_disabled` found for struct `Stateful<E>` in the current scope
+    --> crates/vela-ui/src/app.rs:4795:22
+     |
+4792 | /                 div()
+4793 | |                     .id("status-sass")
+4794 | |                     .role(Role::MenuItem)
+4795 | |                     .aria_disabled(self.sass_pending.as_ref().is_some_and(|(_, scope)| *scope == self.document_workspace()))
+     | |_____________________-^^^^^^^^^^^^^
+     |
+help: there is a method `aria_label` with a similar name
+     |
+4795 -                     .aria_disabled(self.sass_pending.as_ref().is_some_and(|(_, scope)| *scope == self.document_workspace()))
+4795 +                     .aria_label(self.sass_pending.as_ref().is_some_and(|(_, scope)| *scope == self.document_workspace()))
+     |
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `vela-ui` (lib) due to 1 previous error

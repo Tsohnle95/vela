@@ -1,0 +1,16 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.30s
+     Running unittests src/lib.rs (target/debug/deps/vela_core-459787b0242eb816)
+
+running 2 tests
+test tray::tests::dragging_below_window_hides_without_losing_the_last_full_size ... ok
+test tray::tests::resize_snap_expand_and_toggle_follow_source_thresholds ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+
+     Running tests/perf.rs (target/debug/deps/perf-99821340b7fbe00a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+

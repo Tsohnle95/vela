@@ -1,0 +1,12 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.88s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-e8803be48bceb8d9)
+
+running 2 tests
+test changes_view::tests::stale_diff_jobs_cannot_replace_newer_file_state_and_controls_clear_without_mutating_content ... ok
+test changes_view::tests::large_review_only_diffs_visible_sections_and_tree_reveal_reaches_the_last_file ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 97 filtered out; finished in 0.70s
+

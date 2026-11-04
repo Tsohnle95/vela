@@ -1,0 +1,40 @@
+    Checking vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Checking vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+warning: function `render_block` is never used
+    --> crates/vela-ui/src/app.rs:6199:4
+     |
+6199 | fn render_block(block: &Block) -> AnyElement {
+     |    ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `render_markdown_block` is never used
+    --> crates/vela-ui/src/app.rs:6309:4
+     |
+6309 | fn render_markdown_block(block: &Block) -> AnyElement {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `notice_row` is never used
+    --> crates/vela-ui/src/app.rs:6411:4
+     |
+6411 | fn notice_row(label: &str, body: &str, color: gpui::Rgba) -> AnyElement {
+     |    ^^^^^^^^^^
+
+warning: function `inline_markdown` is never used
+    --> crates/vela-ui/src/app.rs:6435:4
+     |
+6435 | fn inline_markdown(text: &str, base: gpui::Rgba, theme: &Theme) -> StyledText {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `truncate` is never used
+    --> crates/vela-ui/src/app.rs:6580:4
+     |
+6580 | fn truncate(text: &str, max: usize) -> String {
+     |    ^^^^^^^^
+
+warning: `vela-ui` (lib) generated 5 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.80s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 5`

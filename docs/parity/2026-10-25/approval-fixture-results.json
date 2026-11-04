@@ -1,0 +1,73 @@
+{
+  "requests": [
+    {
+      "operation": "permission-injected",
+      "id": "req_fixture_old",
+      "session": "ses_provider_fixture"
+    },
+    {
+      "operation": "permission-injected",
+      "id": "req_fixture_new",
+      "session": "ses_provider_fixture"
+    },
+    {
+      "operation": "permission-replied",
+      "id": "req_fixture_new",
+      "session": "ses_provider_fixture",
+      "decision": "allow"
+    },
+    {
+      "operation": "permission-injected",
+      "id": "req_fixture_background",
+      "session": "ses_fixture_background"
+    },
+    {
+      "operation": "permission-injected",
+      "id": "req_fixture_restart",
+      "session": "ses_provider_fixture"
+    },
+    {
+      "operation": "permission-replied",
+      "id": "req_fixture_restart",
+      "session": "ses_provider_fixture",
+      "decision": "allow"
+    }
+  ],
+  "credentials": {},
+  "attempts": {},
+  "selection": {
+    "agent": "build",
+    "model": {
+      "id": "wide",
+      "providerID": "mock"
+    }
+  },
+  "permissions": {
+    "req_fixture_old": {
+      "id": "req_fixture_old",
+      "sessionID": "ses_provider_fixture",
+      "action": "fixture",
+      "resources": [
+        "Disposable fixture action. No command is executed."
+      ]
+    },
+    "req_fixture_background": {
+      "id": "req_fixture_background",
+      "sessionID": "ses_fixture_background",
+      "action": "fixture",
+      "resources": [
+        "Disposable fixture action. No command is executed."
+      ]
+    }
+  },
+  "checks": {
+    "ask_kept_existing_request_pending": true,
+    "enabling_approve_did_not_reply_to_old_request": true,
+    "new_open_session_request_replied_once": true,
+    "background_session_request_not_replied": true,
+    "approve_survived_restart_without_replaying_old_requests": true,
+    "fresh_request_after_restart_replied_once": true,
+    "native_preference_restored_to_ask": true,
+    "no_commands_executed": true
+  }
+}

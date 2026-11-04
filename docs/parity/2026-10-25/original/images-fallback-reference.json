@@ -1,0 +1,157 @@
+{
+  "captured_utc": "2026-10-29T15:47:25.914328+00:00",
+  "surface": "original",
+  "window": {
+    "active": false,
+    "bounds": {
+      "Height": 700,
+      "Width": 900,
+      "X": 2430,
+      "Y": 217
+    },
+    "id": 41671,
+    "layer": 0,
+    "owner": "Vela Reference QA",
+    "pid": 92420,
+    "title": "Vela"
+  },
+  "requested_window": {
+    "active": false,
+    "bounds": {
+      "Height": 700,
+      "Width": 900,
+      "X": 2430,
+      "Y": 217
+    },
+    "id": 41671,
+    "layer": 0,
+    "owner": "Vela Reference QA",
+    "pid": 92420,
+    "title": "Vela"
+  },
+  "capture_surface": "window",
+  "capture_window_inventory": [
+    {
+      "active": false,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2108,
+        "Y": 163
+      },
+      "id": 41927,
+      "layer": 0,
+      "owner": "Vela Native QA",
+      "pid": 8560,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2430,
+        "Y": 217
+      },
+      "id": 41671,
+      "layer": 0,
+      "owner": "Vela Reference QA",
+      "pid": 92420,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 970,
+        "Width": 1920,
+        "X": 0,
+        "Y": 31
+      },
+      "id": 37296,
+      "layer": 0,
+      "owner": "Vela",
+      "pid": 51031,
+      "title": "Vela"
+    }
+  ],
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    900,
+    700
+  ],
+  "point_size": [
+    900,
+    700
+  ],
+  "sha256": "2a3eef71b123a4a4733c735f50a54118b783ebba69c0325795d4596ea87a8f52",
+  "head": "59d4f285968efa3ddee78b09f2cdbdcc960d4288",
+  "tracked_diff_sha256": "081404bfc5fb3ee4f740c91ed7c15b16eb58756b4c6ffd824a03018066cb3025",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "41671"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "capture_stable": true,
+  "capture_window_inventory_after": [
+    {
+      "active": false,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2108,
+        "Y": 163
+      },
+      "id": 41927,
+      "layer": 0,
+      "owner": "Vela Native QA",
+      "pid": 8560,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 700,
+        "Width": 900,
+        "X": 2430,
+        "Y": 217
+      },
+      "id": 41671,
+      "layer": 0,
+      "owner": "Vela Reference QA",
+      "pid": 92420,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 970,
+        "Width": 1920,
+        "X": 0,
+        "Y": 31
+      },
+      "id": 37296,
+      "layer": 0,
+      "owner": "Vela",
+      "pid": 51031,
+      "title": "Vela"
+    }
+  ],
+  "source_tree_sha256": "a0ef509a62e3513c6aec148dbf1b3621adbe8714713c7ab5ae5e54e0eca31a84",
+  "source_tree_files": 590,
+  "source_tree_roots": [
+    "src",
+    "resources",
+    "package.json",
+    "package-lock.json",
+    "electron-vite.config.ts"
+  ],
+  "source_tree_includes_untracked": true,
+  "reference_bundle_sha256": "3a0c646eca0c06543bf2d8a0d0eecfaf351303df9eef743ffc51b72e5b78763d",
+  "reference_bundle_files": 786
+}

@@ -1,0 +1,10 @@
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0599]: no method named `shape_line` found for struct `std::sync::Arc<TextSystem>` in the current scope
+   --> crates/vela-ui/src/changes_view.rs:190:52
+    |
+190 |             let measure = |text: &str| text_system.shape_line(text.to_owned().into(), px(12.), &[TextRun {
+    |                                        ------------^^^^^^^^^^ method not found in `std::sync::Arc<TextSystem>`
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `vela-ui` (lib) due to 1 previous error

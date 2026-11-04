@@ -1,0 +1,11 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.47s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 1 test
+test app::markdown_view::tests::answer_footer_follows_focus_in_its_own_code_table_and_copy_control ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.03s
+

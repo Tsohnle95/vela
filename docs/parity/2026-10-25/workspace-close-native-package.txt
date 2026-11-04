@@ -1,0 +1,3 @@
+Preview resources are current.
+target/debug/Vela Native QA.app: replacing existing signature
+/Users/tdawg/code-repositories/vela-native/target/debug/Vela Native QA.app

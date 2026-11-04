@@ -1,0 +1,49 @@
+{
+  "checks": {
+    "update_cancelled_no_commands": true,
+    "sync_matching_service_no_restart": true,
+    "update_2_1_4_to_2_1_5_and_rebind": true,
+    "updater_failure_and_recovered_controls": true,
+    "already_current_update": true
+  },
+  "runtime": {
+    "cli_version": "2.1.5",
+    "service_version": "2.1.5",
+    "next_version": "2.1.5",
+    "url": "http://127.0.0.1:49560",
+    "pid": 67271,
+    "delay": 1
+  },
+  "commands": [
+    {
+      "command": [
+        "upgrade"
+      ],
+      "state_home": "/private/tmp/vela-runtime-fixture",
+      "time": 1793052577.2086542
+    },
+    {
+      "command": [
+        "service",
+        "restart"
+      ],
+      "state_home": "/private/tmp/vela-runtime-fixture",
+      "time": 1793052579.31643
+    },
+    {
+      "command": [
+        "upgrade"
+      ],
+      "state_home": "/private/tmp/vela-runtime-fixture",
+      "time": 1793052611.3548899
+    },
+    {
+      "command": [
+        "upgrade"
+      ],
+      "state_home": "/private/tmp/vela-runtime-fixture",
+      "time": 1793052645.775626
+    }
+  ],
+  "scope": "Disposable loopback fixture and CLI double only. No installed CLI upgrade, real service restart or agent run."
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "info": {
+      "id": "msg_markdown_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_000",
+        "type": "text",
+        "text": "Retain task states, tables and code controls."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_markdown_001",
+      "role": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture",
+        "providerID": "mock"
+      },
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_001",
+        "type": "text",
+        "text": "## Structured controls\n\n- [x] Finished task\n- [ ] Pending task\n  - [x] Nested task\n\n| **Name** | State |\n| :--- | ---: |\n| Unicode 🌍 | **Retained** |\n\n```text\nClipboard fixture 🌍\nretain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column retain every column \n\nLast line.\n```\n\nNothing is truncated."
+      }
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "info": {"id":"msg_fixture_000","role":"user","time":{"created":1000}},
+    "parts": [{"id":"prt_fixture_000","type":"text","text":"Preserve every detail 🌍"}]
+  },
+  {
+    "info": {"id":"msg_fixture_001","role":"assistant","agent":"build","model":{"id":"fixture","providerID":"mock"},"time":{"created":1100,"completed":4200},"finish":"stop"},
+    "parts": [
+      {"id":"prt_fixture_001","type":"reasoning","text":"Inspect the existing behavior.\n\nThen preserve every detail.","time":{"end":2200}},
+      {"id":"prt_fixture_002","type":"text","text":"Final response 🌍\n\nAll fixture details are retained.","time":{"end":4200}}
+    ]
+  }
+]

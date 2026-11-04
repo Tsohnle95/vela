@@ -1,0 +1,229 @@
+{
+  "requests": [
+    {
+      "id": "fixture-1",
+      "provider": "openai",
+      "key_sha256": "cc93aeed23ce6d0727b96f24fdb559775c1bc9518da86875912ef6e1784b204d",
+      "key_utf16_length": 14,
+      "label": "Native fixture success",
+      "answer": {},
+      "directory_matches": true,
+      "result": "connected"
+    },
+    {
+      "id": "fixture-2",
+      "provider": "openai",
+      "key_sha256": "550893a148b292f775a5789b0186314207476d52bb57b5ab9383aac983d72b52",
+      "key_utf16_length": 25,
+      "label": null,
+      "answer": {},
+      "directory_matches": true,
+      "result": "rejected"
+    },
+    {
+      "id": "fixture-3",
+      "provider": "openai",
+      "key_sha256": "ebbaf2d85806473619fc2c3aa322634ce6c2387330bb06e5784ee66f9c664efb",
+      "key_utf16_length": 24,
+      "label": null,
+      "answer": {},
+      "directory_matches": true,
+      "result": "connected"
+    },
+    {
+      "operation": "remove",
+      "id": "fixture-1",
+      "result": "removed"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-5",
+      "method": "code"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-6",
+      "method": "code"
+    },
+    {
+      "operation": "oauth-code",
+      "id": "oauth-6",
+      "code_sha256": "f9a30b9c017027c1a1328647cb67703c4d321da1a5c8f13f06c4c8ea71b0a2eb"
+    },
+    {
+      "operation": "oauth-code",
+      "id": "oauth-5",
+      "code_sha256": "f9a30b9c017027c1a1328647cb67703c4d321da1a5c8f13f06c4c8ea71b0a2eb"
+    },
+    {
+      "operation": "oauth-code",
+      "id": "oauth-6",
+      "code_sha256": "e23566bbc12cc7171bf0275c9fc1155e3bd998aacc6a4019ecc84077b7b675bf"
+    },
+    {
+      "operation": "oauth-code",
+      "id": "oauth-5",
+      "code_sha256": "e23566bbc12cc7171bf0275c9fc1155e3bd998aacc6a4019ecc84077b7b675bf"
+    },
+    {
+      "operation": "oauth-cancel",
+      "id": "oauth-5"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-7",
+      "method": "auto"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-8",
+      "method": "slow"
+    },
+    {
+      "operation": "oauth-cancel",
+      "id": "oauth-8"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-9",
+      "method": "slow"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-10",
+      "method": "slow"
+    },
+    {
+      "operation": "oauth-cancel",
+      "id": "oauth-10"
+    },
+    {
+      "operation": "oauth-cancel",
+      "id": "oauth-9"
+    },
+    {
+      "id": "fixture-11",
+      "provider": "openai",
+      "key_sha256": "3f79bb7b435b05321651daefd374cdc681dc06faa65e374e38337b88ca046dea",
+      "key_utf16_length": 1,
+      "label": "IME fixture reference",
+      "answer": {},
+      "directory_matches": true,
+      "result": "connected"
+    },
+    {
+      "id": "fixture-12",
+      "provider": "openai",
+      "key_sha256": "4a99557e4033c3539de2eb65472017cad5f9557f7a0625a09f1c3f6e2ba69c4c",
+      "key_utf16_length": 1,
+      "label": "IME fixture native",
+      "answer": {},
+      "directory_matches": true,
+      "result": "connected"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-13",
+      "method": "code"
+    },
+    {
+      "operation": "oauth-start",
+      "id": "oauth-14",
+      "method": "code"
+    },
+    {
+      "operation": "oauth-cancel",
+      "id": "oauth-14"
+    },
+    {
+      "operation": "oauth-cancel",
+      "id": "oauth-13"
+    }
+  ],
+  "credentials": {
+    "openai": [
+      {
+        "type": "credential",
+        "id": "fixture-3",
+        "label": "API key"
+      },
+      {
+        "type": "credential",
+        "id": "fixture-11",
+        "label": "IME fixture reference"
+      },
+      {
+        "type": "credential",
+        "id": "fixture-12",
+        "label": "IME fixture native"
+      }
+    ],
+    "opencode-go": [
+      {
+        "type": "credential",
+        "id": "oauth-6",
+        "label": "Code fixture"
+      },
+      {
+        "type": "credential",
+        "id": "oauth-5",
+        "label": "Code fixture"
+      },
+      {
+        "type": "credential",
+        "id": "oauth-7",
+        "label": "OAuth fixture"
+      }
+    ]
+  },
+  "attempts": {
+    "oauth-5": {
+      "method": "code",
+      "provider": "opencode-go",
+      "status": "complete",
+      "polls": 0
+    },
+    "oauth-6": {
+      "method": "code",
+      "provider": "opencode-go",
+      "status": "complete",
+      "polls": 0
+    },
+    "oauth-7": {
+      "method": "auto",
+      "provider": "opencode-go",
+      "status": "complete",
+      "polls": 2
+    },
+    "oauth-8": {
+      "method": "slow",
+      "provider": "opencode-go",
+      "status": "cancelled",
+      "polls": 0
+    },
+    "oauth-9": {
+      "method": "slow",
+      "provider": "opencode-go",
+      "status": "cancelled",
+      "polls": 808
+    },
+    "oauth-10": {
+      "method": "slow",
+      "provider": "opencode-go",
+      "status": "cancelled",
+      "polls": 337
+    },
+    "oauth-13": {
+      "method": "code",
+      "provider": "opencode-go",
+      "status": "cancelled",
+      "polls": 0
+    },
+    "oauth-14": {
+      "method": "code",
+      "provider": "opencode-go",
+      "status": "cancelled",
+      "polls": 0
+    }
+  }
+}

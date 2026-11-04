@@ -1,0 +1,22 @@
+{
+  "status": "model search functional checks passed; full picker and visual acceptance incomplete",
+  "fixture": "http://127.0.0.1:49563",
+  "checks": [
+    "case-insensitive ID with whitespace: CATALOG-029 returned only Catalog model 029",
+    "Unicode globe returned only the Unicode fixture model",
+    "MOCK provider query returned all 30 model choices",
+    "unmatched query visibly showed No models found",
+    "filtered model selection acknowledged Catalog model 029 and dismissed menu",
+    "CmdQ after selection exited the QA app"
+  ],
+  "capture": "native/model-search-filtered.png",
+  "validation": {
+    "focused_search_test": "passed",
+    "clippy": "workspace all-targets -D warnings passed"
+  },
+  "remaining": [
+    "Favorites and model/provider visibility preferences",
+    "Provider collapse and full source model-menu presentation",
+    "Complete keyboard/focus and visual acceptance"
+  ]
+}

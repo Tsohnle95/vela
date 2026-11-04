@@ -1,0 +1,329 @@
+warning: function `completions_lang` is never used
+  --> crates/vela-ui/src/completion.rs:72:15
+   |
+72 | pub(super) fn completions_lang(
+   |               ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vela-ui` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.45s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/main.rs (target/debug/deps/vela-20ad6e9e2d196f0e)
+
+running 2 tests
+test tests::ordinary_app_does_not_require_comparison_configuration ... ok
+test tests::qa_requires_comparison_flag_and_complete_isolated_environment ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_browser-03ff922580b3669b)
+
+running 8 tests
+test tests::permission_isolation_script_covers_sensitive_web_apis ... ok
+test tests::download_filenames_prefer_the_suggestion_then_the_url_segment ... ok
+test tests::navigation_policy_rejects_privileged_and_credentialed_urls ... ok
+test tests::download_policy_accepts_only_credential_free_http_and_https ... ok
+test tests::external_handoff_is_https_only_and_never_carries_credentials ... ok
+test tests::address_field_matches_original_search_host_and_policy_behavior ... ok
+test tests::popup_edge_cases_normalize_only_safe_external_https ... ok
+test tests::download_destinations_use_the_os_downloads_directory_without_overwriting ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_core-4a1e141a45ff7670)
+
+running 104 tests
+test document::tests::external_updates_reload_clean_buffers_and_preserve_dirty_deleted_edits ... ok
+test document::tests::failed_save_keeps_dirty_state_and_still_releases_the_next_request ... ok
+test document::tests::late_reads_cannot_replace_newer_selection_or_same_name_in_another_workspace ... ok
+test document::tests::crlf_documents_edit_as_lf_and_restore_their_eol_on_save ... ok
+test document::tests::folder_relocation_can_finish_after_only_some_observer_moves_arrive ... ok
+test document::tests::physical_folder_rename_retains_every_context_identity_and_undo ... ok
+test document::tests::external_rename_moves_dirty_buffer_undo_and_tabs_without_overwriting_open_destination ... ok
+test document::tests::editing_pins_a_preview_even_after_undo_but_selection_does_not ... ok
+test document::tests::conflicting_save_pauses_queue_and_requires_explicit_resolution ... ok
+test document::tests::detachment_retains_tabs_dirty_undo_and_neighbors_and_marks_deleted_only_on_success ... ok
+test document::tests::late_overwrite_ack_cannot_clear_a_newer_external_conflict ... ok
+test document::tests::document_workspace_lease_covers_pending_saves_and_reopen_reads_fresh_after_close ... ok
+test appearance::tests::preserves_all_original_palettes_and_required_tokens ... ok
+test document::tests::reloading_external_text_preserves_local_edits_in_undo_and_rejects_unreadable_snapshots ... ok
+test document::tests::relocation_acknowledgement_is_idempotent_with_prior_observer_remapping ... ok
+test document::tests::relocation_waits_for_io_refuses_open_destination_and_failure_releases_reservation ... ok
+test document::tests::retiring_context_refuses_pending_io_and_edits_and_preserves_same_root_sibling ... ok
+test document::tests::removal_batch_uses_original_tab_order_and_keeps_failed_prefixes ... ok
+test document::tests::same_disk_file_has_independent_context_buffers_tabs_undo_and_save_ownership ... ok
+test document::tests::removal_waits_for_io_blocks_recreation_and_keeps_failure_edits ... ok
+test document::tests::reserved_folder_relocation_keeps_dirty_buffers_selection_undo_and_other_workspaces ... ok
+test document::tests::save_acknowledges_exact_snapshot_and_serializes_writes_across_navigation ... ok
+test document::tests::save_echo_requires_write_identity_and_late_ack_keeps_newer_disk_state ... ok
+test document::tests::switching_files_sessions_and_closing_views_preserves_dirty_buffer_and_undo ... ok
+test document::tests::verified_rename_receipt_keeps_dirty_undo_but_unidentified_or_changed_sources_conflict ... ok
+test document::tests::workspace_busy_tracks_load_save_and_reservation_without_blocking_other_roots ... ok
+test document::tests::unsaved_files_follow_workspace_and_tab_order_including_retained_closed_edits ... ok
+test document::tests::physical_save_echo_is_owned_only_by_its_writer_and_updates_other_contexts ... ok
+test event::tests::runtime_failure_copy_preserves_source_codes_markers_nested_errors_and_details ... ok
+test event::tests::parses_stream_delta_and_derives_part_id ... ok
+test event::tests::accepts_legacy_properties_envelope ... ok
+test event::tests::permission_payload_normalizes ... ok
+test event::tests::parses_skill_activation_event ... ok
+test event::tests::strips_numbered_event_suffix ... ok
+test event::tests::parses_compaction_lifecycle_events ... ok
+test event::tests::tool_completion_content_keeps_text_and_file_items ... ok
+test layout::tests::offsets_and_hit_testing ... ok
+test markdown::tests::keeps_fenced_code_whole_even_with_blank_lines ... ok
+test markdown::tests::a_long_paragraph_is_one_block ... ok
+test markdown::tests::autolink_protection_keeps_markdown_punctuation_inside_urls ... ok
+test markdown::tests::autolink_skips_explicit_links_images_code_blocks_and_balanced_punctuation ... ok
+test markdown::tests::autolink_protection_leaves_html_attributes_verbatim ... ok
+test markdown::tests::handles_unclosed_fence_while_streaming ... ok
+test markdown::tests::nested_containers_tables_and_long_fences_keep_their_structure ... ok
+test layout::tests::content_change_invalidates_one_height ... ok
+test markdown::tests::source_inline_math_delimiters_convert_outside_code ... ok
+test markdown::tests::inline_events_preserve_nested_styles_links_entities_and_literal_delimiters ... ok
+test markdown::tests::bare_urls_and_emails_autolink_like_marked_gfm ... ok
+test markdown::tests::splits_paragraphs_and_headings ... ok
+test markdown::tests::trims_blank_edges ... ok
+test text::tests::enter_starts_a_group_that_includes_following_text_and_indentation ... ok
+test text::tests::ime_replaces_marked_text_and_undoes_as_one_transaction ... ok
+test text::tests::independent_replace_many_edits_are_one_undo_and_return_new_ranges ... ok
+test text::tests::grouped_typing_respects_selection_navigation_paste_and_composition ... ok
+test text::tests::contiguous_deletion_groups_preserve_graphemes_and_newline_stops ... ok
+test text::tests::moving_and_deleting_respect_multiline_graphemes ... ok
+test text::tests::selection_replacement_undo_and_redo_preserve_unicode ... ok
+test text::tests::scattered_replace_many_is_one_undo_and_returns_shifted_carets ... ok
+test text::tests::utf16_ranges_and_reversed_selections_are_byte_safe ... ok
+test text::tests::typing_undo_matches_monaco_first_space_and_consecutive_space_boundaries ... ok
+test transcript::tests::assembled_blocks_carry_message_agent_and_model_metadata ... ok
+test transcript::tests::completed_text_replaces_streamed_text ... ok
+test transcript::tests::canonical_tool_replay_preserves_identity_output_status_and_state_times ... ok
+test transcript::tests::empty_assistant_activity_marker_is_replaced_when_the_first_part_becomes_visible ... ok
+test transcript::tests::failed_compaction_keeps_the_summary_and_error ... ok
+test transcript::tests::hydrate_keeps_a_running_compaction_notice ... ok
+test transcript::tests::hydrate_keeps_live_skill_records ... ok
+test transcript::tests::hydrates_replay_messages ... ok
+test transcript::tests::interrupted_execution_retains_partial_answer_and_adds_informational_notice ... ok
+test transcript::tests::live_compaction_aggregates_one_notice_and_finishes ... ok
+test transcript::tests::canonical_replay_preserves_roles_part_ids_completion_and_retry_contract ... ok
+test transcript::tests::local_user_prompt_attachments_survive_block_assembly ... ok
+test transcript::tests::quiet_settlement_matches_source_thresholds_and_near_future_retry_exception ... ok
+test text::tests::large_documents_store_edit_deltas_and_restore_selection ... ok
+test transcript::tests::replay_and_live_tool_updates_share_one_part_across_distinct_call_and_part_ids ... ok
+test transcript::tests::replay_compaction_is_a_completed_notice ... ok
+test transcript::tests::replay_skill_records_preserve_identity_name_and_text ... ok
+test transcript::tests::replay_user_file_parts_become_attachment_names ... ok
+test transcript::tests::restored_failed_tool_matches_reference_hydration_and_retains_original_error ... ok
+test transcript::tests::shell_metadata_command_and_output_fill_missing_input_fields ... ok
+test transcript::tests::retry_settles_on_step_end_and_non_retry_session_status ... ok
+test transcript::tests::skill_activation_renders_a_skill_block ... ok
+test transcript::tests::nested_subcall_parsing_is_bounded ... ok
+test search::tests::whole_words_follow_editor_separators_and_navigation_wraps ... ok
+test search::tests::zero_width_regex_matches_do_not_stall_replacement ... ok
+test transcript::tests::streams_text_without_rebuilding_completed_blocks ... ok
+test transcript::tests::task_progress_metadata_links_the_child_session ... ok
+test transcript::tests::task_tool_metadata_links_the_child_session_and_reaches_blocks ... ok
+test search::tests::selection_scope_limits_navigation_and_replacement_but_preserves_outside_text ... ok
+test search::tests::literal_unicode_matches_preserve_byte_ranges_and_case_options ... ok
+test search::tests::preserve_case_follows_lower_upper_and_capitalized_matches ... ok
+test transcript::tests::tool_lifecycle_is_terminal_and_non_regressing ... ok
+test transcript::tests::v2_execution_events_drive_busy_and_terminal_state_without_step_events ... ok
+test tray::tests::dragging_below_window_hides_without_losing_the_last_full_size ... ok
+test tray::tests::resize_snap_expand_and_toggle_follow_source_thresholds ... ok
+test search::tests::regular_expressions_support_captures_whole_words_and_invalid_patterns ... ok
+test transcript::tests::v2_retry_keeps_deadline_and_replay_state_then_clears_on_restart_or_interrupt ... ok
+test warm::tests::evicts_by_byte_budget ... ok
+test warm::tests::evicts_least_recently_used_by_count ... ok
+test warm::tests::keeps_drafts_and_scroll_across_touches ... ok
+test transcript::tests::terminal_execution_completes_latest_assistant_and_updates_cached_stream_blocks ... ok
+test warm::tests::set_limits_evicts_until_both_new_budgets_hold ... ok
+test text::tests::long_typing_and_backward_deletion_store_one_linear_delta_per_group ... ok
+test search::tests::highlight_limit_does_not_truncate_navigation_or_replace_all_and_undo ... ok
+
+test result: ok. 104 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/perf.rs (target/debug/deps/perf-da915d7281e64afe)
+
+running 1 test
+test transcript_and_warm_navigation ... ignored, performance measurement; run with --release --ignored --nocapture
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-ec8e27122363590f)
+
+running 148 tests
+test changes::diff_tests::intraline_emphasis_handles_multi_line_replacement_runs ... ok
+test changes::diff_tests::intraline_emphasis_marks_only_the_changed_middle ... ok
+test changes::diff_tests::source_line_count_examples_and_exact_newlines ... ok
+test changes::tests::clean_known_baselines_disappear_but_unknown_and_real_deletions_remain ... ok
+test changes::tests::dismissal_is_local_and_only_a_new_event_reintroduces_a_change ... ok
+test changes::tests::hidden_prefixes_and_relocations_do_not_capture_similarly_named_siblings ... ok
+test changes::tests::tree_sorts_case_insensitively_without_losing_stable_case_order ... ok
+test changes::tests::tree_matches_source_directory_first_compaction_and_collapse_examples ... ok
+test engine::tool_input_path_tests::tool_input_paths_keep_first_occurrence_and_ignore_non_objects ... ok
+test engine::tool_input_path_tests::tool_input_paths_cover_common_keys_nested_arrays_and_http_values ... ok
+test changes::diff_tests::line_counts_match_actual_reference_diff_library_fixtures ... ok
+test file_workspace::tests::selected_file_opens_its_canonical_parent_and_exact_unicode_name ... ok
+test file_workspace::tests::selected_symlink_uses_the_real_file_parent_without_moving_or_copying_it ... ok
+test files::tests::safe_rel_matches_validation ... ok
+test changes::diff_tests::large_sparse_change_retains_all_lines_and_numbers ... ok
+test files::tests::creates_new_files_without_overwriting ... ok
+test files::tests::lists_directories_first_and_hides_metadata ... ok
+test detach::tests::invalid_store_and_parent_failure_preserve_the_source ... ok
+test files::tests::rejects_symlinks ... ok
+test detach::tests::detaching_file_and_folder_retains_disk_bytes_and_rejects_unsafe_paths ... ok
+test files::tests::rejects_traversal_absolute_and_backslashes ... ok
+test files::tests::standalone_files_read_write_conflict_and_recreate_without_workspace_recovery ... ok
+test legacy_pins::tests::compacted_table_fallback_scans_a_bounded_json_array ... ok
+test files::tests::new_entries_preserve_existing_data_and_confine_parents ... ok
+test legacy_pins::tests::missing_store_is_distinct_from_an_empty_scan ... ok
+test legacy_pins::tests::malformed_or_truncated_records_are_ignored ... ok
+test legacy_pins::tests::later_delete_clears_pins_and_fragmented_records_reassemble ... ok
+test legacy_pins::tests::newest_batch_wins_and_decodes_both_chromium_encodings ... ok
+test message_queue::tests::invalid_saved_queue_is_preserved_and_failed_save_keeps_memory ... ok
+test migration::tests::a_profile_without_local_storage_keeps_the_pin_scan_pending ... ok
+test changes::diff_tests::exhaustive_small_sequences_are_minimal_and_reconstruct_both_sides ... ok
+test migration::tests::accepts_the_legacy_array_shape ... ok
+test message_queue::tests::unversioned_legacy_queues_are_quarantined_and_persisted_as_v3 ... ok
+test imports::tests::destination_created_during_copy_survives_atomic_install ... ok
+test message_queue::tests::restart_keeps_attachments_order_and_session_workspace_ownership ... ok
+test imports::tests::imports_files_folders_binary_unicode_and_preserves_originals_and_collisions ... ok
+test migration::tests::follows_multi_step_relocation_chains ... ok
+test migration::tests::refuses_a_future_schema_instead_of_guessing ... ok
+test migration::tests::imports_v2_bookmarks_idempotently_and_leaves_the_source_untouched ... ok
+test migration::tests::imports_source_pins_once_and_never_resurrects_native_unpins ... ok
+test migration::tests::ambiguous_project_matches_report_candidates_without_relocating ... ok
+test migration::tests::tolerates_missing_and_corrupt_legacy_files ... ok
+test imports::tests::skips_nested_links_dependencies_and_rejects_scope_and_resource_limits_without_partial_targets ... ok
+test migration::tests::relocates_aliases_and_nested_bookmarks_without_writing_the_source ... ok
+test migration::tests::runtime_relocation_repairs_bookmarks_and_records_alias_idempotently ... ok
+test observation::tests::captured_tool_input_paths_become_known_baselines_before_the_first_write ... ok
+test observation::tests::captured_tool_input_paths_do_not_replace_an_existing_baseline ... ok
+test files::tests::reads_and_writes_files_atomically ... ok
+test observation::tests::detaching_a_folder_forgets_its_baseline_and_suppresses_owned_delete_echoes ... ok
+test migration::tests::relocates_by_opencode_project_id_when_the_inode_changed ... ok
+test migration::tests::relocates_by_device_and_inode_when_no_alias_exists ... ok
+test observation::tests::file_jobs_do_not_wait_for_os_watcher_startup_or_failure ... ok
+test observation::tests::imported_text_becomes_its_baseline_and_owned_watcher_echo_is_suppressed ... ok
+test observation::tests::notification_queue_is_bounded_and_overflow_rescan_deadline_does_not_starve ... ok
+test persist::tests::corrupt_file_falls_back_without_deleting_it ... ok
+test persist::tests::future_schema_is_not_downgraded_silently ... ok
+test persist::tests::legacy_immediate_follow_up_aliases_steer ... ok
+test persist::tests::model_preferences_survive_restart_and_older_settings_default_empty ... ok
+test persist::tests::pinned_sessions_survive_restart_without_losing_unavailable_ids ... ok
+test persist::tests::round_trips_atomically ... ok
+test observation::tests::owned_folder_move_receipts_rebase_tracked_children_and_ignore_os_echoes ... ok
+test persist::tests::workspace_locations_survive_restart_with_aliases_and_identity ... ok
+test persist::tests::shell_preference_defaults_to_codex_and_round_trips ... ok
+test observation::tests::rename_correlation_survives_separate_batches_and_rejects_ambiguous_hardlinks_and_symlinks ... ok
+test git::tests::rejects_paths_outside_the_workspace ... ok
+test observation::tests::owned_rename_receipts_preserve_identity_and_suppress_later_notification_echoes ... ok
+test git::tests::reports_modified_and_untracked_files ... ok
+test git::tests::produces_tracked_and_untracked_diffs ... ok
+test provider_oauth::tests::automatic_authorization_finishes_or_cleans_up_expiry ... ok
+test provider_oauth::tests::cancelled_late_start_is_cleaned_up_without_publishing_an_attempt ... ok
+test provider_oauth::tests::code_authorization_retries_redacted_errors_then_finishes ... ok
+test provider_usage::tests::snapshot_parser_ignores_stale_malformed_and_empty_documents ... ok
+test provider_usage::tests::snapshot_parser_reads_windows_credits_and_provider_errors ... ok
+test provider_usage::tests::snapshot_parser_selects_the_newest_valid_candidate ... ok
+test preview::tests::application_quit_kills_preview_and_helpers_without_polling_async_cleanup ... ok
+test recovery::tests::concurrent_directory_destination_creation_is_never_replaced ... ok
+test observation::tests::owned_removal_records_deleted_children_without_echo_and_keeps_baselines_for_recreation ... ok
+test recovery::tests::changed_source_is_restored_without_overwrite_and_editor_proposal_survives ... ok
+test recovery::tests::external_creation_after_hold_is_never_clobbered ... ok
+test recovery::tests::failed_install_restores_original_and_preserves_proposal ... ok
+test observation::tests::observations_preserve_known_and_unknown_baselines_refresh_git_and_ignore_unsafe_or_large_files ... ok
+test recovery::tests::file_case_only_rename_keeps_source_on_case_insensitive_volumes ... ok
+test recovery::tests::explicit_overwrite_preserves_the_external_original_and_can_recreate_a_deleted_file ... ok
+test recovery::tests::first_creation_reconciles_interrupted_rename_before_claiming_the_original_name ... ok
+test recovery::tests::interrupted_installed_rename_is_completed_without_recreating_old_name ... ok
+test recovery::tests::interrupted_rename_restores_held_source_and_exposes_recovery ... ok
+test recovery::tests::interrupted_source_hold_recovers_after_restart_but_preserves_new_external_file ... ok
+test recovery::tests::moves_reject_symlink_escape_without_mutating_source_or_outside_files ... ok
+test preview::tests::preview_readiness_failures_exit_diagnostics_and_shutdown_clean_up_children ... ok
+test recovery::tests::legacy_recovery_directories_are_imported_without_overwriting_current_transactions ... ok
+test recovery::tests::recovery_rejects_symlink_directories_and_does_not_follow_manifest_traversal ... ok
+test recovery::tests::recovery_acknowledgement_preserves_artifact_bytes_and_rejects_unknown_ids ... ok
+test recovery::tests::rename_external_source_and_destination_creations_never_get_overwritten ... ok
+test recovery::tests::rename_rejects_collisions_and_invalid_targets_without_losing_source ... ok
+test recovery::tests::rename_preserves_source_and_records_acknowledged_unicode_destination ... ok
+test recovery::tests::moves_preserve_files_and_folder_children_and_reject_unsafe_destinations ... ok
+test runtime::tests::opencode_capabilities_match_the_reference_manifest ... ok
+test recovery::tests::retention_purges_old_settled_and_interrupted_transactions_only ... ok
+test recovery::tests::observation_receipt_identifies_the_held_original_and_deleted_recreation ... ok
+test recovery::tests::save_preserves_mode_and_independent_proposed_copy ... ok
+test sass_compiler::tests::cancellation_kills_the_owned_compiler_process ... ok
+test runtime::tests::cli_probe_uses_successful_first_line_and_bounds_a_hung_process ... ok
+test sass_compiler::tests::cancelling_sass_validation_kills_the_validation_process ... ok
+test sass_output::tests::cancelling_a_staged_output_preserves_previous_css_and_cleans_the_temp_file ... ok
+test sass_output::tests::complete_output_replaces_old_css_without_leaving_staging_files ... ok
+test runtime::tests::runtime_profile_alias_requires_complete_identity_and_cli_errors_are_bounded ... ok
+test files::tests::directory_inventory_does_not_silently_drop_entries_after_one_thousand ... ok
+test sass_output::tests::symlink_output_parent_or_changed_root_cannot_modify_external_bytes ... ok
+test sass_output::tests::mapped_output_directories_and_maps_are_installed_inside_the_root ... ok
+test sass_preferences::tests::invalid_or_unwritable_preferences_are_not_silently_overwritten ... ok
+test sass_preferences::tests::corrupt_primary_recovers_without_destroying_valid_backup ... ok
+test sass_preferences::tests::legacy_import_preserves_source_and_never_overrides_native_choices ... ok
+test sass_preferences::tests::legacy_backup_recovery_and_invalid_source_leave_existing_bytes_intact ... ok
+test sass_sources::tests::partial_add_edit_and_delete_change_inventory_without_becoming_outputs ... ok
+test sass_sources::tests::configuration_edits_trigger_a_pass_without_becoming_entrypoints ... ok
+test sass_sources::tests::symlink_sources_and_roots_are_not_followed ... ok
+test sass_preferences::tests::roots_survive_restart_and_toggles_preserve_other_roots ... ok
+test sass_state::tests::failed_watcher_keeps_enabled_error_state_but_allows_an_explicit_restart ... ok
+test sass_state::tests::relocation_and_reopen_reject_old_workers_and_output ... ok
+test sass_state::tests::replacement_root_serializes_output_without_blocking_other_roots_or_state_reads ... ok
+test sass_state::tests::roots_toggle_independently_but_all_owners_of_one_root_follow ... ok
+test sass_state::tests::same_root_shares_worker_until_last_owner_closes ... ok
+test sass_state::tests::shared_status_distinguishes_start_error_recovery_and_off_without_erasing_history ... ok
+test sass_sources::tests::source_ignore_rules_preserve_hidden_project_sources_and_deep_entries ... ok
+test sass_watch::tests::notifications_ignore_css_access_and_dependencies_but_include_partials_config_and_directories ... ok
+test terminal_relay::tests::burst_output_is_coalesced_without_reordering ... ok
+test runtime::tests::runtime_sync_scopes_cli_to_connected_profile_and_rebinds_updated_service ... ok
+test terminal_relay::tests::exit_cannot_overtake_queued_final_output ... ok
+test sass_state::tests::log_limits_match_reference_utf16_slicing_and_keep_the_last_hundred_rows ... ok
+test terminal_relay::tests::output_eof_still_waits_for_exit_and_cancellation_is_bounded ... ok
+test trash::tests::trash_passes_exact_unicode_path_to_recoverable_platform_operation ... ok
+test trash::tests::trash_rejects_root_traversal_and_recovery_and_preserves_source_on_failure ... ok
+test validation::tests::cancelled_validation_returns_without_waiting_for_the_network ... ok
+test validation::tests::html_and_css_diagnostics_match_reference_filtering ... ok
+test validation::tests::local_validators_receive_path_appropriate_requests_and_limits ... ok
+test window_state::tests::accepts_reference_formats_without_clamping_small_windows ... ok
+test window_state::tests::legacy_import_never_overwrites_native_dimensions_and_resizes_round_trip ... ok
+test sass_compiler::tests::pinned_compiler_returns_modern_sass_maps_and_diagnostics_without_writing_outputs ... ok
+test sass_compiler::tests::pinned_compiler_validates_unsaved_scss_with_imports_and_warnings ... ok
+test terminal_relay::tests::exit_deadline_wins_over_a_continuous_output_burst ... ok
+test terminal_relay::tests::inherited_open_slave_cannot_hold_an_exited_terminal_forever ... ok
+test observation::tests::native_events_follow_external_writes_save_echoes_multiple_owners_and_new_generations ... ok
+test preview::tests::html_entry_search_uses_locale_case_insensitive_order ... ok
+test preview::tests::preview_servers_sort_with_locale_compare_and_lowercase_case_tiebreaks ... ok
+test preview::tests::html_targets_match_reference_search_depth_entries_and_confinement ... ok
+test preview::tests::previews_serve_encoded_entries_toggle_independently_and_release_ports ... ok
+test observation::tests::watcher_readiness_reconciles_edits_that_happened_during_startup has been running for over 60 seconds
+test sass_watch::tests::actual_file_events_wake_once_after_a_burst_and_cancellation_stops_waiting ... ok
+test observation::tests::watcher_readiness_reconciles_edits_that_happened_during_startup ... ok
+
+test result: ok. 148 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 60.27s
+
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-283304b5db487649)
+
+running 4 tests
+test canonical_history_client_accepts_raw_arrays_and_continuation_pages ... ok
+test settings_handoff_persists_and_updates_engine_warm_limits ... ok
+test engine_reconnects_after_service_moves_ports_and_rehydrates ... ok
+test end_to_end_replay_stream_prompt_and_permission ... FAILED
+
+failures:
+
+---- end_to_end_replay_stream_prompt_and_permission stdout ----
+
+thread 'end_to_end_replay_stream_prompt_and_permission' (4438572) panicked at crates/vela-engine/tests/engine_flow.rs:2578:5:
+condition not met within 20s
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    end_to_end_replay_stream_prompt_and_permission
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 45.35s
+
+error: test failed, to rerun pass `-p vela-engine --test engine_flow`

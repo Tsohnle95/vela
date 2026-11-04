@@ -1,0 +1,221 @@
+{
+  "threshold": 8,
+  "resized": false,
+  "masked": false,
+  "pages": [
+    {
+      "page": "composer-paste-redo",
+      "original": {
+        "missing": true
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "0c85423efea7bccb2abc547ec20dd719060bf2843b8129db4a2cadab0c895627"
+      },
+      "status": "missing capture"
+    },
+    {
+      "page": "composer-selection",
+      "original": {
+        "missing": true
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "e752d27f3f48f76dbb84bfde80704682f25d69f3929421c40377aa5eac6fc8dc"
+      },
+      "status": "missing capture"
+    },
+    {
+      "page": "settings-about",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "bf716b73d23d6d279ce993f2c2babcac0993764c7e158d4543401a9f7738af8d"
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "2fcd214fc8a31dba1c97c11ebc409caf2d66600de5b1f428c71a4ea83975fafc"
+      },
+      "status": "different",
+      "exact_changed_pixels": 2660329,
+      "changed_pixels_above_threshold": 623581,
+      "changed_fraction_above_threshold": 0.152241455078125,
+      "mean_absolute_channel_error": 5.136730061848958
+    },
+    {
+      "page": "settings-appearance",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "faca17f084e3ffa4ddefc50345058c8c484103697ddfcf8d19229bc338850253"
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "8b85cbbd33a39d27ff3eab117a48ec04cd48772a1d9bb219c300a9184f1a03aa"
+      },
+      "status": "different",
+      "exact_changed_pixels": 1559787,
+      "changed_pixels_above_threshold": 808321,
+      "changed_fraction_above_threshold": 0.197343994140625,
+      "mean_absolute_channel_error": 20.150226725260413
+    },
+    {
+      "page": "settings-mobile",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "d8b8782617f14870e7892457c8c3542722c0f8a6c4b955c06a2deb71900b062e"
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "58c9ac6a125e80ac3f62edfd68268010563e3c798a7807c719c0200c4eeeb784"
+      },
+      "status": "different",
+      "exact_changed_pixels": 2193760,
+      "changed_pixels_above_threshold": 961806,
+      "changed_fraction_above_threshold": 0.23481591796875,
+      "mean_absolute_channel_error": 11.104930094401041
+    },
+    {
+      "page": "settings-model",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "75f7a77f038fc81bc6de3582982e7a77948560f26001db5f42dcc95b4d2d55eb"
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "f25f0ef59ba4fe7e808a0761dd35f8de9408653881c258afb68f48bca1e38353"
+      },
+      "status": "different",
+      "exact_changed_pixels": 2362033,
+      "changed_pixels_above_threshold": 972953,
+      "changed_fraction_above_threshold": 0.237537353515625,
+      "mean_absolute_channel_error": 7.256891438802083
+    },
+    {
+      "page": "settings-providers",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "142fbd20f5555eb7551091249e77a1dabcdb44b97a2f13cfac568c475934a16d"
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "7b6ecce8f25e3dc2b32b52ceb0746d95206bbbe16f7fa3d8ac5ba292ef3f87a4"
+      },
+      "status": "different",
+      "exact_changed_pixels": 2869789,
+      "changed_pixels_above_threshold": 997213,
+      "changed_fraction_above_threshold": 0.243460205078125,
+      "mean_absolute_channel_error": 5.987047526041667
+    },
+    {
+      "page": "settings-servers",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "aedc634dd8b5fe7d55990a599fd6a8d6aaafabdb9505809e0aa708f9bbf13bbf"
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "dd7c9925e2590c333449243a533007f8dfa0c1bd07889ff8c3b72307e88fac7f"
+      },
+      "status": "different",
+      "exact_changed_pixels": 2770392,
+      "changed_pixels_above_threshold": 665763,
+      "changed_fraction_above_threshold": 0.162539794921875,
+      "mean_absolute_channel_error": 4.910224446614584
+    },
+    {
+      "page": "settings-voice",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "6dc15a71a350ae90b639215b6c4fc2a55941a1fb211459ef190e738618dd2286"
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "4a0863eaba1d3d0c50517f459255a68a7a04366eebdda130f51e0125ca5cc329"
+      },
+      "status": "different",
+      "exact_changed_pixels": 2940442,
+      "changed_pixels_above_threshold": 538447,
+      "changed_fraction_above_threshold": 0.131456787109375,
+      "mean_absolute_channel_error": 4.16307763671875
+    },
+    {
+      "page": "theme-midnight",
+      "original": {
+        "missing": true
+      },
+      "native": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "d3ea6cea8efe98ccaf18742417d1cff5a56615d596f33cd318ffb847bf772816"
+      },
+      "status": "missing capture"
+    },
+    {
+      "page": "transcript",
+      "original": {
+        "size": [
+          2560,
+          1600
+        ],
+        "sha256": "8ac5dfec0a66622dbdeb7a426f9ca94e60e7a2bc9cc1f989b1dbcb348dcefd75"
+      },
+      "native": {
+        "size": [
+          2852,
+          1768
+        ],
+        "sha256": "9ac34b940d150a01a2a57457eff811a3507bb51a7e0699c842ebaa960d7bffa1"
+      },
+      "status": "viewport mismatch"
+    }
+  ]
+}

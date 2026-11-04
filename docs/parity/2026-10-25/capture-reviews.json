@@ -1,0 +1,29 @@
+{
+  "transcript-tools-replay-v1": [
+    "Interaction-state mismatch: the native successful execution card is collapsed; the reference successful card is expanded. Preserve as diagnostic only."
+  ],
+  "transcript-user-markdown-v1": [
+    "Interaction-state mismatch: the native capture has an external attachment drag overlay visible while the reference does not. This exposed a stale drag-state defect; diagnostic only."
+  ],
+  "transcript-user-markdown-v3": [
+    "Native Attach keyboard outline is absent while the reference Attach outline is visible; focus state could not be held reliably during this capture. Preserve as a diagnostic, not an acceptance pair."
+  ],
+  "transcript-structured-controls-v1": [
+    "Native horizontal gutter was later proven to oscillate with the transcript vertical gutter; captured layout was not settled. Preserve the raw pair as a diagnostic."
+  ],
+  "table-far-edge-diagnostic": [
+    "Native shows an additional macOS input/window indicator and a different focus outline state. Preserve for diagnosing the real Retained word split, not as an acceptance pair."
+  ],
+  "transcript-wide-table-end-v1": [
+    "Full captures include macOS control indicators over the title bars and have different app activation states (native active, reference inactive). Preserve the unmodified pair for sizing diagnostics, not acceptance."
+  ],
+  "fractional-footer-live-v1": [
+    "Helper delivery diagnostic: reference remained on Sessions while native was on Files; preserve the raw pair, not an acceptance comparison."
+  ],
+  "table-focus-outside-pointer-v1": [
+    "Focus modality mismatch: native table keyboard outline is visible while reference table outline is absent; preserve as footer focus diagnostic."
+  ],
+  "transcript-code-spacing-v1": [
+    "Reference sidebar was collapsed while native Files sidebar was open. Preserve for code tab-position diagnostics, not page acceptance."
+  ]
+}

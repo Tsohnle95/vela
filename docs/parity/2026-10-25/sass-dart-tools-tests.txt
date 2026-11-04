@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: default planning skips dependencies/partials and compiles modern Dart Sass
+ok 1 - default planning skips dependencies/partials and compiles modern Dart Sass
+  ---
+  duration_ms: 31.83275
+  type: 'test'
+  ...
+# Subtest: explicit JSON5 mappings preserve compressed style, load paths and relative maps
+ok 2 - explicit JSON5 mappings preserve compressed style, load paths and relative maps
+  ---
+  duration_ms: 8.241291
+  type: 'test'
+  ...
+# Subtest: Live Sass formats, include/exclude globs and replacement output directories
+ok 3 - Live Sass formats, include/exclude globs and replacement output directories
+  ---
+  duration_ms: 9.046042
+  type: 'test'
+  ...
+# Subtest: literal package Sass mappings never execute the surrounding shell script
+ok 4 - literal package Sass mappings never execute the surrounding shell script
+  ---
+  duration_ms: 3.929458
+  type: 'test'
+  ...
+# Subtest: invalid mappings, output collisions and oversized configuration fail before compiling
+ok 5 - invalid mappings, output collisions and oversized configuration fail before compiling
+  ---
+  duration_ms: 4.839958
+  type: 'test'
+  ...
+# Subtest: entry failures are separate from successful outputs and retain compiler warnings
+ok 6 - entry failures are separate from successful outputs and retain compiler warnings
+  ---
+  duration_ms: 11.907042
+  type: 'test'
+  ...
+# Subtest: legacy explicit config names remain supported
+ok 7 - legacy explicit config names remain supported
+  ---
+  duration_ms: 5.073791
+  type: 'test'
+  ...
+# Subtest: source and configuration-directory symlinks are not followed
+ok 8 - source and configuration-directory symlinks are not followed
+  ---
+  duration_ms: 2.281083
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 235.979333

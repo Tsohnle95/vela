@@ -1,0 +1,8 @@
+/target
+/.tools
+/tools/preview/node_modules
+.DS_Store
+*.log
+.env
+.env.*
+/vela-data

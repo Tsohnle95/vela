@@ -1,0 +1,15 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.94s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-a4a3eefb96284800)
+
+running 4 tests
+test app::explorer::tests::move_selection_compacts_ancestors_and_skips_self_descendants_and_current_parent ... ok
+test app::explorer::tests::drag_retains_selected_hidden_children_and_unselected_grabs_use_only_their_own_path ... ok
+test app::explorer::tests::nested_invalid_and_file_drop_targets_never_fall_through_to_workspace_root ... ok
+test app::explorer::tests::large_tree_scroll_reaches_last_file_and_new_batches_without_painting_every_row ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 0.04s
+

@@ -1,0 +1,15 @@
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0599]: no method named `new` found for mutable reference `&mut gpui::Context<'_, T>` in the current scope
+  --> crates/vela-ui/src/terminal_state.rs:28:24
+   |
+28 |         let input = cx.new(|_| super::terminal_composition::Input::new(geometry.clone()));
+   |                        ^^^ method not found in `&mut gpui::Context<'_, T>`
+   |
+   = help: items from traits can only be used if the trait is in scope
+help: trait `AppContext` which provides `new` is implemented but not in scope; perhaps you want to import it
+   |
+ 2 + use gpui::AppContext;
+   |
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `vela-ui` (lib) due to 1 previous error

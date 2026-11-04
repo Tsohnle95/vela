@@ -1,0 +1,26 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.92s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 1 test
+test app::markdown_view::tests::markdown_accumulates_fractional_line_height_before_snapping_the_block ... FAILED
+
+failures:
+
+---- app::markdown_view::tests::markdown_accumulates_fractional_line_height_before_snapping_the_block stdout ----
+
+thread 'app::markdown_view::tests::markdown_accumulates_fractional_line_height_before_snapping_the_block' (17502779) panicked at crates/vela-ui/src/markdown_view.rs:1557:9:
+assertion `left == right` failed: two CSS22.75px lines must accumulate their fraction: Bounds { origin: Point { x: 0px, y: 0px }, size: Size { 300px × 46px } }
+  left: 46px
+ right: 45.5px
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    app::markdown_view::tests::markdown_accumulates_fractional_line_height_before_snapping_the_block
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 64 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

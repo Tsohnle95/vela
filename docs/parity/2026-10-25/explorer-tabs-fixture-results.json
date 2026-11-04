@@ -1,0 +1,142 @@
+{
+  "status": "partial; no visual acceptance",
+  "fixture": {
+    "directory": "/private/tmp/vela-close-workspaces/many",
+    "files": 1205,
+    "service": "http://127.0.0.1:49561"
+  },
+  "checks": [
+    {
+      "case": "complete filesystem inventory",
+      "result": "passed engine regression; all 1205 sorted entries returned, former silent 1000-entry cap removed"
+    },
+    {
+      "case": "large-folder GUI before fix",
+      "result": "reproduced; repeated wheel gestures advanced only a few rows because unknown GPUI List heights contributed zero"
+    },
+    {
+      "case": "rendered scroll regression before fix",
+      "result": "failed; last file unreachable at item 6, painted rows 6..27",
+      "evidence": "large-directory-regression-before.txt"
+    },
+    {
+      "case": "rendered exact-height viewport",
+      "result": "passed; 1205 and 1405 mixed-height rows, width/height resize, content removal and bounded visible rendering"
+    },
+    {
+      "case": "large-folder GUI after fix",
+      "result": "passed; scrolled to and opened file-1204.txt with real file content",
+      "capture": "native/explorer-large-folder-last.png",
+      "window": 32230
+    },
+    {
+      "case": "original large-folder GUI",
+      "result": "passed; same file opened in original app",
+      "capture": "original/explorer-large-folder-last.png",
+      "window": 32269,
+      "visual_review_eligible": false,
+      "reason": "Different displays produced different ICC profiles; retain as historical evidence"
+    },
+    {
+      "case": "overflow mouse and Escape",
+      "result": "passed; 12 real pinned files, 8 visible and 4 hidden, scroll to hidden item, select and dismiss"
+    },
+    {
+      "case": "overflow keyboard before fix",
+      "result": "reproduced; Enter toggled on key-down and GPUI synthesized click toggled again on key-up"
+    },
+    {
+      "case": "overflow keyboard regression",
+      "result": "passed; shared overflow button activates exactly once on Enter/Space release and ignores modified Enter; packaged GUI repeatedly opened/closed once per Enter/Space press"
+    },
+    {
+      "case": "mixed document and native-browser overflow",
+      "result": "passed real GUI; 12 files plus 3 retained browser tabs, 4 files and 3 browsers visible, 8 hidden, menu scrolled to browser entries and selected retained local page",
+      "capture": "native/editor-tabs-mixed-overflow.png",
+      "visual_acceptance": false
+    },
+    {
+      "case": "matched-display full-size pair",
+      "result": "eligible for visual review; identical workspace/file, empty composer, 1280x800, same ICC profile; substantial differences remain",
+      "captures": [
+        "original/explorer-large-folder-matched-display.png",
+        "native/explorer-large-folder-matched-display.png"
+      ]
+    },
+    {
+      "case": "two-pixel final-row offset",
+      "result": "traced to original collapsed drop target transparent borders; exact-height scroll extent corrected; last filename ink y765..773 in both apps",
+      "captures": [
+        "original/explorer-large-folder-row-corrected.png",
+        "native/explorer-large-folder-row-corrected.png"
+      ],
+      "visual_review_eligible": false,
+      "reason": "Window activation differs; retain diagnostic geometry evidence, no acceptance"
+    },
+    {
+      "case": "narrow startup layout",
+      "result": "passed functional check; both 900x700 apps show 4 visible/8 hidden out of 12 pinned files, matching overflow position, scrolling and wrapped source lines",
+      "captures": [
+        "original/editor-tabs-overflow-narrow.png",
+        "native/editor-tabs-overflow-narrow.png"
+      ],
+      "visual_review_eligible": true,
+      "visual_acceptance": false
+    },
+    {
+      "case": "conditional tree gutter",
+      "result": "passed rendered growth/resize/removal regression and rebuilt GUI; overflowing selected row spans x57..264 in both source and native; short rows regain full width",
+      "before_capture": "native/editor-tabs-overflow-narrow-before-gutter.png",
+      "after_capture": "native/editor-tabs-overflow-narrow.png"
+    },
+    {
+      "case": "live OS corner resizing",
+      "result": "not verified; two source corner drags left window size unchanged; narrow check used the isolated source saved-size fixture and native startup-size override"
+    },
+    {
+      "case": "capture metadata stability",
+      "result": "comparison now requires capture_stable and matching before/after process/window/bounds/layer/activation inventories; QA captures default to uniquely identified QA apps, explicit IDs remain supported"
+    }
+  ],
+  "additional_changes": [
+    "Original 53 explorer SVG glyphs and 9 tab icon categories are embedded with filename/extension precedence; extraction is build-time only",
+    "Explorer tree has original row indentation, guides, selection, status dots and per-workspace viewport ownership; full mutation/keyboard/drop workflows remain unfinished",
+    "Editor breadcrumb, header and save control corrected; SF Mono loaded from locally installed Terminal font files without redistributing Apple fonts",
+    "Source empty-agent artwork uses original dark asset and nearest-neighbor rendering at current device scale",
+    "Responsive shared document/browser tab overflow implemented; mixed browser and complete resize/theme GUI checks remain pending",
+    "Watch Sass control now dispatches engine operation; live status-control check pending",
+    "Native close sheets now use Electron warning style and default AppKit focus; actual Escape/Return/Space behavior checked; OS Quit still pending"
+  ],
+  "remaining": [
+    "Complete explorer actions and keyboard",
+    "Full editor and split capabilities",
+    "Emoji fallback metrics mismatch",
+    "Composer geometry and controls",
+    "All page/theme/shell/responsive visual acceptance",
+    "Mixed-browser paired source comparison and true live OS resize checks",
+    "Full-size corrected-row activation-matched recapture",
+    "Native composer has a no-op Default strength control; complete metadata-driven model/variant behavior and attachment staging still required"
+  ],
+  "validation": {
+    "workspace_tests": {
+      "passed": 126,
+      "ignored": 1,
+      "log": "rust-workspace-tests-2026-10-27.txt",
+      "sandbox_failure_log": "rust-workspace-tests-sandbox-2026-10-27.txt",
+      "note": "sandbox blocked loopback binding and native notifications; full rerun with required access passed"
+    },
+    "clippy": "workspace/all-targets -D warnings passed after gutter change",
+    "format": "passed",
+    "shell_syntax": "passed",
+    "diff_check": "passed",
+    "latest_comparison": {
+      "capture_names": 103,
+      "lossless_pixel_matches": 0,
+      "includes_historical_and_unmatched_evidence": true
+    }
+  },
+  "preserved_profiles": {
+    "/private/tmp/vela-many-native": "composer draft found and preserved; not sent or cleared",
+    "/private/tmp/vela-many-native-matched": "fresh empty-composer comparison profile"
+  }
+}

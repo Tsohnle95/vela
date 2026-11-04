@@ -1,0 +1,48 @@
+{
+  "status": "V2 lifecycle, server inbox actions, durable local recovery and corrected attachment URI contract passed native GUI checks; visual parity remains unaccepted",
+  "fixture": "http://127.0.0.1:49565",
+  "checks": [
+    "Eight runtime queue entries rendered without the former six-item cap",
+    "Wheel scrolling exposed entry 007 in the 96-point viewport",
+    "Send now acknowledged runtime delivery=steer for entry 007",
+    "Edit in composer removed entry 007 and restored its full multiline Unicode text",
+    "Remove deleted entry 006 without changing the edited draft",
+    "File-only Enter while busy sent empty text plus the staged image with delivery=queue",
+    "Stop acknowledged interrupt and retained seven runtime inbox entries",
+    "Original Vela loaded the same eight-item inbox through Projects / Open workspace; Recents reopen does not hydrate inbox",
+    "The original SDK read the fixture contract as an eight-element user-entry array",
+    "Live V2 execution.started displayed Stop in both apps before any step event",
+    "Native Stop with a nonempty Unicode draft preserved the draft and seven runtime inbox entries",
+    "Two rejected native prompts recovered locally; Move up reordered them on disk and order survived a verified restart",
+    "Local Edit restored full multiline text and staged image; corrected wire request used encoded file URI and basename",
+    "Rejected attached retry retained its files; Send now success removed only the acknowledged local item",
+    "Persisted Steer preference sent delivery=steer; QA preference returned to Queue",
+    "Reference OpenCode manifest steering=false intentionally hides the preference control; native UI preserves this gate",
+    "Source GUI produced identical text, URI, basename and delivery=queue against the corrected strict fixture; rejection produced its local recovery chip",
+    "Quit after queue focus exited cleanly; dirty-buffer Quit showed alert, Cancel retained exact text, Dont Save exited without changing disk hash"
+  ],
+  "captures": [
+    "native/composer-inbox-eight.png",
+    "original/composer-inbox-eight.png",
+    "native/composer-inbox-file-only-busy.png",
+    "native/composer-v2-busy-v2.png",
+    "original/composer-v2-busy-v2.png",
+    "native/composer-local-recovery.png",
+    "native/queue-focus-dirty-quit.png"
+  ],
+  "regression": {
+    "before": "v2-execution-before.txt failed because execution.started was ignored",
+    "after": "v2-execution-after.txt passed; full pipeline regression added to engine_flow"
+  },
+  "remaining": [
+    "Paired post-restart local queue visual comparison and complete keyboard/appearance matrix",
+    "Legacy local queue/settings import",
+    "External file-drop GUI and full preview-format parity",
+    "Transcript attachment/terminal/settlement presentation and exact visual equality"
+  ],
+  "validation": {
+    "workspace_tests": "queue-attachment-contract-tests.txt: 142 passed; one ignored performance test",
+    "clippy": "queue-attachment-contract-clippy.txt passed with -D warnings",
+    "important_correction": "Earlier attachment metadata tests accepted native path objects, but the source sends URI/name objects. Those earlier checks do not prove runtime attachment compatibility; the adapter and fixture now enforce the source contract."
+  }
+}

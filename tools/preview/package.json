@@ -1,0 +1,11 @@
+{
+  "name": "vela-native-preview-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pinned project preview tools launched by the native engine. No UI or OpenCode bridge.",
+  "dependencies": {
+    "json5": "2.2.3",
+    "sass": "1.102.0",
+    "vite": "6.4.3"
+  }
+}

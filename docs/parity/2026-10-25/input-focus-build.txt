@@ -1,0 +1,13 @@
+   Compiling gpui v0.2.2 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+   Compiling vela-browser v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-browser)
+   Compiling gpui_macos v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling gpui_platform v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+   Compiling vela v0.1.0 (/Users/tdawg/code-repositories/vela-native/apps/vela)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 15.74s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`

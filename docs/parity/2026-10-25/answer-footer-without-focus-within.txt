@@ -1,0 +1,38 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+warning: method `answer_contains_focused` is never used
+  --> crates/vela-ui/src/markdown_view.rs:25:19
+   |
+21 | impl MarkdownUi {
+   | --------------- method in this implementation
+...
+25 |     pub(super) fn answer_contains_focused(&self, answer: &str, window: &Window) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vela-ui` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.74s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 1 test
+test app::markdown_view::tests::answer_footer_follows_focus_in_its_own_code_table_and_copy_control ... FAILED
+
+failures:
+
+---- app::markdown_view::tests::answer_footer_follows_focus_in_its_own_code_table_and_copy_control stdout ----
+
+thread 'app::markdown_view::tests::answer_footer_follows_focus_in_its_own_code_table_and_copy_control' (17557568) panicked at crates/vela-ui/src/markdown_view.rs:1632:13:
+assertion `left == right` failed
+  left: [false, false]
+ right: [true, false]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    app::markdown_view::tests::answer_footer_follows_focus_in_its_own_code_table_and_copy_control
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

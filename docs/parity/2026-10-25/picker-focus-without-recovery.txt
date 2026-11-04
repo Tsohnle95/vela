@@ -1,0 +1,21 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.62s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 3`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-6342ef03737d5a25)
+
+running 1 test
+
+thread 'app::composer::tests::replacing_picker_restores_owner_and_keeps_escape_and_quit_reachable' (10862505) panicked at crates/vela-ui/src/composer.rs:619:13:
+focus must leave the unmounted Back control
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test app::composer::tests::replacing_picker_restores_owner_and_keeps_escape_and_quit_reachable ... FAILED
+
+failures:
+
+failures:
+    app::composer::tests::replacing_picker_restores_owner_and_keeps_escape_and_quit_reachable
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 26 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

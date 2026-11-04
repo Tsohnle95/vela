@@ -1,0 +1,22 @@
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0599]: no method named `role` found for struct `gpui::Div` in the current scope
+   --> crates/vela-ui/src/explorer_create.rs:177:30
+    |
+176 | /                         div()
+177 | |                             .role(Role::Label)
+    | |                             -^^^^ method not found in `gpui::Div`
+    | |_____________________________|
+    |
+
+error[E0599]: no method named `role` found for struct `gpui::Div` in the current scope
+   --> crates/vela-ui/src/explorer_create.rs:186:30
+    |
+185 | /                         div()
+186 | |                             .role(Role::Label)
+    | |                             -^^^^ method not found in `gpui::Div`
+    | |_____________________________|
+    |
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `vela-ui` (lib) due to 2 previous errors

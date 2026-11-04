@@ -1,0 +1,60 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-eb5b2a56aa69473c)
+
+running 53 tests
+test files::tests::safe_rel_matches_validation ... ok
+test message_queue::tests::invalid_saved_queue_is_preserved_and_failed_save_keeps_memory ... ok
+test files::tests::lists_directories_first_and_hides_metadata ... ok
+test migration::tests::accepts_the_legacy_array_shape ... ok
+test files::tests::rejects_traversal_absolute_and_backslashes ... ok
+test files::tests::creates_new_files_without_overwriting ... ok
+test files::tests::rejects_symlinks ... ok
+test migration::tests::refuses_a_future_schema_instead_of_guessing ... ok
+test migration::tests::tolerates_missing_and_corrupt_legacy_files ... ok
+test migration::tests::imports_v2_bookmarks_idempotently_and_leaves_the_source_untouched ... ok
+test files::tests::new_entries_preserve_existing_data_and_confine_parents ... ok
+test observation::tests::notification_queue_is_bounded_and_overflow_rescan_deadline_does_not_starve ... ok
+test persist::tests::corrupt_file_falls_back_without_deleting_it ... ok
+test persist::tests::future_schema_is_not_downgraded_silently ... ok
+test message_queue::tests::restart_keeps_attachments_order_and_session_workspace_ownership ... ok
+test persist::tests::model_preferences_survive_restart_and_older_settings_default_empty ... ok
+test persist::tests::round_trips_atomically ... ok
+test persist::tests::shell_preference_defaults_to_codex_and_round_trips ... ok
+test persist::tests::pinned_sessions_survive_restart_without_losing_unavailable_ids ... ok
+test observation::tests::rename_correlation_survives_separate_batches_and_rejects_ambiguous_hardlinks_and_symlinks ... ok
+test provider_oauth::tests::automatic_authorization_finishes_or_cleans_up_expiry ... ok
+test provider_oauth::tests::cancelled_late_start_is_cleaned_up_without_publishing_an_attempt ... ok
+test provider_oauth::tests::code_authorization_retries_redacted_errors_then_finishes ... ok
+test files::tests::reads_and_writes_files_atomically ... ok
+test preview::tests::html_targets_match_reference_search_depth_entries_and_confinement ... ok
+test preview::tests::application_quit_kills_preview_and_helpers_without_polling_async_cleanup ... ok
+test recovery::tests::changed_source_is_restored_without_overwrite_and_editor_proposal_survives ... ok
+test recovery::tests::external_creation_after_hold_is_never_clobbered ... ok
+test recovery::tests::failed_install_restores_original_and_preserves_proposal ... ok
+test recovery::tests::file_case_only_rename_keeps_source_on_case_insensitive_volumes ... ok
+test preview::tests::previews_serve_encoded_entries_toggle_independently_and_release_ports ... ok
+test recovery::tests::interrupted_installed_rename_is_completed_without_recreating_old_name ... ok
+test git::tests::reports_modified_and_untracked_files ... ok
+test recovery::tests::interrupted_rename_restores_held_source_and_exposes_recovery ... ok
+test recovery::tests::interrupted_source_hold_recovers_after_restart_but_preserves_new_external_file ... ok
+test git::tests::produces_tracked_and_untracked_diffs ... ok
+test git::tests::rejects_paths_outside_the_workspace ... ok
+test preview::tests::preview_readiness_failures_exit_diagnostics_and_shutdown_clean_up_children ... ok
+test recovery::tests::explicit_overwrite_preserves_the_external_original_and_can_recreate_a_deleted_file ... ok
+test recovery::tests::rename_rejects_collisions_and_invalid_targets_without_losing_source ... ok
+test window_state::tests::accepts_reference_formats_without_clamping_small_windows ... ok
+test recovery::tests::recovery_rejects_symlink_directories_and_does_not_follow_manifest_traversal ... ok
+test window_state::tests::legacy_import_never_overwrites_native_dimensions_and_resizes_round_trip ... ok
+test runtime::tests::cli_probe_uses_successful_first_line_and_bounds_a_hung_process ... ok
+test recovery::tests::rename_external_source_and_destination_creations_never_get_overwritten ... ok
+test recovery::tests::rename_preserves_source_and_records_acknowledged_unicode_destination ... ok
+test runtime::tests::runtime_profile_alias_requires_complete_identity_and_cli_errors_are_bounded ... ok
+test recovery::tests::save_preserves_mode_and_independent_proposed_copy ... ok
+test recovery::tests::observation_receipt_identifies_the_held_original_and_deleted_recreation ... ok
+test runtime::tests::runtime_sync_scopes_cli_to_connected_profile_and_rebinds_updated_service ... ok
+test observation::tests::observations_preserve_known_and_unknown_baselines_refresh_git_and_ignore_unsafe_or_large_files ... ok
+test files::tests::directory_inventory_does_not_silently_drop_entries_after_one_thousand ... ok
+test observation::tests::native_events_follow_external_writes_save_echoes_multiple_owners_and_new_generations ... ok
+
+test result: ok. 53 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.87s
+

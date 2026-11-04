@@ -1,0 +1,26 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.00s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 3 tests
+test app::markdown_view::tests::user_document_collapses_source_block_margins_without_flattening_structure ... ok
+test app::markdown_view::tests::user_bubble_retains_intrinsic_width_and_wraps_into_normal_lines ... ok
+test app::markdown_view::tests::structured_user_bubble_retains_intrinsic_width_and_block_height ... FAILED
+
+failures:
+
+---- app::markdown_view::tests::structured_user_bubble_retains_intrinsic_width_and_block_height stdout ----
+
+thread 'app::markdown_view::tests::structured_user_bubble_retains_intrinsic_width_and_block_height' (15683824) panicked at crates/vela-ui/src/markdown_view.rs:1096:13:
+bubble must obey the 77 percent cap: Bounds { origin: Point { x: 1632px, y: 233.5px }, size: Size { 276px × 225.5px } }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    app::markdown_view::tests::structured_user_bubble_retains_intrinsic_width_and_block_height
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 44 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

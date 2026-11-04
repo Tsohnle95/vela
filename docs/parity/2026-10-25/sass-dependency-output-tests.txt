@@ -1,0 +1,28 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+warning: unused import: `Path`
+ --> crates/vela-engine/src/engine.rs:2:17
+  |
+2 | use std::path::{Path, PathBuf};
+  |                 ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vela-engine` (lib test) generated 1 warning (run `cargo fix --lib -p vela-engine --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.81s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-53443e6c52063261)
+
+running 11 tests
+test sass_state::tests::same_root_shares_worker_until_last_owner_closes ... ok
+test sass_state::tests::relocation_and_reopen_reject_old_workers_and_output ... ok
+test sass_state::tests::roots_toggle_independently_but_all_owners_of_one_root_follow ... ok
+test sass_output::tests::symlink_output_parent_or_changed_root_cannot_modify_external_bytes ... ok
+test sass_sources::tests::symlink_sources_and_roots_are_not_followed ... ok
+test sass_preferences::tests::invalid_or_unwritable_preferences_are_not_silently_overwritten ... ok
+test sass_sources::tests::partial_add_edit_and_delete_change_inventory_without_becoming_outputs ... ok
+test sass_output::tests::complete_output_replaces_old_css_without_leaving_staging_files ... ok
+test sass_preferences::tests::corrupt_primary_recovers_without_destroying_valid_backup ... ok
+test sass_preferences::tests::roots_survive_restart_and_toggles_preserve_other_roots ... ok
+test sass_sources::tests::source_ignore_rules_preserve_hidden_project_sources_and_deep_entries ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.07s
+

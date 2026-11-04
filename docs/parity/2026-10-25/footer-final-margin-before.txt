@@ -1,0 +1,23 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.61s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 1 test
+
+thread 'app::transcript_view::tests::answer_footer_uses_the_final_markdown_margin_instead_of_the_block_count' (18368140) panicked at crates/vela-ui/src/transcript_view.rs:1087:13:
+assertion `left == right` failed: ["## Heading", "| A | B |\n|---|---|\n|1|2|", "After the table."]
+  left: 20.0
+ right: 6.0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test app::transcript_view::tests::answer_footer_uses_the_final_markdown_margin_instead_of_the_block_count ... FAILED
+
+failures:
+
+failures:
+    app::transcript_view::tests::answer_footer_uses_the_final_markdown_margin_instead_of_the_block_count
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

@@ -1,0 +1,10 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.82s
+     Running tests/tmp_legacy_pins_probe.rs (target/debug/deps/tmp_legacy_pins_probe-11c1ee2600203e0c)
+
+running 1 test
+pins_scanned=true pins_imported=2 pin_count=2
+test probe_real_source_profile_pins ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

@@ -1,0 +1,71 @@
+Window: "Vela", App: Vela.
+0 standard window Vela, Secondary Actions: Raise
+	1 HTML content Vela, URL: file:///Users/tdawg/code-repositories/vela/out/renderer/index.html
+		2 container
+			3 toggle button Description: Hide left panel, Value: 1
+			4 tab group Open editor tabs
+			5 toggle button Description: Enter Agent Mode, Help: Agent Mode — collapse the sidebar and split models across the workspace, Value: 0
+			6 button Description: Add model panel, Help: Add agent panel (choose a folder)
+			7 toggle button Description: Hide agent panel, Value: 1
+			8 container Workspace views
+				9 toggle button Description: Sessions, Value: 0
+				10 toggle button Description: Files, Value: 0
+				11 button Description: Terminal, Help: Show terminal (⌥O)
+				12 toggle button Description: Changes, Value: 0
+				13 button Open a browser tab
+				14 toggle button Description: Settings, Help: Close settings, Value: 1
+			15 container
+				16 text PREFERENCES Settings
+			17 container Settings sections
+				18 button Appearance
+				19 button Providers
+				20 button Voice
+				21 button Model
+				22 button Servers
+				23 button Mobile Setup
+				24 button About
+			25 container
+				26 text VELA PREFERENCES
+				27 heading Model, Value: 1
+					28 text Model
+				29 text Choose the model used by the current workspace.
+				30 button Back to workspace
+				31 text Default model
+				32 text Used for new prompts in /private/tmp/vela-test-workspace.
+				33 pop up button Big Pickle · opencode
+					34 (selected) Big Pickle · opencode
+				35 heading SAFETY, Value: 2
+					36 text SAFETY
+				37 text Tool permissions
+				38 text Choose whether agent tool actions need confirmation.
+				39 button Ask
+				40 button Approve
+				41 heading OPENCODE, Value: 2
+					42 text OPENCODE
+				43 text Vela uses the global OpenCode CLI.
+				44 text Sync and update restart the shared OpenCode service. Active runs in Vela or other OpenCode apps may be interrupted.
+				45 text Installed CLI
+				46 text The version resolved from Vela's PATH.
+				47 text OPENCODE V2.1.4
+				48 text Sync installed version
+				49 text Restart the shared service to use the CLI version already installed.
+				50 button Sync
+				51 text Update to latest
+				52 text Run OpenCode's updater for its detected install method, then sync the service.
+				53 button Update
+	54 close button
+	55 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	56 minimize button
+57 menu bar
+	58 Vela
+	59 File
+	60 Edit
+	61 View
+	62 Window
+	63 Help
+
+Selected text: ```
+￼
+```
+
+Note: Pay special attention to the content selected by the user. If the user asks a question or refers to the content they are looking at on-screen, they might be referring to the selected content (but they might be referring to something else that's visible, too).

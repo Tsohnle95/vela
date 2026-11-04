@@ -1,0 +1,75 @@
+{
+  "status": "partial; visual acceptance and operating-system Quit remain open",
+  "service": {
+    "url": "http://127.0.0.1:49555",
+    "version": "2.1.4",
+    "existing_service_preserved": true
+  },
+  "before": {
+    "qa_pid": 68753,
+    "result": "Red Close discarded an unsaved disposable buffer without a dialog; disk stayed unchanged",
+    "capture": "native/close-guard-before-unsaved.png"
+  },
+  "reference": {
+    "pid": 70424,
+    "window": 23361,
+    "result": "Red Close prompted Save All / Don't Save / Cancel; Cancel retained unsaved text",
+    "capture": "original/close-guard-window-dialog.png"
+  },
+  "checks": [
+    {
+      "case": "red-close cancel",
+      "qa_pid": 58346,
+      "window": 28854,
+      "result": "passed; unsaved buffer retained and disk unchanged",
+      "capture": "native/close-guard-window-dialog-real.png"
+    },
+    {
+      "case": "keyboard Quit Save All",
+      "qa_pid": 58346,
+      "result": "passed; exact local text written before engine stopped and process exited"
+    },
+    {
+      "case": "new workspace navigation",
+      "before": "Runtime created the requested session but UI kept the prior active ID and displayed Loading conversation",
+      "result": "fixed explicit WorkspaceOpened completion; fresh app switched explorer and editor ownership to second workspace; engine flow regression passed"
+    },
+    {
+      "case": "red-close Save All across workspaces",
+      "qa_pid": 60059,
+      "window": 29019,
+      "result": "passed; dialog listed both roots, both exact unsaved texts written before app exited",
+      "capture": "native/close-guard-two-workspaces.png"
+    },
+    {
+      "case": "Save All conflict",
+      "qa_pid": 60344,
+      "window": 29100,
+      "result": "passed; failure alert kept app open; local text and external disk content both retained",
+      "capture": "native/close-guard-conflict-stayed-open.png"
+    },
+    {
+      "case": "menu Quit and Escape",
+      "qa_pid": 60344,
+      "result": "passed; Quit Vela prompted; Escape canceled and kept local edit"
+    },
+    {
+      "case": "Don't Save",
+      "qa_pid": 60344,
+      "result": "passed; app exited, engine stopped, external disk content unchanged"
+    }
+  ],
+  "tests": {
+    "workspace_passed": 122,
+    "ignored_performance_measurements": 1,
+    "engine_flow": "passed, including editor lease after transcript close and two explicit workspace navigation completions"
+  },
+  "remaining": [
+    "Dock/OS termination hook compiles and installs without startup failure, but Dock automation timed out and no actual OS Quit was verified",
+    "Real Save All I/O error, edits during delayed saves and more-than-warm-cache GUI navigation remain unverified (owner/ack regressions pass)",
+    "Native warning style corrected to AppKit Critical after first screenshot omitted Source warning icon; latest screenshots include triangle",
+    "GPUI initial button focus differs from Electron source and requires keyboard parity correction",
+    "Complete page, shell, theme and responsive visual acceptance remain open"
+  ],
+  "ordinary_native_app_replaced": false
+}

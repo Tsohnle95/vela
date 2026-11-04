@@ -1,0 +1,40 @@
+{
+  "captured_utc": "2026-10-25T08:48:04.001224+00:00",
+  "surface": "native",
+  "window": {
+    "bounds": {
+      "Height": 800,
+      "Width": 1280,
+      "X": -1404,
+      "Y": 266
+    },
+    "id": 14232,
+    "owner": "Vela Native",
+    "pid": 97428,
+    "title": "Vela"
+  },
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    2560,
+    1600
+  ],
+  "point_size": [
+    1280,
+    800
+  ],
+  "sha256": "29b867545b102db7918f752044dfeec49e30da8ddeb21ca3f2890135ba4ba4ad",
+  "head": "e882e09c9813301d33811ebc3f6099e88163da16",
+  "tracked_diff_sha256": "cbbd999b2fab9dce82bede0957f118dcb6309ed4062a9edf6fdbf7d8f9eb8fd1",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "14232"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "binary_sha256": "d0527622f7bde9fd6ba90ecb47a6451f2df538f19077e69bdd5ff184fc948132"
+}

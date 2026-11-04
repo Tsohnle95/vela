@@ -1,0 +1,33 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling vela-browser v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-browser)
+error[E0107]: enum takes 2 generic arguments but 1 generic argument was supplied
+  --> crates/vela-core/src/search.rs:31:50
+   |
+31 |     pub fn new(query: &str, options: Options) -> Result<Self> {
+   |                                                  ^^^^^^ ---- supplied 1 generic argument
+   |                                                  |
+   |                                                  expected 2 generic arguments
+   |
+help: add missing generic argument
+   |
+31 |     pub fn new(query: &str, options: Options) -> Result<Self, E> {
+   |                                                             +++
+
+error[E0107]: enum takes 2 generic arguments but 1 generic argument was supplied
+  --> crates/vela-core/src/search.rs:39:10
+   |
+39 |     ) -> Result<Self> {
+   |          ^^^^^^ ---- supplied 1 generic argument
+   |          |
+   |          expected 2 generic arguments
+   |
+help: add missing generic argument
+   |
+39 |     ) -> Result<Self, E> {
+   |                     +++
+
+For more information about this error, try `rustc --explain E0107`.
+error: could not compile `vela-core` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `vela-core` (lib test) due to 2 previous errors
+EXIT:101

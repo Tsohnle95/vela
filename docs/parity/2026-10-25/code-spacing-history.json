@@ -1,0 +1,41 @@
+[
+  {
+    "info": {
+      "id": "msg_markdown_000",
+      "role": "user",
+      "time": {
+        "created": 1000
+      }
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_000",
+        "type": "text",
+        "text": "Check code spacing, blank lines, and tab stops."
+      }
+    ]
+  },
+  {
+    "info": {
+      "id": "msg_markdown_001",
+      "role": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "fixture",
+        "providerID": "mock"
+      },
+      "time": {
+        "created": 1100,
+        "completed": 4200
+      },
+      "finish": "stop"
+    },
+    "parts": [
+      {
+        "id": "prt_markdown_001",
+        "type": "text",
+        "text": "## Code spacing\n\n```text\nOne\nTwo\n\nFour\n```\n\n```text\nA\tB\nAB\tC\n🌍\tD\n```\n\nAfter code."
+      }
+    ]
+  }
+]

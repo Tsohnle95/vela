@@ -1,0 +1,59 @@
+   Compiling objc2-exception-helper v0.1.1
+   Compiling psm v0.1.32
+   Compiling ring v0.17.14
+   Compiling objc2 v0.6.5
+   Compiling stacker v0.1.25
+   Compiling stacksafe v0.1.4
+   Compiling gpui v0.2.2 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling block2 v0.6.2
+   Compiling objc2-core-foundation v0.3.2
+   Compiling rustls v0.23.46
+   Compiling dispatch2 v0.3.1
+   Compiling objc2-foundation v0.3.2
+   Compiling rustls-webpki v0.103.16
+   Compiling objc2-app-kit v0.3.2
+   Compiling objc2-core-location v0.3.2
+   Compiling tokio-rustls v0.26.6
+   Compiling objc2-user-notifications v0.3.2
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+   Compiling objc2-web-kit v0.3.2
+   Compiling wry v0.56.1
+   Compiling vela-browser v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-browser)
+   Compiling gpui_macos v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling gpui_platform v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+warning: unused variable: `unwrapped_width`
+    --> crates/vela-ui/src/markdown_view.rs:1057:17
+     |
+1057 |             let unwrapped_width = if wrap {px(0.)} else {
+     |                 ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unwrapped_width`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vela-ui` (lib test) generated 1 warning (run `cargo fix --lib -p vela-ui --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 17.03s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 1 test
+test app::markdown_view::tests::actual_code_surface_exposes_intrinsic_width_and_resets_scroll_when_wrapped ... FAILED
+
+failures:
+
+---- app::markdown_view::tests::actual_code_surface_exposes_intrinsic_width_and_resets_scroll_when_wrapped stdout ----
+
+thread 'app::markdown_view::tests::actual_code_surface_exposes_intrinsic_width_and_resets_scroll_when_wrapped' (17190542) panicked at crates/vela-ui/src/markdown_view.rs:1400:9:
+unwrapped glyphs must be reachable by scrolling
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    app::markdown_view::tests::actual_code_surface_exposes_intrinsic_width_and_resets_scroll_when_wrapped
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 57 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

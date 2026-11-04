@@ -1,0 +1,6 @@
+Excerpt from native QA session57850 live diagnostics, before the axis-specific fix. Full raw tool output is preserved in the conversation. No prompt text was logged.
+
+2026-10-30T02:53:38.039880Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 381px }, size: Size { 274px × 100px } } max=1604px gutter=false applied=false
+2026-10-30T02:53:38.061217Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 381px }, size: Size { 282px × 108px } } max=1596px gutter=true applied=true
+2026-10-30T02:53:38.075035Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 381px }, size: Size { 274px × 108px } } max=1604px gutter=true applied=false
+2026-10-30T02:53:38.087757Z TRACE vela_ui::scroll: horizontal scroll geometry bounds=Bounds { origin: Point { x: 597px, y: 381px }, size: Size { 274px × 100px } } max=1604px gutter=false applied=false

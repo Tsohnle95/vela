@@ -1,0 +1,24 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.74s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-c295635d0783ff95)
+
+running 1 test
+test input::tests::input_invalidates_cached_paint_on_focus_loss_and_regain ... FAILED
+
+failures:
+
+---- input::tests::input_invalidates_cached_paint_on_focus_loss_and_regain stdout ----
+
+thread 'input::tests::input_invalidates_cached_paint_on_focus_loss_and_regain' (16190812) panicked at crates/vela-ui/src/input.rs:897:9:
+blur must invalidate the cached caret/selection drawing
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    input::tests::input_invalidates_cached_paint_on_focus_loss_and_regain
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 50 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p vela-ui --lib`

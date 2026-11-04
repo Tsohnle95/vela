@@ -1,0 +1,22 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.64s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-2b8f2aa34662d861)
+
+running 8 tests
+test changes::tests::clean_known_baselines_disappear_but_unknown_and_real_deletions_remain ... ok
+test changes::diff_tests::source_line_count_examples_and_exact_newlines ... ok
+test changes::tests::tree_matches_source_directory_first_compaction_and_collapse_examples ... ok
+test changes::tests::hidden_prefixes_and_relocations_do_not_capture_similarly_named_siblings ... ok
+test changes::tests::dismissal_is_local_and_only_a_new_event_reintroduces_a_change ... ok
+test changes::diff_tests::line_counts_match_actual_reference_diff_library_fixtures ... ok
+test changes::diff_tests::large_sparse_change_retains_all_lines_and_numbers ... ok
+test changes::diff_tests::exhaustive_small_sequences_are_minimal_and_reconstruct_both_sides ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 100 filtered out; finished in 0.12s
+
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-778ad0b90109e03c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+

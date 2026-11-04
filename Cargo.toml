@@ -1,0 +1,43 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/vela-core",
+    "crates/vela-opencode",
+    "crates/vela-engine",
+    "crates/vela-terminal",
+    "crates/vela-browser",
+    "crates/vela-ui",
+    "apps/vela",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+vela-core = { path = "crates/vela-core" }
+vela-opencode = { path = "crates/vela-opencode" }
+vela-engine = { path = "crates/vela-engine" }
+vela-ui = { path = "crates/vela-ui" }
+vela-terminal = { path = "crates/vela-terminal" }
+vela-browser = { path = "crates/vela-browser" }
+anyhow = "1"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+futures = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4"] }
+dirs = "6"
+
+# GPUI is pinned to the Zeron-maintained fork revision. The fork adds bounded
+# backdrop blur, EdgeFade, paint-time rounded clipping, GPU memory bounding and
+# macOS 26 window-blur fixes. Upstream GPUI remains the base implementation.
+gpui = { git = "https://github.com/zeronsh/zui", rev = "361ff20b919fdfb80199ee6d9aed725300cb7d54" }
+gpui_platform = { git = "https://github.com/zeronsh/zui", rev = "361ff20b919fdfb80199ee6d9aed725300cb7d54", features = ["font-kit", "runtime_shaders"] }

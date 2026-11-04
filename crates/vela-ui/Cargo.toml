@@ -1,0 +1,39 @@
+[package]
+name = "vela-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+uuid = { workspace = true }
+vela-core = { workspace = true }
+vela-engine = { workspace = true }
+vela-opencode = { workspace = true }
+vela-terminal = { workspace = true }
+vela-browser = { workspace = true }
+gpui = { workspace = true }
+url = "2"
+base64 = "0.22"
+percent-encoding = "2"
+gpui_platform = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+unicode-linebreak = "=0.1.5"
+unicode-segmentation = "1"
+image = { version = "=0.25.10", default-features = false, features = ["png"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSDate", "NSDateFormatter", "NSFormatter", "NSString", "NSObject", "NSLocale", "NSTimeZone", "NSGeometry", "NSAttributedString", "NSDictionary", "NSArray", "NSURL"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSAlert", "NSOpenPanel", "NSSavePanel", "NSButton", "NSApplication", "NSMenu", "NSMenuItem", "NSMenuItemCell", "NSView", "NSWindow", "NSResponder", "NSCell", "NSAppearance", "NSFont", "NSColor", "NSColorSpace", "NSPopUpButtonCell", "NSButtonCell", "NSActionCell", "NSControl", "NSParagraphStyle", "NSText", "NSAttributedString", "block2", "objc2-core-foundation"] }
+block2 = "0.6"
+raw-window-handle = "0.6"
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+chrono = "=0.4.45"
+
+[dev-dependencies]
+gpui = { workspace = true, features = ["test-support"] }
+tempfile = "3"

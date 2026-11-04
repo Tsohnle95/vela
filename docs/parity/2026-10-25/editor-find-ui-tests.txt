@@ -1,0 +1,18 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error: mismatched closing delimiter: `}`
+   --> crates/vela-ui/src/editor.rs:702:42
+    |
+698 |                     if start < end {
+    |                                    - closing delimiter possibly meant for this
+...
+702 |                         window.paint_quad(fill(Bounds::new(
+    |                                          ^ unclosed delimiter
+...
+706 |                     }
+    |                     ^ mismatched closing delimiter
+
+error: could not compile `vela-ui` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

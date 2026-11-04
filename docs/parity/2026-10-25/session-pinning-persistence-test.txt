@@ -1,0 +1,22 @@
+   Compiling tokio-rustls v0.26.6
+   Compiling alacritty_terminal v0.26.0
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling hyper-rustls v0.27.10
+   Compiling vela-terminal v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-terminal)
+   Compiling reqwest v0.12.28
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 13.56s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-eb5b2a56aa69473c)
+
+running 1 test
+test persist::tests::pinned_sessions_survive_restart_without_losing_unavailable_ids ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.00s
+
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-2ca414e6e9caa9cd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+

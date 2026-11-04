@@ -1,0 +1,83 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+error[E0499]: cannot borrow `*cx` as mutable more than once at a time
+    --> crates/vela-ui/src/editor.rs:1243:27
+     |
+1243 |         cx.simulate_click(cx.debug_bounds("find-word").unwrap().center(), Modifiers::default()); draw(cx);
+     |         -- -------------- ^^ second mutable borrow occurs here
+     |         |  |
+     |         |  first borrow later used by call
+     |         first mutable borrow occurs here
+     |
+help: try adding a local storing this argument...
+    --> crates/vela-ui/src/editor.rs:1243:27
+     |
+1243 |         cx.simulate_click(cx.debug_bounds("find-word").unwrap().center(), Modifiers::default()); draw(cx);
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: ...and then using that local as the argument to this call
+    --> crates/vela-ui/src/editor.rs:1243:9
+     |
+1243 |         cx.simulate_click(cx.debug_bounds("find-word").unwrap().center(), Modifiers::default()); draw(cx);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0499]: cannot borrow `*cx` as mutable more than once at a time
+    --> crates/vela-ui/src/editor.rs:1245:27
+     |
+1245 |         cx.simulate_click(cx.debug_bounds("find-case").unwrap().center(), Modifiers::default()); draw(cx);
+     |         -- -------------- ^^ second mutable borrow occurs here
+     |         |  |
+     |         |  first borrow later used by call
+     |         first mutable borrow occurs here
+     |
+help: try adding a local storing this argument...
+    --> crates/vela-ui/src/editor.rs:1245:27
+     |
+1245 |         cx.simulate_click(cx.debug_bounds("find-case").unwrap().center(), Modifiers::default()); draw(cx);
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: ...and then using that local as the argument to this call
+    --> crates/vela-ui/src/editor.rs:1245:9
+     |
+1245 |         cx.simulate_click(cx.debug_bounds("find-case").unwrap().center(), Modifiers::default()); draw(cx);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0499]: cannot borrow `*cx` as mutable more than once at a time
+    --> crates/vela-ui/src/editor.rs:1247:27
+     |
+1247 |         cx.simulate_click(cx.debug_bounds("find-toggle-replace").unwrap().center(), Modifiers::default()); draw(cx);
+     |         -- -------------- ^^ second mutable borrow occurs here
+     |         |  |
+     |         |  first borrow later used by call
+     |         first mutable borrow occurs here
+     |
+help: try adding a local storing this argument...
+    --> crates/vela-ui/src/editor.rs:1247:27
+     |
+1247 |         cx.simulate_click(cx.debug_bounds("find-toggle-replace").unwrap().center(), Modifiers::default()); draw(cx);
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: ...and then using that local as the argument to this call
+    --> crates/vela-ui/src/editor.rs:1247:9
+     |
+1247 |         cx.simulate_click(cx.debug_bounds("find-toggle-replace").unwrap().center(), Modifiers::default()); draw(cx);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0499]: cannot borrow `*cx` as mutable more than once at a time
+    --> crates/vela-ui/src/editor.rs:1251:27
+     |
+1251 |         cx.simulate_click(cx.debug_bounds("replace-all").unwrap().center(), Modifiers::default()); draw(cx);
+     |         -- -------------- ^^ second mutable borrow occurs here
+     |         |  |
+     |         |  first borrow later used by call
+     |         first mutable borrow occurs here
+     |
+help: try adding a local storing this argument...
+    --> crates/vela-ui/src/editor.rs:1251:27
+     |
+1251 |         cx.simulate_click(cx.debug_bounds("replace-all").unwrap().center(), Modifiers::default()); draw(cx);
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: ...and then using that local as the argument to this call
+    --> crates/vela-ui/src/editor.rs:1251:9
+     |
+1251 |         cx.simulate_click(cx.debug_bounds("replace-all").unwrap().center(), Modifiers::default()); draw(cx);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0499`.
+error: could not compile `vela-ui` (lib test) due to 4 previous errors

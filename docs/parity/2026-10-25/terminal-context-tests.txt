@@ -1,0 +1,14 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.39s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-5c12963d3a4790e1)
+
+running 4 tests
+test app::tool_view::tests::activity_summaries_match_reference_tool_kinds_and_terminal_states ... ok
+test app::terminal_state::tests::same_directory_conversations_retire_terminals_and_reject_previous_activation_results ... ok
+test app::terminal_state::tests::tabs_keep_inactive_buffers_choose_source_neighbor_and_reject_retired_ids ... ok
+test app::terminal_state::tests::keyboard_focus_reveals_offscreen_tabs_without_fighting_manual_scroll ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 90 filtered out; finished in 0.03s
+

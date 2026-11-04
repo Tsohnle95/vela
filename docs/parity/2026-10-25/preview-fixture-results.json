@@ -1,0 +1,35 @@
+{
+  "recorded_utc": "2026-10-27T03:38:25.227981+00:00",
+  "reference_head": "3157a41357f28137874d7298af6177e657df5afc",
+  "workspace": "/private/tmp/vela-test-workspace/native-preview-fixture",
+  "checks": {
+    "real_html_sass_render": "passed in embedded native browser",
+    "scss_live_reload": "passed blue to green without reload, restored blue afterward",
+    "external_default_browser_open": "fixture tab title observed in Firefox",
+    "two_html_entries": "passed at ports 5199 and 5200",
+    "context_menu_above_browser": "visible and Stop action worked",
+    "individual_stop": "5199 closed, 5200 continued serving second.html",
+    "stop_all": "both ports closed and empty inventory shown",
+    "reference_running_inventory": "paired captures for one and two servers",
+    "stop_all_layout": "stretched width found in paired captures, corrected and live checked",
+    "app_exit_before_fix": {
+      "qa_pid": 25527,
+      "surviving_preview_pid": 25879,
+      "surviving_preview_parent": 1,
+      "port": 5199,
+      "status": "reproduced leak; owned orphan terminated"
+    },
+    "app_exit_after_fix": {
+      "qa_pid": 27942,
+      "terminal_pid": 27948,
+      "preview_pid": 27998,
+      "all_processes_exited": true,
+      "port_5199_closed": true,
+      "engine_stopped_logged": true
+    },
+    "shutdown_regression": "passed with SIGTERM-ignoring helper and no async cleanup polling",
+    "rust_suite": "109 passed, one performance measurement ignored",
+    "clippy": "passed with -D warnings"
+  },
+  "acceptance": "No page accepted; locale collation, resource relocation, production signing and full feature matrix remain unfinished."
+}

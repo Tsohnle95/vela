@@ -1,0 +1,50 @@
+{
+  "captured_utc": "2026-10-26T03:13:04.656045+00:00",
+  "surface": "native",
+  "window": {
+    "bounds": {
+      "Height": 106,
+      "Width": 150,
+      "X": -849,
+      "Y": 731
+    },
+    "id": 18205,
+    "layer": 101,
+    "owner": "Vela Native",
+    "pid": 62971,
+    "title": ""
+  },
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    300,
+    212
+  ],
+  "point_size": [
+    150,
+    106
+  ],
+  "sha256": "c7bfeb50eae224ab04b2d88f02ddb1070a4e39d4ce3b702c2227b3c36d130c32",
+  "head": "e882e09c9813301d33811ebc3f6099e88163da16",
+  "tracked_diff_sha256": "32a2354c08f6e001384a98d1d055ee81238a315a196e7c97cf33c3a9d88c2e1b",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "18205"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "source_tree_sha256": "e22d1f4a58050df2cc3435a06be08e06d5214c6948969236b7aa9ad5c4729ceb",
+  "source_tree_files": 66,
+  "source_tree_roots": [
+    "crates",
+    "apps",
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "source_tree_includes_untracked": true,
+  "binary_sha256": "e48e6d4cda7daa964a0cd4538f0870721c3b85e53c2ebfaab0a5bb72bce9c0d1"
+}

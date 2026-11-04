@@ -1,0 +1,39 @@
+{
+  "status": "functional checks passed; full migration and visual acceptance incomplete",
+  "fixture": "http://127.0.0.1:49563",
+  "checks": [
+    {
+      "case": "model catalog",
+      "result": "30 models exposed; scrolled to and selected Catalog model 029; acknowledged toolbar label matched",
+      "capture": "native/catalog-model-last.png"
+    },
+    {
+      "case": "agent catalog",
+      "result": "45 agents exposed; scrolled to and selected Catalog agent 044; acknowledged toolbar label matched",
+      "capture": "native/catalog-agent-last.png"
+    },
+    {
+      "case": "picker focus",
+      "result": "Back from strength to models, Escape dismissal, and CmdQ passed in packaged app; engine stopped and process exited",
+      "regression": "picker-focus-without-recovery.txt"
+    },
+    {
+      "case": "QA isolation",
+      "result": "direct execution without comparison flag refused before profile creation; normal isolated launcher succeeded; two unit tests passed"
+    }
+  ],
+  "remaining": [
+    "Model search, favorites, visibility/preferences and remaining source menu behavior",
+    "Full composer operations and attachments",
+    "Retina accessibility/input investigation",
+    "All-page visual and feature acceptance"
+  ],
+  "validation": {
+    "passed": 131,
+    "ignored": 1,
+    "log": "rust-workspace-tests-qa-guard-2026-10-27.txt",
+    "clippy": "workspace all-targets -D warnings passed",
+    "format": "passed",
+    "diff": "passed"
+  }
+}

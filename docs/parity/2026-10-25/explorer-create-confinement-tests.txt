@@ -1,0 +1,15 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.69s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-eb5b2a56aa69473c)
+
+running 1 test
+test files::tests::new_entries_preserve_existing_data_and_confine_parents ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 0.01s
+
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-2ca414e6e9caa9cd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+

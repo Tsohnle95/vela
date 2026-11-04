@@ -1,0 +1,16 @@
+    Blocking waiting for file lock on build directory
+    Checking objc2-foundation v0.3.2
+    Checking objc2-app-kit v0.3.2
+    Checking objc2-core-location v0.3.2
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking objc2-user-notifications v0.3.2
+    Checking objc2-web-kit v0.3.2
+    Checking gpui_macos v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking wry v0.56.1
+    Checking gpui_platform v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+    Checking vela-browser v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-browser)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Checking vela v0.1.0 (/Users/tdawg/code-repositories/vela-native/apps/vela)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 20.88s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 5`

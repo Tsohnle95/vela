@@ -1,0 +1,20 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+warning: unused import: `Path`
+ --> crates/vela-engine/src/engine.rs:2:17
+  |
+2 | use std::path::{Path, PathBuf};
+  |                 ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vela-engine` (lib test) generated 1 warning (run `cargo fix --lib -p vela-engine --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.36s
+     Running unittests src/lib.rs (target/debug/deps/vela_engine-53443e6c52063261)
+
+running 3 tests
+test sass_sources::tests::symlink_sources_and_roots_are_not_followed ... ok
+test sass_sources::tests::partial_add_edit_and_delete_change_inventory_without_becoming_outputs ... ok
+test sass_sources::tests::source_ignore_rules_preserve_hidden_project_sources_and_deep_entries ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 78 filtered out; finished in 0.01s
+

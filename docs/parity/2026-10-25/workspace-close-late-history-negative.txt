@@ -1,0 +1,11 @@
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.73s
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-0d2ddc61355c0625)
+
+running 2 tests
+test canonical_history_client_accepts_raw_arrays_and_continuation_pages ... ok
+test end_to_end_replay_stream_prompt_and_permission has been running for over 60 seconds
+error: test failed, to rerun pass `-p vela-engine --test engine_flow`
+
+Caused by:
+  process didn't exit successfully: `/Users/tdawg/code-repositories/vela-native/target/debug/deps/engine_flow-0d2ddc61355c0625` (signal: 15, SIGTERM: termination signal)

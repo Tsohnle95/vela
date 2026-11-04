@@ -1,0 +1,22 @@
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.18s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 6`
+     Running unittests src/lib.rs (target/debug/deps/vela_ui-5c12963d3a4790e1)
+
+running 12 tests
+test app::terminal_composition::tests::printable_input_and_composition_are_separate_from_pty_protocol_keys ... ok
+test app::tests::terminal_key_encoding_covers_control_and_arrows ... ok
+test app::terminal_input::tests::control_named_keys_are_never_mistaken_for_control_letters ... ok
+test app::terminal_input::tests::navigation_application_mode_modifiers_and_function_keys_match_xterm ... ok
+test app::tool_view::tests::activity_summaries_match_reference_tool_kinds_and_terminal_states ... ok
+test app::tests::terminal_rows_preserve_combining_marks_and_ansi_run_boundaries ... ok
+test app::tests::selected_terminal_cells_have_a_distinct_background_and_valid_runs ... ok
+test app::tests::terminal_rows_have_byte_exact_runs ... ok
+test app::terminal_input::tests::special_keys_match_all_reference_modifier_and_application_mode_combinations ... ok
+test app::terminal_state::tests::tabs_keep_inactive_buffers_choose_source_neighbor_and_reject_retired_ids ... ok
+test app::terminal_composition::tests::preedit_stays_local_and_commits_once_to_its_own_terminal ... ok
+test app::terminal_state::tests::keyboard_focus_reveals_offscreen_tabs_without_fighting_manual_scroll ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.03s
+

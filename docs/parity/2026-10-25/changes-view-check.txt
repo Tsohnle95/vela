@@ -1,0 +1,56 @@
+    Checking vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Checking vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-ui)
+warning: enum `Event` is never used
+ --> crates/vela-ui/src/changes_view.rs:7:17
+  |
+7 | pub(crate) enum Event { Close, Open(String) }
+  |                 ^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: enum `Row` is never used
+ --> crates/vela-ui/src/changes_view.rs:9:6
+  |
+9 | enum Row { Header(String), Pending(String), Unknown, Line(String, usize) }
+  |      ^^^
+
+warning: struct `ChangesView` is never constructed
+  --> crates/vela-ui/src/changes_view.rs:10:19
+   |
+10 | pub(crate) struct ChangesView {
+   |                   ^^^^^^^^^^^
+
+warning: multiple associated items are never used
+  --> crates/vela-ui/src/changes_view.rs:26:12
+   |
+25 | impl ChangesView {
+   | ---------------- associated items in this implementation
+26 |     pub fn new(directory: String, seed: &[ObservedFile], _: &mut Context<Self>) -> Self {
+   |            ^^^
+...
+31 |     pub fn receive(&mut self, changes: &[ObservedFile], cx: &mut Context<Self>) {
+   |            ^^^^^^^
+...
+35 |     pub fn relocate(&mut self, from: &str, to: &str, cx: &mut Context<Self>) {
+   |            ^^^^^^^^
+...
+38 |     pub fn hide(&mut self, prefix: String, cx: &mut Context<Self>) {
+   |            ^^^^
+...
+41 |     fn rebuild(&mut self) {
+   |        ^^^^^^^
+...
+53 |     fn compute(&mut self, path: String, cx: &mut Context<Self>) {
+   |        ^^^^^^^
+...
+69 |     fn button(&mut self,id:String,label:String,active:bool,action:impl Fn(&mut Self,&mut Window,&mut Context<Self>)+'static,cx:&mut ...
+   |        ^^^^^^
+...
+80 |     fn render_row(&mut self,index:usize,cx:&mut Context<Self>)->AnyElement {
+   |        ^^^^^^^^^^
+
+warning: `vela-ui` (lib) generated 4 warnings
+    Checking vela v0.1.0 (/Users/tdawg/code-repositories/vela-native/apps/vela)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.69s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 5`

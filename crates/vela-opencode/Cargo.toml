@@ -1,0 +1,24 @@
+[package]
+name = "vela-opencode"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vela-core = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+futures-util = { version = "0.3", features = ["std"] }
+reqwest = { workspace = true }
+tracing = { workspace = true }
+base64 = "0.22"
+url = "2"
+dirs = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tempfile = "3"

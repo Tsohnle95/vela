@@ -1,0 +1,72 @@
+Window: "Vela", App: Vela.
+0 standard window Vela, Secondary Actions: Raise
+	1 HTML content Vela, URL: file:///Users/tdawg/code-repositories/vela/out/renderer/index.html
+		2 container
+			3 toggle button Description: Hide left panel, Value: 1
+			4 tab group Open editor tabs
+			5 toggle button Description: Enter Agent Mode, Help: Agent Mode — collapse the sidebar and split models across the workspace, Value: 0
+			6 button Description: Add model panel, Help: Add agent panel (choose a folder)
+			7 toggle button Description: Hide agent panel, Value: 1
+			8 container Workspace views
+				9 toggle button Description: Sessions, Value: 0
+				10 toggle button Description: Files, Value: 0
+				11 button Description: Terminal, Help: Show terminal (⌥O)
+				12 toggle button Description: Changes, Value: 0
+				13 button Open a browser tab
+				14 toggle button Description: Settings, Help: Close settings, Value: 1
+			15 container
+				16 text PREFERENCES Settings
+			17 container Settings sections
+				18 button Appearance
+				19 button Providers
+				20 button Voice
+				21 button Model
+				22 button Servers
+				23 button Mobile Setup
+				24 button About
+			25 container
+				26 text VELA PREFERENCES
+				27 heading Mobile Setup, Value: 1
+					28 text Mobile Setup
+				29 text Prepare secure access to Vela from another device.
+				30 button Back to workspace
+				31 container Mobile setup walkthrough
+					32 text VELA · PHONE COMPANION
+					33 heading Continue your workspace on your phone., Value: 2
+						34 text Continue your workspace on your phone.
+					35 text Vela Desktop starts an authenticated companion server while this app is open. Pair once; your phone then remembers this desktop. When the desktop OpenCode service is available, conversations are shared across both apps.
+					36 container Pairing steps
+						37 text 01
+						38 text Prepare this Mac
+						39 text Leave Vela open. This desktop starts the mobile server automatically and stops it when you quit.
+						40 text 02
+						41 text Open the mobile companion app
+						42 container
+							43 text On your phone, open the mobile companion app and choose  Scan QR code  on its connection screen.
+						44 text 03
+						45 text Scan the code from this page
+						46 text The code works once and expires after 10 minutes. It contains no reusable password or device token.
+					47 container
+						48 text The code includes this Mac’s reachable network address and a relay route when available. For manual setup, use an address the phone can reach—never  localhost .
+					49 text PAIR A DEVICE
+					50 heading Connect the mobile companion, Value: 3
+						51 text Connect the mobile companion
+					52 text Ready to pair
+					53 text The desktop companion server is running. Generate a one-time code for your phone.
+					54 button Generate pairing QR
+	55 close button
+	56 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	57 minimize button
+58 menu bar
+	59 Vela
+	60 File
+	61 Edit
+	62 View
+	63 Window
+	64 Help
+
+Selected text: ```
+￼
+```
+
+Note: Pay special attention to the content selected by the user. If the user asks a question or refers to the content they are looking at on-screen, they might be referring to the selected content (but they might be referring to something else that's visible, too).

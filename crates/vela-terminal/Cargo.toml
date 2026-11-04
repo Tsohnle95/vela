@@ -1,0 +1,12 @@
+[package]
+name = "vela-terminal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+alacritty_terminal = "0.26"
+portable-pty = "0.8"
+anyhow = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }

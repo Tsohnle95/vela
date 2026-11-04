@@ -1,0 +1,25 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-opencode)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.26s
+     Running tests/engine_flow.rs (target/debug/deps/engine_flow-778ad0b90109e03c)
+
+running 2 tests
+test canonical_history_client_accepts_raw_arrays_and_continuation_pages ... ok
+test end_to_end_replay_stream_prompt_and_permission ... FAILED
+
+failures:
+
+---- end_to_end_replay_stream_prompt_and_permission stdout ----
+
+thread 'end_to_end_replay_stream_prompt_and_permission' (22000699) panicked at crates/vela-engine/tests/engine_flow.rs:1469:14:
+called `Result::unwrap()` on an `Err` value: Elapsed(())
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    end_to_end_replay_stream_prompt_and_permission
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.78s
+
+error: test failed, to rerun pass `-p vela-engine --test engine_flow`

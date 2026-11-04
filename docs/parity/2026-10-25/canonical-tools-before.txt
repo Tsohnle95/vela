@@ -1,0 +1,34 @@
+   Compiling vela-core v0.1.0 (/Users/tdawg/code-repositories/vela-native/crates/vela-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.04s
+     Running unittests src/lib.rs (target/debug/deps/vela_core-f0522c35333491a9)
+
+running 3 tests
+test transcript::tests::tool_lifecycle_is_terminal_and_non_regressing ... ok
+test transcript::tests::canonical_tool_replay_preserves_identity_output_status_and_state_times ... FAILED
+test transcript::tests::replay_and_live_tool_updates_share_one_part_across_distinct_call_and_part_ids ... FAILED
+
+failures:
+
+---- transcript::tests::canonical_tool_replay_preserves_identity_output_status_and_state_times stdout ----
+
+thread 'transcript::tests::canonical_tool_replay_preserves_identity_output_status_and_state_times' (15484966) panicked at crates/vela-core/src/transcript.rs:2176:13:
+assertion `left == right` failed
+  left: "prt_tool"
+ right: "call_tool"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- transcript::tests::replay_and_live_tool_updates_share_one_part_across_distinct_call_and_part_ids stdout ----
+
+thread 'transcript::tests::replay_and_live_tool_updates_share_one_part_across_distinct_call_and_part_ids' (15484967) panicked at crates/vela-core/src/transcript.rs:2203:9:
+assertion `left == right` failed
+  left: 2
+ right: 1
+
+
+failures:
+    transcript::tests::canonical_tool_replay_preserves_identity_output_status_and_state_times
+    transcript::tests::replay_and_live_tool_updates_share_one_part_across_distinct_call_and_part_ids
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 46 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p vela-core --lib`

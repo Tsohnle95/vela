@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Vela browser fixture B</title>
+<style>body{font:16px system-ui;max-width:520px;margin:40px auto;padding:20px}</style>
+<h1>Page B</h1><p>Use the browser Back button to return to Page A.</p>
+<a href="index.html">Page A</a>
+<p id="partition"></p><script>document.querySelector('#partition').textContent='Shared partition: '+(document.cookie.includes('velaParity=shared')?'yes':'no');</script>
+</html>
