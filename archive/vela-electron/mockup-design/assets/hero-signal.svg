@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="void" x1="120" y1="74" x2="1435" y2="911" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#11172B"/>
+      <stop offset=".57" stop-color="#171B31"/>
+      <stop offset="1" stop-color="#28213A"/>
+    </linearGradient>
+    <radialGradient id="blue" cx="0" cy="0" r="1" gradientTransform="matrix(0 534 -613 0 1154 354)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5D8DFF" stop-opacity=".56"/>
+      <stop offset="1" stop-color="#5D8DFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="mint" cx="0" cy="0" r="1" gradientTransform="matrix(0 348 -388 0 372 550)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#75E5D0" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#75E5D0" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M60 0H0v60" stroke="#CFD7FF" stroke-opacity=".07"/>
+    </pattern>
+    <linearGradient id="beam" x1="270" y1="733" x2="1333" y2="171" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#75E5D0" stop-opacity="0"/>
+      <stop offset=".53" stop-color="#75E5D0" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#9B8AFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="noise" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .08"/></feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="soft-light"/>
+    </filter>
+  </defs>
+  <path fill="url(#void)" d="M0 0h1600v900H0z"/>
+  <path fill="url(#blue)" d="M0 0h1600v900H0z"/>
+  <path fill="url(#mint)" d="M0 0h1600v900H0z"/>
+  <path fill="url(#grid)" d="M0 0h1600v900H0z"/>
+  <g stroke="url(#beam)" stroke-width="2">
+    <path d="M-74 650c287-191 438-204 639-101 195 100 323 109 485-4 188-131 355-161 668-37"/>
+    <path d="M-74 690c287-191 438-204 639-101 195 100 323 109 485-4 188-131 355-161 668-37"/>
+    <path d="M-74 730c287-191 438-204 639-101 195 100 323 109 485-4 188-131 355-161 668-37"/>
+  </g>
+  <circle cx="1154" cy="354" r="191" stroke="#B7C6FF" stroke-opacity=".19"/>
+  <circle cx="1154" cy="354" r="256" stroke="#B7C6FF" stroke-opacity=".11"/>
+  <circle cx="1154" cy="354" r="321" stroke="#B7C6FF" stroke-opacity=".07"/>
+  <circle cx="1154" cy="163" r="5" fill="#A9FFE8"/>
+  <rect width="1600" height="900" filter="url(#noise)" opacity=".23"/>
+</svg>

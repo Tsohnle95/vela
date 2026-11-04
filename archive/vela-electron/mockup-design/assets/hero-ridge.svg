@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="800" y1="0" x2="800" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172C2A"/>
+      <stop offset=".48" stop-color="#49685A"/>
+      <stop offset="1" stop-color="#D1A876"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0" cy="0" r="1" gradientTransform="matrix(0 360 -440 0 1190 378)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE9B5" stop-opacity=".86"/>
+      <stop offset=".42" stop-color="#EAAE70" stop-opacity=".31"/>
+      <stop offset="1" stop-color="#EAAE70" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="far-ridge" x1="800" y1="460" x2="800" y2="840" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5B7764"/>
+      <stop offset="1" stop-color="#344F45"/>
+    </linearGradient>
+    <linearGradient id="near-ridge" x1="800" y1="590" x2="800" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#29453F"/>
+      <stop offset="1" stop-color="#142923"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".76" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .1"/></feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="soft-light"/>
+    </filter>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1600v900H0z"/>
+  <path fill="url(#sun)" d="M0 0h1600v900H0z"/>
+  <circle cx="1190" cy="365" r="98" fill="#F5D699" fill-opacity=".72"/>
+  <g stroke="#F7DDAE" stroke-opacity=".23">
+    <path d="M-80 583c262-126 449-164 653-96 213 71 372 61 524-20 180-95 340-91 579 14"/>
+    <path d="M-80 616c262-126 449-164 653-96 213 71 372 61 524-20 180-95 340-91 579 14"/>
+    <path d="M-80 649c262-126 449-164 653-96 213 71 372 61 524-20 180-95 340-91 579 14"/>
+  </g>
+  <path fill="url(#far-ridge)" d="M0 625 163 540l143 76 152-133 135 96 143-102 191 132 157-102 161 77 126-88 229 123v281H0z"/>
+  <path fill="url(#near-ridge)" d="m0 715 183-57 167 87 162-74 172 73 158-79 194 76 189-91 176 85 199-55v220H0z"/>
+  <path d="M0 779c201-71 335-62 504-8s306 47 465-11 388-89 631-13" stroke="#B3C78F" stroke-opacity=".35" stroke-width="2"/>
+  <path d="M0 818c194-63 360-56 515-9 190 57 346 47 514-11 186-64 365-62 571-8" stroke="#D1B47F" stroke-opacity=".3" stroke-width="2"/>
+  <rect width="1600" height="900" filter="url(#grain)" opacity=".32"/>
+</svg>
