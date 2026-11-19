@@ -17,14 +17,14 @@ pub(super) struct TranscriptRowCache {
 struct SessionRows {
     entries: HashMap<SharedString, Entry>,
     clock: u64,
+    viewport_width: Option<Pixels>,
 }
 
 struct Entry {
     entity: gpui::Entity<CachedTranscriptRow>,
     revision: crate::transcript_viewport::RowRevision,
     measured: Option<gpui::Size<Pixels>>,
-    native_width: Option<Pixels>,
-    force_measure: bool,
+    pending_measurement: Option<usize>,
     last_used: u64,
     #[cfg(test)]
     renders: Rc<std::cell::Cell<u64>>,
@@ -58,7 +58,6 @@ impl TranscriptRowCache {
         list: &ListState,
         rows: &[transcript_view::Row],
         window: &Window,
-        natural_tail: bool,
     ) {
         let window_size = window.viewport_size();
         if self.window_size != Some(window_size) {
@@ -68,43 +67,27 @@ impl TranscriptRowCache {
         let Some(state) = self.sessions.get_mut(session) else {
             return;
         };
-        let mut retained = HashSet::with_capacity(state.entries.len());
         let viewport_width = list.viewport_bounds().size.width;
-        for (index, row) in rows.iter().enumerate() {
-            // GPUI lends the unused turn reservation to the final list box.
-            // Its measured height is not the row's natural content height.
-            // Never cache it or carry that reservation into a later sibling.
-            let Some(entry) = state.entries.get_mut(&row.id) else {
-                continue;
-            };
-            retained.insert(row.id.clone());
-            if natural_tail && index + 1 == rows.len() {
+        if state.viewport_width != Some(viewport_width) {
+            for entry in state.entries.values_mut() {
                 entry.measured = None;
-                entry.force_measure = true;
-                continue;
             }
-            if entry
-                .native_width
-                .is_some_and(|width| width != viewport_width)
-            {
-                entry.force_measure = true;
-            }
-            entry.native_width = Some(viewport_width);
-            entry.measured = if !entry.force_measure && entry.revision == row.revision() {
-                list.bounds_for_item(index)
-                    .map(|bounds| bounds.size)
-                    .filter(|size| {
-                        size.width == viewport_width && size.width > px(0.) && size.height > px(0.)
-                    })
-                    // A native tail remeasurement may temporarily put an
-                    // unchanged row before its logical top. Its last measured
-                    // size remains valid; never replace it with an estimate.
-                    .or_else(|| entry.measured.filter(|size| size.width == viewport_width))
-            } else {
-                None
-            };
+            state.viewport_width = Some(viewport_width);
         }
-        state.entries.retain(|id, _| retained.contains(id));
+
+        // Only newly laid-out rows can supply a missing measurement. Walk the
+        // bounded cache instead of rehashing the transcript on every wheel frame.
+        for (id, entry) in &mut state.entries {
+            let Some(index) = entry.pending_measurement.take() else {
+                continue;
+            };
+            // A stream update may splice or revise this row before capture.
+            if rows.get(index).is_some_and(|row| row.id == *id && row.revision() == entry.revision) {
+                entry.measured = list.bounds_for_item(index)
+                    .map(|bounds| bounds.size)
+                    .filter(|size| size.width > px(0.) && size.height > px(0.));
+            }
+        }
     }
 
     /// Source revisions, Markdown dependencies and explicit UI invalidation
@@ -115,6 +98,7 @@ impl TranscriptRowCache {
         owner: gpui::WeakEntity<VelaApp>,
         session: &str,
         row: &transcript_view::Row,
+        index: usize,
         natural_height: bool,
         cx: &mut Context<VelaApp>,
     ) -> AnyElement {
@@ -145,8 +129,7 @@ impl TranscriptRowCache {
                 entity,
                 revision: revision.clone(),
                 measured: None,
-                native_width: None,
-                force_measure: true,
+                pending_measurement: None,
                 last_used: state.clock,
                 #[cfg(test)]
                 renders,
@@ -160,17 +143,17 @@ impl TranscriptRowCache {
             });
             entry.revision = revision;
             entry.measured = None;
-            entry.force_measure = true;
+            entry.pending_measurement = None;
         }
-        let measured = if natural_height || entry.force_measure {
-            None
-        } else {
-            entry.measured
-        };
-        // Leave the first frame after a reservation uncached as well. The
-        // most recent list measurement may still include the borrowed space.
-        entry.force_measure = natural_height;
-        match measured {
+        // GPUI lends unused turn space to the last row. Never carry that
+        // artificial height into another row or beyond the reservation.
+        if natural_height {
+            entry.measured = None;
+            entry.pending_measurement = None;
+        } else if entry.measured.is_none() {
+            entry.pending_measurement = Some(index);
+        }
+        match entry.measured {
             Some(size) => entry
                 .entity
                 .clone()
@@ -186,7 +169,7 @@ impl TranscriptRowCache {
         for state in self.sessions.values_mut() {
             for entry in state.entries.values_mut() {
                 entry.measured = None;
-                entry.force_measure = true;
+                entry.pending_measurement = None;
             }
         }
     }
@@ -195,13 +178,18 @@ impl TranscriptRowCache {
         if let Some(state) = self.sessions.get_mut(session) {
             for entry in state.entries.values_mut() {
                 entry.measured = None;
-                entry.force_measure = true;
+                entry.pending_measurement = None;
             }
         }
     }
 
     pub(super) fn remove_session(&mut self, session: &str) {
         self.sessions.remove(session);
+    }
+
+    #[cfg(test)]
+    pub(super) fn measured_height(&self, session: &str, id: &str) -> Option<Pixels> {
+        self.sessions.get(session)?.entries.get(id)?.measured.map(|size| size.height)
     }
 
     #[cfg(test)]

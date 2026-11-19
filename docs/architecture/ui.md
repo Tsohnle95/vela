@@ -95,6 +95,12 @@ Rendering invariants:
   cached content height after more content arrives.
   The focused transcript reserves a fixed, symmetric scrollbar gutter.
   Overflow changes thumb visibility without moving or rewrapping the text.
+  Wheel and thumb share the padded scroll range. Scrolling preserves settled
+  row measurements, and the idle return-to-bottom animation runs on native
+  window frames. Discrete mouse-wheel ticks ease across native frames in the
+  receiving panel. Precise scrolling and reduced motion use GPUI's immediate
+  scroll path. Precise input, keyboard navigation, or a scrollbar gesture
+  supersedes queued wheel motion.
   A reader keeps their row and pixel offset where possible. Follow uses GPUI's
   native tail mode. A matching newly observed canonical prompt gets a temporary
   viewport reservation that a growing answer consumes; optimistic queue rows

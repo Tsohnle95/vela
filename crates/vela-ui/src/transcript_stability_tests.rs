@@ -188,8 +188,17 @@ fn manual_scroll_to_live_edge_resumes_only_the_owning_panel(cx: &mut gpui::TestA
         assert!(crate::scroll::list_at_live_edge(&list, px(0.)));
         assert!(app.stick);
     });
-    let viewport = app.read_with(cx, |app, _| app.transcript_list.viewport_bounds());
+    let (viewport, cached_id, height) = app.read_with(cx, |app, _| {
+        let (id, height) = app.transcript_rows.iter().find_map(|row| {
+            app.row_cache.measured_height(ACTIVE, &row.id).map(|height| (row.id.clone(), height))
+        }).expect("settled rows are measured before scrolling");
+        (app.transcript_list.viewport_bounds(), id, height)
+    });
     wheel(cx, viewport, 300.);
+    app.read_with(cx, |app, _| {
+        assert_eq!(app.row_cache.measured_height(ACTIVE, &cached_id), Some(height),
+            "wheel input must keep settled row measurements");
+    });
     draw(&app, cx);
     assert!(!app.read_with(cx, |app, _| app.stick));
     wheel(cx, viewport, -100_000.);
@@ -773,4 +782,102 @@ fn screenshot_reasoning_and_read_commands_are_one_closed_native_line(
         cx.debug_bounds("conversation-row:stability-active:footer:step-0").is_none(),
         "commentary copy controls do not appear inside tool work"
     );
+}
+
+#[gpui::test]
+fn mouse_wheel_ticks_move_the_transcript_across_multiple_frames(cx: &mut gpui::TestAppContext) {
+    let isolated = TestEngine::new();
+    let engine = isolated.engine.clone();
+    let settings = engine.settings();
+    let (app, cx) = cx
+        .add_window_view(move |_, cx| VelaApp::new(engine, settings, None, Default::default(), cx));
+    cx.simulate_resize(size(px(1440.), px(900.)));
+    app.update(cx, initialize);
+    draw(&app, cx);
+
+    app.update(cx, |app, cx| {
+        for session in [ACTIVE, OTHER] {
+            app.list_for(session).unwrap().measure_all();
+        }
+        cx.notify();
+    });
+    draw(&app, cx);
+
+    let detent = |cx: &mut gpui::VisualTestContext, list: &ListState, lines| {
+        cx.simulate_event(gpui::ScrollWheelEvent {
+            position: list.viewport_bounds().center(),
+            delta: gpui::ScrollDelta::Lines(point(0., lines)),
+            ..Default::default()
+        });
+    };
+    let advance = |cx: &mut gpui::VisualTestContext| {
+        cx.background_executor.advance_clock(Duration::from_millis(16));
+        cx.update(|window, cx| window.simulate_next_frame(cx));
+        draw(&app, cx);
+    };
+
+    for session in [ACTIVE, OTHER] {
+        let list = app.read_with(cx, |app, _| app.list_for(session).unwrap());
+        let before = list.scroll_px_offset_for_scrollbar().y;
+        detent(cx, &list, 3.);
+        assert_eq!(
+            list.scroll_px_offset_for_scrollbar().y, before,
+            "a detent must not move the transcript by its full distance before the first frame in {session}",
+        );
+        assert!(!list.is_following_tail(), "wheel intent releases follow immediately in {session}");
+
+        let mut previous = before;
+        let mut moving_frames = 0;
+        for _ in 0..24 {
+            advance(cx);
+            let current = list.scroll_px_offset_for_scrollbar().y;
+            assert!(current >= previous, "scroll must move monotonically");
+            assert!(current - previous < px(30.), "a frame must not repeat the detent bump");
+            moving_frames += usize::from(current > previous);
+            previous = current;
+        }
+        assert!(moving_frames >= 4, "a detent must be spread across several frames");
+        assert!((previous - before - px(60.)).abs() < px(0.1));
+    }
+
+    let list = app.read_with(cx, |app, _| app.transcript_list.clone());
+    let before = list.scroll_px_offset_for_scrollbar().y;
+    detent(cx, &list, 1.);
+    detent(cx, &list, 2.);
+    for _ in 0..24 {
+        advance(cx);
+    }
+    assert!((list.scroll_px_offset_for_scrollbar().y - before - px(60.)).abs() < px(0.1),
+        "a burst must retain the distance of each tick");
+
+    detent(cx, &list, 3.);
+    advance(cx);
+    let before = list.scroll_px_offset_for_scrollbar().y;
+    detent(cx, &list, -1.);
+    advance(cx);
+    assert!(list.scroll_px_offset_for_scrollbar().y < before,
+        "reversal must change direction on the next frame");
+
+    let before = list.scroll_px_offset_for_scrollbar().y;
+    wheel(cx, list.viewport_bounds(), 12.);
+    let precise = list.scroll_px_offset_for_scrollbar().y;
+    assert!(precise > before, "precise input moves immediately");
+    for _ in 0..24 {
+        advance(cx);
+    }
+    assert_eq!(list.scroll_px_offset_for_scrollbar().y, precise,
+        "precise input cancels any pending mouse-wheel animation");
+
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    detent(cx, &list, 1.);
+    assert!(list.scroll_px_offset_for_scrollbar().y > precise,
+        "reduced motion uses immediate native scrolling");
+    cx.update(|_, cx| cx.set_reduce_motion(false));
+    draw(&app, cx);
+    detent(cx, &list, -20.);
+    for _ in 0..24 {
+        advance(cx);
+    }
+    assert!(list.is_following_tail(), "a detent reaching bottom resumes follow");
+    assert!(!app.read_with(cx, |app, _| app.list_for(OTHER).unwrap().is_following_tail()));
 }

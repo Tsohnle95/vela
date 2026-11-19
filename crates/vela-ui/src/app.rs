@@ -3309,6 +3309,9 @@ impl VelaApp {
             self.panel_tile_lists.remove(&session);
             return;
         }
+        self.transcript_ui.scroll_generation += 1;
+        self.transcript_ui.scrolling_to_bottom = false;
+        self.transcript_ui.cancel_wheel_scroll();
         self.panel_tile_lists.insert(session.clone(), self.transcript_list.clone());
         self.panel_transcripts.insert(session, transcript_view::PanelTranscript {
             ui: std::mem::take(&mut self.transcript_ui),
@@ -4648,6 +4651,7 @@ impl VelaApp {
         let retained_geometry = retained.is_some() && self.panel_tile_lists.contains_key(&id);
         if let Some(retained) = retained {
             self.transcript_ui = retained.ui;
+            self.transcript_ui.cancel_wheel_scroll();
             self.transcript_viewport = retained.viewport;
             self.transcript_rows = retained.rows;
         }
@@ -8961,25 +8965,25 @@ impl VelaApp {
                 .get(&session)
                 .cloned()
                 .expect("tile list state");
-            Self::observe_conversation_wheel(&list_state, session.clone(), cx);
+            let wheel_input = self.observe_conversation_wheel(&list_state, session.clone(), cx);
             self.restore_measured_conversation_scroll(&session, &list_state);
             let natural_tail = if active {
                 self.transcript_viewport.requires_natural_tail()
             } else {
                 self.panel_transcripts.get(&session).is_some_and(|panel| panel.viewport.requires_natural_tail())
             };
-            self.row_cache.capture_measurements(&session, &list_state, &preview, window, natural_tail);
+            self.row_cache.capture_measurements(&session, &list_state, &preview, window);
             let owner = cx.weak_entity();
             let rows_preview = preview.clone();
             let rows_session = session.clone();
-            let rows = gpui::list(list_state, move |index, window, cx| {
+            let rows = gpui::list(list_state.clone(), move |index, window, cx| {
                 let Some(row) = rows_preview.get(index) else {
                     return div().into_any_element();
                 };
                 owner
                     .update(cx, |app, cx| {
                         if row.cacheable() {
-                            app.row_cache.element(cx.weak_entity(), &rows_session, row,
+                            app.row_cache.element(cx.weak_entity(), &rows_session, row, index,
                                 natural_tail && index + 1 == rows_preview.len(), cx)
                         } else {
                             app.render_panel_transcript_row(&rows_session, row, window, cx)
@@ -9007,7 +9011,7 @@ impl VelaApp {
                     .flex()
                     .flex_col()
                     .gap(px(16.))
-                    .child(rows),
+                    .child(wheel_input.wrap(list_state, rows.into_any_element())),
             );
         }
 
@@ -23923,7 +23927,7 @@ mod tests {
         draw(cx);
         app.read_with(cx, |app, _| {
             assert!(app.transcript_list.is_following_tail());
-            assert!(crate::scroll::list_distance_from_bottom(&app.transcript_list) <= px(1.));
+            assert!(crate::scroll::list_distance_from_bottom(&app.transcript_list, app.focused_transcript_padding()) <= px(1.));
             assert!(app.transcript_list.logical_scroll_top().item_ix > 30);
         });
         cx.simulate_event(gpui::ScrollWheelEvent {

@@ -2,6 +2,7 @@
 //! A long answer remains a sequence of stable Markdown blocks; expanding a
 //! process group never turns the whole conversation into one layout element.
 use super::*;
+
 use std::{
     borrow::Cow,
     cell::{Cell, RefCell},
@@ -10,6 +11,8 @@ use std::{
     rc::Rc,
 };
 use unicode_segmentation::UnicodeSegmentation;
+
+const TRANSCRIPT_BOTTOM_PADDING: Pixels = px(32.);
 
 #[path = "work_summary_caption.rs"]
 mod work_summary_caption;
@@ -243,10 +246,16 @@ pub(super) struct TranscriptUi {
     user_text_focus: HashMap<Arc<str>, gpui::FocusHandle>,
     pub(super) markdown: markdown_view::MarkdownUi,
     viewport: crate::scroll::ListViewportHandle,
+    wheel_input: crate::scroll::TranscriptWheelInput,
+    wheel_motion: crate::scroll::WheelMotion,
     pub(super) scroll_generation: u64,
     pub(super) scrolling_to_bottom: bool,
 }
 impl TranscriptUi {
+    pub(super) fn cancel_wheel_scroll(&mut self) {
+        self.wheel_motion.cancel();
+    }
+
     pub(super) fn contains_focused(&self, window: &Window) -> bool {
         self.markdown.contains_focused(window)
             || self.focus.values().any(|focus| focus.is_focused(window))
@@ -1038,7 +1047,7 @@ impl VelaApp {
         });
         let Some(owner) = owner else { return false; };
         let Some(list) = self.list_for(&owner) else { return false; };
-        let handled = self.ui_for_mut(&owner)
+        let handled = self.transcript_ui_mut(&owner)
             .is_some_and(|ui| ui.navigate(event, &list, window));
         if handled {
             // Forward navigation can explicitly return to the live edge;
@@ -1085,6 +1094,10 @@ impl VelaApp {
 
     pub(super) fn ui_for_mut(&mut self, session: &str) -> Option<&mut TranscriptUi> {
         self.row_cache.invalidate_session(session);
+        self.transcript_ui_mut(session)
+    }
+
+    fn transcript_ui_mut(&mut self, session: &str) -> Option<&mut TranscriptUi> {
         if self.active_id.as_deref() == Some(session) {
             Some(&mut self.transcript_ui)
         } else {
@@ -1246,9 +1259,10 @@ impl VelaApp {
         if let Some(list) = self.list_for(session) {
             list.set_follow_mode(gpui::FollowMode::Normal);
         }
-        if let Some(ui) = self.ui_for_mut(session) {
+        if let Some(ui) = self.transcript_ui_mut(session) {
             ui.scroll_generation += 1;
             ui.scrolling_to_bottom = false;
+            ui.cancel_wheel_scroll();
         }
     }
 
@@ -1257,12 +1271,13 @@ impl VelaApp {
     /// growing Markdown, images and completed tools cannot do so.
     pub(super) fn observe_conversation_scroll(&mut self, session: &str) {
         let Some(list) = self.list_for(session) else { return; };
-        let padding = if self.active_id.as_deref() == Some(session) {
-            px(if self.is_codex() { 48. } else { 80. })
-        } else {
-            px(0.)
-        };
+        let padding = self.conversation_scroll_padding(session);
         let at_edge = crate::scroll::list_at_live_edge(&list, padding);
+        if at_edge && list.is_following_tail() {
+            self.cancel_conversation_scroll_restore(session);
+            self.turn_anchors.cancel(session);
+            return;
+        }
         self.stop_conversation_follow(session);
         if at_edge {
             if self.active_id.as_deref() == Some(session) {
@@ -1274,22 +1289,106 @@ impl VelaApp {
         }
     }
 
+    fn transcript_top_padding(&self) -> Pixels {
+        px(if self.is_codex() { 16. } else { 48. })
+    }
+
+    pub(super) fn focused_transcript_padding(&self) -> Pixels {
+        self.transcript_top_padding() + TRANSCRIPT_BOTTOM_PADDING
+    }
+
+    fn conversation_scroll_padding(&self, session: &str) -> Pixels {
+        if self.active_id.as_deref() == Some(session) {
+            self.focused_transcript_padding()
+        } else {
+            px(0.)
+        }
+    }
+
     pub(super) fn observe_conversation_wheel(
+        &self,
         list: &ListState,
         session: String,
         cx: &mut Context<Self>,
-    ) {
+    ) -> crate::scroll::TranscriptWheelInput {
+        let input = self.ui_for(&session).expect("transcript UI").wheel_input.clone();
+        let captured = input.clone();
         let owner = cx.weak_entity();
-        list.set_scroll_handler(move |event, _, cx| {
+        list.set_scroll_handler(move |event, window, cx| {
             let owner = owner.clone();
             let session = session.clone();
-            crate::scroll::observe_list_scroll(event, cx, move |_, cx| {
-                let _ = owner.update(cx, |app, cx| {
-                    if app.list_for(&session).is_some() {
-                        app.observe_conversation_scroll(&session);
-                        cx.notify();
-                    }
-                });
+            match captured.claim() {
+                crate::scroll::WheelInput::Tick(tick) => {
+                    window.defer(cx, move |window, cx| {
+                        let _ = owner.update(cx, |app, cx| {
+                            app.queue_transcript_wheel(&session, tick, window, cx);
+                        });
+                    });
+                }
+                crate::scroll::WheelInput::Native => {
+                    crate::scroll::observe_list_scroll(event, cx, move |_, cx| {
+                        let _ = owner.update(cx, |app, _| {
+                            app.observe_conversation_scroll(&session);
+                        });
+                    });
+                }
+                crate::scroll::WheelInput::Queued => {}
+            }
+        });
+        input
+    }
+
+    fn queue_transcript_wheel(
+        &mut self,
+        session: &str,
+        tick: crate::scroll::WheelTick,
+        window: &Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(list) = self.list_for(session) else { return; };
+        // Roll back only the discrete list movement before the window paints.
+        // The native wheel path also dispatches to scrollable tool/code rows.
+        list.scroll_to(tick.anchor);
+        if !self.ui_for(session).is_some_and(|ui| ui.wheel_motion.is_running()) {
+            self.stop_conversation_follow(session);
+        }
+        let now = cx.background_executor().now();
+        if let Some(token) = self
+            .transcript_ui_mut(session)
+            .and_then(|ui| ui.wheel_motion.queue(tick.distance, now))
+        {
+            Self::animate_transcript_wheel(cx.weak_entity(), session.to_owned(), token, window);
+        }
+    }
+
+    fn animate_transcript_wheel(
+        owner: gpui::WeakEntity<Self>,
+        session: String,
+        token: Rc<()>,
+        window: &Window,
+    ) {
+        window.on_next_frame(move |window, cx| {
+            let _ = owner.update(cx, |app, cx| {
+                let Some(list) = app.list_for(&session) else { return; };
+                let now = cx.background_executor().now();
+                let Some(step) = app.transcript_ui_mut(&session)
+                    .and_then(|ui| ui.wheel_motion.advance(&token, now))
+                else { return; };
+                let padding = app.conversation_scroll_padding(&session);
+                let down = crate::scroll::list_distance_from_bottom(&list, padding);
+                let up = (-list.scroll_px_offset_for_scrollbar().y).max(px(0.));
+                list.scroll_by(step.clamp(-up, down));
+                if step > px(0.) && step >= down {
+                    app.observe_conversation_scroll(&session);
+                } else if step < px(0.) && -step >= up
+                    && let Some(ui) = app.transcript_ui_mut(&session)
+                {
+                    ui.cancel_wheel_scroll();
+                }
+                if app.ui_for(&session).is_some_and(|ui| ui.wheel_motion.is_running()) {
+                    Self::animate_transcript_wheel(owner.clone(), session, token, window);
+                }
+                cx.notify();
             });
         });
     }
@@ -1308,57 +1407,62 @@ impl VelaApp {
         self.transcript_ui.markdown.keyboard = self.picker_anchors.keyboard.clone();
         configure_user_order(&mut self.transcript_ui, &self.transcript_rows);
         let rows = self.transcript_rows.clone();
-        let codex_layout = self.is_codex();
+        let top_padding = self.transcript_top_padding();
         let owner = cx.weak_entity();
         let scroll_owner = cx.weak_entity();
         let natural_tail = self.transcript_viewport.requires_natural_tail();
         let scroll_session = self.active_id.clone();
         let list_state = self.transcript_list.clone();
         self.transcript_ui.markdown.set_viewport_width(list_state.viewport_bounds().size.width);
-        if let Some(session) = scroll_session.clone() {
+        let wheel_input = if let Some(session) = scroll_session.clone() {
             self.restore_measured_conversation_scroll(&session, &list_state);
-            self.row_cache.capture_measurements(&session, &list_state, &self.transcript_rows, window, natural_tail);
-            Self::observe_conversation_wheel(&list_state, session, cx);
-        }
-        let bottom_padding = px(32.);
-        self.transcript_viewport.set_bottom_padding(&list_state, bottom_padding);
+            self.row_cache.capture_measurements(&session, &list_state, &self.transcript_rows, window);
+            self.observe_conversation_wheel(&list_state, session, cx)
+        } else {
+            Default::default()
+        };
+        self.transcript_viewport.set_bottom_padding(&list_state, TRANSCRIPT_BOTTOM_PADDING);
         let viewport = crate::scroll::ListViewport::new(
             self.transcript_ui.viewport.clone(),
             list_state.clone(),
             move |gutter| {
+                let transcript = list(list_state.clone(), move |index, window, cx| {
+                    let Some(row) = rows.get(index) else {
+                        return div().into_any_element();
+                    };
+                    owner
+                        .update(cx, |app, cx| {
+                            if row.cacheable() {
+                                let session = app.active_id.clone().unwrap_or_default();
+                                app.row_cache.element(
+                                    cx.weak_entity(),
+                                    &session,
+                                    row,
+                                    index,
+                                    natural_tail && index + 1 == rows.len(),
+                                    cx,
+                                )
+                            } else {
+                                app.render_transcript_row(row, window, cx)
+                            }
+                        })
+                        .unwrap_or_else(|_| div().into_any_element())
+                })
+                .size_full()
+                .w_full()
+                // The Codex shell puts the work row in flow; only the
+                // classic shell reserves room for its absolute header.
+                .pt(top_padding)
+                .pb(TRANSCRIPT_BOTTOM_PADDING);
                 div()
                     .size_full()
                     // Center the transcript on the same axis as the composer.
                     .px(gutter)
-                    .child(
-                        list(list_state, move |index, window, cx| {
-                            let Some(row) = rows.get(index) else {
-                                return div().into_any_element();
-                            };
-                            owner
-                                .update(cx, |app, cx| {
-                                    if row.cacheable() {
-                                        let session = app.active_id.clone().unwrap_or_default();
-                                        app.row_cache.element(cx.weak_entity(), &session, row,
-                                            natural_tail && index + 1 == rows.len(), cx)
-                                    } else {
-                                        app.render_transcript_row(row, window, cx)
-                                    }
-                                })
-                                .unwrap_or_else(|_| div().into_any_element())
-                        })
-                        .size_full()
-                        .w_full()
-                        // The Codex shell puts the work row in flow; only the
-                        // classic shell reserves room for its absolute header.
-                        .pt(px(if codex_layout { 16. } else { 48. }))
-                        .pb(bottom_padding)
-                        .into_any_element(),
-                    )
+                    .child(wheel_input.wrap(list_state, transcript.into_any_element()))
                     .into_any_element()
             },
         );
-        let viewport = viewport.on_scroll(move |_, _, cx| {
+        let viewport = viewport.with_padding(self.focused_transcript_padding()).on_scroll(move |_, _, cx| {
             let _ = scroll_owner.update(cx, |app, cx| {
                 if let Some(session) = scroll_session.as_deref() && app.list_for(session).is_some() {
                     app.observe_conversation_scroll(session);
@@ -1367,7 +1471,7 @@ impl VelaApp {
             });
         });
         let show_bottom = !self.transcript_ui.scrolling_to_bottom
-            && crate::scroll::list_distance_from_bottom(&self.transcript_list) > px(24.);
+            && crate::scroll::list_distance_from_bottom(&self.transcript_list, self.focused_transcript_padding()) > px(24.);
         let button = if show_bottom {
             let row = Row {
                 id: "scroll-to-bottom".into(),
@@ -1384,7 +1488,7 @@ impl VelaApp {
                 "",
                 window,
                 cx,
-                |app, _, cx| app.scroll_transcript_to_bottom(cx),
+                |app, window, cx| app.scroll_transcript_to_bottom(window, cx),
             );
             Some(
                 div()
@@ -1427,58 +1531,61 @@ impl VelaApp {
             .into_any_element()
     }
 
-    pub(super) fn scroll_transcript_to_bottom(&mut self, cx: &mut Context<Self>) {
-        if let Some(session) = self.active_id.clone() {
-            self.cancel_conversation_scroll_restore(&session);
-            self.turn_anchors.cancel(&session);
-        }
+    pub(super) fn scroll_transcript_to_bottom(&mut self, window: &Window, cx: &mut Context<Self>) {
+        let Some(session) = self.active_id.clone() else { return; };
+        self.stop_conversation_follow(&session);
         self.transcript_viewport.release_turn_anchor(&self.transcript_list);
-        self.stick = true;
-        self.transcript_ui.scroll_generation += 1;
-        let generation = self.transcript_ui.scroll_generation;
-        let distance = crate::scroll::list_distance_from_bottom(&self.transcript_list);
+        let distance = crate::scroll::list_distance_from_bottom(
+            &self.transcript_list, self.focused_transcript_padding(),
+        );
         if self.phase.is_active() || cx.reduce_motion() || distance <= px(24.) {
-            self.transcript_list.scroll_to_end();
-            cx.notify();
-            return;
+            self.stick = true;
+            self.transcript_list.set_follow_mode(gpui::FollowMode::Tail);
+        } else {
+            self.transcript_ui.scrolling_to_bottom = true;
+            self.animate_transcript_bottom(
+                window, cx, session, self.transcript_ui.scroll_generation,
+                std::time::Instant::now(), 1.,
+            );
         }
-        self.transcript_ui.scrolling_to_bottom = true;
-        let session = self.active_id.clone();
-        let started = std::time::Instant::now();
-        cx.spawn(async move |this, cx| {
-            loop {
-                cx.background_executor()
-                    .timer(Duration::from_millis(16))
-                    .await;
-                let progress = (started.elapsed().as_secs_f32() / 0.260).min(1.);
-                let keep = this
-                    .update(cx, |app, cx| {
-                        if app.transcript_ui.scroll_generation != generation
-                            || app.active_id != session
-                        {
-                            return false;
-                        }
-                        let maximum = app.transcript_list.max_offset_for_scrollbar().y;
-                        let remaining = distance * (1. - progress).powi(3);
-                        app.transcript_list.set_offset_from_scrollbar(point(
-                            px(0.),
-                            -(maximum - remaining).max(px(0.)),
-                        ));
-                        if progress >= 1. {
-                            app.transcript_list.scroll_to_end();
-                            app.transcript_ui.scrolling_to_bottom = false;
-                        }
-                        cx.notify();
-                        progress < 1.
-                    })
-                    .unwrap_or(false);
-                if !keep {
-                    break;
-                }
-            }
-        })
-        .detach();
         cx.notify();
+    }
+
+    fn animate_transcript_bottom(
+        &self,
+        window: &Window,
+        cx: &Context<Self>,
+        session: String,
+        generation: u64,
+        started: std::time::Instant,
+        previous_remaining: f32,
+    ) {
+        let owner = cx.weak_entity();
+        window.on_next_frame(move |window, cx| {
+            let _ = owner.update(cx, |app, cx| {
+                if app.active_id.as_deref() != Some(&session)
+                    || app.transcript_ui.scroll_generation != generation
+                {
+                    return;
+                }
+                let progress = (started.elapsed().as_secs_f32() / 0.260).min(1.);
+                let remaining = (1. - progress).powi(3);
+                if remaining == 0. {
+                    app.stick = true;
+                    app.transcript_list.set_follow_mode(gpui::FollowMode::Tail);
+                    app.transcript_ui.scrolling_to_bottom = false;
+                } else {
+                    let distance = crate::scroll::list_distance_from_bottom(
+                        &app.transcript_list, app.focused_transcript_padding(),
+                    );
+                    // Advance from the current row anchor. Discovering heights
+                    // above it must not alter the animation's next step.
+                    app.transcript_list.scroll_by(distance * (1. - remaining / previous_remaining));
+                    app.animate_transcript_bottom(window, cx, session, generation, started, remaining);
+                }
+                cx.notify();
+            });
+        });
     }
 
     fn active_transcript_button(

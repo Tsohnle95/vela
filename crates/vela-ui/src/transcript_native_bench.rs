@@ -168,7 +168,7 @@ pub fn run_native_transcript_bench(
                                             assert_eq!((offset.item_ix, offset.offset_in_item), anchor);
                                             assert!(ids[1..].iter().all(|id| app.list_for(id)
                                                 .is_some_and(|list| list.is_following_tail())));
-                                            app.scroll_transcript_to_bottom(cx);
+                                            app.scroll_transcript_to_bottom(window, cx);
                                         });
                                         checked_scroll = true;
                                         eprintln!("native reading anchor and sibling follow verified");

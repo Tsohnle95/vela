@@ -3,21 +3,26 @@
 //! Vela's eight-point gutter is actually needed. Content/viewport changes probe
 //! again, including removal of the final overflowing form.
 use gpui::{prelude::*, *};
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::{Cell, RefCell}, rc::Rc, time::Instant};
 
-pub(crate) fn list_distance_from_bottom(list: &ListState) -> Pixels {
-    (list.max_offset_for_scrollbar().y + list.scroll_px_offset_for_scrollbar().y).max(px(0.))
+fn list_scroll_maximum(list: &ListState, padding: Pixels) -> Pixels {
+    // GPUI's scrollbar maximum omits padding. Its wheel and scrollbar input
+    // both accept offsets through the padded extent.
+    let height = list.viewport_bounds().size.height;
+    if height <= px(0.) {
+        return px(0.);
+    }
+    (list.offset_for_item(list.item_count()) + padding - height).max(px(0.))
+}
+
+pub(crate) fn list_distance_from_bottom(list: &ListState, padding: Pixels) -> Pixels {
+    (list_scroll_maximum(list, padding) + list.scroll_px_offset_for_scrollbar().y).max(px(0.))
 }
 
 /// Read only after a native user-scroll callback has released the list borrow.
 /// A content/height update alone must never use this to resume following.
 pub(crate) fn list_at_live_edge(list: &ListState, padding: Pixels) -> bool {
-    // GPUI's scrollbar maximum deliberately omits list padding. Use the same
-    // content + padding maximum as its wheel implementation; otherwise an
-    // upward scroll inside bottom padding would be mistaken for the edge.
-    let content = list.offset_for_item(list.item_count());
-    let maximum = (content + padding - list.viewport_bounds().size.height).max(px(0.));
-    maximum + list.scroll_px_offset_for_scrollbar().y <= px(0.)
+    list_distance_from_bottom(list, padding) == px(0.)
 }
 
 pub(crate) fn observe_list_scroll(
@@ -31,6 +36,181 @@ pub(crate) fn observe_list_scroll(
     // Deliver that final event too, so a reader can resume by scrolling down.
     let following = event.is_following_tail;
     cx.defer(move |cx| callback(following, cx));
+}
+
+/// The native list still dispatches wheel input to nested scrollable content.
+/// For a discrete wheel tick, remember the transcript's pre-event anchor so it
+/// can replace the native list's immediate jump before the next frame.
+#[derive(Clone, Default)]
+pub(crate) struct TranscriptWheelInput(Rc<Cell<WheelInput>>);
+
+#[derive(Clone, Copy, Default)]
+pub(crate) enum WheelInput {
+    #[default]
+    Native,
+    Tick(WheelTick),
+    // A list callback already deferred this event. Leave follow alone until
+    // the eased movement has reached its actual destination.
+    Queued,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct WheelTick {
+    pub(crate) anchor: ListOffset,
+    pub(crate) distance: Pixels,
+}
+
+impl TranscriptWheelInput {
+    pub(crate) fn claim(&self) -> WheelInput {
+        let input = self.0.get();
+        if matches!(input, WheelInput::Tick(_)) {
+            self.0.set(WheelInput::Queued);
+        }
+        input
+    }
+
+    pub(crate) fn wrap(&self, list: ListState, child: AnyElement) -> impl IntoElement {
+        WheelInputElement {
+            input: self.clone(),
+            list,
+            child,
+        }
+    }
+}
+
+struct WheelInputElement {
+    input: TranscriptWheelInput,
+    list: ListState,
+    child: AnyElement,
+}
+
+impl IntoElement for WheelInputElement {
+    type Element = Self;
+
+    fn into_element(self) -> Self {
+        self
+    }
+}
+
+impl Element for WheelInputElement {
+    type RequestLayoutState = ();
+    type PrepaintState = Hitbox;
+
+    fn id(&self) -> Option<ElementId> {
+        None
+    }
+
+    fn source_location(&self) -> Option<&'static std::panic::Location<'static>> {
+        None
+    }
+
+    fn request_layout(
+        &mut self,
+        _: Option<&GlobalElementId>,
+        _: Option<&InspectorElementId>,
+        window: &mut Window,
+        cx: &mut App,
+    ) -> (LayoutId, ()) {
+        (self.child.request_layout(window, cx), ())
+    }
+
+    fn prepaint(
+        &mut self,
+        _: Option<&GlobalElementId>,
+        _: Option<&InspectorElementId>,
+        bounds: Bounds<Pixels>,
+        _: &mut (),
+        window: &mut Window,
+        cx: &mut App,
+    ) -> Hitbox {
+        let hitbox = window.insert_hitbox(bounds, HitboxBehavior::Normal);
+        self.child.prepaint(window, cx);
+        hitbox
+    }
+
+    fn paint(
+        &mut self,
+        _: Option<&GlobalElementId>,
+        _: Option<&InspectorElementId>,
+        _: Bounds<Pixels>,
+        _: &mut (),
+        hitbox: &mut Hitbox,
+        window: &mut Window,
+        cx: &mut App,
+    ) {
+        let hitbox = hitbox.id;
+        let input = self.input.clone();
+        let list = self.list.clone();
+        window.on_mouse_event(move |event: &ScrollWheelEvent, phase, window, cx| {
+            if phase != DispatchPhase::Capture {
+                return;
+            }
+            input.0.set(match event.delta {
+                ScrollDelta::Lines(delta)
+                    if delta.y != 0. && hitbox.should_handle_scroll(window) && !cx.reduce_motion() =>
+                {
+                    // Keep the native list's existing 20-point line distance.
+                    WheelInput::Tick(WheelTick {
+                        anchor: list.logical_scroll_top(),
+                        distance: px(-20. * delta.y),
+                    })
+                }
+                _ => WheelInput::Native,
+            });
+        });
+        self.child.paint(window, cx);
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct WheelMotion {
+    remaining: Pixels,
+    animation: Option<(Rc<()>, Instant)>,
+}
+
+impl WheelMotion {
+    pub(crate) fn is_running(&self) -> bool {
+        self.animation.is_some()
+    }
+
+    pub(crate) fn cancel(&mut self) {
+        self.remaining = px(0.);
+        self.animation = None;
+    }
+
+    pub(crate) fn queue(&mut self, distance: Pixels, now: Instant) -> Option<Rc<()>> {
+        if (self.remaining > px(0.)) != (distance > px(0.)) {
+            self.remaining = px(0.);
+        }
+        self.remaining += distance;
+        if self.is_running() {
+            return None;
+        }
+        let token = Rc::new(());
+        self.animation = Some((token.clone(), now));
+        Some(token)
+    }
+
+    pub(crate) fn advance(&mut self, token: &Rc<()>, now: Instant) -> Option<Pixels> {
+        let (running, last_frame) = self.animation.as_mut()?;
+        if !Rc::ptr_eq(running, token) {
+            return None;
+        }
+        let elapsed = now.saturating_duration_since(*last_frame).as_secs_f32();
+        *last_frame = now;
+        // Time-based easing keeps the response consistent across display refresh
+        // rates. Bound the step after a missed frame to avoid a catch-up jump.
+        let fraction = 1. - (-elapsed.min(0.032) / 0.045).exp();
+        let step = self.remaining * fraction;
+        if (self.remaining - step).abs() <= px(0.5) {
+            let step = self.remaining;
+            self.cancel();
+            Some(step)
+        } else {
+            self.remaining -= step;
+            Some(step)
+        }
+    }
 }
 
 #[derive(Clone, Default)]
@@ -283,14 +463,21 @@ impl ListViewportHandle {
 #[derive(Default)]
 struct ListViewportState {
     viewport_height: Pixels,
-    dragging: Option<Pixels>,
+    dragging: Option<ListDrag>,
     hovered: bool,
 }
+#[derive(Clone, Copy)]
+struct ListDrag {
+    grab: Pixels,
+    maximum: Pixels,
+}
+
 type ListBuild = Box<dyn FnOnce(Pixels) -> AnyElement>;
 type ListObserver = Rc<dyn Fn(&ListState, &mut Window, &mut App)>;
 pub(crate) struct ListViewport {
     handle: ListViewportHandle,
     list: ListState,
+    padding: Pixels,
     build: Option<ListBuild>,
     on_scroll: Option<ListObserver>,
 }
@@ -303,10 +490,16 @@ impl ListViewport {
         Self {
             handle,
             list,
+            padding: px(0.),
             build: Some(Box::new(build)),
             on_scroll: None,
         }
     }
+    pub fn with_padding(mut self, padding: Pixels) -> Self {
+        self.padding = padding;
+        self
+    }
+
     pub fn on_scroll(
         mut self,
         callback: impl Fn(&ListState, &mut Window, &mut App) + 'static,
@@ -323,7 +516,7 @@ impl IntoElement for ListViewport {
 }
 impl Element for ListViewport {
     type RequestLayoutState = AnyElement;
-    type PrepaintState = ();
+    type PrepaintState = Pixels;
     fn id(&self) -> Option<ElementId> {
         None
     }
@@ -348,10 +541,13 @@ impl Element for ListViewport {
         child: &mut AnyElement,
         window: &mut Window,
         cx: &mut App,
-    ) {
+    ) -> Pixels {
         let _ = child.prepaint(window, cx);
-        let maximum = self.list.max_offset_for_scrollbar().y;
         let mut state = self.handle.0.borrow_mut();
+        let maximum = state.dragging.map_or_else(
+            || list_scroll_maximum(&self.list, self.padding),
+            |drag| drag.maximum,
+        );
         state.viewport_height = bounds.size.height;
         if maximum > px(0.) {
             let _ = window.insert_hitbox(
@@ -367,6 +563,7 @@ impl Element for ListViewport {
                 self.list.scrollbar_drag_ended();
             }
         }
+        maximum
     }
     fn paint(
         &mut self,
@@ -374,13 +571,13 @@ impl Element for ListViewport {
         _: Option<&InspectorElementId>,
         bounds: Bounds<Pixels>,
         child: &mut AnyElement,
-        _: &mut (),
+        maximum: &mut Pixels,
         window: &mut Window,
         cx: &mut App,
     ) {
         child.paint(window, cx);
-        let maximum = self.list.max_offset_for_scrollbar().y;
         let state = self.handle.0.borrow();
+        let maximum = *maximum;
         if maximum <= px(0.) {
             return;
         }
@@ -391,7 +588,7 @@ impl Element for ListViewport {
         let height = (bounds.size.height * (bounds.size.height / (bounds.size.height + maximum)))
             .max(px(18.))
             .min(bounds.size.height);
-        let top = (-self.list.scroll_px_offset_for_scrollbar().y / maximum)
+        let top = (-self.list.scroll_px_offset_for_scrollbar().y / maximum).clamp(0., 1.)
             * (track.size.height - height);
         let thumb = Bounds::new(
             point(track.left(), track.top() + top),
@@ -407,6 +604,7 @@ impl Element for ListViewport {
             transparent_black(),
             BorderStyle::Solid,
         ));
+        let view = window.current_view();
         let handle = self.handle.clone();
         let list = self.list.clone();
         let observer = self.on_scroll.clone();
@@ -418,7 +616,10 @@ impl Element for ListViewport {
                 return;
             }
             if thumb.contains(&event.position) {
-                handle.0.borrow_mut().dragging = Some(event.position.y - thumb.top());
+                handle.0.borrow_mut().dragging = Some(ListDrag {
+                    grab: event.position.y - thumb.top(),
+                    maximum,
+                });
                 list.scrollbar_drag_started();
             } else {
                 let step = track.size.height
@@ -435,7 +636,7 @@ impl Element for ListViewport {
             if let Some(observer) = &observer {
                 observer(&list, window, cx);
             }
-            window.refresh();
+            cx.notify(view);
             cx.stop_propagation();
         });
         let handle = self.handle.clone();
@@ -449,30 +650,30 @@ impl Element for ListViewport {
             let hovered = track.contains(&event.position);
             if state.hovered != hovered {
                 state.hovered = hovered;
-                window.refresh();
+                cx.notify(view);
             }
-            if let Some(grab) = state.dragging {
+            if let Some(drag) = state.dragging {
                 let travel = track.size.height - thumb.size.height;
                 if travel > px(0.) {
-                    let fraction = ((event.position.y - track.top() - grab) / travel).clamp(0., 1.);
+                    let fraction = ((event.position.y - track.top() - drag.grab) / travel).clamp(0., 1.);
                     list.set_offset_from_scrollbar(point(px(0.), -maximum * fraction));
                     if let Some(observer) = &observer {
                         observer(&list, window, cx);
                     }
-                    window.refresh();
+                    cx.notify(view);
                     cx.stop_propagation();
                 }
             }
         });
         let handle = self.handle.clone();
         let list = self.list.clone();
-        window.on_mouse_event(move |event: &MouseUpEvent, phase, window, cx| {
+        window.on_mouse_event(move |event: &MouseUpEvent, phase, _, cx| {
             if phase.bubble()
                 && event.button == MouseButton::Left
                 && handle.0.borrow_mut().dragging.take().is_some()
             {
                 list.scrollbar_drag_ended();
-                window.refresh();
+                cx.notify(view);
                 cx.stop_propagation();
             }
         });
@@ -742,10 +943,12 @@ mod tests {
     struct ViewportFixture {
         list: gpui::ListState,
         handle: super::ListViewportHandle,
+        padding: Pixels,
     }
     impl Render for ViewportFixture {
         fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
             let list = self.list.clone();
+            let padding = self.padding;
             div().size_full().child(super::ListViewport::new(
                 self.handle.clone(),
                 list.clone(),
@@ -760,11 +963,12 @@ mod tests {
                                     .child(format!("row {index}"))
                                     .into_any_element()
                             })
-                            .size_full(),
+                            .size_full()
+                            .pb(padding),
                         )
                         .into_any_element()
                 },
-            ))
+            ).with_padding(padding))
         }
     }
     #[gpui::test]
@@ -773,6 +977,7 @@ mod tests {
             list: gpui::ListState::new(2, gpui::ListAlignment::Top, px(100.))
                 .with_uniform_item_height(px(20.)),
             handle: super::ListViewportHandle::default(),
+            padding: px(0.),
         });
         let draw = |cx: &mut gpui::VisualTestContext, height| {
             cx.simulate_resize(size(px(300.), height));
@@ -815,6 +1020,42 @@ mod tests {
             assert_eq!(view.list.viewport_bounds().size.width, initial.size.width);
         });
     }
+    #[gpui::test]
+    fn virtual_transcript_thumb_can_drag_through_padded_overflow(cx: &mut TestAppContext) {
+        let (view, cx) = cx.add_window_view(|_, _| ViewportFixture {
+            list: gpui::ListState::new(10, gpui::ListAlignment::Top, px(100.)).measure_all(),
+            handle: super::ListViewportHandle::default(),
+            padding: px(48.),
+        });
+        cx.simulate_resize(size(px(300.), px(200.)));
+        cx.draw(point(px(0.), px(0.)), size(px(300.), px(200.)), |_, _| {
+            view.clone().into_any_element()
+        });
+        view.read_with(cx, |view, _| {
+            assert_eq!(view.list.max_offset_for_scrollbar().y, px(0.));
+            assert_eq!(super::list_distance_from_bottom(&view.list, view.padding), px(48.));
+        });
+        cx.simulate_event(MouseDownEvent {
+            position: point(px(296.), px(40.)),
+            button: MouseButton::Left,
+            ..Default::default()
+        });
+        cx.simulate_event(MouseMoveEvent {
+            position: point(px(296.), px(195.)),
+            pressed_button: Some(MouseButton::Left),
+            ..Default::default()
+        });
+        cx.simulate_event(MouseUpEvent {
+            position: point(px(296.), px(195.)),
+            button: MouseButton::Left,
+            ..Default::default()
+        });
+        view.read_with(cx, |view, _| {
+            assert!(super::list_at_live_edge(&view.list, view.padding));
+            assert!(!view.list.is_scrollbar_dragging());
+        });
+    }
+
     impl Render for ListFixture {
         fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
             div().size_full().child(
