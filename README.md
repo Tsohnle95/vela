@@ -12,26 +12,10 @@ The Codex interface is the default shell. Classic remains selectable in
 **Settings → Appearance**, together with all 15 source appearance palettes.
 The migration is in progress; no page has passed final visual acceptance.
 
-The images below are earlier development captures. Current paired comparisons,
-lossless capture manifests and outstanding validation are under `docs/parity/`.
+![Vela with the source editor, explorer, and agent panel](docs/assets/native-overview.png)
 
-![Codex landing](docs/assets/native-landing.png)
-
-![Codex editor with file tree and agent panel](docs/assets/native-editor.png)
-
-![Codex transcript](docs/assets/native-transcript.png)
-
-![Codex terminal dock](docs/assets/native-terminal.png)
-
-![Codex appearance settings](docs/assets/native-settings.png)
-
-![Codex diff view](docs/assets/native-diff.png)
-
-![Codex model picker](docs/assets/native-picker.png)
-
-![Codex embedded browser](docs/assets/native-browser.png)
-
-![Preserved Classic shell](docs/assets/classic-shell.png)
+Current paired comparisons, lossless capture manifests and outstanding
+validation are under `docs/parity/`.
 
 ## Status
 
@@ -49,7 +33,7 @@ is the authoritative feature record; do not infer completion from this summary.
 
 The repository is published at
 [github.com/Tsohnle95/vela](https://github.com/Tsohnle95/vela).
-Screenshots use a disposable test workspace; no credentials or personal
+The screenshot uses a disposable test workspace; no credentials or personal
 transcripts are stored in this implementation.
 
 ## Run
