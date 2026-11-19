@@ -483,12 +483,13 @@ impl VelaApp {
                         .role(Role::Button)
                         .aria_label("Open Workspace")
                         .tab_index(0)
+                        .group("explorer-open-workspace")
                         .h(px(30.))
                         .px(px(8.))
-                        .rounded(px(7.))
+                        .rounded(px(999.))
                         .flex()
                         .items_center()
-                        .gap(px(13.))
+                        .gap(px(7.))
                         .cursor_pointer()
                         .text_size(px(13.))
                         .text_color(theme.text)
@@ -497,18 +498,17 @@ impl VelaApp {
                             this.choose_workspace(cx);
                         }))
                         .child(
+                            // Same `sessions-new` treatment Source uses for this action.
                             div()
-                                .size(px(18.))
-                                .rounded(px(3.))
-                                .border_1()
-                                .border_color(theme.border_strong)
-                                .flex()
-                                .items_center()
-                                .justify_center()
-                                .text_size(px(14.))
+                                .flex_shrink_0()
+                                .text_size(px(16.))
+                                .line_height(px(16.))
                                 .font_family("codicon")
                                 .text_color(theme.dim)
-                                .child(icon("ea73")),
+                                .group_hover("explorer-open-workspace", |style| {
+                                    style.text_color(theme.text)
+                                })
+                                .child(icon("ec84")),
                         )
                         .child("Open Workspace"),
                 )

@@ -10619,12 +10619,14 @@ impl VelaApp {
             );
         }
         body = body.child(
-            div().pl(px(11.0)).pr(px(6.0)).pt(px(0.0)).child(
+            div().pl(px(6.0)).pr(px(6.0)).child(
                 div()
                     .id("new-session")
+                    .debug_selector(|| "new-session".into())
                     .role(Role::Button)
                     .aria_label("New Session")
                     .tab_index(0)
+                    .group("new-session")
                     .h(px(30.0))
                     .px(px(8.0))
                     .rounded(px(999.0))
@@ -10637,20 +10639,24 @@ impl VelaApp {
                     .hover(|style| style.bg(theme.selected))
                     .on_click(cx.listener(|this, _, _, cx| this.choose_workspace(cx)))
                     .child(
+                        // Source renders the Codicon `new-session` glyph, not a
+                        // hand-drawn square around a pencil.
                         div()
-                            .size(px(18.0))
-                            .rounded(px(3.0))
-                            .border_1()
-                            .border_color(theme.border_strong)
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .text_size(px(14.0))
+                            .debug_selector(|| "new-session-icon".into())
+                            .flex_shrink_0()
+                            .w(px(16.))
+                            .text_size(px(16.))
+                            .line_height(px(16.))
                             .font_family("codicon")
                             .text_color(theme.dim)
-                            .child(icon("ea73")),
+                            .group_hover("new-session", |style| style.text_color(theme.text))
+                            .child(icon("ec84")),
                     )
-                    .child("New Session"),
+                    .child(
+                        div()
+                            .debug_selector(|| "new-session-label".into())
+                            .child("New Session"),
+                    ),
             ),
         );
         if !self.filtered_pinned_sessions.is_empty() {
@@ -23704,6 +23710,56 @@ mod tests {
         let title = cx.debug_bounds("session-title:ses_inset").unwrap();
         let inset = f32::from(title.left() - sidebar.left());
         assert!((inset - 14.).abs() <= 2., "session title inset was {inset}");
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn new_session_button_matches_source_geometry(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.agent_panel_open = false;
+            app.settings_open = false;
+            app.agent_mode = false;
+            app.sidebar_tab = SidebarTab::Sessions;
+        });
+        draw(cx);
+        let sidebar = cx.debug_bounds("sidebar-root").unwrap();
+        let button = cx.debug_bounds("new-session").unwrap();
+        let icon = cx.debug_bounds("new-session-icon").unwrap();
+        let label = cx.debug_bounds("new-session-label").unwrap();
+
+        // Source: `.sessions-pane` 6px inset, `.sessions-new` 8px padding,
+        // 16px Codicon, 7px gap, 30px min-height.
+        let button_inset = f32::from(button.left() - sidebar.left());
+        assert!((button_inset - 6.).abs() <= 2., "button inset was {button_inset}");
+        let icon_padding = f32::from(icon.left() - button.left());
+        assert!((icon_padding - 8.).abs() <= 1., "icon padding was {icon_padding}");
+        let icon_width = f32::from(icon.size.width);
+        assert!((icon_width - 16.).abs() <= 1., "icon width was {icon_width}");
+        let label_gap = f32::from(label.left() - icon.left());
+        assert!((label_gap - 23.).abs() <= 1.5, "icon/label gap was {label_gap}");
+        let height = f32::from(button.size.height);
+        assert!((height - 30.).abs() <= 1., "button height was {height}");
         runtime.block_on(engine.shutdown_and_wait());
     }
 
