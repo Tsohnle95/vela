@@ -32,6 +32,7 @@ pub enum SyntaxToken {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(test)]
 pub enum InlineCodeKind {
     Path,
     Url,
@@ -42,6 +43,7 @@ fn starts_with_ignore_ascii_case(text: &str, prefix: &str) -> bool {
         .is_some_and(|head| head.eq_ignore_ascii_case(prefix))
 }
 
+#[cfg(test)]
 fn has_uri_scheme(text: &str) -> bool {
     let Some(index) = text.find("://") else {
         return false;
@@ -55,6 +57,7 @@ fn has_uri_scheme(text: &str) -> bool {
 /// credential-free HTTP(S) is a URL, filesystem-looking spans become paths,
 /// and everything else stays plain. Extension/filename data comes from the
 /// same Linguist-derived tables Source ships.
+#[cfg(test)]
 pub fn inline_code_kind(text: &str) -> Option<InlineCodeKind> {
     if starts_with_ignore_ascii_case(text, "https://")
         || starts_with_ignore_ascii_case(text, "http://")
@@ -99,6 +102,7 @@ pub struct Span {
     pub token: SyntaxToken,
 }
 
+#[cfg(test)]
 pub fn language(info: &str) -> Option<&'static str> {
     let name = info
         .split_whitespace()
@@ -110,6 +114,7 @@ pub fn language(info: &str) -> Option<&'static str> {
         "typescript" | "ts" | "tsx" => "typescript",
         "json" => "json",
         "css" | "scss" | "less" => "css",
+        "sass" => "sass",
         "html" | "htm" | "xml" => "html",
         "python" | "py" => "python",
         "go" | "golang" => "go",
@@ -135,6 +140,12 @@ pub fn language(info: &str) -> Option<&'static str> {
         "elm" => "elm",
         "hcl" | "terraform" | "tf" => "hcl",
         "nix" => "nix",
+        "cmake" => "cmake",
+        "proto" | "protobuf" | "proto3" => "protobuf",
+        "groovy" | "gvy" => "groovy",
+        "objective-c" | "objc" | "objectivec" => "objective-c",
+        "latex" | "tex" => "latex",
+        "nim" => "nim",
         "puppet" | "pp" => "puppet",
         "graphql" | "gql" => "graphql",
         "vue" => "vue",
@@ -161,6 +172,34 @@ pub fn language(info: &str) -> Option<&'static str> {
         "diff" | "patch" => "diff",
         "markdown" | "md" => "markdown",
         "rust" | "rs" => "rust",
+        "ansi" => "ansi",
+        _ => return None,
+    })
+}
+
+/// The languages the live `VelaCodeBlock` can highlight. Source's
+/// `ai-elements/upstream/lib/highlighter.tsx` loads only this small Shiki set;
+/// every other fence stays on the plain code surface.
+pub fn live_language(info: &str) -> Option<&'static str> {
+    let name = info
+        .split_whitespace()
+        .next()
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    Some(match name.as_str() {
+        "bash" | "sh" | "shell" | "shellscript" | "zsh" => "bash",
+        "css" => "css",
+        "diff" => "diff",
+        "html" => "html",
+        "javascript" | "js" => "javascript",
+        "json" => "json",
+        "jsx" => "jsx",
+        "markdown" | "md" => "markdown",
+        "python" | "py" => "python",
+        "sql" => "sql",
+        "tsx" => "tsx",
+        "typescript" | "ts" => "typescript",
+        "yaml" | "yml" => "yaml",
         "ansi" => "ansi",
         _ => return None,
     })
@@ -290,6 +329,7 @@ pub fn highlight(language: &str, text: &str) -> Vec<Span> {
         "json" => json(text),
         "javascript" | "typescript" => script(text),
         "css" => css(text),
+        "sass" => sass(text),
         "html" => html(text),
         "python" => python(text),
         "go" => go(text),
@@ -315,6 +355,12 @@ pub fn highlight(language: &str, text: &str) -> Vec<Span> {
         "elm" => elm(text),
         "hcl" => hcl(text),
         "nix" => nix(text),
+        "cmake" => cmake(text),
+        "protobuf" => protobuf(text),
+        "groovy" => groovy(text),
+        "objective-c" => objective_c(text),
+        "latex" => latex(text),
+        "nim" => nim(text),
         "puppet" => puppet(text),
         "graphql" => graphql(text),
         "vue" => vue(text),
@@ -414,7 +460,7 @@ fn skip_number(text: &str, start: usize) -> usize {
     while index < text.len() {
         let ch = text[index..].chars().next().unwrap_or('\0');
         let exponent_sign = matches!(ch, '+' | '-') && matches!(previous, 'e' | 'E');
-        if ch.is_ascii_alphanumeric() || matches!(ch, '.' | '_') || exponent_sign {
+        if ch.is_ascii_alphanumeric() || matches!(ch, '.' | '_' | '%') || exponent_sign {
             previous = ch;
             index += ch.len_utf8();
         } else {
@@ -1056,6 +1102,209 @@ fn css(text: &str) -> Vec<Span> {
                 index += ch.len_utf8();
             }
         }
+    }
+    spans
+}
+
+/// End of a Sass `#{…}` interpolation (bounded to nested braces).
+fn sass_interpolation_end(text: &str, start: usize) -> Option<usize> {
+    if !text[start..].starts_with("#{") {
+        return None;
+    }
+    let mut depth = 0usize;
+    let mut index = start + 1;
+    while index < text.len() {
+        match text.as_bytes()[index] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Some(index + 1);
+                }
+            }
+            _ => {}
+        }
+        index += 1;
+    }
+    None
+}
+
+/// The indented Sass syntax shares CSS values but has no braces or semicolons;
+/// declarations are recognized at the start of a line instead of by brace
+/// depth. `scss` keeps using the brace-based CSS tokenizer.
+fn sass(text: &str) -> Vec<Span> {
+    let mut spans = Vec::new();
+    let mut index = 0usize;
+    let mut line_start = true;
+    let mut value = false;
+    while index < text.len() {
+        if text[index..].starts_with("//") {
+            let end = text[index..]
+                .find('\n')
+                .map_or(text.len(), |offset| index + offset);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+            continue;
+        }
+        if text[index..].starts_with("/*") {
+            let end = text[index + 2..]
+                .find("*/")
+                .map_or(text.len(), |offset| index + 2 + offset + 2);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+            continue;
+        }
+        let ch = text[index..].chars().next().unwrap_or('\0');
+        if ch == '\n' {
+            line_start = true;
+            value = false;
+            index += 1;
+            continue;
+        }
+        if ch.is_whitespace() {
+            index += ch.len_utf8();
+            continue;
+        }
+        if let Some(end) = sass_interpolation_end(text, index) {
+            push(&mut spans, index, end, SyntaxToken::Property);
+            index = end;
+            line_start = false;
+            continue;
+        }
+        if ch == '$' {
+            let end = identifier_end_hyphen(text, index + 1);
+            if end > index + 1 {
+                push(&mut spans, index, end, SyntaxToken::Property);
+                if !value && next_non_space(text, end) == Some(':') {
+                    value = true;
+                }
+                index = end;
+                line_start = false;
+                continue;
+            }
+            index += 1;
+            continue;
+        }
+        if ch == '@' {
+            let end = identifier_end_hyphen(text, index + 1);
+            if end > index + 1 {
+                let token = if css_at_rule(&text[index + 1..end]) {
+                    SyntaxToken::Keyword
+                } else {
+                    SyntaxToken::Property
+                };
+                push(&mut spans, index, end, token);
+                index = end;
+                line_start = false;
+                continue;
+            }
+            index += 1;
+            continue;
+        }
+        if ch == '!' {
+            let end = identifier_end(text, index + 1);
+            if matches!(
+                &text[index + 1..end],
+                "default" | "global" | "important" | "optional"
+            ) {
+                push(&mut spans, index, end, SyntaxToken::Keyword);
+                index = end;
+                line_start = false;
+                continue;
+            }
+            index += 1;
+            continue;
+        }
+        if ch == '&' {
+            push(&mut spans, index, index + 1, SyntaxToken::Keyword);
+            index += 1;
+            line_start = false;
+            continue;
+        }
+        if matches!(ch, '"' | '\'') {
+            let end = skip_quoted(text, index, ch, false);
+            push(&mut spans, index, end, SyntaxToken::String);
+            index = end;
+            line_start = false;
+            continue;
+        }
+        if line_start && matches!(ch, '.' | '%' | '#') {
+            let end = identifier_end_hyphen(text, index + 1);
+            if end > index + 1 {
+                push(&mut spans, index, end, SyntaxToken::Tag);
+                index = end;
+                line_start = false;
+                continue;
+            }
+            index += 1;
+            continue;
+        }
+        if ch == '#' && value
+            && let Some(end) = css_hex_color(text, index)
+        {
+            push(&mut spans, index, end, SyntaxToken::Number);
+            index = end;
+            line_start = false;
+            continue;
+        }
+        if ch == ':' && !value && css_pseudo_selector(text, index) {
+            let mut start = index + 1;
+            while text[start..].starts_with(':') {
+                start += 1;
+            }
+            let end = identifier_end_hyphen(text, start);
+            if end > start {
+                push(&mut spans, start, end, SyntaxToken::Tag);
+                index = end;
+                line_start = false;
+                continue;
+            }
+        }
+        if (line_start && (is_ident_start(ch) || ch == '-'))
+            || (!line_start && ch.is_ascii_alphabetic())
+        {
+            let end = identifier_end_hyphen(text, index);
+            let word = &text[index..end];
+            if line_start
+                && let Some((colon, ':')) = next_non_space_index(text, end)
+                && !css_pseudo_selector(text, colon)
+            {
+                let after = text[colon + 1..].chars().next();
+                let declaration = word.starts_with("--")
+                    || css_property_name(word)
+                        && (after.is_none_or(char::is_whitespace) || !word.is_empty());
+                if declaration {
+                    push(&mut spans, index, end, SyntaxToken::Property);
+                    value = true;
+                    index = end;
+                    line_start = false;
+                    continue;
+                }
+            }
+            if matches!(word, "true" | "false" | "null") {
+                push(&mut spans, index, end, SyntaxToken::Number);
+            } else if next_non_space(text, end) == Some('(') {
+                push(&mut spans, index, end, SyntaxToken::Function);
+            }
+            index = end;
+            line_start = false;
+            continue;
+        }
+        if ch.is_ascii_digit()
+            || (ch == '.'
+                && text[index + 1..]
+                    .chars()
+                    .next()
+                    .is_some_and(|next| next.is_ascii_digit()))
+        {
+            let end = skip_number(text, index);
+            push(&mut spans, index, end, SyntaxToken::Number);
+            index = end;
+            line_start = false;
+            continue;
+        }
+        index += ch.len_utf8();
+        line_start = false;
     }
     spans
 }
@@ -4644,6 +4893,179 @@ fn puppet(text: &str) -> Vec<Span> {
     spans
 }
 
+/// CMake bracket tokens: `[`, any number of `=`, `[` … `]`, the same number
+/// of `=`, `]`. Shared by bracket strings and bracket comments.
+fn cmake_bracket_end(text: &str, start: usize) -> Option<usize> {
+    if !text[start..].starts_with('[') {
+        return None;
+    }
+    let mut cursor = start + 1;
+    while text.as_bytes().get(cursor) == Some(&b'=') {
+        cursor += 1;
+    }
+    if text.as_bytes().get(cursor) != Some(&b'[') {
+        return None;
+    }
+    let equals = cursor - start - 1;
+    let close = format!("]{}]", "=".repeat(equals));
+    let body = cursor + 1;
+    text[body..]
+        .find(&close)
+        .map(|offset| body + offset + close.len())
+}
+
+/// `$<genex>`, `${VAR}`, `$ENV{VAR}` and `$CACHE{VAR}` references.
+fn cmake_variable_end(text: &str, start: usize) -> usize {
+    let after = start + 1;
+    if text[after..].starts_with('<') {
+        let mut depth = 0usize;
+        let mut index = after;
+        while index < text.len() {
+            let ch = text[index..].chars().next().unwrap_or('\0');
+            match ch {
+                '<' => depth += 1,
+                '>' => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 {
+                        return index + 1;
+                    }
+                }
+                _ => {}
+            }
+            index += ch.len_utf8();
+        }
+        return text.len();
+    }
+    let Some(brace) = text[after..].find('{').map(|offset| after + offset) else {
+        return after;
+    };
+    if !matches!(&text[after..brace], "" | "ENV" | "CACHE") {
+        return after;
+    }
+    let Some(close) = text[brace + 1..].find('}').map(|offset| brace + 1 + offset) else {
+        return text.len();
+    };
+    close + 1
+}
+
+fn cmake(text: &str) -> Vec<Span> {
+    const KEYWORDS: &[&str] = &[
+        "block", "break", "continue", "else", "elseif", "endblock", "endforeach",
+        "endfunction", "endif", "endmacro", "endwhile", "foreach", "function", "if",
+        "macro", "return", "while",
+    ];
+    let mut spans = Vec::new();
+    let mut index = 0usize;
+    while index < text.len() {
+        if text[index..].starts_with('#') {
+            let end = cmake_bracket_end(text, index + 1).unwrap_or_else(|| {
+                text[index..]
+                    .find('\n')
+                    .map_or(text.len(), |offset| index + offset)
+            });
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else if let Some(end) = cmake_bracket_end(text, index) {
+            push(&mut spans, index, end, SyntaxToken::String);
+            index = end;
+        } else {
+            let ch = text[index..].chars().next().unwrap_or('\0');
+            if ch == '"' {
+                let end = skip_quoted(text, index, '"', false);
+                push(&mut spans, index, end, SyntaxToken::String);
+                index = end;
+            } else if ch == '$' {
+                let end = cmake_variable_end(text, index);
+                if end > index + 1 {
+                    push(&mut spans, index, end, SyntaxToken::Property);
+                }
+                index = end.max(index + 1);
+            } else if ch.is_ascii_digit() {
+                let end = c_number_end(text, index, false);
+                push(&mut spans, index, end, SyntaxToken::Number);
+                index = end;
+            } else if is_ident_start(ch) {
+                let end = identifier_end(text, index);
+                let word = &text[index..end];
+                let upper = word.to_ascii_uppercase();
+                if KEYWORDS.contains(&word) {
+                    push(&mut spans, index, end, SyntaxToken::Keyword);
+                } else if matches!(
+                    upper.as_str(),
+                    "ON" | "OFF" | "TRUE" | "FALSE" | "YES" | "NO" | "Y" | "N"
+                ) {
+                    push(&mut spans, index, end, SyntaxToken::Number);
+                } else if next_non_space(text, end) == Some('(') {
+                    push(&mut spans, index, end, SyntaxToken::Function);
+                }
+                index = end;
+            } else {
+                index += ch.len_utf8();
+            }
+        }
+    }
+    spans
+}
+
+fn protobuf(text: &str) -> Vec<Span> {
+    const KEYWORDS: &[&str] = &[
+        "default", "edition", "enum", "extend", "extensions", "false", "group", "import",
+        "map", "max", "message", "oneof", "optional", "option", "package", "public",
+        "repeated", "required", "reserved", "returns", "rpc", "service", "stream",
+        "syntax", "to", "true", "weak",
+    ];
+    const TYPES: &[&str] = &[
+        "bool", "bytes", "double", "fixed32", "fixed64", "float", "int32", "int64",
+        "sfixed32", "sfixed64", "sint32", "sint64", "string", "uint32", "uint64",
+    ];
+    let mut spans = Vec::new();
+    let mut index = 0usize;
+    while index < text.len() {
+        if text[index..].starts_with("//") {
+            let end = text[index..]
+                .find('\n')
+                .map_or(text.len(), |offset| index + offset);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else if text[index..].starts_with("/*") {
+            let end = text[index + 2..]
+                .find("*/")
+                .map_or(text.len(), |offset| index + 2 + offset + 2);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else {
+            let ch = text[index..].chars().next().unwrap_or('\0');
+            if matches!(ch, '"' | '\'') {
+                let end = skip_quoted(text, index, ch, false);
+                push(&mut spans, index, end, SyntaxToken::String);
+                index = end;
+            } else if ch.is_ascii_digit() {
+                let end = c_number_end(text, index, false);
+                push(&mut spans, index, end, SyntaxToken::Number);
+                index = end;
+            } else if is_ident_start(ch) {
+                let end = identifier_end(text, index);
+                let word = &text[index..end];
+                if KEYWORDS.contains(&word) {
+                    push(&mut spans, index, end, SyntaxToken::Keyword);
+                } else if TYPES.contains(&word) {
+                    push(&mut spans, index, end, SyntaxToken::Type);
+                } else if next_non_space(text, end) == Some('(') {
+                    push(&mut spans, index, end, SyntaxToken::Function);
+                } else if next_non_space(text, end) == Some('=') {
+                    push(&mut spans, index, end, SyntaxToken::Property);
+                } else if ch.is_ascii_uppercase() {
+                    push(&mut spans, index, end, SyntaxToken::Type);
+                }
+                index = end;
+            } else {
+                index += ch.len_utf8();
+            }
+        }
+    }
+    spans
+}
+
 fn graphql(text: &str) -> Vec<Span> {
     const KEYWORDS: &[&str] = &[
         "directive", "enum", "extend", "fragment", "implements", "input", "interface",
@@ -7976,6 +8398,452 @@ fn java(text: &str) -> Vec<Span> {
     spans
 }
 
+/// Groovy's BigDecimal/Double suffixes extend Java's numeric forms.
+fn groovy_number_end(text: &str, start: usize) -> usize {
+    let mut end = java_number_end(text, start);
+    while end < text.len() && matches!(text.as_bytes()[end], b'g' | b'G') {
+        end += 1;
+    }
+    end
+}
+
+/// Slashy strings (`/pattern/`) are only a literal where an expression may
+/// start; elsewhere `/` stays division and is left uncolored.
+fn groovy_slashy_end(text: &str, start: usize) -> Option<usize> {
+    if !text[start..].starts_with('/') || text[start..].starts_with("//") {
+        return None;
+    }
+    let previous = text[..start].chars().rev().find(|ch| !ch.is_whitespace());
+    let expression_start = match previous {
+        None => true,
+        Some(ch) => matches!(
+            ch,
+            '=' | '(' | '[' | ',' | ':' | '!' | '&' | '|' | '?' | '{' | ';' | '~'
+        ),
+    };
+    if !expression_start {
+        return None;
+    }
+    let mut index = start + 1;
+    while index < text.len() {
+        let ch = text[index..].chars().next().unwrap_or('\0');
+        if ch == '\\' {
+            index += ch.len_utf8();
+            if let Some(next) = text[index..].chars().next() {
+                index += next.len_utf8();
+            }
+            continue;
+        }
+        if ch == '/' {
+            return Some(index + 1);
+        }
+        if ch == '\n' {
+            return None;
+        }
+        index += ch.len_utf8();
+    }
+    None
+}
+
+fn groovy(text: &str) -> Vec<Span> {
+    const KEYWORDS: &[&str] = &[
+        "abstract", "as", "assert", "break", "case", "catch", "class", "const",
+        "continue", "def", "default", "do", "else", "enum", "extends", "final",
+        "finally", "for", "goto", "if", "implements", "import", "in", "instanceof",
+        "interface", "native", "new", "package", "private", "protected", "public",
+        "return", "static", "strictfp", "super", "switch", "synchronized", "this",
+        "throw", "throws", "trait", "transient", "try", "var", "volatile", "while",
+    ];
+    const TYPES: &[&str] = &[
+        "boolean", "byte", "char", "double", "float", "int", "long", "short", "void",
+    ];
+    const TYPE_DECLS: &[&str] = &["class", "enum", "interface", "trait"];
+    const BUILTINS: &[&str] = &["print", "printf", "println"];
+    let mut spans = Vec::new();
+    let mut index = 0usize;
+    while index < text.len() {
+        if text[index..].starts_with("//") {
+            let end = text[index..]
+                .find('\n')
+                .map_or(text.len(), |offset| index + offset);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else if text[index..].starts_with("/*") {
+            let end = text[index + 2..]
+                .find("*/")
+                .map_or(text.len(), |offset| index + 2 + offset + 2);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else {
+            let ch = text[index..].chars().next().unwrap_or('\0');
+            if ch == '@' {
+                let end = identifier_end(text, index + 1);
+                if end > index + 1 {
+                    let mut end = end;
+                    while text[end..].starts_with('.') {
+                        let segment = identifier_end(text, end + 1);
+                        if segment == end + 1 {
+                            break;
+                        }
+                        end = segment;
+                    }
+                    push(&mut spans, index, end, SyntaxToken::Attribute);
+                    index = end;
+                } else {
+                    index += 1;
+                }
+            } else if text[index..].starts_with("\"\"\"") {
+                let end = skip_quoted(text, index, '"', true);
+                push(&mut spans, index, end, SyntaxToken::String);
+                index = end;
+            } else if text[index..].starts_with("'''") {
+                let end = skip_quoted(text, index, '\'', true);
+                push(&mut spans, index, end, SyntaxToken::String);
+                index = end;
+            } else if matches!(ch, '"' | '\'') {
+                let end = skip_quoted(text, index, ch, false);
+                push(&mut spans, index, end, SyntaxToken::String);
+                index = end;
+            } else if let Some(end) = groovy_slashy_end(text, index) {
+                push(&mut spans, index, end, SyntaxToken::String);
+                index = end;
+            } else if ch.is_ascii_digit()
+                || (ch == '.'
+                    && text[index + 1..]
+                        .chars()
+                        .next()
+                        .is_some_and(|next| next.is_ascii_digit()))
+            {
+                let end = groovy_number_end(text, index);
+                push(&mut spans, index, end, SyntaxToken::Number);
+                index = end;
+            } else if is_ident_start(ch) {
+                let end = identifier_end(text, index);
+                let word = &text[index..end];
+                if matches!(word, "true" | "false" | "null") {
+                    push(&mut spans, index, end, SyntaxToken::Number);
+                } else if KEYWORDS.contains(&word) {
+                    push(&mut spans, index, end, SyntaxToken::Keyword);
+                    if TYPE_DECLS.contains(&word)
+                        && let Some((position, ch)) = next_non_space_index(text, end)
+                        && is_ident_start(ch)
+                    {
+                        let name_end = identifier_end(text, position);
+                        push(&mut spans, position, name_end, SyntaxToken::Type);
+                        index = name_end;
+                        continue;
+                    }
+                } else if TYPES.contains(&word)
+                    || word.chars().next().is_some_and(char::is_uppercase)
+                {
+                    push(&mut spans, index, end, SyntaxToken::Type);
+                } else if BUILTINS.contains(&word) || next_non_space(text, end) == Some('(') {
+                    push(&mut spans, index, end, SyntaxToken::Function);
+                }
+                index = end;
+            } else {
+                index += ch.len_utf8();
+            }
+        }
+    }
+    spans
+}
+
+/// Objective-C adds directives, BOOL/Foundation types and its literals to the
+/// C grammar. String/comment spans win over additions, while a directive such
+/// as `@property` replaces the C call span the C grammar produced for it.
+fn objective_c(text: &str) -> Vec<Span> {
+    const KEYWORDS: &[&str] = &[
+        "autoreleasepool", "catch", "class", "compatibility_alias", "defs", "dynamic",
+        "encode", "end", "finally", "implementation", "import", "interface", "optional",
+        "package", "private", "property", "protected", "protocol", "public", "required",
+        "selector", "synchronized", "synthesize", "throw", "try",
+    ];
+    const TYPES: &[&str] = &[
+        "BOOL", "Class", "IMP", "NSInteger", "NSUInteger", "CGFloat", "CGRect",
+        "CGPoint", "CGSize", "SEL",
+    ];
+    let mut spans = c_family(text, false);
+    let mut extra: Vec<(Span, bool)> = Vec::new();
+    let mut index = 0usize;
+    while index < text.len() {
+        let ch = text[index..].chars().next().unwrap_or('\0');
+        if ch == '@' {
+            let end = identifier_end(text, index + 1);
+            if end > index + 1 {
+                let word = &text[index + 1..end];
+                let token = if KEYWORDS.contains(&word) {
+                    SyntaxToken::Keyword
+                } else {
+                    SyntaxToken::Attribute
+                };
+                extra.push((
+                    Span {
+                        start: index,
+                        end,
+                        token,
+                    },
+                    true,
+                ));
+                index = end;
+                continue;
+            }
+            index += 1;
+        } else if is_ident_start(ch) && ch != '$' {
+            let end = identifier_end(text, index);
+            let word = &text[index..end];
+            let (token, strong) = if matches!(word, "nil" | "Nil" | "YES" | "NO") {
+                (Some(SyntaxToken::Number), true)
+            } else if matches!(word, "self" | "super") {
+                (Some(SyntaxToken::Keyword), true)
+            } else if TYPES.contains(&word) {
+                (Some(SyntaxToken::Type), true)
+            } else if word.starts_with("NS")
+                && word[2..].chars().next().is_some_and(char::is_uppercase)
+            {
+                (Some(SyntaxToken::Type), false)
+            } else {
+                (None, false)
+            };
+            if let Some(token) = token {
+                extra.push((
+                    Span {
+                        start: index,
+                        end,
+                        token,
+                    },
+                    strong,
+                ));
+            }
+            index = end;
+        } else {
+            index += ch.len_utf8();
+        }
+    }
+    for (span, strong) in extra {
+        if spans.iter().any(|existing| {
+            existing.start < span.end
+                && span.start < existing.end
+                && matches!(existing.token, SyntaxToken::String | SyntaxToken::Comment)
+        }) {
+            continue;
+        }
+        if strong {
+            // `@property (` looked like a C call and `YES` like a C type; the
+            // Objective-C meaning wins over those C spans.
+            spans.retain(|existing| !(existing.start < span.end && span.start < existing.end));
+        } else if spans
+            .iter()
+            .any(|existing| existing.start < span.end && span.start < existing.end)
+        {
+            // Keep C function/type spans such as `NSLog(` over the NS-type hint.
+            continue;
+        }
+        spans.push(span);
+    }
+    spans.sort_by_key(|span| span.start);
+    spans
+}
+
+fn nim_block_comment_end(text: &str, start: usize) -> Option<usize> {
+    if !text[start..].starts_with("#[") {
+        return None;
+    }
+    let bytes = text.as_bytes();
+    let mut depth = 0usize;
+    let mut index = start;
+    while index < text.len() {
+        if bytes[index] == b'#' && bytes.get(index + 1) == Some(&b'[') {
+            depth += 1;
+            index += 2;
+            continue;
+        }
+        if bytes[index] == b']' && bytes.get(index + 1) == Some(&b'#') {
+            depth = depth.saturating_sub(1);
+            index += 2;
+            if depth == 0 {
+                return Some(index);
+            }
+            continue;
+        }
+        index += 1;
+    }
+    None
+}
+
+fn nim(text: &str) -> Vec<Span> {
+    const KEYWORDS: &[&str] = &[
+        "addr", "and", "as", "asm", "bind", "block", "break", "case", "cast",
+        "concept", "const", "continue", "converter", "defer", "discard", "distinct",
+        "div", "do", "elif", "else", "end", "enum", "except", "export", "finally",
+        "for", "from", "func", "if", "import", "in", "include", "interface", "is",
+        "isnot", "iterator", "let", "macro", "method", "mixin", "mod", "not",
+        "notin", "object", "of", "or", "out", "proc", "ptr", "raise", "ref",
+        "return", "shl", "shr", "static", "template", "try", "tuple", "type",
+        "using", "var", "when", "while", "with", "xor", "yield",
+    ];
+    const TYPES: &[&str] = &[
+        "bool", "byte", "char", "cstring", "float", "float32", "float64", "int",
+        "int8", "int16", "int32", "int64", "pointer", "range", "seq", "set",
+        "string", "uint", "uint8", "uint16", "uint32", "uint64",
+    ];
+    const DECLS: &[&str] = &[
+        "converter", "func", "iterator", "macro", "method", "proc", "template",
+    ];
+    let mut spans = Vec::new();
+    let mut index = 0usize;
+    while index < text.len() {
+        if let Some(end) = nim_block_comment_end(text, index) {
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else if text[index..].starts_with('#') {
+            let end = text[index..]
+                .find('\n')
+                .map_or(text.len(), |offset| index + offset);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else if text[index..].starts_with("\"\"\"") {
+            let end = skip_quoted(text, index, '"', true);
+            push(&mut spans, index, end, SyntaxToken::String);
+            index = end;
+        } else if text[index..].starts_with("r\"") || text[index..].starts_with("R\"") {
+            let end = skip_quoted(text, index + 1, '"', false);
+            push(&mut spans, index, end, SyntaxToken::String);
+            index = end;
+        } else {
+            let ch = text[index..].chars().next().unwrap_or('\0');
+            if ch == '"' || ch == '\'' {
+                let end = skip_quoted(text, index, ch, false);
+                push(&mut spans, index, end, SyntaxToken::String);
+                index = end;
+            } else if ch.is_ascii_digit() {
+                let end = c_number_end(text, index, false);
+                push(&mut spans, index, end, SyntaxToken::Number);
+                index = end;
+            } else if is_ident_start(ch) {
+                let end = identifier_end(text, index);
+                let word = &text[index..end];
+                let upper = word.to_ascii_uppercase();
+                if matches!(word, "true" | "false" | "nil") {
+                    push(&mut spans, index, end, SyntaxToken::Number);
+                } else if matches!(upper.as_str(), "AND" | "OR" | "XOR" | "NOT" | "DIV" | "MOD" | "SHL" | "SHR" | "IS" | "ISNOT" | "IN" | "NOTIN" | "OF") {
+                    push(&mut spans, index, end, SyntaxToken::Keyword);
+                } else if KEYWORDS.contains(&word) {
+                    push(&mut spans, index, end, SyntaxToken::Keyword);
+                    if DECLS.contains(&word)
+                        && let Some((position, ch)) = next_non_space_index(text, end)
+                        && is_ident_start(ch)
+                    {
+                        let name_end = identifier_end(text, position);
+                        push(&mut spans, position, name_end, SyntaxToken::Function);
+                        index = name_end;
+                        continue;
+                    }
+                } else if TYPES.contains(&word) {
+                    push(&mut spans, index, end, SyntaxToken::Type);
+                } else if next_non_space(text, end) == Some('(') {
+                    push(&mut spans, index, end, SyntaxToken::Function);
+                } else if ch.is_ascii_uppercase() {
+                    push(&mut spans, index, end, SyntaxToken::Type);
+                }
+                index = end;
+            } else {
+                index += ch.len_utf8();
+            }
+        }
+    }
+    spans
+}
+
+fn latex_command_end(text: &str, start: usize) -> usize {
+    let mut index = start + 1;
+    let mut letters = 0usize;
+    while index < text.len() {
+        let ch = text[index..].chars().next().unwrap_or('\0');
+        if ch.is_ascii_alphabetic() {
+            letters += 1;
+            index += ch.len_utf8();
+        } else {
+            break;
+        }
+    }
+    if letters > 0 {
+        index
+    } else if text[start + 1..].chars().next().is_some() {
+        start + 1 + text[start + 1..].chars().next().map_or(1, char::len_utf8)
+    } else {
+        text.len()
+    }
+}
+
+fn latex(text: &str) -> Vec<Span> {
+    const STRUCTURE: &[&str] = &[
+        "begin", "end", "documentclass", "usepackage", "chapter", "section",
+        "subsection", "subsubsection", "paragraph", "title", "author", "date",
+        "maketitle", "label", "ref", "eqref", "cite", "bibliography",
+        "bibliographystyle", "item", "caption", "include", "input",
+    ];
+    const ENVIRONMENTS: &[&str] = &["begin", "end"];
+    let mut spans = Vec::new();
+    let mut index = 0usize;
+    while index < text.len() {
+        let ch = text[index..].chars().next().unwrap_or('\0');
+        if ch == '%' && !text[..index].ends_with('\\') {
+            let end = text[index..]
+                .find('\n')
+                .map_or(text.len(), |offset| index + offset);
+            push(&mut spans, index, end, SyntaxToken::Comment);
+            index = end;
+        } else if ch == '\\' {
+            let end = latex_command_end(text, index);
+            let name = text[index + 1..end].to_string();
+            let token = if matches!(name.as_str(), "\\" | "[" | "]" | "(" | ")")
+                || STRUCTURE.contains(&name.as_str())
+            {
+                SyntaxToken::Keyword
+            } else {
+                SyntaxToken::Function
+            };
+            push(&mut spans, index, end, token);
+            index = end;
+            if ENVIRONMENTS.contains(&name.as_str()) {
+                let mut cursor = index;
+                while cursor < text.len()
+                    && text[cursor..]
+                        .chars()
+                        .next()
+                        .is_some_and(char::is_whitespace)
+                {
+                    cursor += text[cursor..].chars().next().map_or(1, char::len_utf8);
+                }
+                if text[cursor..].starts_with('{') {
+                    let name_start = cursor + 1;
+                    let name_end = identifier_end_hyphen(text, name_start);
+                    if name_end > name_start {
+                        push(&mut spans, name_start, name_end, SyntaxToken::Type);
+                        index = name_end;
+                    }
+                }
+            }
+        } else if ch == '$' {
+            let double = text[index..].starts_with("$$");
+            let end = index + if double { 2 } else { 1 };
+            push(&mut spans, index, end, SyntaxToken::Keyword);
+            index = end;
+        } else if ch.is_ascii_digit() {
+            let end = skip_number(text, index);
+            push(&mut spans, index, end, SyntaxToken::Number);
+            index = end;
+        } else if ch == '&' {
+            push(&mut spans, index, index + 1, SyntaxToken::Keyword);
+            index += 1;
+        } else {
+            index += ch.len_utf8();
+        }
+    }
+    spans
+}
+
 fn go_raw_string_end(text: &str, start: usize) -> usize {
     text[start + 1..]
         .find('`')
@@ -10016,6 +10884,442 @@ node 'web01' {
             assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
         }
         assert_well_formed("puppet", source);
+    }
+
+    #[test]
+    fn cmake_commands_variables_bracket_comments_arguments_and_genexes() {
+        let source = r##"cmake_minimum_required(VERSION 3.24)
+project(Vela LANGUAGES C CXX)
+
+# line comment
+#[[ block
+ comment ]]
+
+set(VELA_ENV "$ENV{HOME}/vela" CACHE STRING "install path")
+if(WIN32 AND NOT DEFINED ENV{TEMP})
+  message(STATUS "Windows ${VELA_ENV}")
+  message(STATUS ${VELA_ENV})
+endif()
+
+add_executable(vela main.cpp)
+target_link_libraries(vela PRIVATE fmt::fmt)
+set(VERSION 1.2)
+set(FLAG ON)
+include(GNUInstallDirs)
+if($<CONFIG:Debug>)
+  add_compile_definitions(DEBUG_BUILD=1)
+endif()
+"##;
+        assert_eq!(language("cmake"), Some("cmake"));
+        let tokens = tokens("cmake", source);
+        assert!(tokens.contains(&(SyntaxToken::Comment, "# line comment")));
+        assert!(tokens.iter().any(|(kind, text)| {
+            *kind == SyntaxToken::Comment && text.starts_with("#[[ block")
+        }));
+        for keyword in ["if", "endif"] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for command in [
+            "cmake_minimum_required",
+            "project",
+            "set",
+            "message",
+            "add_executable",
+            "target_link_libraries",
+            "include",
+            "add_compile_definitions",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Function, command)), "{command}");
+        }
+        for variable in ["${VELA_ENV}", "$<CONFIG:Debug>"] {
+            assert!(tokens.contains(&(SyntaxToken::Property, variable)), "{variable}");
+        }
+        assert!(
+            highlight("cmake", "message(STATUS $)")
+                .iter()
+                .all(|span| span.token != SyntaxToken::Property),
+            "a bare dollar sign stays plain"
+        );
+        for text in [
+            "\"$ENV{HOME}/vela\"",
+            "\"install path\"",
+            "\"Windows ${VELA_ENV}\"",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::String, text)), "{text}");
+        }
+        for number in ["3.24", "1.2", "ON", "1"] {
+            assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
+        }
+        assert_well_formed("cmake", source);
+    }
+
+    #[test]
+    fn protobuf_messages_services_scalars_fields_enums_and_comments() {
+        let source = r##"syntax = "proto3";
+package vela.sync;
+import "google/protobuf/timestamp.proto";
+
+option java_package = "dev.vela";
+
+// line comment
+/* block
+   comment */
+message SyncRequest {
+  string session_id = 1;
+  repeated string paths = 2;
+  map<string, int32> limits = 3;
+  google.protobuf.Timestamp since = 4;
+  optional bytes token = 5;
+  enum State {
+    STATE_OK = 0;
+    STATE_FAILED = 1;
+  }
+}
+service SyncService {
+  rpc Sync (SyncRequest) returns (SyncResponse) {}
+  rpc Watch (stream SyncRequest) returns (stream SyncResponse);
+}
+"##;
+        for alias in ["proto", "protobuf", "proto3"] {
+            assert_eq!(language(alias), Some("protobuf"), "{alias}");
+        }
+        let tokens = tokens("protobuf", source);
+        assert!(tokens.contains(&(SyntaxToken::Comment, "// line comment")));
+        assert!(tokens.iter().any(|(kind, text)| {
+            *kind == SyntaxToken::Comment && text.starts_with("/* block") && text.contains("comment */")
+        }));
+        for keyword in [
+            "syntax", "package", "import", "option", "message", "enum", "service", "rpc",
+            "returns", "repeated", "optional", "map", "stream",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for scalar in ["string", "int32", "bytes"] {
+            assert!(tokens.contains(&(SyntaxToken::Type, scalar)), "{scalar}");
+        }
+        for name in ["SyncRequest", "SyncService", "State", "Timestamp", "SyncResponse"] {
+            assert!(tokens.contains(&(SyntaxToken::Type, name)), "{name}");
+        }
+        for call in ["Sync", "Watch"] {
+            assert!(tokens.contains(&(SyntaxToken::Function, call)), "{call}");
+        }
+        for property in [
+            "java_package", "session_id", "paths", "limits", "since", "token",
+            "STATE_OK", "STATE_FAILED",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Property, property)), "{property}");
+        }
+        for text in ["\"proto3\"", "\"google/protobuf/timestamp.proto\"", "\"dev.vela\""] {
+            assert!(tokens.contains(&(SyntaxToken::String, text)), "{text}");
+        }
+        for number in ["1", "2", "3", "4", "5", "0"] {
+            assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
+        }
+        assert_well_formed("protobuf", source);
+    }
+
+    #[test]
+    fn groovy_classes_defs_gstrings_slashy_strings_annotations_and_numbers() {
+        let source = r##"#!/usr/bin/env groovy
+package demo
+
+import groovy.transform.CompileStatic
+
+// line comment
+/* block
+   comment */
+@CompileStatic
+class VelaSync {
+  static final String NAME = "vela"
+  def run(String input, int count = 1) {
+    def pattern = ~/v[a-z]+/
+    def text = """multi
+line ${input}"""
+    def raw = '''raw'''
+    println "hello ${input}"
+    1_000.times { it -> print it }
+    def values = [0xff, 0b1010, 12.5G, 3.14f]
+    return count > 0 ? true : null
+  }
+}
+"##;
+        for alias in ["groovy", "gvy"] {
+            assert_eq!(language(alias), Some("groovy"), "{alias}");
+        }
+        let tokens = tokens("groovy", source);
+        assert!(tokens.contains(&(SyntaxToken::Comment, "// line comment")));
+        assert!(tokens.iter().any(|(kind, text)| {
+            *kind == SyntaxToken::Comment && text.starts_with("/* block") && text.contains("comment */")
+        }));
+        for keyword in [
+            "package", "import", "class", "static", "final", "def", "return",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for name in ["String", "VelaSync"] {
+            assert!(tokens.contains(&(SyntaxToken::Type, name)), "{name}");
+        }
+        for call in ["run", "println", "print"] {
+            assert!(tokens.contains(&(SyntaxToken::Function, call)), "{call}");
+        }
+        for text in ["\"vela\"", "\"hello ${input}\"", "'''raw'''"] {
+            assert!(tokens.contains(&(SyntaxToken::String, text)), "{text}");
+        }
+        assert!(
+            tokens.iter().any(|(kind, text)| {
+                *kind == SyntaxToken::String && text.starts_with("\"\"\"multi") && text.ends_with("\"\"\"")
+            }),
+            "triple-quoted GString"
+        );
+        assert!(
+            tokens.contains(&(SyntaxToken::String, "/v[a-z]+/")),
+            "slashy string after a match operator"
+        );
+        for number in ["1_000", "0xff", "0b1010", "12.5G", "3.14f", "1", "0", "true", "null"] {
+            assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
+        }
+        assert_eq!(
+            tokens.iter().filter(|(kind, _)| *kind == SyntaxToken::Attribute).count(),
+            1,
+            "annotations stay attributes"
+        );
+        assert_well_formed("groovy", source);
+    }
+
+    #[test]
+    fn objective_c_directives_foundation_types_literals_and_c_tokens() {
+        let source = r##"#import <Foundation/Foundation.h>
+
+// line comment
+/* block
+   comment */
+@class VelaStore;
+
+@interface VelaSync : NSObject
+@property (nonatomic, copy) NSString *name;
+- (void)syncWithCompletion:(void (^)(BOOL ok))completion;
+@end
+
+@implementation VelaSync
+- (void)syncWithCompletion:(void (^)(BOOL ok))completion {
+  BOOL ok = YES;
+  if (ok) {
+    NSLog(@"synced %@", self.name);
+    completion(YES);
+  } else {
+    completion(NO);
+  }
+}
+@end
+"##;
+        for alias in ["objective-c", "objc", "objectivec"] {
+            assert_eq!(language(alias), Some("objective-c"), "{alias}");
+        }
+        let tokens = tokens("objective-c", source);
+        assert!(tokens.contains(&(SyntaxToken::Comment, "// line comment")));
+        assert!(tokens.iter().any(|(kind, text)| {
+            *kind == SyntaxToken::Comment && text.starts_with("/* block") && text.contains("comment */")
+        }));
+        for keyword in [
+            "@class", "@interface", "@property", "@end", "@implementation",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for name in ["NSObject", "NSString", "BOOL"] {
+            assert!(tokens.contains(&(SyntaxToken::Type, name)), "{name}");
+        }
+        for keyword in ["self", "if", "else"] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for number in ["YES", "NO"] {
+            assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
+        }
+        for call in ["NSLog", "completion"] {
+            assert!(tokens.contains(&(SyntaxToken::Function, call)), "{call}");
+        }
+        assert!(tokens.contains(&(SyntaxToken::String, "\"synced %@\"")));
+        assert!(tokens.contains(&(SyntaxToken::String, "<Foundation/Foundation.h>")));
+        assert_well_formed("objective-c", source);
+    }
+
+    #[test]
+    fn sass_indented_comments_variables_flow_properties_interpolation_and_values() {
+        let source = r##"// silent comment
+/* loud
+   comment */
+@use "sass:math";
+@forward "theme";
+@import "reset";
+
+$brand: #0a84ff;
+$space: 8px !default;
+$font-stack: "Inter", -apple-system, sans-serif;
+
+@mixin card($radius: 12px)
+  border-radius: $radius
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2)
+
+.card
+  &:hover
+    color: $brand
+    background: lighten($brand, 10%)
+  .title
+    --accent: #ff0
+    width: #{math.div($space, 2)}
+    &::before
+      content: "→"
+
+%placeholder
+  display: flex
+  gap: $space
+  @include card(8px)
+  @if $space
+    opacity: 1
+  @else
+    opacity: 0.5
+"##;
+        assert_eq!(language("sass"), Some("sass"));
+        let tokens = tokens("sass", source);
+        assert!(tokens.contains(&(SyntaxToken::Comment, "// silent comment")));
+        assert!(tokens.iter().any(|(kind, text)| {
+            *kind == SyntaxToken::Comment && text.starts_with("/* loud") && text.contains("comment */")
+        }));
+        for keyword in ["@use", "@forward", "@import", "@mixin", "@include", "@if", "@else", "!default", "&"] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for variable in ["$brand", "$space", "$font-stack", "$radius"] {
+            assert!(tokens.contains(&(SyntaxToken::Property, variable)), "{variable}");
+        }
+        for property in [
+            "border-radius", "box-shadow", "color", "background", "--accent", "width",
+            "content", "display", "gap", "opacity",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Property, property)), "{property}");
+        }
+        for function in ["rgba", "lighten", "card"] {
+            assert!(tokens.contains(&(SyntaxToken::Function, function)), "{function}");
+        }
+        for text in ["\"sass:math\"", "\"theme\"", "\"reset\"", "\"Inter\"", "\"→\""] {
+            assert!(tokens.contains(&(SyntaxToken::String, text)), "{text}");
+        }
+        for number in ["#0a84ff", "8px", "0.2", "10%", "#ff0", "1", "0.5"] {
+            assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
+        }
+        assert!(
+            tokens.contains(&(SyntaxToken::Tag, "hover")),
+            "pseudo selector"
+        );
+        assert!(
+            tokens.contains(&(SyntaxToken::Tag, "%placeholder")),
+            "placeholder selector"
+        );
+        assert!(
+            tokens.iter().any(|(kind, text)| {
+                *kind == SyntaxToken::Property && text.starts_with("#{math.div")
+            }),
+            "interpolation is painted as a value"
+        );
+        assert_well_formed("sass", source);
+    }
+
+    #[test]
+    fn latex_commands_environments_math_comments_and_numbers() {
+        let source = r##"\documentclass[11pt]{article}
+\usepackage{amsmath}
+% line comment
+\title{Vela Notes}
+\begin{document}
+\section{Introduction}
+Inline math $E = mc^2$ and display:
+\[
+  \frac{a}{b} + \alpha_1 = 42
+\]
+\begin{itemize}
+  \item First
+  \item Second
+\end{itemize}
+\label{sec:intro}
+See \ref{sec:intro} and \cite{vela2026}.
+\end{document}
+"##;
+        for alias in ["latex", "tex"] {
+            assert_eq!(language(alias), Some("latex"), "{alias}");
+        }
+        let tokens = tokens("latex", source);
+        assert!(tokens.contains(&(SyntaxToken::Comment, "% line comment")));
+        for keyword in [
+            "\\documentclass", "\\usepackage", "\\title", "\\section", "\\item",
+            "\\label", "\\ref", "\\cite", "\\begin", "\\end", "$",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for environment in ["document", "itemize"] {
+            assert!(tokens.contains(&(SyntaxToken::Type, environment)), "{environment}");
+        }
+        for function in ["\\frac", "\\alpha"] {
+            assert!(tokens.contains(&(SyntaxToken::Function, function)), "{function}");
+        }
+        for number in ["11pt", "2", "1", "42"] {
+            assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
+        }
+        assert_well_formed("latex", source);
+    }
+
+    #[test]
+    fn nim_comments_declarations_types_strings_literals_and_numbers() {
+        let source = r##"# line comment
+#[ block
+   comment ]#
+import std/[strutils, sequtils]
+
+type
+  VelaStatus* = enum
+    Idle, Running
+
+const Version* = "1.0"
+
+proc sync*(paths: seq[string], verbose = false): int =
+  var count = 0
+  for path in paths:
+    if path.len > 0:
+      inc count
+  let raw = r"raw\n"
+  let text = """multi
+line"""
+  result = count
+  echo "synced ", count, ' ', true, nil
+  when defined(release):
+    discard 0xFF + 0b1010 + 1_000 + 3.5
+"##;
+        assert_eq!(language("nim"), Some("nim"));
+        let tokens = tokens("nim", source);
+        assert!(tokens.contains(&(SyntaxToken::Comment, "# line comment")));
+        assert!(tokens.iter().any(|(kind, text)| {
+            *kind == SyntaxToken::Comment && text.starts_with("#[ block") && text.contains("comment ]#")
+        }));
+        for keyword in [
+            "import", "type", "enum", "const", "proc", "var", "for", "in", "if",
+            "let", "when", "discard",
+        ] {
+            assert!(tokens.contains(&(SyntaxToken::Keyword, keyword)), "{keyword}");
+        }
+        for name in ["seq", "string", "int", "VelaStatus", "Idle", "Running"] {
+            assert!(tokens.contains(&(SyntaxToken::Type, name)), "{name}");
+        }
+        assert!(tokens.contains(&(SyntaxToken::Function, "sync")));
+        for text in ["\"1.0\"", "r\"raw\\n\"", "' '"] {
+            assert!(tokens.contains(&(SyntaxToken::String, text)), "{text}");
+        }
+        assert!(
+            tokens.iter().any(|(kind, text)| {
+                *kind == SyntaxToken::String && text.starts_with("\"\"\"multi") && text.ends_with("\"\"\"")
+            }),
+            "triple-quoted string"
+        );
+        for number in ["true", "false", "nil", "0", "0xFF", "0b1010", "1_000", "3.5"] {
+            assert!(tokens.contains(&(SyntaxToken::Number, number)), "{number}");
+        }
+        assert_well_formed("nim", source);
     }
 
     #[test]

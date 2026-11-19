@@ -10,6 +10,18 @@ pub(super) struct Menu {
     position: gpui::Point<gpui::Pixels>,
     pub(super) return_focus: Option<gpui::FocusHandle>,
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum ExplorerMenuAction {
+    OpenTerminal,
+    NewFile,
+    NewFolder,
+    Reveal,
+    RemoveWorkspace,
+    Rename,
+    RemoveFromWorkspace,
+    Delete,
+}
 fn remap(rel: &str, from: &str, to: &str) -> String {
     if rel == from
         || rel
@@ -34,25 +46,28 @@ impl VelaApp {
         key: DocumentKey,
         session: String,
         cx: &mut Context<Self>,
-    ) {
+    ) -> Option<u64> {
         if self.documents.borrow().relocation_contains(&key) {
             self.relocation_saves.insert(key, session);
             cx.notify();
-            return;
+            return None;
         }
         self.file_request += 1;
+        let request_id = self.file_request;
         let request = self
             .documents
             .borrow_mut()
-            .save(self.file_request, session, &key);
+            .save(request_id, session, &key);
+        let dispatched = request.is_some();
         if let Some(request) = request {
             self.dispatch_save(request);
         }
         cx.notify();
+        dispatched.then_some(request_id)
     }
     pub(super) fn drain_relocation_saves(&mut self, cx: &mut Context<Self>) {
         for (key, session) in std::mem::take(&mut self.relocation_saves) {
-            self.save_document_key(key, session, cx);
+            let _ = self.save_document_key(key, session, cx);
         }
     }
     pub(super) fn pump_entry_renames(&mut self, cx: &mut Context<Self>) -> bool {
@@ -266,6 +281,9 @@ impl VelaApp {
         self.session_context_menu = None;
         self.preview_menu = None;
         self.dismiss_tab_overflow();
+        if let Some(tree) = self.file_trees.get_mut(&workspace) {
+            tree.select_for_context(&rel);
+        }
         self.explorer_menu = Some(Menu {
             workspace,
             rel,
@@ -312,6 +330,48 @@ impl VelaApp {
         cx.stop_propagation();
         true
     }
+    /// Source's ExplorerMenu label/group contract. `Remove Workspace` exists
+    /// only on the workspace root; entry targets instead add the
+    /// rename/detach/delete group after a separator.
+    pub(super) fn explorer_menu_items(
+        rel_empty: bool,
+        selection_count: usize,
+    ) -> Vec<(String, ExplorerMenuAction)> {
+        let mut items = vec![
+            (
+                "Open in Integrated Terminal".to_owned(),
+                ExplorerMenuAction::OpenTerminal,
+            ),
+            ("New File…".to_owned(), ExplorerMenuAction::NewFile),
+            ("New Folder…".to_owned(), ExplorerMenuAction::NewFolder),
+            (
+                "Reveal in File Manager".to_owned(),
+                ExplorerMenuAction::Reveal,
+            ),
+        ];
+        if rel_empty {
+            items.push((
+                "Remove Workspace".to_owned(),
+                ExplorerMenuAction::RemoveWorkspace,
+            ));
+        } else {
+            items.push(("Rename…".to_owned(), ExplorerMenuAction::Rename));
+            items.push((
+                "Remove from Workspace".to_owned(),
+                ExplorerMenuAction::RemoveFromWorkspace,
+            ));
+            items.push((
+                if selection_count > 1 {
+                    format!("Delete {selection_count} Items")
+                } else {
+                    "Delete".to_owned()
+                },
+                ExplorerMenuAction::Delete,
+            ));
+        }
+        items
+    }
+
     pub(super) fn render_explorer_menu(
         &self,
         window: &Window,
@@ -344,38 +404,31 @@ impl VelaApp {
             .border_1()
             .border_color(theme.border_strong)
             .bg(theme.elevated)
-            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation());
-        for (index, label) in [
-            "Open in Integrated Terminal",
-            "New File",
-            "New Folder",
-            "Reveal in File Manager",
-            "Remove Workspace",
-            "Rename",
-            "Remove from Workspace",
-            "Delete",
-        ]
-        .into_iter()
-        .enumerate()
-        {
-            if index >= 5 && menu.rel.is_empty() {
-                continue;
+            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+            .on_mouse_down_out(cx.listener(|app, _, window, cx| {
+                let fallback = app.composer_focus.clone();
+                let focus = app.explorer_menu.take().and_then(|menu| menu.return_focus);
+                window.focus(focus.as_ref().unwrap_or(&fallback), cx);
+                cx.notify();
+            }));
+        let selection_count = self
+            .file_trees
+            .get(&menu.workspace)
+            .map(|tree| super::explorer::compact_paths(&tree.drag_paths(&menu.rel)).len())
+            .unwrap_or(1);
+        let items = Self::explorer_menu_items(menu.rel.is_empty(), selection_count);
+        for (index, (label, action)) in items.into_iter().enumerate() {
+            if action == ExplorerMenuAction::Rename {
+                body = body.child(
+                    div()
+                        .id("explorer-menu-separator")
+                        .debug_selector(|| "explorer-menu-separator".into())
+                        .h(px(1.))
+                        .mx(px(2.))
+                        .my(px(4.))
+                        .bg(theme.border),
+                );
             }
-            let label = if index == 7 {
-                let paths = self
-                    .file_trees
-                    .get(&menu.workspace)
-                    .map(|tree| tree.drag_paths(&menu.rel))
-                    .unwrap_or_else(|| vec![menu.rel.clone()]);
-                let count = super::explorer::compact_paths(&paths).len();
-                if count > 1 {
-                    format!("Delete {count} Items")
-                } else {
-                    label.to_owned()
-                }
-            } else {
-                label.to_owned()
-            };
             let workspace = menu.workspace.clone();
             let rel = menu.rel.clone();
             let is_dir = menu.is_dir;
@@ -393,7 +446,7 @@ impl VelaApp {
                     .hover(|style| style.bg(theme.selected))
                     .on_click(cx.listener(move |app, _, window, cx| {
                         cx.stop_propagation();
-                        if index == 6 {
+                        if action == ExplorerMenuAction::RemoveFromWorkspace {
                             app.confirm_entry_detachment(
                                 workspace.clone(),
                                 rel.clone(),
@@ -410,75 +463,78 @@ impl VelaApp {
                             window.focus(&focus, cx);
                         }
                         app.explorer_menu = None;
-                        if index == 0 {
-                            if let Some(session) = app.active_id.clone() {
-                                let parent = if is_dir {
-                                    rel.clone()
-                                } else {
-                                    rel.rsplit_once('/')
-                                        .map(|(parent, _)| parent)
-                                        .unwrap_or("")
-                                        .to_owned()
-                                };
-                                app.file_request += 1;
-                                let name = Path::new(&parent)
-                                    .file_name()
-                                    .map(|name| name.to_string_lossy().into_owned());
-                                app.terminal_directory_requests.insert(
-                                    app.file_request,
-                                    terminal_state::DirectoryRequest {
-                                        session: session.clone(),
-                                        workspace: workspace.clone(),
-                                        generation: app.terminals.generation,
-                                        name,
-                                    },
-                                );
-                                app.engine.resolve_terminal_directory(
-                                    app.file_request,
-                                    session,
-                                    workspace.clone(),
-                                    parent,
-                                );
-                            }
-                        } else if index == 3 {
-                            if let Some(session) = app.active_id.clone() {
-                                app.file_request += 1;
-                                app.reveal_requests.insert(app.file_request);
-                                app.engine.resolve_entry(
-                                    app.file_request,
-                                    session,
-                                    workspace.clone(),
-                                    rel.clone(),
-                                );
-                            }
-                        } else if index == 7 {
-                            app.start_remove_entry(workspace.clone(), rel.clone(), cx);
-                        } else if index == 4 {
-                            app.request_workspace_close(workspace.clone(), cx);
-                        } else if index == 5 {
-                            app.start_rename_entry(
-                                workspace.clone(),
-                                rel.clone(),
-                                is_dir,
-                                window,
-                                cx,
-                            );
-                        } else {
-                            let parent = if is_dir {
+                        let parent = || {
+                            if is_dir {
                                 rel.clone()
                             } else {
                                 rel.rsplit_once('/')
                                     .map(|(parent, _)| parent)
                                     .unwrap_or("")
                                     .to_owned()
-                            };
-                            app.start_create_entry(
-                                workspace.clone(),
-                                parent,
-                                index == 2,
-                                window,
-                                cx,
-                            );
+                            }
+                        };
+                        match action {
+                            ExplorerMenuAction::OpenTerminal => {
+                                if let Some(session) = app.active_id.clone() {
+                                    let parent = parent();
+                                    app.file_request += 1;
+                                    let name = Path::new(&parent)
+                                        .file_name()
+                                        .map(|name| name.to_string_lossy().into_owned());
+                                    app.terminal_directory_requests.insert(
+                                        app.file_request,
+                                        terminal_state::DirectoryRequest {
+                                            session: session.clone(),
+                                            workspace: workspace.clone(),
+                                            generation: app.terminals.generation,
+                                            name,
+                                        },
+                                    );
+                                    app.engine.resolve_terminal_directory(
+                                        app.file_request,
+                                        session,
+                                        workspace.clone(),
+                                        parent,
+                                    );
+                                }
+                            }
+                            ExplorerMenuAction::Reveal => {
+                                if let Some(session) = app.active_id.clone() {
+                                    app.file_request += 1;
+                                    app.reveal_requests.insert(app.file_request);
+                                    app.engine.resolve_entry(
+                                        app.file_request,
+                                        session,
+                                        workspace.clone(),
+                                        rel.clone(),
+                                    );
+                                }
+                            }
+                            ExplorerMenuAction::RemoveWorkspace => {
+                                app.request_workspace_close(workspace.clone(), cx);
+                            }
+                            ExplorerMenuAction::Rename => {
+                                app.start_rename_entry(
+                                    workspace.clone(),
+                                    rel.clone(),
+                                    is_dir,
+                                    window,
+                                    cx,
+                                );
+                            }
+                            ExplorerMenuAction::Delete => {
+                                app.start_remove_entry(workspace.clone(), rel.clone(), cx);
+                            }
+                            ExplorerMenuAction::NewFile | ExplorerMenuAction::NewFolder => {
+                                app.start_create_entry(
+                                    workspace.clone(),
+                                    parent(),
+                                    action == ExplorerMenuAction::NewFolder,
+                                    window,
+                                    cx,
+                                );
+                            }
+                            ExplorerMenuAction::RemoveFromWorkspace => unreachable!(),
                         }
                     }))
                     .child(label),
@@ -512,9 +568,12 @@ pub(super) fn menu_action(
     is_dir: bool,
     focus: gpui::FocusHandle,
     owner: gpui::WeakEntity<VelaApp>,
+    group: &str,
+    right: f32,
 ) -> AnyElement {
     let theme = Theme::default();
-    div()
+    let hover_group = group.to_owned();
+    let button = div()
         .id(SharedString::from(format!("explorer-more-{rel}")))
         .role(Role::Button)
         .aria_label("More actions…")
@@ -541,6 +600,73 @@ pub(super) fn menu_action(
                 );
             });
         })
-        .child(icon("ea7c"))
+        .child(icon("ea7c"));
+    div()
+        .absolute()
+        .right(px(right))
+        .top(px(1.))
+        .bottom(px(1.))
+        .flex()
+        .items_center()
+        .opacity(0.)
+        .group_hover(hover_group, |style| style.opacity(1.))
+        .child(button)
         .into_any_element()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn explorer_menu_labels_match_source_groups_and_ellipses() {
+        let labels = |rel_empty, count| {
+            VelaApp::explorer_menu_items(rel_empty, count)
+                .into_iter()
+                .map(|(label, _)| label)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            labels(true, 1),
+            vec![
+                "Open in Integrated Terminal",
+                "New File…",
+                "New Folder…",
+                "Reveal in File Manager",
+                "Remove Workspace",
+            ]
+        );
+        assert_eq!(
+            labels(false, 1),
+            vec![
+                "Open in Integrated Terminal",
+                "New File…",
+                "New Folder…",
+                "Reveal in File Manager",
+                "Rename…",
+                "Remove from Workspace",
+                "Delete",
+            ],
+            "Source shows Remove Workspace only on the root target"
+        );
+        assert!(!labels(false, 1).iter().any(|label| label == "Remove Workspace"));
+        assert_eq!(
+            labels(false, 3).last().map(String::as_str),
+            Some("Delete 3 Items")
+        );
+
+        let entry = VelaApp::explorer_menu_items(false, 1);
+        assert_eq!(entry[3].1, ExplorerMenuAction::Reveal);
+        assert_eq!(entry[4].1, ExplorerMenuAction::Rename, "separator precedes Rename");
+        assert_eq!(entry[5].1, ExplorerMenuAction::RemoveFromWorkspace);
+        assert_eq!(entry[6].1, ExplorerMenuAction::Delete);
+        let root = VelaApp::explorer_menu_items(true, 1);
+        assert_eq!(root[4].1, ExplorerMenuAction::RemoveWorkspace);
+        assert!(
+            !root
+                .iter()
+                .any(|(_, action)| *action == ExplorerMenuAction::Rename
+                    || *action == ExplorerMenuAction::Delete)
+        );
+    }
 }

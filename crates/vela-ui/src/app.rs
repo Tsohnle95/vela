@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 use gpui::accesskit::Role;
 use gpui::prelude::*;
@@ -11,14 +11,14 @@ use gpui::{
     AnyElement, App, Bounds, Context, CursorStyle, Focusable, Font, FontStyle, FontWeight, Hsla,
     IntoElement, KeyDownEvent, ListAlignment, ListOffset, ListState, MouseButton, MouseDownEvent,
     MouseMoveEvent, PathPromptOptions, Pixels, Render, SharedString, StyledText, TextRun, Window,
-    WindowBounds, WindowControlArea, WindowOptions, div, list, point, px, relative, size,
+    WindowBounds, WindowOptions, div, list, point, px, relative, size,
 };
 
 use vela_browser::{BrowserEvent, BrowserHost, BrowserProfile};
 use vela_core::document::{DocumentKey, Documents, ExternalChange, FileRequest};
 use vela_core::event::{PermissionRequest, TodoItem};
 use vela_core::session::{SessionPhase, SessionSummary, SessionUsage};
-use vela_core::transcript::{Block, BlockKind, ToolFile, ToolStatus, ToolSubCall};
+use vela_core::transcript::{Block, BlockKind, ToolStatus};
 use vela_engine::runtime::RuntimeCapabilities;
 use vela_engine::{ConnectionState, Engine, EngineUpdate, FileEntry, GitEntry, Settings};
 use vela_opencode::client::PermissionReply;
@@ -38,9 +38,16 @@ use crate::settings::{setting_row, settings_group_title, settings_list, tracked_
 use crate::surface::{RoundedSurface, codex_card};
 use crate::theme::{self, Theme};
 
-use crate::theme::{AGENT_WIDTH, PANEL_RADIUS, RAIL_WIDTH, SIDEBAR_WIDTH, TITLEBAR_HEIGHT};
+use crate::theme::{AGENT_WIDTH, PANEL_RADIUS, RAIL_WIDTH, TITLEBAR_HEIGHT};
+
+const SIDEBAR_MIN_WIDTH: f32 = 230.0;
+const SIDEBAR_MAX_WIDTH: f32 = 520.0;
+const SIDEBAR_DEFAULT_WIDTH: f32 = 234.0;
+const AGENT_MIN_WIDTH: f32 = 280.0;
+
 
 const CODICON_FONT: &[u8] = include_bytes!("../assets/codicon.ttf");
+const OPENCODE_INTER_FONT: &[u8] = include_bytes!("../assets/opencode-inter.ttf");
 
 /// Fraction of the viewport reserved for simultaneous agent panels. The
 /// single-panel layout keeps its fixed source width; tiled mode needs more room
@@ -97,12 +104,22 @@ fn pending_validation(requests: &HashMap<u64, DocumentKey>, key: &DocumentKey) -
         .max()
 }
 
-fn validation_action_label(pending: bool, failed: bool, has_summary: bool) -> &'static str {
+fn validation_action_label(
+    pending: bool,
+    failed: bool,
+    has_summary: bool,
+    has_markers: bool,
+    markers_shown: bool,
+) -> &'static str {
     if pending {
-        "Cancel validation"
-    } else if failed {
-        "Retry validation"
-    } else if has_summary {
+        "Validating…"
+    } else if has_markers {
+        if markers_shown {
+            "Hide errors"
+        } else {
+            "Show errors"
+        }
+    } else if failed || has_summary {
         "Validate again"
     } else {
         "Validate"
@@ -205,9 +222,8 @@ fn executable_file(path: &Path) -> bool {
     }
 }
 
-/// Resolve the Agent TUI program before creating a PTY tab. A configured
-/// binary wins; a bare name is searched on PATH so a missing CLI fails with a
-/// useful toast instead of leaving an empty terminal behind.
+/// Move a document into a secondary editor group, clearing any previous
+/// assignment so a tab belongs to at most one group.
 fn assign_editor_group_tab(
     groups: &mut [Option<DocumentKey>],
     key: &DocumentKey,
@@ -242,6 +258,9 @@ fn tui_exit_notice(code: Option<i32>) -> String {
     }
 }
 
+/// Resolve the Agent TUI program before creating its embedded PTY. A
+/// configured binary wins; a bare name is searched on PATH so a missing CLI
+/// fails with a useful panel notice instead of leaving an empty terminal.
 fn find_tui_program(
     configured: Option<&std::ffi::OsStr>,
     path_var: Option<&std::ffi::OsStr>,
@@ -263,12 +282,15 @@ fn find_tui_program(
     None
 }
 
+#[path = "agent_tui.rs"]
+mod agent_tui;
 #[path = "attachments.rs"]
 mod attachments;
 #[path = "close.rs"]
 mod close;
 #[path = "composer.rs"]
 mod composer;
+use agent_tui::{AgentPanelMode, AgentTuiState};
 #[path = "terminal_composition.rs"]
 mod terminal_composition;
 #[path = "terminal_selection.rs"]
@@ -300,29 +322,51 @@ mod forms;
 #[path = "inbox.rs"]
 mod inbox;
 #[path = "inline_flow.rs"]
-mod inline_flow;
+pub(crate) mod inline_flow;
 #[path = "markdown_images.rs"]
 mod markdown_images;
 #[path = "markdown_view.rs"]
 mod markdown_view;
 #[path = "model_picker.rs"]
 mod model_picker;
+#[path = "locale_clock.rs"]
+mod locale_clock;
 #[path = "model_settings.rs"]
 mod model_settings;
 #[path = "preview_settings.rs"]
 mod preview_settings;
 #[path = "sass_output.rs"]
 mod sass_output;
+#[path = "selection_clipboard.rs"]
+mod selection_clipboard;
 #[path = "session_sidebar.rs"]
 mod session_sidebar;
-#[path = "shimmer.rs"]
-mod shimmer;
 #[path = "tabs.rs"]
 mod tabs;
 #[path = "tool_view.rs"]
 mod tool_view;
 #[path = "transcript_view.rs"]
 mod transcript_view;
+#[cfg(test)]
+#[path = "transcript_scoping_tests.rs"]
+mod transcript_scoping_tests;
+#[cfg(test)]
+#[path = "transcript_keyboard_tests.rs"]
+mod transcript_keyboard_tests;
+#[cfg(test)]
+#[path = "transcript_reconciliation_tests.rs"]
+mod transcript_reconciliation_tests;
+#[path = "transcript_row_cache.rs"]
+mod transcript_row_cache;
+#[cfg(test)]
+#[path = "transcript_stability_tests.rs"]
+mod transcript_stability_tests;
+#[cfg(test)]
+#[path = "../../vela-engine/tests/support/streaming_publication.rs"]
+mod transcript_fixture;
+#[cfg(feature = "transcript-bench")]
+#[path = "transcript_native_bench.rs"]
+pub(crate) mod transcript_native_bench;
 #[path = "workspace_close.rs"]
 mod workspace_close;
 
@@ -332,6 +376,10 @@ fn prompt_command(text: &str, commands_enabled: bool) -> Option<(String, String)
     commands_enabled
         .then(|| parse_slash_command(text))
         .flatten()
+}
+
+fn compaction_command_toast(name: &str) -> Option<&'static str> {
+    matches!(name, "compact" | "compress").then_some("Compacting session…")
 }
 
 fn parse_slash_command(text: &str) -> Option<(String, String)> {
@@ -347,11 +395,48 @@ fn parse_slash_command(text: &str) -> Option<(String, String)> {
     ))
 }
 
+/// Source's `sessionLabel`: title, then the directory basename, then the
+/// agent name, then the id.
+fn session_display_label(title: &str, directory: &str, agent: Option<&str>, id: &str) -> String {
+    if !title.trim().is_empty() {
+        return title.to_owned();
+    }
+    if let Some(name) = directory
+        .rsplit(['/', '\\'])
+        .find(|part| !part.is_empty())
+    {
+        return name.to_owned();
+    }
+    if let Some(agent) = agent.filter(|agent| !agent.trim().is_empty()) {
+        return agent.to_owned();
+    }
+    id.to_owned()
+}
+
+/// JavaScript's `toFixed` behavior (ties away from zero), which Source relies
+/// on for its compact token counts.
+fn js_fixed(value: f64, places: usize) -> String {
+    let factor = 10f64.powi(places as i32);
+    let rounded = (value * factor).round() / factor;
+    format!("{rounded:.places$}")
+}
+
+fn scroll_key_for(sessions: &[SessionSummary], session: &str) -> String {
+    sessions
+        .iter()
+        .find(|summary| summary.id == session)
+        .map(|summary| summary.directory.clone())
+        .filter(|directory| !directory.is_empty())
+        .unwrap_or_else(|| session.to_owned())
+}
+
 fn usage_count(value: u64) -> String {
     if value >= 1_000_000 {
-        format!("{:.1}M", value as f64 / 1_000_000.)
+        let places = if value >= 10_000_000 { 0 } else { 1 };
+        format!("{}M", js_fixed(value as f64 / 1_000_000., places))
     } else if value >= 1_000 {
-        format!("{:.1}k", value as f64 / 1_000.)
+        let places = if value >= 100_000 { 0 } else { 1 };
+        format!("{}k", js_fixed(value as f64 / 1_000., places))
     } else {
         value.to_string()
     }
@@ -373,6 +458,21 @@ fn usage_cache_summary(usage: &SessionUsage) -> String {
     }
 }
 
+const COMPACTION_BASELINE_WINDOW: i64 = 10_000;
+
+/// Source's `inferRenderedBaselines`: freeze `input - 10k` once a compaction
+/// item is present, and keep an existing estimate.
+fn inferred_compaction_baseline(
+    has_compaction: bool,
+    input: i64,
+    existing: Option<i64>,
+) -> Option<i64> {
+    existing.or_else(|| {
+        (has_compaction && input > COMPACTION_BASELINE_WINDOW)
+            .then_some((input - COMPACTION_BASELINE_WINDOW).max(0))
+    })
+}
+
 fn usage_cost(value: f64) -> String {
     if value >= 1. {
         format!("${value:.2}")
@@ -382,6 +482,52 @@ fn usage_cost(value: f64) -> String {
         "$0.00".into()
     }
 }
+
+/// Source's 20px context ring: a faint track plus an accent arc for the used
+/// fraction, rotated to start at twelve o'clock.
+fn usage_ring(percent: f32, theme: &Theme) -> AnyElement {
+    let track = theme.text.opacity(0.19);
+    let accent = theme.accent;
+    let fraction = (percent / 100.).clamp(0., 1.);
+    div()
+        .debug_selector(|| "usage-ring".into())
+        .flex_shrink_0()
+        .w(px(20.))
+        .h(px(20.))
+        .child(gpui::canvas(
+        |_, _, _| (),
+        move |bounds, _, window, _| {
+            let center = bounds.center();
+            let radius = px(8.);
+            let stroke = px(2.5);
+            let arc = |end_fraction: f32| {
+                let mut path = gpui::PathBuilder::stroke(stroke);
+                let steps = 72;
+                let end = (steps as f32 * end_fraction) as usize;
+                path.move_to(gpui::point(center.x, center.y - radius));
+                for step in 1..=end {
+                    let angle = -std::f32::consts::FRAC_PI_2
+                        + (step as f32 / steps as f32) * std::f32::consts::TAU;
+                    path.line_to(gpui::point(
+                        center.x + radius * angle.cos(),
+                        center.y + radius * angle.sin(),
+                    ));
+                }
+                path.build().ok()
+            };
+            if let Some(path) = arc(1.) {
+                window.paint_path(path, track);
+            }
+            if fraction > 0.
+                && let Some(path) = arc(fraction)
+            {
+                window.paint_path(path, accent);
+            }
+        },
+    ))
+    .into_any_element()
+}
+
 
 fn icon(code: &str) -> SharedString {
     let value = u32::from_str_radix(code, 16).unwrap_or(0xea60);
@@ -548,7 +694,10 @@ pub fn run(engine: Engine, settings: Settings, workspace_hint: Option<String>) {
         };
         let _ = cx
             .text_system()
-            .add_fonts(vec![std::borrow::Cow::Borrowed(CODICON_FONT)]);
+            .add_fonts(vec![
+                std::borrow::Cow::Borrowed(CODICON_FONT),
+                std::borrow::Cow::Borrowed(OPENCODE_INTER_FONT),
+            ]);
         theme::initialize_source_font(cx);
         let bounds = Bounds {
             origin,
@@ -680,6 +829,8 @@ struct TileComposer {
     slash_arg_pending: Option<u64>,
     slash_arg_query: String,
     slash_arg_selected: usize,
+    /// Each tiled panel owns its todo-dock collapse state like its composer.
+    todos_collapsed: bool,
 }
 
 struct VelaApp {
@@ -696,6 +847,9 @@ struct VelaApp {
     blocks: Arc<Vec<Block>>,
     permissions: Vec<PermissionRequest>,
     todos: Vec<TodoItem>,
+    /// Source's todo dock is collapsible; the state belongs to the dock
+    /// instance, so it resets when the active session changes.
+    todos_collapsed: bool,
     usage: Option<SessionUsage>,
     active_id: Option<String>,
     #[cfg(test)]
@@ -717,6 +871,10 @@ struct VelaApp {
     transcript_list: ListState,
     transcript_rows: Arc<Vec<transcript_view::Row>>,
     transcript_ui: transcript_view::TranscriptUi,
+    row_cache: transcript_row_cache::TranscriptRowCache,
+    transcript_viewport: crate::transcript_viewport::TranscriptViewport,
+    turn_anchors: crate::turn_anchor::PendingTurnAnchors,
+    panel_transcripts: HashMap<String, transcript_view::PanelTranscript>,
     session_list: ListState,
     session_filter: String,
     session_projects_open: bool,
@@ -730,8 +888,14 @@ struct VelaApp {
     saved_workspace_menu_focus: gpui::FocusHandle,
     session_context_menu: Option<(String, gpui::Point<gpui::Pixels>)>,
     session_context_focus: [gpui::FocusHandle; 2],
-    session_delete_confirmation: Option<u64>,
     session_deletions: HashMap<String, (u64, String)>,
+    /// Session currently showing the delete confirmation, if any.
+    session_delete_prompt: Option<String>,
+    /// Panels waiting for their dirty-tab saves before closing.
+    panel_close_saves: HashMap<String, (std::collections::HashSet<u64>, bool)>,
+    /// Whether the pending folder picker adds a panel (titlebar +) instead of
+    /// Source's New Session replace-all flow.
+    workspace_open_adds: bool,
     session_filter_focus: gpui::FocusHandle,
     session_search_input: gpui::Entity<TextInput>,
     filtered_sessions: Arc<Vec<usize>>,
@@ -788,12 +952,22 @@ struct VelaApp {
     usage_focus: gpui::FocusHandle,
     usage_anchor: Option<Bounds<gpui::Pixels>>,
     provider_usage: Vec<vela_engine::provider_usage::ProviderUsageResult>,
+    /// Independent scroll handles for inactive tiled transcripts.
+    /// Source remembers a panel's distance from the bottom while it is closed.
+    panel_scroll_memory: HashMap<String, gpui::Pixels>,
+    /// Sessions opened since a workspace scroll memory was recorded. The
+    /// remembered distance belongs to the session being reopened, not to every
+    /// panel that shares the workspace directory.
+    pending_scroll_restore: HashMap<String, gpui::Pixels>,
     provider_usage_loading: bool,
     provider_usage_request: Option<u64>,
     scroll_offsets: HashMap<String, ListOffset>,
     focused_once: bool,
     loading: bool,
     terminals: terminal_state::Tabs,
+    /// Embedded Agent TUI views live outside the tray's terminal tabs, matching
+    /// Source's dedicated `AgentTui` terminal in the agent panel.
+    agent_tui: AgentTuiState,
     tray: vela_core::tray::Tray,
     terminal_focus_pending: bool,
     automation_done: bool,
@@ -824,6 +998,10 @@ struct VelaApp {
     browser: Option<Rc<BrowserHost>>,
     browser_profile: BrowserProfile,
     browser_input: gpui::Entity<TextInput>,
+    /// Source treats the address field as an edit session between focus and
+    /// blur. Subscriptions are installed lazily because `new` has no window.
+    browser_focus_subscription: Option<gpui::Subscription>,
+    browser_blur_subscription: Option<gpui::Subscription>,
     browser_editing: bool,
     browser_open: bool,
     browser_url: String,
@@ -845,6 +1023,8 @@ struct VelaApp {
     problem_path: Option<String>,
     validation_requests: HashMap<u64, DocumentKey>,
     validation_summary: Option<(usize, usize)>,
+    validation_result: Option<Vec<crate::diagnostics::Diagnostic>>,
+    validation_markers_shown: bool,
     validation_failed: bool,
     validation_key: Option<DocumentKey>,
     git_request: u64,
@@ -895,6 +1075,7 @@ struct VelaApp {
     forms_session: Option<String>,
     form_requests: HashMap<u64, (String, String)>,
     slash_requests: HashMap<u64, String>,
+    slash_command_names: HashMap<u64, String>,
     command_catalog: Vec<CommandOption>,
     command_session: Option<String>,
     slash_selected: usize,
@@ -907,6 +1088,17 @@ struct VelaApp {
     reference_pending: Option<(u64, String, usize)>,
     reference_selected: usize,
     agent_panel_open: bool,
+    agent_mode: bool,
+    sidebar_before_agent_mode: Option<bool>,
+    /// Source's anchor panel while its slot is hidden in Agent Mode.
+    hidden_agent_anchor: Option<crate::panels::PanelState>,
+    tile_compact: bool,
+    panel_tile_lists: HashMap<String, ListState>,
+    free_drag: Option<(String, f32)>,
+    sidebar_width: f32,
+    sidebar_drag: Option<f32>,
+    agent_width: f32,
+    agent_drag: Option<f32>,
     sidebar_open: bool,
     ui_shell: UiShell,
     terminal_panel: TerminalPanel,
@@ -921,8 +1113,6 @@ struct VelaApp {
     settings_section: SettingsSection,
     changes_open: bool,
     preview_servers: Vec<vela_engine::preview::PreviewServer>,
-    integrations: preview_settings::IntegrationInventory,
-    integration_request: Option<u64>,
     preview_pending: HashMap<u64, Option<String>>,
     preview_notice: Option<(String, String)>,
     preview_menu: Option<gpui::Point<gpui::Pixels>>,
@@ -1012,7 +1202,7 @@ enum UiShell {
     Classic,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PickerKind {
     Model,
     Agent,
@@ -1051,31 +1241,71 @@ impl VelaApp {
     ) -> Self {
         let mut updates = engine.subscribe();
         cx.spawn(async move |this, cx| {
+            use tokio::sync::broadcast::error::{RecvError, TryRecvError};
+            let mut next = None;
             loop {
-                match updates.recv().await {
+                let received = match next.take() {
+                    Some(received) => received,
+                    None => updates.recv().await,
+                };
+                match received {
                     Ok(update) => {
-                        let mut pending = Some(update);
+                        // Adjacent session invalidations describe latest
+                        // snapshots. Apply them in one GPUI transaction, but
+                        // preserve the order of other updates and lag recovery.
+                        let mut pending = vec![update];
+                        if let EngineUpdate::Session(first) = &pending[0] {
+                            let mut seen = HashSet::from([first.clone()]);
+                            for _ in 1..64 {
+                                match updates.try_recv() {
+                                    Ok(EngineUpdate::Session(id)) => {
+                                        if seen.insert(id.clone()) {
+                                            pending.push(EngineUpdate::Session(id));
+                                        }
+                                    }
+                                    Ok(update) => {
+                                        next = Some(Ok(update));
+                                        break;
+                                    }
+                                    Err(TryRecvError::Empty) => break,
+                                    Err(TryRecvError::Lagged(skipped)) => {
+                                        next = Some(Err(RecvError::Lagged(skipped)));
+                                        break;
+                                    }
+                                    Err(TryRecvError::Closed) => {
+                                        next = Some(Err(RecvError::Closed));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                         if this
                             .update_in(cx, |app, window, cx| {
-                                app.on_update(pending.take().expect("pending engine update"), cx);
+                                app.on_update_batch(std::mem::take(&mut pending), cx);
                                 app.advance_close(window, cx);
                             })
                             .is_err()
                         {
                             // Initial events can precede the root's first
                             // window association. Retain their state normally.
-                            let Some(update) = pending else {
+                            if pending.is_empty() {
                                 break;
-                            };
+                            }
                             if this
-                                .update(cx, |app, cx| app.on_update(update, cx))
+                                .update(cx, |app, cx| app.on_update_batch(pending, cx))
                                 .is_err()
                             {
                                 break;
                             }
                         }
                     }
-                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(RecvError::Lagged(_)) => {
+                        // Invalidations are hints. Recover the latest canonical state now,
+                        // including a final update with no subsequent event to wake us.
+                        if this.update(cx, |app, cx| app.resync_conversations(cx)).is_err() {
+                            break;
+                        }
+                    }
                     Err(_) => break,
                 }
             }
@@ -1101,6 +1331,29 @@ impl VelaApp {
                     .update(cx, |app, cx| app.open_launch_paths(paths, cx))
                     .is_err()
                 {
+                    break;
+                }
+            }
+        })
+        .detach();
+
+        cx.spawn(async move |this, cx| {
+            loop {
+                cx.background_executor()
+                    .timer(Duration::from_secs(1))
+                    .await;
+                let updated = this.update(cx, |app, cx| {
+                    let running = app.phase.is_active()
+                        || app
+                            .panels
+                            .entries()
+                            .iter()
+                            .any(|panel| panel.phase.is_active());
+                    if running {
+                        cx.notify();
+                    }
+                });
+                if updated.is_err() {
                     break;
                 }
             }
@@ -1196,24 +1449,6 @@ impl VelaApp {
             .collect::<Vec<_>>();
         let connection = engine.connection();
         let transcript_list = ListState::new(0, ListAlignment::Top, px(420.0));
-        {
-            let weak = cx.weak_entity();
-            let scroll_list = transcript_list.clone();
-            transcript_list.set_scroll_handler(move |event, _window, cx| {
-                let weak = weak.clone();
-                crate::scroll::observe_list_scroll(
-                    &scroll_list,
-                    event,
-                    cx,
-                    move |following, cx| {
-                        let _ = weak.update(cx, |app, cx| {
-                            app.stick = following;
-                            cx.notify();
-                        });
-                    },
-                );
-            });
-        }
         let ui_shell = if settings.shell == "classic" {
             UiShell::Classic
         } else {
@@ -1353,6 +1588,7 @@ impl VelaApp {
             blocks: Arc::new(Vec::new()),
             permissions: Vec::new(),
             todos: Vec::new(),
+            todos_collapsed: false,
             usage: None,
             active_id: None,
             #[cfg(test)]
@@ -1371,9 +1607,13 @@ impl VelaApp {
             transcript_list,
             transcript_rows: Arc::new(Vec::new()),
             transcript_ui: Default::default(),
+            row_cache: Default::default(),
+            transcript_viewport: Default::default(),
+            turn_anchors: Default::default(),
+            panel_transcripts: HashMap::new(),
             session_list: ListState::new(initial_filtered.len(), ListAlignment::Top, px(200.0)),
             session_filter: String::new(),
-            session_projects_open: true,
+            session_projects_open: false,
             session_projects_scroll: Default::default(),
             session_project_focus: Default::default(),
             expanded_session_projects: HashSet::new(),
@@ -1387,8 +1627,10 @@ impl VelaApp {
                 cx.focus_handle().tab_stop(true),
                 cx.focus_handle().tab_stop(true),
             ],
-            session_delete_confirmation: None,
             session_deletions: HashMap::new(),
+            session_delete_prompt: None,
+            panel_close_saves: HashMap::new(),
+            workspace_open_adds: false,
             session_filter_focus: cx.focus_handle().tab_stop(true),
             session_search_input,
             filtered_sessions: Arc::new(initial_filtered),
@@ -1445,12 +1687,15 @@ impl VelaApp {
             usage_focus: cx.focus_handle().tab_stop(true),
             usage_anchor: None,
             provider_usage: Vec::new(),
+            panel_scroll_memory: HashMap::new(),
+            pending_scroll_restore: HashMap::new(),
             provider_usage_loading: false,
             provider_usage_request: None,
             scroll_offsets: HashMap::new(),
             focused_once: false,
             loading: false,
             terminals: terminal_state::Tabs::default(),
+            agent_tui: AgentTuiState::default(),
             tray: vela_core::tray::Tray::default(),
             terminal_focus_pending: false,
             automation_done: false,
@@ -1477,6 +1722,8 @@ impl VelaApp {
             browser: None,
             browser_profile: BrowserProfile::default(),
             browser_input,
+            browser_focus_subscription: None,
+            browser_blur_subscription: None,
             browser_editing: false,
             browser_open: false,
             browser_url: String::new(),
@@ -1500,6 +1747,8 @@ impl VelaApp {
             problem_path: None,
             validation_requests: HashMap::new(),
             validation_summary: None,
+            validation_result: None,
+            validation_markers_shown: false,
             validation_failed: false,
             validation_key: None,
             git_request: 0,
@@ -1550,6 +1799,7 @@ impl VelaApp {
             forms_session: None,
             form_requests: HashMap::new(),
             slash_requests: HashMap::new(),
+            slash_command_names: HashMap::new(),
             command_catalog: Vec::new(),
             command_session: None,
             slash_selected: 0,
@@ -1562,6 +1812,16 @@ impl VelaApp {
             reference_pending: None,
             reference_selected: 0,
             agent_panel_open: true,
+            agent_mode: false,
+            sidebar_before_agent_mode: None,
+            hidden_agent_anchor: None,
+            tile_compact: false,
+            panel_tile_lists: HashMap::new(),
+            free_drag: None,
+            sidebar_width: SIDEBAR_DEFAULT_WIDTH,
+            sidebar_drag: None,
+            agent_width: AGENT_WIDTH,
+            agent_drag: None,
             sidebar_open: true,
             ui_shell,
             terminal_panel: TerminalPanel::Terminal,
@@ -1576,15 +1836,34 @@ impl VelaApp {
             settings_section: SettingsSection::Appearance,
             changes_open: false,
             preview_servers,
-            integrations: Default::default(),
-            integration_request: None,
             preview_pending: HashMap::new(),
             preview_notice: None,
             preview_menu: None,
         }
     }
 
+    fn on_update_batch(&mut self, updates: Vec<EngineUpdate>, cx: &mut Context<Self>) {
+        let mut updates = updates.into_iter().peekable();
+        while let Some(update) = updates.next() {
+            if updates.peek().is_some() {
+                self.apply_update(update, true, cx);
+            } else {
+                self.on_update(update, cx);
+            }
+        }
+    }
+
     fn on_update(&mut self, update: EngineUpdate, cx: &mut Context<Self>) {
+        self.apply_update(update, false, cx);
+    }
+
+    fn apply_update(&mut self, update: EngineUpdate, defer_panel_refresh: bool, cx: &mut Context<Self>) {
+        let affects_conversations = matches!(&update,
+            EngineUpdate::Connection | EngineUpdate::Sessions | EngineUpdate::Session(_)
+            | EngineUpdate::SessionRemoved(_) | EngineUpdate::SessionSettled { .. }
+            | EngineUpdate::Permissions | EngineUpdate::PermissionAsked(_) | EngineUpdate::Todo(_)
+            | EngineUpdate::Selection { .. } | EngineUpdate::Forms { .. }
+            | EngineUpdate::FormFinished { .. } | EngineUpdate::Catalog { .. });
         self.note_close_result(&update);
         self.note_workspace_close_result(&update);
         tracing::debug!(?update, "ui engine update");
@@ -1752,6 +2031,7 @@ impl VelaApp {
                 }
             }
             EngineUpdate::SettingsApplied { error } => {
+                self.row_cache.invalidate_all();
                 if let Some(error) = error {
                     self.toasts
                         .update(cx, |toasts, cx| toasts.push(error.clone(), true, cx));
@@ -1776,6 +2056,7 @@ impl VelaApp {
                 self.apply_connection_state(connection, error, cx);
             }
             EngineUpdate::Sessions => {
+                self.row_cache.invalidate_all();
                 self.sessions = Arc::new(self.engine.sessions());
                 let ids = self
                     .panels
@@ -1797,12 +2078,45 @@ impl VelaApp {
                     self.loading = false;
                     let launch = self.launch_busy
                         && self.launch_directory.as_deref() == Some(directory.as_str());
+                    let adds = self.workspace_open_adds;
+                    self.workspace_open_adds = false;
                     match result {
                         Ok(id) => {
-                            self.open_session(id, cx);
+                            let was_agent_mode = self.agent_mode;
+                            if !adds {
+                                self.detach_panels_for_replacement(cx);
+                            } else if !was_agent_mode {
+                                self.sidebar_before_agent_mode = Some(self.sidebar_open);
+                                self.agent_mode = true;
+                                self.agent_panel_open = true;
+                                self.settings_open = false;
+                            }
+                            let opened = id.clone();
+                            let already_open = self.panels.contains(&opened);
+                            if adds && !already_open && self.occupied_panel_slots() >= 8 {
+                                self.toasts.update(cx, |toasts, cx| {
+                                    toasts.push(
+                                        "Agent panel limit reached".to_string(),
+                                        true,
+                                        cx,
+                                    )
+                                });
+                            } else {
+                                self.open_session(id, cx);
+                                if adds && !was_agent_mode {
+                                    self.detach_panels_except(&opened, cx);
+                                }
+                                if adds {
+                                    self.panels.even_widths();
+                                }
+                            }
                             self.refresh_active();
                             self.ensure_changes_view(cx);
                             self.refresh_files(cx);
+                            let opened = directory.clone();
+                            self.toasts.update(cx, |toasts, cx| {
+                                toasts.push(format!("Opened {opened}"), false, cx)
+                            });
                         }
                         Err(error) => {
                             self.error = Some(format!("Could not open workspace: {error}"));
@@ -1875,6 +2189,9 @@ impl VelaApp {
             }
             EngineUpdate::Todo(_) => {}
             EngineUpdate::TerminalData { id, data } => {
+                if self.feed_agent_tui(&id, &data, cx) {
+                    return;
+                }
                 let Some(terminal) = self.terminals.get_mut(&id) else {
                     return;
                 };
@@ -1885,7 +2202,9 @@ impl VelaApp {
                 cx.notify();
             }
             EngineUpdate::TerminalExit { id, code } => {
-                self.handle_terminal_exit(&id, code, cx);
+                if !self.handle_agent_tui_exit(&id, code, cx) {
+                    self.handle_terminal_exit(&id, code, cx);
+                }
             }
             EngineUpdate::Catalog {
                 session_id,
@@ -1916,23 +2235,6 @@ impl VelaApp {
                     }
                 }
                 cx.notify();
-            }
-            EngineUpdate::Integrations {
-                request_id,
-                session_id,
-                mcp_servers,
-                plugins,
-                skills,
-                error,
-            } => {
-                if self.integration_request == Some(request_id)
-                    && self.active_id.as_deref() == Some(session_id.as_str())
-                {
-                    self.integration_request = None;
-                    self.integrations
-                        .finish(session_id, mcp_servers, plugins, skills, error);
-                    cx.notify();
-                }
             }
             EngineUpdate::ProviderUsage {
                 request_id,
@@ -2087,9 +2389,11 @@ impl VelaApp {
                     let editor_diagnostics = validation_diagnostics(target, &diagnostics);
                     if let Some(editor) = self.editor_views.get(&key) {
                         editor.update(cx, |editor, cx| {
-                            editor.set_validation_diagnostics(editor_diagnostics, cx)
+                            editor.set_validation_diagnostics(editor_diagnostics.clone(), cx)
                         });
                     }
+                    self.validation_result = (!failed).then_some(editor_diagnostics.clone());
+                    self.validation_markers_shown = !failed && !editor_diagnostics.is_empty();
                     self.problems = diagnostics;
                     self.validation_summary = (!failed).then_some((errors, warnings));
                     self.validation_failed = failed;
@@ -2296,6 +2600,7 @@ impl VelaApp {
             } => {
                 let has_conflict = conflict.is_some();
                 let failed = error.is_some() || has_conflict;
+                self.note_panel_close_save(request_id, failed, cx);
                 let result = self.documents.borrow_mut().complete_save(
                     request_id,
                     &rel,
@@ -2489,13 +2794,24 @@ impl VelaApp {
                 session_id,
                 error,
             } => {
-                if self.slash_requests.remove(&request_id).as_deref() == Some(session_id.as_str())
-                    && let Some(error) = error
-                {
-                    self.toasts.update(cx, |toasts, cx| {
-                        toasts.push(format!("Command failed: {error}"), true, cx)
-                    });
-                    cx.notify();
+                let belongs = self.slash_requests.remove(&request_id).as_deref()
+                    == Some(session_id.as_str());
+                let command = self.slash_command_names.remove(&request_id);
+                if belongs {
+                    if let Some(error) = error {
+                        self.toasts.update(cx, |toasts, cx| {
+                            toasts.push(error, true, cx)
+                        });
+                        cx.notify();
+                    } else if let Some(message) = command
+                        .as_deref()
+                        .and_then(compaction_command_toast)
+                    {
+                        self.toasts.update(cx, |toasts, cx| {
+                            toasts.push(message.to_string(), false, cx)
+                        });
+                        cx.notify();
+                    }
                 }
             }
             EngineUpdate::CommandCatalog {
@@ -2571,9 +2887,10 @@ impl VelaApp {
                 cx.notify();
             }
         }
-        if self.panels.len() > 1 {
+        if affects_conversations && !defer_panel_refresh && self.panels.len() > 1 {
             self.save_active_panel_state(cx);
             self.refresh_panel_snapshots();
+            cx.notify();
         }
     }
 
@@ -2620,6 +2937,7 @@ impl VelaApp {
         self.command_catalog.clear();
         self.command_session = None;
         self.slash_requests.clear();
+        self.slash_command_names.clear();
         self.reference_files.clear();
         self.reference_pending = None;
         self.preview_servers = self.engine.preview_servers();
@@ -2844,11 +3162,12 @@ impl VelaApp {
             .iter()
             .find(|session| session.id == id)
             .map(|session| {
-                if session.title.is_empty() {
-                    session.id.clone()
-                } else {
-                    session.title.clone()
-                }
+                session_display_label(
+                    &session.title,
+                    &session.directory,
+                    session.agent.as_deref(),
+                    &session.id,
+                )
             })
             .unwrap_or_else(|| id.to_owned())
     }
@@ -2898,6 +3217,8 @@ impl VelaApp {
             self.composer.clone()
         };
         state.blocks = self.blocks.clone();
+        state.transcript_revision = self.revision;
+        state.markdown = self.transcript_ui.markdown.snapshot();
         state.phase = self.phase;
         state.permissions = self.permissions.clone();
         state.todos = self.todos.clone();
@@ -2922,9 +3243,9 @@ impl VelaApp {
         else {
             return;
         };
-        let placeholder = format!("Message {}", panel.title);
         let input = cx.new(|cx| {
-            let mut input = TextInput::new(false, &placeholder, cx);
+            let mut input =
+                TextInput::new(false, composer::COMPOSER_PLACEHOLDER, cx);
             if !panel.composer.is_empty() {
                 input.set_text(panel.composer.clone(), cx);
             }
@@ -2979,6 +3300,76 @@ impl VelaApp {
     /// Keep tiled panels live without making them active. The active panel is
     /// already captured from the primary fields; every other open panel reads
     /// its engine view so simultaneous tiles stay current.
+    fn retain_active_transcript(&mut self) {
+        let Some(session) = self.active_id.clone() else { return; };
+        if !self.panels.contains(&session) {
+            self.transcript_ui = Default::default();
+            self.transcript_viewport = Default::default();
+            self.panel_transcripts.remove(&session);
+            self.panel_tile_lists.remove(&session);
+            return;
+        }
+        self.panel_tile_lists.insert(session.clone(), self.transcript_list.clone());
+        self.panel_transcripts.insert(session, transcript_view::PanelTranscript {
+            ui: std::mem::take(&mut self.transcript_ui),
+            rows: self.transcript_rows.clone(),
+            blocks: self.blocks.clone(),
+            phase: self.phase,
+            viewport: std::mem::take(&mut self.transcript_viewport),
+            dirty: false,
+        });
+    }
+
+    fn request_turn_anchor(&mut self, session: &str, text: &str) {
+        let blocks = if self.active_id.as_deref() == Some(session) {
+            self.blocks.clone()
+        } else {
+            self.panels.entries().iter().find(|panel| panel.session == session)
+                .map(|panel| panel.blocks.clone()).unwrap_or_default()
+        };
+        self.turn_anchors.request(session, &blocks, text, crate::browser_downloads::now_ms());
+    }
+
+    fn anchor_pending_active_turn(&mut self, session: &str) {
+        if !self.stick { return; }
+        while let Some(message) = self.turn_anchors.take_match(session, &self.blocks) {
+            let row = format!("user:{message}");
+            self.transcript_viewport.anchor_turn(&self.transcript_list, &row, px(24.));
+        }
+    }
+
+    fn prepare_panel_conversation(
+        &mut self,
+        panel: &crate::panels::PanelState,
+    ) -> Arc<Vec<transcript_view::Row>> {
+        let state = self.panel_transcripts.entry(panel.session.clone()).or_default();
+        let changed = state.dirty || !Arc::ptr_eq(&state.blocks, &panel.blocks) || state.phase != panel.phase;
+        if changed {
+            state.ui.markdown.install(panel.markdown.clone());
+            state.rows = Arc::new(transcript_view::project(
+                &panel.blocks, panel.phase.is_active(), &panel.session, &state.ui,
+            ));
+            transcript_view::configure_user_order(&mut state.ui, &state.rows);
+            state.blocks = panel.blocks.clone();
+            state.phase = panel.phase;
+            state.dirty = false;
+        }
+        let list = self.panel_tile_lists.entry(panel.session.clone())
+            .or_insert_with(|| ListState::new(0, ListAlignment::Top, px(240.)));
+        state.ui.markdown.set_viewport_width(list.viewport_bounds().size.width);
+        state.viewport.set_bottom_padding(list, px(0.));
+        if changed || list.item_count() != state.rows.len() || list.is_following_tail() != panel.stick {
+            state.viewport.sync(list,
+                state.rows.iter().map(transcript_view::Row::revision).collect(), panel.stick);
+        }
+        if panel.stick {
+            while let Some(message) = self.turn_anchors.take_match(&panel.session, &panel.blocks) {
+                state.viewport.anchor_turn(list, &format!("user:{message}"), px(24.));
+            }
+        }
+        state.rows.clone()
+    }
+
     fn refresh_panel_snapshots(&mut self) {
         let active = self.active_id.clone();
         let ids = self
@@ -2994,9 +3385,11 @@ impl VelaApp {
             let Some(view) = self.engine.view(&id) else {
                 continue;
             };
-            let blocks = Arc::new(view.blocks());
-            let phase = view.phase();
-            let (_, stick) = view.scroll();
+            let presentation = view.presentation();
+            let changed = self.panels.entries().iter()
+                .find(|panel| panel.session == id)
+                .is_none_or(|panel| panel.transcript_revision != presentation.revision);
+            let phase = presentation.phase;
             let permissions = self.engine.permissions(&id);
             let todos = self.engine.todos(&id);
             let forms = self.engine.forms(&id);
@@ -3004,9 +3397,12 @@ impl VelaApp {
             let title = self.panel_title(&id);
             self.panels.update(&id, |panel| {
                 panel.title = title;
-                panel.blocks = blocks;
+                if changed {
+                    panel.blocks = presentation.blocks.clone();
+                    panel.transcript_revision = presentation.revision;
+                    panel.markdown = presentation.markdown.clone();
+                }
                 panel.phase = phase;
-                panel.stick = stick;
                 panel.permissions = permissions;
                 panel.todos = todos;
                 panel.forms = forms;
@@ -3313,6 +3709,17 @@ impl VelaApp {
         if input.read(cx).buffer.marked.is_some() {
             return false;
         }
+        if event.keystroke.key == "escape" {
+            if self.agent_tui.menu.is_some() {
+                self.close_agent_panel_menu(cx);
+                return true;
+            }
+            if self.usage_open {
+                self.usage_open = false;
+                cx.notify();
+                return true;
+            }
+        }
         let keystroke = &event.keystroke;
         let plain = !keystroke.modifiers.platform
             && !keystroke.modifiers.control
@@ -3448,6 +3855,21 @@ impl VelaApp {
                     return true;
                 }
                 _ => {}
+            }
+        }
+        if keystroke.key == "escape" {
+            let options_open = self
+                .panels
+                .entries()
+                .iter()
+                .find(|panel| panel.session == session)
+                .is_some_and(|panel| panel.composer_options_open);
+            if options_open {
+                self.panels.update(session, |panel| {
+                    panel.composer_options_open = false;
+                });
+                cx.notify();
+                return true;
             }
         }
         if keystroke.key == "enter" && !keystroke.modifiers.shift {
@@ -3830,6 +4252,7 @@ impl VelaApp {
             self.file_request += 1;
             let request = self.file_request;
             self.slash_requests.insert(request, session.clone());
+            self.slash_command_names.insert(request, name.clone());
             self.engine.run_slash_command(
                 request,
                 session.clone(),
@@ -3837,6 +4260,7 @@ impl VelaApp {
                 crate::slash_args::unescape_arguments(&args),
             );
         } else {
+            self.request_turn_anchor(&session, &text);
             self.engine.prompt_with_behavior(
                 session.clone(),
                 text,
@@ -3854,22 +4278,226 @@ impl VelaApp {
             self.composer_input
                 .update(cx, |input, cx| input.set_text(String::new(), cx));
             self.stick = true;
-            self.transcript_list.scroll_to_end();
         }
         window.focus(&input.focus_handle(cx), cx);
         cx.notify();
     }
 
+    /// Source keys scroll memory by workspace, so sessions that share a
+    /// directory restore the same distance-from-bottom.
+    fn scroll_memory_key(&self, session: &str) -> String {
+        scroll_key_for(&self.sessions, session)
+    }
+
+    /// A workspace scroll memory is consumed by the session that is opened
+    /// next, not by every panel already showing that workspace.
+    fn queue_scroll_restore(&mut self, session: &str) {
+        let key = self.scroll_memory_key(session);
+        if let Some(distance) = self.panel_scroll_memory.remove(&key) {
+            self.pending_scroll_restore.insert(session.to_owned(), distance);
+        }
+    }
+
+    pub(super) fn restore_measured_conversation_scroll(&mut self, session: &str, list: &ListState) {
+        if let Some(&distance) = self.pending_scroll_restore.get(session) {
+            let maximum = list.max_offset_for_scrollbar().y;
+            if maximum <= px(0.) {
+                return;
+            }
+            self.pending_scroll_restore.remove(session);
+            let stick = distance <= px(24.);
+            self.panels.update(session, |panel| panel.stick = stick);
+            if self.active_id.as_deref() == Some(session) {
+                self.stick = stick;
+            }
+            if stick {
+                list.set_follow_mode(gpui::FollowMode::Tail);
+                list.scroll_to_end();
+            } else {
+                list.set_follow_mode(gpui::FollowMode::Normal);
+                list.set_offset_from_scrollbar(point(px(0.), -(maximum - distance).max(px(0.))));
+            }
+        }
+    }
+
+    pub(super) fn cancel_conversation_scroll_restore(&mut self, session: &str) {
+        self.pending_scroll_restore.remove(session);
+    }
+
     fn close_panel(&mut self, session: String, cx: &mut Context<Self>) {
+        if self.panel_close_saves.contains_key(&session) {
+            return;
+        }
+        let scope = self.document_scopes.get(&session).cloned();
+        let (dirty, conflict) = {
+            let documents = self.documents.borrow();
+            let dirty = scope
+                .as_ref()
+                .map(|scope| {
+                    documents
+                        .unsaved_keys()
+                        .into_iter()
+                        .filter(|key| &key.workspace == scope)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            let conflict = dirty
+                .iter()
+                .any(|key| documents.get(key).is_some_and(|document| document.conflict.is_some()));
+            (dirty, conflict)
+        };
+        if conflict {
+            self.toasts.update(cx, |toasts, cx| {
+                toasts.push(
+                    "Resolve external file conflicts before closing this workspace."
+                        .to_string(),
+                    true,
+                    cx,
+                )
+            });
+            cx.notify();
+            return;
+        }
+        if dirty.is_empty() {
+            self.finish_close_panel(session, cx);
+            return;
+        }
+        let mut requests = std::collections::HashSet::new();
+        for key in dirty {
+            if let Some(request) = self.save_document_key(key, session.clone(), cx) {
+                requests.insert(request);
+            }
+        }
+        if requests.is_empty() {
+            self.finish_close_panel(session, cx);
+            return;
+        }
+        self.panel_close_saves.insert(session, (requests, false));
+        cx.notify();
+    }
+
+    /// Source's `replacePanels` detaches every panel without tearing down its
+    /// backend, so old sessions remain jumpable from Recents.
+    fn dismiss_tile_composer_options(&mut self, cx: &mut Context<Self>) {
+        let sessions = self
+            .panels
+            .entries()
+            .iter()
+            .filter(|panel| panel.composer_options_open)
+            .map(|panel| panel.session.clone())
+            .collect::<Vec<_>>();
+        if sessions.is_empty() {
+            return;
+        }
+        for session in sessions {
+            self.panels.update(&session, |panel| {
+                panel.composer_options_open = false;
+            });
+        }
+        cx.notify();
+    }
+
+    fn drop_hidden_agent_anchor(&mut self) {
+        if let Some(anchor) = self.hidden_agent_anchor.take() {
+            self.forget_panel_widgets(&anchor.session);
+            self.clear_agent_menu_for(&anchor.session);
+        }
+    }
+
+    pub(super) fn clear_agent_menu_for(&mut self, session: &str) {
+        if self.agent_tui.menu.as_deref() == Some(session) {
+            self.agent_tui.menu = None;
+        }
+    }
+
+    pub(super) fn forget_panel_widgets(&mut self, session: &str) {
+        self.turn_anchors.cancel(session);
+        self.pending_scroll_restore.remove(session);
+        self.panel_inputs.remove(session);
+        self.panel_composers.remove(session);
+        self.panel_form_docks.remove(session);
+        self.panel_focuses.remove(session);
+        self.panel_tile_lists.remove(session);
+        self.panel_transcripts.remove(session);
+        self.row_cache.remove_session(session);
+    }
+
+    fn detach_panels_for_replacement(&mut self, cx: &mut Context<Self>) {
+        self.save_active_panel_state(cx);
+        self.drop_hidden_agent_anchor();
+        let sessions = self
+            .panels
+            .entries()
+            .iter()
+            .map(|panel| panel.session.clone())
+            .collect::<Vec<_>>();
+        for session in sessions {
+            self.panels.close(&session);
+            self.forget_panel_widgets(&session);
+            self.clear_agent_menu_for(&session);
+        }
+        self.active_id = None;
+    }
+
+    fn detach_panels_except(&mut self, keep: &str, cx: &mut Context<Self>) {
+        self.save_active_panel_state(cx);
+        self.drop_hidden_agent_anchor();
+        let sessions = self
+            .panels
+            .entries()
+            .iter()
+            .map(|panel| panel.session.clone())
+            .filter(|session| session != keep)
+            .collect::<Vec<_>>();
+        for session in sessions {
+            self.panels.close(&session);
+            self.forget_panel_widgets(&session);
+            self.clear_agent_menu_for(&session);
+        }
+        if self.panels.contains(keep) {
+            self.panels.activate(keep);
+            self.active_id = Some(keep.to_owned());
+        }
+    }
+
+    fn finish_close_panel(&mut self, session: String, cx: &mut Context<Self>) {
+        self.clear_agent_menu_for(&session);
         let was_active = self.active_id.as_deref() == Some(session.as_str());
+        if self.settings.compaction_baselines.remove(&session).is_some() {
+            self.persist_preferences(cx);
+        }
+        self.stop_agent_tui(&session);
+        self.agent_tui.notices.remove(&session);
+        if was_active {
+            self.usage_open = false;
+            self.usage_anchor = None;
+        }
+        if let Some(list) = self.panel_tile_lists.get(&session) {
+            let distance =
+                (list.max_offset_for_scrollbar().y + list.scroll_px_offset_for_scrollbar().y)
+                    .max(px(0.));
+            let key = self.scroll_memory_key(&session);
+            self.panel_scroll_memory.insert(key, distance);
+        }
         self.panels.close(&session);
-        self.panel_composers.remove(&session);
-        self.panel_form_docks.remove(&session);
+        self.forget_panel_widgets(&session);
+        self.engine.close_session(session.clone());
         if !was_active {
             cx.notify();
             return;
         }
         if self.panels.is_empty() {
+            if self.agent_mode && self.hidden_agent_anchor.is_some() {
+                self.active_id = None;
+                cx.notify();
+                return;
+            }
+            if self.agent_mode {
+                self.agent_mode = false;
+                if let Some(open) = self.sidebar_before_agent_mode.take() {
+                    self.sidebar_open = open;
+                }
+            }
             self.active_id = None;
             self.workspace_closed = true;
             self.clear_active_session_ui(&session, cx);
@@ -3878,6 +4506,29 @@ impl VelaApp {
             self.open_session(next, cx);
         }
         cx.notify();
+    }
+
+    fn note_panel_close_save(&mut self, request: u64, failed: bool, cx: &mut Context<Self>) {
+        let mut finished = None;
+        for (session, (requests, any_failed)) in self.panel_close_saves.iter_mut() {
+            if !requests.remove(&request) {
+                continue;
+            }
+            *any_failed |= failed;
+            if requests.is_empty() {
+                finished = Some(session.clone());
+            }
+            break;
+        }
+        if let Some(session) = finished {
+            let (_, failed) = self
+                .panel_close_saves
+                .remove(&session)
+                .unwrap_or_default();
+            if !failed {
+                self.finish_close_panel(session, cx);
+            }
+        }
     }
 
     fn open_session(&mut self, id: String, cx: &mut Context<Self>) {
@@ -3897,8 +4548,22 @@ impl VelaApp {
             .entry(id.clone())
             .or_insert_with(|| uuid::Uuid::new_v4().to_string());
         self.workspace_closed = false;
+        // Opening or focusing a session supersedes its pending asynchronous
+        // close. Saves already dispatched may finish, but must not retire the
+        // new activation.
+        self.workspace_closures.remove(&id);
+        self.panel_close_saves.remove(&id);
+        if let Some(directory) = self
+            .sessions
+            .iter()
+            .find(|session| session.id == id)
+            .map(|session| session.directory.clone())
+        {
+            self.remember_workspace(&directory, cx);
+        }
         if self.active_id.as_deref() == Some(id.as_str()) {
-            if !self.panels.contains(&id)
+            let opening = !self.panels.contains(&id);
+            if opening
                 && let Err(error) = self.panels.open(crate::panels::PanelState::new(
                     id.clone(),
                     self.panel_title(&id),
@@ -3907,9 +4572,13 @@ impl VelaApp {
                 self.toasts
                     .update(cx, |toasts, cx| toasts.push(error, true, cx));
             }
+            if opening {
+                self.queue_scroll_restore(&id);
+            }
             self.panels.activate(&id);
             return;
         }
+        self.todos_collapsed = false;
         self.save_active_panel_state(cx);
         if !self.panels.contains(&id) {
             let state = crate::panels::PanelState::new(id.clone(), self.panel_title(&id));
@@ -3924,6 +4593,7 @@ impl VelaApp {
                 cx.notify();
                 return;
             }
+            self.queue_scroll_restore(&id);
         } else {
             self.panels.activate(&id);
         }
@@ -3936,9 +4606,6 @@ impl VelaApp {
         for session in panel_sessions {
             self.ensure_panel_input(&session, cx);
         }
-        // Reopening a context supersedes its older asynchronous close. Saves
-        // already dispatched can finish, but must not retire the new activation.
-        self.workspace_closures.remove(&id);
         self.status_menu_open = false;
         self.usage_open = false;
         self.pending_create = None;
@@ -3975,16 +4642,28 @@ impl VelaApp {
         self.sass = self.engine.sass_watch_state(&id);
         self.preview_notice = None;
         self.preview_menu = None;
+        self.retain_active_transcript();
         self.active_id = Some(id.clone());
+        let retained = self.panel_transcripts.remove(&id);
+        let retained_geometry = retained.is_some() && self.panel_tile_lists.contains_key(&id);
+        if let Some(retained) = retained {
+            self.transcript_ui = retained.ui;
+            self.transcript_viewport = retained.viewport;
+            self.transcript_rows = retained.rows;
+        }
+        self.transcript_list = self.panel_tile_lists.entry(id.clone())
+            .or_insert_with(|| ListState::new(0, ListAlignment::Top, px(420.))).clone();
         self.revision = u64::MAX;
-        self.pending_reset = true;
+        self.pending_reset = false;
         self.permissions = self.engine.permissions(&id);
         self.error = None;
         let cached = self.engine.view(&id);
         if let Some(view) = &cached {
             let (_, stick) = view.scroll();
-            self.blocks = Arc::new(view.blocks());
-            self.phase = view.phase();
+            let presentation = view.presentation();
+            self.blocks = presentation.blocks.clone();
+            self.transcript_ui.markdown.install(presentation.markdown.clone());
+            self.phase = presentation.phase;
             self.composer = view.draft();
             self.stick = stick;
             self.loading = false;
@@ -3998,6 +4677,7 @@ impl VelaApp {
         if let Some(panel) = self.panels.active().cloned() {
             if cached.is_none() && !panel.blocks.is_empty() {
                 self.blocks = panel.blocks;
+                self.transcript_ui.markdown.install(panel.markdown.clone());
                 self.phase = panel.phase;
                 self.loading = false;
             }
@@ -4011,6 +4691,7 @@ impl VelaApp {
             };
             self.todos = panel.todos;
             self.usage = panel.usage;
+            self.note_compaction_baseline(&id);
             self.selected_model = panel.selected_model;
             self.selected_agent = panel.selected_agent;
             self.scroll_offsets.insert(id.clone(), panel.scroll);
@@ -4022,6 +4703,12 @@ impl VelaApp {
             &id,
             &self.transcript_ui,
         ));
+        self.transcript_viewport.sync(&self.transcript_list,
+            self.transcript_rows.iter().map(transcript_view::Row::revision).collect(), self.stick);
+        self.anchor_pending_active_turn(&id);
+        if !self.stick && !retained_geometry && let Some(offset) = self.scroll_offsets.get(&id).copied() {
+            self.transcript_list.scroll_to(offset);
+        }
         self.composer_input
             .update(cx, |input, cx| input.set_text(self.composer.clone(), cx));
         self.engine.open_session(id.clone());
@@ -4035,6 +4722,7 @@ impl VelaApp {
         self.forms_session = Some(id.clone());
         self.form_requests.clear();
         self.slash_requests.clear();
+        self.slash_command_names.clear();
         self.command_catalog.clear();
         self.command_session = Some(id.clone());
         self.slash_selected = 0;
@@ -4062,6 +4750,26 @@ impl VelaApp {
             .insert(id, self.transcript_list.logical_scroll_top());
     }
 
+    fn resync_conversations(&mut self, cx: &mut Context<Self>) {
+        let mut ids = self.panels.entries().iter()
+            .map(|panel| panel.session.clone()).collect::<HashSet<_>>();
+        ids.extend(self.active_id.clone());
+        for id in ids {
+            if self.engine.session_is_retired(&id) {
+                self.retire_session_ui(&id, cx);
+            }
+        }
+        self.sessions = Arc::new(self.engine.sessions());
+        self.refresh_active();
+        self.refresh_panel_snapshots();
+        if let Some(id) = self.active_id.clone() {
+            let forms = self.engine.forms(&id);
+            self.forms.update(cx, |dock, cx| dock.set_forms(forms, cx));
+        }
+        self.refresh_session_filter();
+        cx.notify();
+    }
+
     fn refresh_active(&mut self) {
         self.connection = self.engine.connection();
         self.error = self.engine.last_error();
@@ -4077,13 +4785,17 @@ impl VelaApp {
         let Some(view) = self.engine.view(&id) else {
             return;
         };
-        let (revision, blocks) = view.blocks_with_revision();
-        self.phase = view.phase();
-        if revision != self.revision {
+        let presentation = view.presentation();
+        let revision = presentation.revision;
+        if revision != self.revision || presentation.phase != self.phase {
+            let blocks = presentation.blocks.clone();
+            self.phase = presentation.phase;
             tracing::debug!(session = %id, revision, blocks = blocks.len(), "ui transcript refresh");
-            let old_count = self.transcript_rows.len();
+            let previous = self.blocks.clone();
+            self.note_finished_compactions(&previous, &blocks, &id);
             self.revision = revision;
-            self.blocks = Arc::new(blocks);
+            self.transcript_ui.markdown.install(presentation.markdown.clone());
+            self.blocks = blocks;
             self.loading = false;
             self.transcript_rows = Arc::new(transcript_view::project(
                 &self.blocks,
@@ -4091,29 +4803,22 @@ impl VelaApp {
                 &id,
                 &self.transcript_ui,
             ));
-            let new_count = self.transcript_rows.len();
             if self.pending_reset {
-                self.transcript_list.reset(new_count);
+                self.transcript_viewport = Default::default();
                 self.pending_reset = false;
-                if let Some(offset) = self.scroll_offsets.get(&id).copied() {
-                    self.transcript_list.scroll_to(offset);
-                }
-            } else if new_count > old_count {
-                self.transcript_list
-                    .splice(old_count..old_count, new_count - old_count);
-            } else if new_count < old_count {
-                self.transcript_list.splice(new_count..old_count, 0);
-            } else {
-                self.transcript_list.remeasure();
             }
-            if self.stick {
-                self.transcript_list.scroll_to_end();
-            }
+            self.transcript_viewport.sync(
+                &self.transcript_list,
+                self.transcript_rows.iter().map(transcript_view::Row::revision).collect(),
+                self.stick,
+            );
+            self.anchor_pending_active_turn(&id);
         }
-        self.phase = view.phase();
+        self.phase = presentation.phase;
         self.permissions = self.engine.permissions(&id);
         self.todos = self.engine.todos(&id);
         self.usage = self.engine.usage(&id);
+        self.note_compaction_baseline(&id);
     }
 
     fn synchronize_terminal_workspace(&mut self, cx: &mut Context<Self>) {
@@ -4215,83 +4920,6 @@ impl VelaApp {
         }
         cx.notify();
     }
-    fn spawn_tui_terminal(&mut self, cx: &mut Context<Self>) {
-        let root = self.workspace_directory();
-        if root.is_empty() {
-            return;
-        }
-        if !self.terminals.owns(&root, self.active_id.as_deref()) {
-            for view in self.terminals.reset(root.clone(), self.active_id.clone()) {
-                self.engine.stop_terminal(view.id);
-            }
-        }
-        let configured = std::env::var_os("VELA_OPENCODE_BINARY");
-        let path_var = std::env::var_os("PATH");
-        let Some(program) = find_tui_program(configured.as_deref(), path_var.as_deref()) else {
-            self.toasts.update(cx, |toasts, cx| {
-                toasts.push(
-                    "OpenCode CLI was not found. Install OpenCode or set VELA_OPENCODE_BINARY.",
-                    true,
-                    cx,
-                )
-            });
-            cx.notify();
-            return;
-        };
-        let program = program.to_string_lossy().into_owned();
-        self.file_request += 1;
-        let id = format!("term-{}", uuid::Uuid::new_v4());
-        let mut terminal = TerminalView::new(id.clone(), 100, 24, cx);
-        let input_id = id.clone();
-        terminal.input_subscriptions.push(cx.subscribe(
-            &terminal.input,
-            move |app, _, event: &terminal_composition::Committed, cx| {
-                let Some(view) = app.terminals.get_mut(&input_id).filter(|view| view.running)
-                else {
-                    return;
-                };
-                view.emulator.clear_selection();
-                view.emulator.scroll_to_bottom();
-                view.selecting = false;
-                app.engine
-                    .terminal_input(input_id.clone(), event.0.as_bytes().to_vec());
-                cx.notify();
-            },
-        ));
-        let composition_id = id.clone();
-        terminal
-            .input_subscriptions
-            .push(cx.observe(&terminal.input, move |app, input, cx| {
-                if input.read(cx).buffer.marked.is_some()
-                    && let Some(view) = app.terminals.get_mut(&composition_id)
-                {
-                    view.emulator.scroll_to_bottom();
-                }
-                cx.notify();
-            }));
-        terminal
-            .input_subscriptions
-            .push(cx.observe(&terminal.blink, |_, _, cx| {
-                cx.notify();
-            }));
-        terminal.name = Some("Agent TUI".into());
-        self.terminals.insert(terminal);
-        self.engine
-            .start_terminal_command(vela_engine::TerminalCommand {
-                id,
-                cwd: root,
-                program,
-                args: Vec::new(),
-                envs: Vec::new(),
-                cols: 100,
-                rows: 24,
-            });
-        self.tray.open = true;
-        self.terminal_panel = TerminalPanel::Terminal;
-        self.terminal_focus_pending = true;
-        cx.notify();
-    }
-
     fn toggle_terminal(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if self.browser_open {
             self.browser_open = false;
@@ -4356,18 +4984,9 @@ impl VelaApp {
         cx.notify();
     }
 
-    fn handle_terminal_exit(&mut self, id: &str, code: Option<i32>, cx: &mut Context<Self>) {
-        let tui = self
-            .terminals
-            .views
-            .iter()
-            .any(|view| view.id == id && view.name.as_deref() == Some("Agent TUI"));
+    fn handle_terminal_exit(&mut self, id: &str, _code: Option<i32>, cx: &mut Context<Self>) {
         let active = self.terminals.active().is_some_and(|view| view.id == id);
         if self.terminals.remove(id).is_some() {
-            if tui {
-                self.toasts
-                    .update(cx, |toasts, cx| toasts.push(tui_exit_notice(code), false, cx));
-            }
             if self.terminals.views.is_empty() {
                 self.tray.open = false;
             }
@@ -4477,6 +5096,10 @@ impl VelaApp {
                 .any(|owner| owner == session)
     }
 
+    /// Source's live `VelaTurn` renders no per-message revert action, but
+    /// `AgentPanel` still renders the staged-revert banner. Keep the staging
+    /// path so replayed/staged state and the banner flow stay testable.
+    #[allow(dead_code)]
     fn revert_message(
         &mut self,
         message_id: String,
@@ -4551,6 +5174,13 @@ impl VelaApp {
     }
 
     fn activate_sidebar_tab(&mut self, tab: SidebarTab, cx: &mut Context<Self>) {
+        if self.agent_mode {
+            self.toggle_agent_mode(cx);
+            self.settings_open = false;
+            self.sidebar_open = true;
+            self.switch_sidebar(tab, cx);
+            return;
+        }
         if !self.settings_open && self.sidebar_open && self.sidebar_tab == tab {
             self.sidebar_open = false;
             cx.notify();
@@ -4833,7 +5463,7 @@ impl VelaApp {
                 return;
             }
             self.close_after_save.insert(key.clone());
-            self.save_document_key(key, session, cx);
+            let _ = self.save_document_key(key, session, cx);
         } else {
             self.documents.borrow_mut().close(&key);
             self.editor_views.remove(&key);
@@ -4858,19 +5488,27 @@ impl VelaApp {
         pending_validation(&self.validation_requests, &key)
     }
 
-    fn cancel_validation(&mut self, cx: &mut Context<Self>) {
-        let Some(request) = self.pending_validation_request() else {
+    fn toggle_validation_markers(&mut self, cx: &mut Context<Self>) {
+        let Some(key) = self.active_document_key() else {
             return;
         };
-        self.validation_requests.remove(&request);
-        self.validation_summary = None;
-        self.validation_failed = false;
-        self.validation_key = None;
-        self.engine.cancel_validation(request);
-        self.status_menu_open = false;
-        self.toasts.update(cx, |toasts, cx| {
-            toasts.push("Validation cancelled", false, cx)
-        });
+        if self.validation_key.as_ref() != Some(&key) {
+            return;
+        }
+        let Some(result) = self.validation_result.clone() else {
+            return;
+        };
+        self.validation_markers_shown = !self.validation_markers_shown;
+        let diagnostics = if self.validation_markers_shown {
+            result
+        } else {
+            Vec::new()
+        };
+        if let Some(editor) = self.editor_views.get(&key) {
+            editor.update(cx, |editor, cx| {
+                editor.set_validation_diagnostics(diagnostics, cx)
+            });
+        }
         cx.notify();
     }
 
@@ -4909,6 +5547,8 @@ impl VelaApp {
         let request = self.file_request;
         track_validation_request(&mut self.validation_requests, request, key.clone());
         self.validation_summary = None;
+        self.validation_result = None;
+        self.validation_markers_shown = false;
         self.validation_failed = false;
         self.validation_key = Some(key.clone());
         if let Some(editor) = self.editor_views.get(&key) {
@@ -4949,7 +5589,7 @@ impl VelaApp {
         let Some(key) = self.active_document_key() else {
             return;
         };
-        self.save_document_key(key, id, cx);
+        let _ = self.save_document_key(key, id, cx);
     }
 
     fn new_editor_view(
@@ -4969,7 +5609,7 @@ impl VelaApp {
             }
             let session = this.active_id.clone();
             if let Some(session) = session {
-                this.save_document_key(key, session, cx);
+                let _ = this.save_document_key(key, session, cx);
             }
         })
         .detach();
@@ -5356,6 +5996,22 @@ impl VelaApp {
             }
             cx.notify();
         }
+    }
+
+    fn begin_browser_edit(&mut self, cx: &mut Context<Self>) {
+        // Source keeps the visitor's text while the field owns focus, even if
+        // the page commits a redirect.
+        if !self.browser_editing {
+            self.browser_editing = true;
+            cx.notify();
+        }
+    }
+
+    fn finish_browser_edit(&mut self, cx: &mut Context<Self>) {
+        // Source's address onBlur restores the last committed URL instead of
+        // leaving abandoned edits in the field.
+        self.browser_address = self.browser_url.clone();
+        self.sync_browser_input(cx);
     }
 
     fn sync_browser_tab(&mut self) {
@@ -5848,6 +6504,20 @@ impl VelaApp {
         if self.browser_tabs.is_empty() {
             return div().into_any_element();
         }
+        if self.browser_focus_subscription.is_none()
+            || self.browser_blur_subscription.is_none()
+        {
+            let focus = self.browser_focus.clone();
+            self.browser_focus_subscription =
+                Some(cx.on_focus(&focus, window, |app, _, cx| {
+                    app.begin_browser_edit(cx);
+                }));
+            self.browser_blur_subscription =
+                Some(cx.on_blur(&focus, window, |app, _, cx| {
+                    app.finish_browser_edit(cx);
+                    cx.notify();
+                }));
+        }
         let active = self.browser_active;
         let (loading, error, label) = self
             .browser_tabs
@@ -5880,7 +6550,7 @@ impl VelaApp {
                 let left = if codex {
                     RAIL_WIDTH
                         + if self.sidebar_open {
-                            SIDEBAR_WIDTH
+                            self.sidebar_width
                         } else {
                             0.0
                         }
@@ -5888,7 +6558,7 @@ impl VelaApp {
                     10.0 + RAIL_WIDTH
                         + 10.0
                         + if self.sidebar_open {
-                            SIDEBAR_WIDTH + 10.0
+                            self.sidebar_width + 10.0
                         } else {
                             0.0
                         }
@@ -5897,9 +6567,9 @@ impl VelaApp {
                     TITLEBAR_HEIGHT + if codex { 36.0 } else { 46.0 } + downloads_height;
                 let right = if self.agent_panel_open && self.active_id.is_some() {
                     if codex {
-                        AGENT_WIDTH
+                        self.agent_width
                     } else {
-                        AGENT_WIDTH + 20.0
+                        self.agent_width + 20.0
                     }
                 } else if codex {
                     0.0
@@ -6343,6 +7013,33 @@ impl VelaApp {
         cx.notify();
     }
 
+    /// Source remembers every workspace whose session is attached, not only
+    /// folders saved from the Projects plus button.
+    pub(super) fn remember_workspace(&mut self, directory: &str, cx: &mut Context<Self>) {
+        if directory.is_empty()
+            || self
+                .settings
+                .workspaces
+                .iter()
+                .any(|workspace| workspace.directory == directory)
+        {
+            return;
+        }
+        let name = directory
+            .rsplit(['/', '\\'])
+            .find(|part| !part.is_empty())
+            .unwrap_or(directory)
+            .to_owned();
+        self.settings
+            .workspaces
+            .push(vela_engine::migration::WorkspaceBookmark {
+                directory: directory.to_owned(),
+                name,
+            });
+        self.persist_preferences(cx);
+        cx.notify();
+    }
+
     fn persist_preferences(&mut self, _cx: &mut Context<Self>) {
         self.engine.apply_settings(self.settings.clone());
     }
@@ -6370,14 +7067,21 @@ impl VelaApp {
                 }
             }
             self.refresh_changes(cx);
+            if let Some(review) = self.change_reviews.get(&self.document_workspace()) {
+                review.update(cx, |view, cx| view.reset_transient(cx));
+            }
         }
         cx.notify();
     }
 
     fn reveal_change(&mut self, path: String, cx: &mut Context<Self>) {
+        let was_open = self.changes_open;
         self.ensure_changes_view(cx);
         self.changes_open = true;
         if let Some(review) = self.change_reviews.get(&self.document_workspace()) {
+            if !was_open {
+                review.update(cx, |view, cx| view.reset_transient(cx));
+            }
             review.update(cx, |view, cx| view.reveal(path, cx));
         }
         cx.notify();
@@ -6481,8 +7185,7 @@ impl VelaApp {
                 return;
             }
         }
-        self.picker = Some(PickerKind::Model);
-        cx.notify();
+        self.open_model_picker(cx);
     }
 
     fn choose_agent(&mut self, agent: AgentInfo, cx: &mut Context<Self>) {
@@ -6503,7 +7206,123 @@ impl VelaApp {
         }
     }
 
+    fn restore_hidden_agent_anchor(&mut self) {
+        let Some(state) = self.hidden_agent_anchor.take() else {
+            return;
+        };
+        let session = state.session.clone();
+        if !self.panels.contains(&session) && self.panels.open(state).is_ok() {
+            self.panels.activate(&session);
+            self.active_id = Some(session);
+        }
+        self.agent_panel_open = true;
+    }
+
+    fn toggle_agent_panel(&mut self, cx: &mut Context<Self>) {
+        if !self.agent_mode {
+            self.agent_panel_open = !self.agent_panel_open;
+            cx.notify();
+            return;
+        }
+        if self.agent_panel_open {
+            let Some(anchor) = self
+                .panels
+                .entries()
+                .first()
+                .map(|panel| panel.session.clone())
+            else {
+                self.agent_panel_open = false;
+                cx.notify();
+                return;
+            };
+            if let Some(state) = self.panels.close(&anchor) {
+                self.hidden_agent_anchor = Some(state);
+            }
+            self.agent_panel_open = false;
+            if let Some(next) = self.panels.active().map(|panel| panel.session.clone()) {
+                self.panels.activate(&next);
+                self.active_id = Some(next);
+            } else {
+                self.active_id = None;
+            }
+        } else {
+            self.agent_panel_open = true;
+            self.restore_hidden_agent_anchor();
+            self.panels.even_widths();
+        }
+        cx.notify();
+    }
+
+    fn toggle_agent_mode(&mut self, cx: &mut Context<Self>) {
+        if self.agent_mode {
+            self.restore_hidden_agent_anchor();
+        }
+        let keep = self
+            .active_id
+            .clone()
+            .or_else(|| self.panels.active().map(|panel| panel.session.clone()));
+        if self.agent_mode {
+            self.agent_mode = false;
+            if let Some(open) = self.sidebar_before_agent_mode.take() {
+                self.sidebar_open = open;
+            }
+            if let Some(keep) = keep {
+                self.detach_panels_except(&keep, cx);
+            }
+            self.panels.even_widths();
+        } else {
+            self.sidebar_before_agent_mode = Some(self.sidebar_open);
+            self.agent_mode = true;
+            self.agent_panel_open = true;
+            self.settings_open = false;
+            if let Some(keep) = keep {
+                self.detach_panels_except(&keep, cx);
+            }
+            self.panels.even_widths();
+        }
+        cx.notify();
+    }
+
+    fn toggle_sidebar_from_titlebar(&mut self, cx: &mut Context<Self>) {
+        if self.agent_mode {
+            self.toggle_agent_mode(cx);
+            self.sidebar_open = true;
+            return;
+        }
+        self.sidebar_open = !self.sidebar_open;
+        cx.notify();
+    }
+
+    fn leave_agent_mode_for_manual_adjustment(&mut self, cx: &mut Context<Self>) {
+        if !self.agent_mode {
+            return;
+        }
+        self.agent_mode = false;
+        self.sidebar_before_agent_mode = None;
+        let keep = self
+            .active_id
+            .clone()
+            .or_else(|| self.panels.active().map(|panel| panel.session.clone()));
+        if let Some(keep) = keep {
+            self.detach_panels_except(&keep, cx);
+        }
+        cx.notify();
+    }
+
     fn choose_workspace(&mut self, cx: &mut Context<Self>) {
+        self.workspace_open_adds = false;
+        self.choose_workspace_dialog(false, cx);
+    }
+
+    fn occupied_panel_slots(&self) -> usize {
+        self.panels.len() + usize::from(self.hidden_agent_anchor.is_some())
+    }
+
+    fn add_workspace_panel(&mut self, cx: &mut Context<Self>) {
+        if self.occupied_panel_slots() >= 8 {
+            return;
+        }
+        self.workspace_open_adds = true;
         self.choose_workspace_dialog(false, cx);
     }
 
@@ -6689,9 +7508,10 @@ impl VelaApp {
             self.file_request += 1;
             let request = self.file_request;
             self.slash_requests.insert(request, id.clone());
+            self.slash_command_names.insert(request, name.clone());
             let args = crate::slash_args::unescape_arguments(&args);
             self.engine
-                .run_slash_command(request, id.clone(), name, args);
+                .run_slash_command(request, id.clone(), name.clone(), args);
             self.engine.set_draft(id.clone(), String::new());
             self.composer.clear();
             self.slash_menu.edited();
@@ -6711,6 +7531,7 @@ impl VelaApp {
             return;
         }
         let files = self.take_prompt_files(&text);
+        self.request_turn_anchor(&id, &text);
         self.engine.prompt_with_behavior(
             id.clone(),
             text,
@@ -6728,7 +7549,6 @@ impl VelaApp {
         self.reference_selected = 0;
         self.picker = None;
         self.stick = true;
-        self.transcript_list.scroll_to_end();
         window.focus(&self.composer_focus, cx);
         cx.notify();
     }
@@ -6923,6 +7743,9 @@ impl VelaApp {
         let settings_active = self.settings_open;
         let terminal_active = self.tray.open;
         let mut rail = div()
+            .id("activity-rail")
+            .role(Role::Navigation)
+            .aria_label("Workspace views")
             .w(px(if self.is_codex() { RAIL_WIDTH } else { 44.2 }))
             .h_full()
             .flex_shrink_0()
@@ -6938,6 +7761,7 @@ impl VelaApp {
                 .rounded(px(PANEL_RADIUS))
                 .border_1()
                 .border_color(theme.border)
+                .shadow(theme.medium_shadow())
                 .px(px(5.0))
                 .py(px(10.0));
         }
@@ -7027,6 +7851,7 @@ impl VelaApp {
                     .child(sidebar)
                     .child(workspace),
             ))
+            .child(self.panel_drag_observer(cx))
             .into_any_element()
     }
 
@@ -7044,12 +7869,60 @@ impl VelaApp {
             .child(rail)
             .child(sidebar)
             .child(workspace)
+            .child(self.panel_drag_observer(cx))
             .into_any_element()
     }
 
     fn render_workspace(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         let theme = Theme::default();
+        if self.agent_mode {
+            let body = if self.agent_panel_open || !self.panels.is_empty() {
+                self.render_agent_panel(window, cx)
+            } else {
+                div()
+                    .debug_selector(|| "agent-mode-hidden".into())
+                    .flex_1()
+                    .min_w_0()
+                    .h_full()
+                    .into_any_element()
+            };
+            return div()
+                .debug_selector(|| "agent-mode-root".into())
+                .flex_1()
+                .w_full()
+                .min_w_0()
+                .h_full()
+                .flex()
+                .when(!self.is_codex(), |root| root.gap(px(10.0)))
+                .child(body)
+                .into_any_element();
+        }
         let codex = self.is_codex();
+        // Codex is conversation-first: when no document/browser/diff/terminal
+        // owns the workspace, the conversation fills the space beside the rail
+        // and sidebar instead of leaving an empty editor column.
+        if self.conversation_fills_workspace() {
+            let was_agent_mode = self.agent_mode;
+            self.agent_mode = true;
+            let body = if self.agent_panel_open {
+                self.render_agent_panel(window, cx)
+            } else {
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .h_full()
+                    .into_any_element()
+            };
+            self.agent_mode = was_agent_mode;
+            return div()
+                .debug_selector(|| "codex-conversation-root".into())
+                .flex_1()
+                .min_w_0()
+                .h_full()
+                .flex()
+                .child(body)
+                .into_any_element();
+        }
         let surface = self.render_editor_surface(window, cx);
         let terminal = if self.tray.open {
             self.render_terminal(window, cx)
@@ -7077,6 +7950,7 @@ impl VelaApp {
                 .rounded(px(PANEL_RADIUS))
                 .border_1()
                 .border_color(theme.border)
+                .shadow(theme.medium_shadow())
                 .bg(theme.editor)
                 .overflow_hidden()
                 .flex()
@@ -7156,6 +8030,19 @@ impl VelaApp {
             .into_any_element()
     }
 
+    fn open_panel_usage(&mut self, session: String, cx: &mut Context<Self>) {
+        let was_open = self.usage_open;
+        let previous = self.active_id.clone();
+        self.activate_panel(session.clone(), cx);
+        self.close_agent_panel_menu(cx);
+        if was_open && previous.as_deref() != Some(session.as_str()) {
+            self.usage_open = true;
+            self.load_provider_usage(cx);
+        } else {
+            self.toggle_usage_popup(cx);
+        }
+    }
+
     fn toggle_usage_popup(&mut self, cx: &mut Context<Self>) {
         self.usage_open = !self.usage_open;
         if self.usage_open {
@@ -7176,42 +8063,57 @@ impl VelaApp {
         cx.notify();
     }
 
-    fn render_usage_button(&mut self, cx: &mut Context<Self>) -> AnyElement {
+    /// Source renders the usage control as a menu item inside the agent panel
+    /// options menu rather than as a floating header pill.
+    fn render_usage_button(&mut self, session: &str, cx: &mut Context<Self>) -> AnyElement {
         let theme = Theme::default();
-        let limit = self
-            .selected_model
-            .as_ref()
+        let panel = self
+            .panels
+            .entries()
+            .iter()
+            .find(|panel| panel.session == session);
+        let limit = panel
+            .and_then(|panel| panel.selected_model.as_ref())
             .and_then(|model| model.context_limit)
             .filter(|limit| *limit > 0);
-        let used = self
-            .usage
-            .as_ref()
-            .map(|usage| usage.input_tokens)
+        let raw_used = panel
+            .and_then(|panel| panel.usage.as_ref())
+            .map(|usage| usage.input_tokens as i64)
             .unwrap_or(0);
+        let baseline = self.settings.compaction_baselines.get(session).copied();
+        let used = baseline
+            .map(|baseline| (raw_used - baseline).max(0) as u64)
+            .unwrap_or(raw_used.max(0) as u64);
         let percent = limit
             .map(|limit| ((used as f64 / limit as f64) * 100.).clamp(0., 100.))
             .unwrap_or(0.);
         let label = if limit.is_some() {
-            format!("{}% context used", percent.round() as u64)
+            format!("Context usage {} percent", percent.round() as u64)
         } else {
             "Context and usage".into()
+        };
+        let detail = if limit.is_some() {
+            format!("{}% used · session and provider usage", percent.round() as u64)
+        } else {
+            "Session and provider usage".into()
         };
         let anchor = cx.weak_entity();
         div()
             .id("agent-usage-toggle")
-            .role(Role::Button)
+            .debug_selector(|| "agent-usage-toggle".into())
+            .role(Role::MenuItem)
             .aria_label(label)
             .aria_expanded(self.usage_open)
             .track_focus(&self.usage_focus)
-            .absolute()
-            .top(px(8.))
-            .right(px(10.))
-            .h(px(24.))
+            .relative()
+            .w_full()
             .px(px(8.))
-            .rounded(px(999.))
+            .py(px(7.))
+            .rounded(px(6.))
             .flex()
-            .items_center()
-            .gap(px(5.))
+            .flex_col()
+            .items_start()
+            .gap(px(2.))
             .text_size(px(11.))
             .text_color(if self.usage_open {
                 theme.text
@@ -7224,36 +8126,28 @@ impl VelaApp {
                 theme::rgba(0, 0, 0, 0.)
             })
             .cursor_pointer()
-            .hover(|style| style.bg(theme.inset))
-            .on_mouse_down(
-                MouseButton::Left,
-                cx.listener(|this, _, window, cx| {
-                    window.focus(&this.usage_focus, cx);
-                    this.toggle_usage_popup(cx);
-                }),
-            )
-            .on_key_down(cx.listener(|this, event: &KeyDownEvent, window, cx| {
-                if ["enter", "space"].contains(&event.keystroke.key.as_str()) {
-                    this.toggle_usage_popup(cx);
-                    window.focus(&this.usage_focus, cx);
-                    cx.stop_propagation();
-                } else if event.keystroke.key == "escape" {
-                    this.usage_open = false;
-                    cx.stop_propagation();
-                    cx.notify();
-                }
-            }))
+            .hover(|style| style.bg(theme.selected).text_color(theme.text))
+            .on_click({
+                let session = session.to_owned();
+                cx.listener(move |this, _, window, cx| {
+                    window.focus(&this.composer_focus, cx);
+                    this.open_panel_usage(session.clone(), cx);
+                })
+            })
             .child(
                 div()
-                    .font_family("codicon")
-                    .text_size(px(12.))
-                    .child(icon("ea7c")),
+                    .flex()
+                    .items_center()
+                    .gap(px(5.))
+                    .child(usage_ring(percent as f32, &theme))
+                    .child(div().text_size(px(12.)).child("Context")),
             )
-            .child(if limit.is_some() {
-                format!("{}%", percent.round() as u64)
-            } else {
-                "Usage".into()
-            })
+            .child(
+                div()
+                    .text_size(px(10.))
+                    .text_color(theme.faint)
+                    .child(detail),
+            )
             .child(
                 gpui::canvas(
                     move |bounds, _, cx| {
@@ -7267,6 +8161,75 @@ impl VelaApp {
             .into_any_element()
     }
 
+    fn note_compaction_baseline(&mut self, session: &str) {
+        let Some(input) = self.usage.as_ref().map(|usage| usage.input_tokens as i64) else {
+            return;
+        };
+        let existing = self
+            .settings
+            .compaction_baselines
+            .get(session)
+            .copied();
+        let has_compaction = self
+            .blocks
+            .iter()
+            .any(|block| block.kind == BlockKind::Compaction);
+        if let Some(baseline) = inferred_compaction_baseline(has_compaction, input, existing)
+            && existing != Some(baseline)
+        {
+            self.settings
+                .compaction_baselines
+                .insert(session.to_string(), baseline);
+            self.engine.apply_settings(self.settings.clone());
+        }
+    }
+
+    /// Source snapshots the pre-compaction input on `session.compaction.ended`
+    /// so the refreshed, smaller input subtracts back to zero context.
+    fn note_finished_compactions(
+        &mut self,
+        previous: &[Block],
+        next: &[Block],
+        session: &str,
+    ) {
+        let finished = next.iter().any(|block| {
+            block.kind == BlockKind::Compaction
+                && !block.streaming
+                && !matches!(block.status, ToolStatus::Streaming | ToolStatus::Running)
+                && previous.iter().any(|old| {
+                    old.id == block.id
+                        && (old.streaming
+                            || matches!(old.status, ToolStatus::Streaming | ToolStatus::Running))
+                })
+        });
+        if !finished {
+            return;
+        }
+        let Some(input) = self.usage.as_ref().map(|usage| usage.input_tokens as i64) else {
+            return;
+        };
+        if input <= 0 {
+            return;
+        }
+        self.settings
+            .compaction_baselines
+            .insert(session.to_string(), input);
+        self.engine.apply_settings(self.settings.clone());
+    }
+
+    fn context_usage(&self) -> (u64, Option<i64>) {
+        let raw = self.usage.as_ref().map(|usage| usage.input_tokens).unwrap_or(0);
+        let baseline = self
+            .active_id
+            .as_ref()
+            .and_then(|id| self.settings.compaction_baselines.get(id))
+            .copied();
+        let used = baseline
+            .map(|baseline| (raw as i64 - baseline).max(0) as u64)
+            .unwrap_or(raw);
+        (used, baseline)
+    }
+
     fn render_usage_popup(&mut self, cx: &mut Context<Self>) -> AnyElement {
         let theme = Theme::default();
         let limit = self
@@ -7275,12 +8238,14 @@ impl VelaApp {
             .and_then(|model| model.context_limit)
             .filter(|limit| *limit > 0);
         let usage = self.usage;
-        let used = usage.as_ref().map(|usage| usage.input_tokens).unwrap_or(0);
+        let (used, baseline) = self.context_usage();
+        let raw_used = usage.as_ref().map(|usage| usage.input_tokens).unwrap_or(0);
         let percent = limit
             .map(|limit| ((used as f64 / limit as f64) * 100.).clamp(0., 100.))
             .unwrap_or(0.);
         let mut content = div()
             .id("agent-usage-content")
+            .debug_selector(|| "agent-usage-content".into())
             .max_h(px(400.))
             .overflow_y_scroll()
             .flex()
@@ -7290,33 +8255,18 @@ impl VelaApp {
                 div()
                     .flex()
                     .items_center()
-                    .justify_between()
+                    .gap(px(6.))
+                    .child(glyph(
+                        "dashboard",
+                        12.,
+                        theme.text,
+                    ))
                     .child(
                         div()
                             .text_size(px(12.))
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(theme.text)
                             .child("Session usage"),
-                    )
-                    .child(
-                        div()
-                            .id("usage-close")
-                            .role(Role::Button)
-                            .aria_label("Close usage")
-                            .h(px(22.))
-                            .px(px(8.))
-                            .rounded(px(999.))
-                            .flex()
-                            .items_center()
-                            .text_size(px(11.))
-                            .text_color(theme.dim)
-                            .cursor_pointer()
-                            .hover(|style| style.bg(theme.inset))
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.usage_open = false;
-                                cx.notify();
-                            }))
-                            .child("Close"),
                     ),
             );
         if let Some(usage) = usage {
@@ -7339,47 +8289,44 @@ impl VelaApp {
                                 .child(usage_cost(usage.cost)),
                         ),
                 )
-                .child(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .gap(px(3.))
-                        .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .justify_between()
-                                .text_size(px(11.))
-                                .text_color(theme.dim)
-                                .child("Context window")
-                                .child(if limit.is_some() {
-                                    format!("{}%", percent.round() as u64)
-                                } else {
-                                    "Limit unavailable".into()
-                                }),
-                        )
-                        .child(
-                            div()
-                                .h(px(4.))
-                                .w_full()
-                                .rounded(px(999.))
-                                .bg(theme.inset)
-                                .child(
-                                    div()
-                                        .h_full()
-                                        .rounded(px(999.))
-                                        .bg(if percent >= 85. {
-                                            theme.red
-                                        } else if percent >= 65. {
-                                            theme::rgba(0xf0, 0xa6, 0x4b, 1.)
-                                        } else {
-                                            theme.accent
-                                        })
-                                        .w(gpui::relative((percent / 100.) as f32)),
-                                ),
-                        )
-                        .when_some(limit, |section, limit| {
-                            section.child(
+                .when_some(limit, |content, limit| {
+                    content.child(
+                        div()
+                            .debug_selector(|| "usage-context".into())
+                            .flex()
+                            .flex_col()
+                            .gap(px(3.))
+                            .child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .justify_between()
+                                    .text_size(px(11.))
+                                    .text_color(theme.dim)
+                                    .child("Context window")
+                                    .child(format!("{}%", percent.round() as u64)),
+                            )
+                            .child(
+                                div()
+                                    .h(px(4.))
+                                    .w_full()
+                                    .rounded(px(999.))
+                                    .bg(theme.inset)
+                                    .child(
+                                        div()
+                                            .h_full()
+                                            .rounded(px(999.))
+                                            .bg(if percent >= 85. {
+                                                theme.red
+                                            } else if percent >= 60. {
+                                                theme::rgba(0xf0, 0xa6, 0x4b, 1.)
+                                            } else {
+                                                theme.accent
+                                            })
+                                            .w(gpui::relative((percent / 100.) as f32)),
+                                    ),
+                            )
+                            .child(
                                 div()
                                     .flex()
                                     .items_center()
@@ -7389,62 +8336,126 @@ impl VelaApp {
                                     .child(usage_count(used))
                                     .child(format!("of {} tokens", usage_count(limit))),
                             )
-                        }),
+                            .when_some(
+                                baseline.filter(|baseline| *baseline > 0),
+                                |section, baseline| {
+                                    section.child(
+                                        div()
+                                            .debug_selector(|| "usage-compaction-note".into())
+                                            .text_size(px(10.))
+                                            .line_height(px(16.))
+                                            .text_color(theme.faint)
+                                            .child(format!(
+                                                "{} total · {} before last compaction",
+                                                usage_count(raw_used),
+                                                usage_count(baseline as u64)
+                                            )),
+                                    )
+                                },
+                            ),
+                    )
+                });
+            let total = usage.total_tokens();
+            if total > 0 {
+                let share = |count: u64| gpui::relative((count as f64 / total as f64) as f32);
+                content = content.child(
+                    div()
+                        .debug_selector(|| "usage-share-bar".into())
+                        .mb(px(8.))
+                        .h(px(5.))
+                        .w_full()
+                        .flex()
+                        .gap(px(1.))
+                        .rounded(px(999.))
+                        .overflow_hidden()
+                        .child(
+                            div()
+                                .h_full()
+                                .w(share(usage.input_tokens))
+                                .bg(theme.accent),
+                        )
+                        .child(
+                            div()
+                                .h_full()
+                                .w(share(usage.output_tokens))
+                                .bg(theme.text.opacity(0.62)),
+                        )
+                        .child(
+                            div()
+                                .h_full()
+                                .w(share(usage.reasoning_tokens))
+                                .bg(theme::rgba(0xb4, 0x8e, 0xf0, 1.)),
+                        )
+                        .child(
+                            div()
+                                .h_full()
+                                .w(share(usage.cache_read_tokens))
+                                .bg(theme.green),
+                        ),
                 );
-            let rows = [
+            }
+            let mut rows_section = div().flex().flex_col().gap(px(4.)).mb(px(8.));
+            for (label, count) in [
                 ("Input", usage.input_tokens),
                 ("Output", usage.output_tokens),
                 ("Reasoning", usage.reasoning_tokens),
                 ("Cache read", usage.cache_read_tokens),
                 ("Cache write", usage.cache_write_tokens),
-            ];
-            for (label, count) in rows {
-                content = content.child(
+            ] {
+                rows_section = rows_section.child(
                     div()
                         .flex()
                         .items_center()
                         .justify_between()
-                        .text_size(px(11.))
+                        .text_size(px(12.5))
                         .text_color(theme.dim)
                         .child(label)
                         .child(
                             div()
-                                .text_size(px(11.))
+                                .text_size(px(12.5))
                                 .text_color(theme.text)
                                 .child(usage_count(count)),
                         ),
                 );
             }
-            content = content.child(
+            rows_section = rows_section.child(
                 div()
-                    .flex()
-                    .items_center()
-                    .justify_between()
-                    .text_size(px(11.))
-                    .text_color(theme.dim)
-                    .child("Cache")
-                    .child(
-                        div()
-                            .text_size(px(11.))
-                            .text_color(theme.text)
-                            .child(usage_cache_summary(&usage)),
-                    ),
-            );
-            content = content.child(
-                div()
-                    .mt(px(2.))
-                    .pt(px(6.))
+                    .mt(px(1.))
+                    .pt(px(5.))
                     .border_t_1()
                     .border_color(theme.border)
                     .flex()
                     .items_center()
                     .justify_between()
-                    .text_size(px(11.))
+                    .text_size(px(12.5))
                     .text_color(theme.dim)
-                    .child("Total tokens")
+                    .child("Cache")
                     .child(
                         div()
                             .font_weight(FontWeight::SEMIBOLD)
+                            .text_color(theme.green)
+                            .child(usage_cache_summary(&usage)),
+                    ),
+            );
+            content = content.child(rows_section);
+            content = content.child(
+                div()
+                    .pt(px(7.))
+                    .border_t_1()
+                    .border_color(theme.border)
+                    .flex()
+                    .items_center()
+                    .justify_between()
+                    .text_size(px(12.))
+                    .child(
+                        div()
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .text_color(theme.faint)
+                            .child("Total tokens"),
+                    )
+                    .child(
+                        div()
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text)
                             .child(usage_count(usage.total_tokens())),
                     ),
@@ -7453,7 +8464,8 @@ impl VelaApp {
             content = content.child(
                 div()
                     .py(px(10.))
-                    .text_size(px(11.))
+                    .text_size(px(12.5))
+                    .line_height(px(18.))
                     .text_color(theme.faint)
                     .child("No usage recorded for this session yet."),
             );
@@ -7479,11 +8491,22 @@ impl VelaApp {
                     this.load_provider_usage(cx);
                 }
             }))
-            .child(glyph(
-                "refresh",
-                12.,
-                if provider_loading { theme.faint } else { theme.dim },
-            ));
+            .child(if provider_loading {
+                use gpui::AnimationExt;
+                glyph("refresh", 12., theme.faint)
+                    .with_animation(
+                        "provider-usage-refresh-spin",
+                        gpui::Animation::new(Duration::from_millis(700)).repeat(),
+                        |svg, progress| {
+                            svg.with_transformation(gpui::Transformation::rotate(
+                                gpui::percentage(progress),
+                            ))
+                        },
+                    )
+                    .into_any_element()
+            } else {
+                glyph("refresh", 12., theme.dim).into_any_element()
+            });
         content = content.child(crate::provider_usage::render_provider_usage_with_refresh(
             &self.provider_usage,
             self.provider_usage_loading,
@@ -7491,6 +8514,7 @@ impl VelaApp {
         ));
         div()
             .id("agent-usage-popup")
+            .debug_selector(|| "agent-usage-popup".into())
             .role(Role::Region)
             .aria_label("Session usage")
             .on_mouse_down_out(cx.listener(|this, event: &gpui::MouseDownEvent, _, cx| {
@@ -7633,6 +8657,47 @@ impl VelaApp {
                     let viewport = f32::from(window.viewport_size().width);
                     let active = movement
                         .update(cx, |app, cx| {
+                            if let Some(last) = app.sidebar_drag {
+                                if event.pressed_button != Some(MouseButton::Left) {
+                                    app.sidebar_drag = None;
+                                    cx.notify();
+                                    return false;
+                                }
+                                let dx = f32::from(event.position.x) - last;
+                                app.sidebar_width = (app.sidebar_width + dx)
+                                    .clamp(SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH);
+                                app.sidebar_drag = Some(f32::from(event.position.x));
+                                cx.notify();
+                                return true;
+                            }
+                            if let Some(last) = app.agent_drag {
+                                if event.pressed_button != Some(MouseButton::Left) {
+                                    app.agent_drag = None;
+                                    cx.notify();
+                                    return false;
+                                }
+                                let dx = f32::from(event.position.x) - last;
+                                let max = (viewport * 0.6).clamp(AGENT_MIN_WIDTH, 720.);
+                                app.agent_width =
+                                    (app.agent_width - dx).clamp(AGENT_MIN_WIDTH, max);
+                                app.agent_drag = Some(f32::from(event.position.x));
+                                cx.notify();
+                                return true;
+                            }
+                            if let Some((session, last)) = app.free_drag.clone() {
+                                if event.pressed_button != Some(MouseButton::Left) {
+                                    app.free_drag = None;
+                                    cx.notify();
+                                    return false;
+                                }
+                                let total = app.tiled_panel_width(viewport);
+                                let dx = f32::from(event.position.x) - last;
+                                app.slide_free_panel(&session, dx, total);
+                                app.free_drag =
+                                    Some((session, f32::from(event.position.x)));
+                                cx.notify();
+                                return true;
+                            }
                             let Some((boundary, last)) = app.panel_resize else {
                                 return false;
                             };
@@ -7641,7 +8706,7 @@ impl VelaApp {
                                 cx.notify();
                                 return false;
                             }
-                            let total = (viewport * TILED_PANEL_FRACTION).max(AGENT_WIDTH);
+                            let total = app.tiled_panel_width(viewport);
                             let dx = f32::from(event.position.x) - last;
                             app.panels.resize_boundary(boundary, dx / total.max(1.));
                             app.panel_resize = Some((boundary, f32::from(event.position.x)));
@@ -7660,7 +8725,11 @@ impl VelaApp {
                     }
                     let active = release
                         .update(cx, |app, cx| {
-                            if app.panel_resize.take().is_some() {
+                            let free = app.free_drag.take().is_some();
+                            let resized = app.panel_resize.take().is_some();
+                            let sidebar = app.sidebar_drag.take().is_some();
+                            let agent = app.agent_drag.take().is_some();
+                            if free || resized || sidebar || agent {
                                 cx.notify();
                                 true
                             } else {
@@ -7691,11 +8760,14 @@ impl VelaApp {
         let theme = Theme::default();
         let session = panel.session.clone();
         let title = panel.title.clone();
-        let preview = crate::panels::preview_rows(&panel.blocks, crate::panels::PREVIEW_BLOCKS);
+        let preview = if active {
+            self.panel_tile_lists.insert(session.clone(), self.transcript_list.clone());
+            self.transcript_rows.clone()
+        } else {
+            self.prepare_panel_conversation(panel)
+        };
         let phase = panel.phase;
         let input = self.panel_inputs.get(&session).cloned();
-        // Source renders each panel's own pending permissions, so an inactive
-        // tile never hides a prompt behind the focused conversation.
         let panel_permissions = (!active && !panel.permissions.is_empty()).then(|| {
             self.render_permission_dock(
                 &panel.permissions,
@@ -7704,9 +8776,6 @@ impl VelaApp {
                 cx,
             )
         });
-        // The active tile keeps the complete rich transcript, forms dock and
-        // composer. Other tiles render their retained snapshot with an
-        // independent compact composer until they are activated.
         let rich = active.then(|| {
             (
                 self.render_transcript(window, cx),
@@ -7725,7 +8794,6 @@ impl VelaApp {
                 }
             })
             .unwrap_or_else(|| "Model".into());
-
         let tile_back = self.session_parent(&session).map(|(parent, parent_title)| {
             self.render_session_back(
                 parent,
@@ -7740,6 +8808,10 @@ impl VelaApp {
         let focus = session.clone();
         let mut header = div()
             .id(SharedString::from(format!("panel-tile-header-{session}")))
+            .debug_selector({
+                let selector = format!("panel-tile-header-{session}");
+                move || selector.clone()
+            })
             .role(Role::Tab)
             .aria_label(title.clone())
             .aria_selected(active)
@@ -7755,55 +8827,61 @@ impl VelaApp {
             .when(active, |header| header.bg(theme.inset))
             .cursor_pointer()
             .on_click(cx.listener(move |app, _, window, cx| {
+                if app.agent_tui.menu.as_deref() == Some(activate.as_str()) {
+                    app.close_agent_panel_menu(cx);
+                    return;
+                }
                 app.activate_panel(activate.clone(), cx);
                 app.focus_panel(&focus, window, cx);
                 cx.notify();
             }))
-            .when_some(tile_back, |header, back| header.child(back))
-            .child(
-                div()
-                    .size(px(6.))
-                    .flex_shrink_0()
-                    .rounded_full()
-                    .bg(if phase.is_active() {
-                        theme.green
-                    } else if !panel.permissions.is_empty() {
-                        theme.yellow
+            .when_some(tile_back, |header, back| header.child(back));
+        if phase.is_active()
+            && let Some(started) = turn_started_at_blocks(&panel.blocks)
+        {
+            header = header.child(turn_timer_element(
+                started,
+                format!("panel-turn-timer-{session}"),
+                &theme,
+                false,
+            ));
+        }
+        let free_session = session.clone();
+        let boundary = self
+            .panels
+            .entries()
+            .iter()
+            .position(|panel| panel.session == session)
+            .filter(|_| self.panels.len() > 1)
+            .map(|index| index.min(self.panels.len().saturating_sub(2)));
+        let mut spacer = div()
+            .id(SharedString::from(format!("panel-tile-drag-{session}")))
+            .debug_selector({
+                let selector = format!("panel-tile-drag-{session}");
+                move || selector.clone()
+            })
+            .flex_1()
+            .h_full();
+        if let Some(boundary) = boundary {
+            spacer = spacer.cursor(CursorStyle::ResizeColumn).on_mouse_down(
+                MouseButton::Left,
+                cx.listener(move |app, event: &MouseDownEvent, _, cx| {
+                    if app.agent_mode {
+                        app.seed_free_slots();
+                        app.free_drag =
+                            Some((free_session.clone(), f32::from(event.position.x)));
                     } else {
-                        theme.faint
-                    }),
-            )
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .truncate()
-                    .text_size(px(11.))
-                    .font_weight(FontWeight::SEMIBOLD)
-                    .text_color(if active { theme.text } else { theme.dim })
-                    .child(SharedString::from(title)),
-            );
-        let close_session = session.clone();
-        header = header.child(
-            div()
-                .id(SharedString::from(format!("panel-tile-close-{session}")))
-                .role(Role::Button)
-                .aria_label("Close agent panel")
-                .size(px(18.))
-                .flex()
-                .items_center()
-                .justify_center()
-                .rounded(px(4.))
-                .text_size(px(12.))
-                .text_color(theme.faint)
-                .cursor_pointer()
-                .hover(|style| style.bg(theme.elevated).text_color(theme.text))
-                .on_click(cx.listener(move |app, _, _, cx| {
+                        app.panel_resize =
+                            Some((boundary, f32::from(event.position.x)));
+                    }
                     cx.stop_propagation();
-                    app.close_panel(close_session.clone(), cx);
-                }))
-                .child("×"),
-        );
+                    cx.notify();
+                }),
+            );
+        }
+        header = header
+            .child(spacer)
+            .child(self.render_agent_panel_options(&session, cx));
 
         let activate_preview = session.clone();
         let focus_preview = session.clone();
@@ -7816,137 +8894,121 @@ impl VelaApp {
             .flex_1()
             .min_h_0()
             .w_full()
-            .overflow_y_scroll()
-            .bg(theme.editor)
-            .px(px(10.))
-            .py(px(8.))
             .flex()
             .flex_col()
-            .gap(px(8.))
             .cursor_pointer()
             .on_click(cx.listener(move |app, _, window, cx| {
                 app.activate_panel(activate_preview.clone(), cx);
                 app.focus_panel(&focus_preview, window, cx);
                 cx.notify();
-            }));
+            }))
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|app, _, _, cx| app.dismiss_tile_composer_options(cx)),
+            );
+        let mut column = div()
+            .id(SharedString::from(format!("panel-column-{session}")))
+            .debug_selector({
+                let selector = format!("panel-column-{session}");
+                move || selector.clone()
+            })
+            .w_full()
+            .max_w(px(768.))
+            .mx_auto()
+            .px(px(16.))
+            .py(px(32.))
+            .flex()
+            .flex_col()
+            .gap(px(16.));
         if preview.is_empty() {
-            transcript = transcript.child(
+            let mut empty = div()
+                .id(SharedString::from(format!("panel-empty-{session}")))
+                .debug_selector({
+                    let selector = format!("panel-empty-{session}");
+                    move || selector.clone()
+                })
+                .flex()
+                .flex_col()
+                .items_center()
+                .gap(px(4.));
+            if self.settings.experimental_art && !phase.is_active() {
+                empty = empty.child(
+                    div()
+                        .flex_shrink_0()
+                        .mb(px(10.))
+                        .child(crate::pixel_art::station(110.)),
+                );
+            }
+            empty = empty.child(
                 div()
-                    .text_size(px(11.))
-                    .line_height(px(17.))
-                    .text_color(theme.faint)
+                    .text_size(px(13.))
+                    .line_height(px(19.5))
+                    .text_color(theme.text)
                     .child(if phase.is_active() {
                         "Working…"
                     } else {
-                        "No messages yet."
+                        "Tell the agent what to work on."
                     }),
             );
+            column = column.child(empty);
         }
-        let copied_message = panel.copied_message.clone();
-        let mut index = 0;
-        while index < preview.len() {
-            let row = &preview[index];
-            let source = panel.blocks.get(row.source_index);
-            if matches!(
-                row.kind,
-                BlockKind::Reasoning | BlockKind::Activity | BlockKind::System
-            ) {
-                let start = index;
-                let mut end = index + 1;
-                while end < preview.len()
-                    && matches!(
-                        preview[end].kind,
-                        BlockKind::Reasoning | BlockKind::Activity | BlockKind::System
-                    )
-                {
-                    end += 1;
-                }
-                let key = source
-                    .map(|block| format!("work:{}", block.id))
-                    .unwrap_or_else(|| format!("work:{start}"));
-                let running = phase.is_active() && end == preview.len();
-                let work = self.render_tile_work_row(
-                    &session,
-                    &key,
-                    start,
-                    &preview[start..end],
-                    running,
-                    cx,
-                );
-                transcript = transcript.child(work);
-                index = end;
-                continue;
-            }
-            if let Some(block) = source
-                .filter(|block| matches!(block.kind, BlockKind::Tool | BlockKind::Shell))
+
+        if preview.is_empty() {
+            transcript = transcript.child(column);
+        } else {
+            let list_state = self
+                .panel_tile_lists
+                .get(&session)
                 .cloned()
-            {
-                let summary = div()
-                    .id(SharedString::from(format!(
-                        "panel-tile-row-{session}-{index}"
-                    )))
-                    .role(Role::ListItem)
+                .expect("tile list state");
+            Self::observe_conversation_wheel(&list_state, session.clone(), cx);
+            self.restore_measured_conversation_scroll(&session, &list_state);
+            let natural_tail = if active {
+                self.transcript_viewport.requires_natural_tail()
+            } else {
+                self.panel_transcripts.get(&session).is_some_and(|panel| panel.viewport.requires_natural_tail())
+            };
+            self.row_cache.capture_measurements(&session, &list_state, &preview, window, natural_tail);
+            let owner = cx.weak_entity();
+            let rows_preview = preview.clone();
+            let rows_session = session.clone();
+            let rows = gpui::list(list_state, move |index, window, cx| {
+                let Some(row) = rows_preview.get(index) else {
+                    return div().into_any_element();
+                };
+                owner
+                    .update(cx, |app, cx| {
+                        if row.cacheable() {
+                            app.row_cache.element(cx.weak_entity(), &rows_session, row,
+                                natural_tail && index + 1 == rows_preview.len(), cx)
+                        } else {
+                            app.render_panel_transcript_row(&rows_session, row, window, cx)
+                        }
+                    })
+                    .unwrap_or_else(|_| div().into_any_element())
+            })
+            .flex_1()
+            .min_h_0()
+            .w_full();
+            transcript = transcript.child(
+                div()
+                    .id(SharedString::from(format!("panel-column-{session}")))
+                    .debug_selector({
+                        let selector = format!("panel-column-{session}");
+                        move || selector.clone()
+                    })
+                    .flex_1()
+                    .min_h_0()
+                    .w_full()
+                    .max_w(px(768.))
+                    .mx_auto()
+                    .px(px(16.))
+                    .py(px(32.))
                     .flex()
                     .flex_col()
-                    .gap(px(1.))
-                    .child(
-                        div()
-                            .text_size(px(8.5))
-                            .font_weight(FontWeight::SEMIBOLD)
-                            .text_color(theme.faint)
-                            .child(row.label),
-                    )
-                    .child(self.render_tile_tool_row(&session, &block, cx));
-                transcript = transcript.child(summary);
-            } else {
-                let actions = if row.kind == BlockKind::User {
-                    source.cloned().map(|block| {
-                        self.render_tile_user_actions(
-                            &session,
-                            &block,
-                            copied_message.as_deref() == Some(block.id.as_ref()),
-                            cx,
-                        )
-                    })
-                } else if row.kind == BlockKind::Assistant {
-                    source.cloned().map(|block| {
-                        self.render_tile_answer_copy(
-                            &session,
-                            &block,
-                            copied_message.as_deref() == Some(block.id.as_ref()),
-                            cx,
-                        )
-                    })
-                } else {
-                    None
-                };
-                transcript = transcript.child(
-                    div()
-                        .id(SharedString::from(format!(
-                            "panel-tile-row-{session}-{index}"
-                        )))
-                        .role(Role::ListItem)
-                        .flex()
-                        .flex_col()
-                        .gap(px(1.))
-                        .child(
-                            div()
-                                .text_size(px(8.5))
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(if row.user { theme.accent } else { theme.faint })
-                                .child(row.label),
-                        )
-                        .child(
-                            div()
-                                .text_size(px(11.5))
-                                .line_height(px(17.))
-                                .text_color(if row.user { theme.text } else { theme.dim })
-                                .child(SharedString::from(row.text.clone())),
-                        )
-                        .when_some(actions, |row, actions| row.child(actions)),
-                );
-            }
-            index += 1;
+                    .gap(px(16.))
+                    .child(rows),
+            );
         }
 
         let send_session = session.clone();
@@ -7967,7 +9029,8 @@ impl VelaApp {
         if let Some(input) = input {
             let send = session.clone();
             let attach = session.clone();
-            let title = panel.title.clone();
+            let compact = self.agent_mode && self.occupied_panel_slots() >= 3;
+            let options_open = panel.composer_options_open;
             let mut row = div().flex().items_end().gap(px(4.)).child(
                 div()
                     .flex_1()
@@ -7987,7 +9050,7 @@ impl VelaApp {
                     .text_color(theme.text)
                     .child(input),
             );
-            if self.runtime_capabilities.attachments {
+            if self.runtime_capabilities.attachments && (!compact || options_open) {
                 row = row.child(
                     div()
                         .id(SharedString::from(format!("panel-tile-attach-{session}")))
@@ -7996,7 +9059,7 @@ impl VelaApp {
                             move || selector.clone()
                         })
                         .role(Role::Button)
-                        .aria_label(SharedString::from(format!("Attach files to {title}")))
+                        .aria_label("Attach files")
                         .size(px(26.))
                         .flex_shrink_0()
                         .flex()
@@ -8016,35 +9079,188 @@ impl VelaApp {
                         .child(icon("ea60")),
                 );
             }
+            let busy = panel.phase.is_active();
+            let can_send = busy
+                || !panel.composer.trim().is_empty()
+                || self
+                    .panel_composers
+                    .get(&session)
+                    .is_some_and(|composer| !composer.attachments.is_empty());
+            let send_selector = if busy {
+                format!("panel-tile-stop-{session}")
+            } else {
+                format!("panel-tile-send-{session}")
+            };
             row = row.child(
                 div()
-                    .id(SharedString::from(format!("panel-tile-send-{session}")))
+                    .debug_selector(move || send_selector.clone())
+                    .id(SharedString::from(format!("panel-tile-action-{session}")))
                     .role(Role::Button)
-                    .aria_label(format!("Send message to {}", panel.title))
+                    .aria_label(if busy {
+                        "Stop the agent".to_string()
+                    } else {
+                        "Send prompt".to_string()
+                    })
                     .size(px(26.))
                     .flex_shrink_0()
                     .flex()
                     .items_center()
                     .justify_center()
                     .rounded(px(7.))
-                    .bg(if active { theme.accent } else { theme.inset })
+                    .bg(if busy {
+                        theme.selected
+                    } else if active {
+                        theme.accent
+                    } else {
+                        theme.inset
+                    })
                     .text_size(px(12.))
-                    .text_color(if active { theme.editor } else { theme.dim })
-                    .cursor_pointer()
-                    .hover(|style| style.bg(theme.accent))
+                    .text_color(if busy {
+                        theme.red
+                    } else if active {
+                        theme.editor
+                    } else {
+                        theme.dim
+                    })
+                    .opacity(if can_send { 1. } else { 0.45 })
+                    .when(can_send, |button| {
+                        button
+                            .cursor_pointer()
+                            .hover(|style| style.bg(theme.accent))
+                    })
                     .on_click(cx.listener(move |app, _, window, cx| {
-                        app.send_tile_message(send.clone(), window, cx);
+                        if busy {
+                            app.engine.interrupt(send.clone());
+                            cx.notify();
+                        } else {
+                            app.send_tile_message(send.clone(), window, cx);
+                        }
                     }))
-                    .child("↑"),
+                    .child(if busy {
+                        crate::icons::glyph("stop", 11., theme.red).into_any_element()
+                    } else {
+                        div().child("↑").into_any_element()
+                    }),
             );
+            if compact {
+                let options_session = session.clone();
+                row = row.child(
+                    div()
+                        .id(SharedString::from(format!("panel-tile-options-{session}")))
+                        .debug_selector({
+                            let selector = format!("panel-tile-options-{session}");
+                            move || selector.clone()
+                        })
+                        .role(Role::Button)
+                        .aria_label("Prompt options")
+                        .aria_expanded(options_open)
+                        .size(px(26.))
+                        .flex_shrink_0()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .rounded(px(7.))
+                        .text_size(px(13.))
+                        .text_color(theme.dim)
+                        .cursor_pointer()
+                        .hover(|style| style.bg(theme.inset))
+                        .on_click(cx.listener(move |app, _, _, cx| {
+                            app.panels.update(&options_session, |panel| {
+                                panel.composer_options_open = !panel.composer_options_open;
+                            });
+                            cx.notify();
+                        }))
+                        .child("⋮"),
+                );
+            }
             composer = composer.child(self.render_tile_composer_extras(&session, cx));
             composer = composer.child(row);
-            composer = composer.child(
-                div()
-                    .text_size(px(9.))
-                    .text_color(theme.faint)
-                    .child(SharedString::from(format!("{model} · Enter sends"))),
-            );
+            if !compact || options_open {
+                let agent = panel
+                    .selected_agent
+                    .clone()
+                    .unwrap_or_else(|| "Agent".into());
+                let strength = panel
+                    .selected_model
+                    .as_ref()
+                    .filter(|model| !model.variants.is_empty())
+                    .map(|model| source_variant_label(model.variant.as_deref()));
+                let model_session = session.clone();
+                let agent_session = session.clone();
+                composer = composer.child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .gap(px(6.))
+                        .text_size(px(9.))
+                        .text_color(theme.faint)
+                        .child(
+                            div()
+                                .id(SharedString::from(format!("panel-tile-model-{session}")))
+                                .debug_selector({
+                                    let selector = format!("panel-tile-model-{session}");
+                                    move || selector.clone()
+                                })
+                                .role(Role::Button)
+                                .aria_label(SharedString::from(format!("Model: {model}")))
+                                .rounded(px(4.))
+                                .px(px(2.))
+                                .cursor_pointer()
+                                .hover(|style| style.bg(theme.inset).text_color(theme.text))
+                                .on_click(cx.listener(move |app, _, _, cx| {
+                                    app.activate_panel(model_session.clone(), cx);
+                                    app.open_model_picker(cx);
+                                }))
+                                .child(SharedString::from(model.clone())),
+                        )
+                        .child(
+                            div()
+                                .id(SharedString::from(format!("panel-tile-agent-{session}")))
+                                .debug_selector({
+                                    let selector = format!("panel-tile-agent-{session}");
+                                    move || selector.clone()
+                                })
+                                .role(Role::Button)
+                                .aria_label(SharedString::from(format!("Agent: {agent}")))
+                                .rounded(px(4.))
+                                .px(px(2.))
+                                .cursor_pointer()
+                                .hover(|style| style.bg(theme.inset).text_color(theme.text))
+                                .on_click(cx.listener(move |app, _, _, cx| {
+                                    app.activate_panel(agent_session.clone(), cx);
+                                    app.toggle_agent_picker(cx);
+                                }))
+                                .child(SharedString::from(agent)),
+                        )
+                        .when_some(strength, |row, strength| {
+                            let strength_session = session.clone();
+                            row.child(
+                                div()
+                                    .id(SharedString::from(format!("panel-tile-strength-{session}")))
+                                    .debug_selector({
+                                        let selector = format!("panel-tile-strength-{session}");
+                                        move || selector.clone()
+                                    })
+                                    .role(Role::Button)
+                                    .aria_label(SharedString::from(format!(
+                                        "Response strength: {strength}"
+                                    )))
+                                    .rounded(px(4.))
+                                    .px(px(2.))
+                                    .cursor_pointer()
+                                    .hover(|style| style.bg(theme.inset).text_color(theme.text))
+                                    .on_click(cx.listener(move |app, _, _, cx| {
+                                        app.activate_panel(strength_session.clone(), cx);
+                                        app.picker = Some(PickerKind::Strength);
+                                        app.picker_anchors.pending = Some(PickerKind::Strength);
+                                        cx.notify();
+                                    }))
+                                    .child(SharedString::from(strength)),
+                            )
+                        })
+                        .child(SharedString::from("· Enter sends")),
+                );
+            }
         }
 
         let tile_forms = (!panel.forms.is_empty()).then(|| {
@@ -8065,7 +9281,18 @@ impl VelaApp {
             .contains(&session)
             .then(|| self.render_tile_revert_dock(&session, cx));
         let activate_permission = session.clone();
-        let body = match rich {
+        let tui_mode = self.agent_panel_mode(&session) == AgentPanelMode::Tui;
+        let body = if tui_mode {
+            div()
+                .flex_1()
+                .min_h_0()
+                .w_full()
+                .flex()
+                .flex_col()
+                .child(self.render_agent_tui(&session, window, cx))
+                .into_any_element()
+        } else {
+            match rich {
             Some((rich_transcript, rich_composer, forms)) => div()
                 .flex_1()
                 .min_h_0()
@@ -8082,7 +9309,55 @@ impl VelaApp {
                 .w_full()
                 .flex()
                 .flex_col()
-                .child(transcript)
+                .child({
+                    let jump_session = session.clone();
+                    let jump_selector = format!("panel-to-bottom-{session}");
+                    let mut area = div()
+                        .relative()
+                        .flex_1()
+                        .min_h_0()
+                        .w_full()
+                        .flex()
+                        .flex_col()
+                        .child(transcript);
+                    if !panel.stick {
+                        area = area.child(
+                            div()
+                                .id(SharedString::from(jump_selector.clone()))
+                                .debug_selector(move || jump_selector.clone())
+                                .absolute()
+                                .bottom(px(10.))
+                                .right(px(10.))
+                                .size(px(26.))
+                                .rounded(px(999.))
+                                .border_1()
+                                .border_color(theme.border)
+                                .bg(theme.elevated)
+                                .text_color(theme.dim)
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .cursor_pointer()
+                                .hover(|style| style.bg(theme.inset).text_color(theme.text))
+                                .child(glyph("chevron-down", 14., theme.dim))
+                                .on_click(cx.listener(move |app, _, _, cx| {
+                                    cx.stop_propagation();
+                                    app.cancel_conversation_scroll_restore(&jump_session);
+                                    app.panels.update(&jump_session, |panel| panel.stick = true);
+                                    app.turn_anchors.cancel(&jump_session);
+                                    if let Some(list) = app.panel_tile_lists.get(&jump_session) {
+                                        if let Some(state) = app.panel_transcripts.get_mut(&jump_session) {
+                                            state.viewport.release_turn_anchor(list);
+                                        }
+                                        list.set_follow_mode(gpui::FollowMode::Tail);
+                                        list.scroll_to_end();
+                                    }
+                                    cx.notify();
+                                })),
+                        );
+                    }
+                    area
+                })
                 .when_some(panel_permissions, |tile, permissions| {
                     tile.child(
                         div()
@@ -8102,14 +9377,35 @@ impl VelaApp {
                 .when_some(tile_revert, |tile, revert| {
                     tile.child(div().px(px(8.)).pb(px(6.)).child(revert))
                 })
+                .when(!panel.todos.is_empty(), |tile| {
+                    let todos = panel.todos.clone();
+                    let todos_session = session.clone();
+                    tile.child(div().px(px(8.)).pb(px(4.)).child(
+                        self.render_todo_dock(Some(todos_session), todos, cx),
+                    ))
+                })
                 .child(composer)
                 .into_any_element(),
+            }
         };
         let mut tile = div()
             .id(SharedString::from(format!("panel-tile-{session}")))
             .role(Role::TabPanel)
             .aria_label(panel.title.clone())
             .relative()
+            .on_key_down(cx.listener(|app, event: &KeyDownEvent, _, cx| {
+                if event.keystroke.key != "escape" {
+                    return;
+                }
+                if app.agent_tui.menu.is_some() {
+                    app.close_agent_panel_menu(cx);
+                    cx.stop_propagation();
+                } else if app.usage_open {
+                    app.usage_open = false;
+                    cx.notify();
+                    cx.stop_propagation();
+                }
+            }))
             .h_full()
             .min_w_0()
             .min_h_0()
@@ -8152,6 +9448,7 @@ impl VelaApp {
                             else {
                                 return;
                             };
+                            app.leave_agent_mode_for_manual_adjustment(cx);
                             app.panel_resize = Some((index, f32::from(event.position.x)));
                             cx.stop_propagation();
                             cx.notify();
@@ -8162,21 +9459,6 @@ impl VelaApp {
         tile.into_any_element()
     }
 
-    fn revert_tile_message(
-        &mut self,
-        session: String,
-        message_id: String,
-        edit: bool,
-        text: String,
-        cx: &mut Context<Self>,
-    ) {
-        if self.active_id.as_deref() != Some(session.as_str()) {
-            self.open_session(session.clone(), cx);
-        }
-        if self.active_id.as_deref() == Some(session.as_str()) {
-            self.revert_message(message_id, edit, text, cx);
-        }
-    }
 
     fn tile_form_dock(
         &mut self,
@@ -8271,62 +9553,6 @@ impl VelaApp {
         cx.notify();
     }
 
-    fn render_tile_answer_copy(
-        &mut self,
-        session: &str,
-        block: &Block,
-        copied: bool,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let theme = Theme::default();
-        let copy_text = block.text.to_string();
-        let copy_session = session.to_owned();
-        let copy_key = block.id.to_string();
-        let copy_id = format!("panel-answer-copy-{session}-{}", block.id);
-        let copy_selector = copy_id.clone();
-        div()
-            .id(SharedString::from(copy_id))
-            .debug_selector(move || copy_selector.clone())
-            .role(Role::Button)
-            .aria_label("Copy answer")
-            .px(px(4.))
-            .py(px(1.))
-            .rounded(px(4.))
-            .text_size(px(9.5))
-            .text_color(theme.faint)
-            .cursor_pointer()
-            .hover(|style| style.bg(theme.inset).text_color(theme.text))
-            .on_click(cx.listener(move |app, _, _, cx| {
-                cx.stop_propagation();
-                if copy_text.is_empty() {
-                    return;
-                }
-                cx.write_to_clipboard(gpui::ClipboardItem::new_string(copy_text.clone()));
-                app.panels.update(&copy_session, |panel| {
-                    panel.copied_message = Some(copy_key.clone());
-                });
-                let reset_session = copy_session.clone();
-                let reset_key = copy_key.clone();
-                cx.spawn(async move |this, cx| {
-                    cx.background_executor()
-                        .timer(Duration::from_secs(2))
-                        .await;
-                    let _ = this.update(cx, |app, cx| {
-                        app.panels.update(&reset_session, |panel| {
-                            if panel.copied_message.as_deref() == Some(reset_key.as_str()) {
-                                panel.copied_message = None;
-                            }
-                        });
-                        cx.notify();
-                    });
-                })
-                .detach();
-                cx.notify();
-            }))
-            .child(if copied { "Copied" } else { "Copy" })
-            .into_any_element()
-    }
-
     fn render_tile_revert_dock(
         &mut self,
         session: &str,
@@ -8419,735 +9645,187 @@ impl VelaApp {
             .into_any_element()
     }
 
-    fn render_tile_user_actions(
-        &mut self,
-        session: &str,
-        block: &Block,
-        copied: bool,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let theme = Theme::default();
-        let copy_text = block.text.to_string();
-        let copy_session = session.to_owned();
-        let copy_key = block.id.to_string();
-        let copy_id = format!("panel-message-copy-{session}-{}", block.id);
-        let copy_selector = copy_id.clone();
-        let copy = div()
-            .id(SharedString::from(copy_id))
-            .debug_selector(move || copy_selector.clone())
-            .role(Role::Button)
-            .aria_label("Copy message")
-            .px(px(4.))
-            .py(px(1.))
-            .rounded(px(4.))
-            .text_size(px(9.5))
-            .text_color(theme.faint)
-            .cursor_pointer()
-            .hover(|style| style.bg(theme.inset).text_color(theme.text))
-            .on_click(cx.listener(move |app, _, _, cx| {
-                cx.stop_propagation();
-                if copy_text.is_empty() {
-                    return;
-                }
-                cx.write_to_clipboard(gpui::ClipboardItem::new_string(copy_text.clone()));
-                app.panels.update(&copy_session, |panel| {
-                    panel.copied_message = Some(copy_key.clone());
-                });
-                let reset_session = copy_session.clone();
-                let reset_key = copy_key.clone();
-                cx.spawn(async move |this, cx| {
-                    cx.background_executor()
-                        .timer(Duration::from_secs(2))
-                        .await;
-                    let _ = this.update(cx, |app, cx| {
-                        app.panels.update(&reset_session, |panel| {
-                            if panel.copied_message.as_deref() == Some(reset_key.as_str()) {
-                                panel.copied_message = None;
-                            }
-                        });
-                        cx.notify();
-                    });
-                })
-                .detach();
-                cx.notify();
-            }))
-            .child(if copied { "Copied" } else { "Copy" });
-        let undo_session = session.to_owned();
-        let undo_message = block.message_id.to_string();
-        let undo_id = format!("panel-message-undo-{session}-{}", block.id);
-        let undo_selector = undo_id.clone();
-        let undo = div()
-            .id(SharedString::from(undo_id))
-            .debug_selector(move || undo_selector.clone())
-            .role(Role::Button)
-            .aria_label("Undo message")
-            .px(px(4.))
-            .py(px(1.))
-            .rounded(px(4.))
-            .text_size(px(9.5))
-            .text_color(theme.faint)
-            .cursor_pointer()
-            .hover(|style| style.bg(theme.inset).text_color(theme.text))
-            .on_click(cx.listener(move |app, _, _, cx| {
-                cx.stop_propagation();
-                app.revert_tile_message(
-                    undo_session.clone(),
-                    undo_message.clone(),
-                    false,
-                    String::new(),
-                    cx,
-                );
-            }))
-            .child("Undo");
-        let edit_session = session.to_owned();
-        let edit_message = block.message_id.to_string();
-        let edit_text = block.text.to_string();
-        let edit_id = format!("panel-message-edit-{session}-{}", block.id);
-        let edit_selector = edit_id.clone();
-        let edit = div()
-            .id(SharedString::from(edit_id))
-            .debug_selector(move || edit_selector.clone())
-            .role(Role::Button)
-            .aria_label("Edit message")
-            .px(px(4.))
-            .py(px(1.))
-            .rounded(px(4.))
-            .text_size(px(9.5))
-            .text_color(theme.faint)
-            .cursor_pointer()
-            .hover(|style| style.bg(theme.inset).text_color(theme.text))
-            .on_click(cx.listener(move |app, _, _, cx| {
-                cx.stop_propagation();
-                app.revert_tile_message(
-                    edit_session.clone(),
-                    edit_message.clone(),
-                    true,
-                    edit_text.clone(),
-                    cx,
-                );
-            }))
-            .child("Edit");
-        div()
-            .flex()
-            .items_center()
-            .gap(px(2.))
-            .child(copy)
-            .child(undo)
-            .child(edit)
-            .into_any_element()
-    }
 
-    fn render_tile_work_row(
-        &mut self,
-        session: &str,
-        key: &str,
-        first_index: usize,
-        rows: &[crate::panels::PanelPreviewRow],
-        running: bool,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let theme = Theme::default();
-        let open = running
-            || self
-                .panels
-                .entries()
-                .iter()
-                .find(|panel| panel.session == session)
-                .is_some_and(|panel| panel.work_open.contains(key));
-        let toggle_session = session.to_owned();
-        let toggle_key = key.to_owned();
-        let head_id = format!("panel-work-{session}-{first_index}");
-        let head_selector = head_id.clone();
-        let head = div()
-            .id(SharedString::from(head_id))
-            .debug_selector(move || head_selector.clone())
-            .role(Role::Button)
-            .aria_label(if running {
-                "Working activity"
-            } else {
-                "Work activity"
-            })
-            .aria_expanded(open)
-            .w_full()
-            .min_w_0()
-            .flex()
-            .items_center()
-            .gap(px(5.))
-            .cursor_pointer()
-            .on_click(cx.listener(move |app, _, _, cx| {
-                cx.stop_propagation();
-                app.panels.update(&toggle_session, |panel| {
-                    if !panel.work_open.remove(&toggle_key) {
-                        panel.work_open.insert(toggle_key.clone());
-                    }
-                });
-                cx.notify();
-            }))
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .truncate()
-                    .text_size(px(10.))
-                    .font_weight(FontWeight::SEMIBOLD)
-                    .text_color(theme.faint)
-                    .child(SharedString::from(format!(
-                        "{} · {} steps",
-                        if running { "Working" } else { "Work" },
-                        rows.len()
-                    ))),
-            )
-            .child(
-                div()
-                    .flex_shrink_0()
-                    .text_size(px(9.5))
-                    .text_color(theme.faint)
-                    .child(if open { "▾" } else { "▸" }),
-            );
-        let mut container = div()
-            .id(SharedString::from(format!(
-                "panel-work-group-{session}-{first_index}"
-            )))
-            .role(Role::ListItem)
-            .w_full()
-            .min_w_0()
-            .flex()
-            .flex_col()
-            .gap(px(2.))
-            .child(head);
-        if open {
-            let body_id = format!("panel-work-body-{session}-{first_index}");
-            let body_selector = body_id.clone();
-            let mut body = div()
-                .id(SharedString::from(body_id))
-                .debug_selector(move || body_selector.clone())
-                .role(Role::Group)
-                .aria_label("Expanded work activity")
-                .w_full()
-                .min_w_0()
-                .pl(px(8.))
-                .flex()
-                .flex_col()
-                .gap(px(3.))
-                .border_l_1()
-                .border_color(theme.border_soft);
-            for (offset, row) in rows.iter().enumerate() {
-                let row_selector =
-                    format!("panel-work-row-{session}-{first_index}-{offset}");
-                body = body.child(
-                    div()
-                        .id(SharedString::from(format!(
-                            "panel-work-row-{session}-{first_index}-{offset}"
-                        )))
-                        .debug_selector(move || row_selector.clone())
-                        .flex()
-                        .flex_col()
-                        .gap(px(1.))
-                        .child(
-                            div()
-                                .text_size(px(8.5))
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(theme.faint)
-                                .child(row.label),
-                        )
-                        .child(
-                            div()
-                                .text_size(px(10.5))
-                                .line_height(px(15.))
-                                .text_color(theme.dim)
-                                .child(SharedString::from(row.text.clone())),
-                        ),
-                );
-            }
-            container = container.child(body);
+    #[allow(clippy::too_many_arguments)]
+    fn sync_tile_compact(&mut self) {
+        let compact = self.agent_mode && self.occupied_panel_slots() >= 3;
+        if self.tile_compact == compact {
+            return;
         }
-        container.into_any_element()
-    }
-
-    fn render_tile_tool_files(
-        &self,
-        session: &str,
-        namespace: &str,
-        files: &[ToolFile],
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let theme = Theme::default();
-        let mut rows = div()
-            .w_full()
-            .min_w_0()
-            .flex()
-            .flex_col()
-            .gap(px(2.))
-            .pl(px(10.))
-            .pt(px(2.));
-        for (index, file) in files.iter().enumerate() {
-            let label = file.name.clone().unwrap_or_else(|| file.uri.clone());
-            let url = vela_browser::safe_external_url(&file.uri);
-            let debug = format!("panel-tool-file-{session}-{namespace}-{index}");
-            let selector = debug.clone();
-            let mut row = div()
-                .id(SharedString::from(debug))
-                .debug_selector(move || selector.clone())
-                .role(Role::Link)
-                .aria_label(SharedString::from(format!("Open tool file {label}")))
-                .min_w_0()
-                .flex()
-                .items_center()
-                .gap(px(4.))
-                .text_size(px(10.))
-                .text_color(if url.is_some() {
-                    theme.accent
-                } else {
-                    theme.dim
-                })
-                .child(crate::tree_icons::glyph(&label))
-                .child(div().min_w_0().truncate().child(SharedString::from(label)));
-            if let Some(url) = url {
-                row = row.cursor_pointer().on_click(cx.listener(move |_, _, _, cx| {
-                    cx.open_url(&url);
-                }));
-            }
-            rows = rows.child(row);
-        }
-        rows.into_any_element()
-    }
-
-    fn render_tile_tool_subcall(
-        &mut self,
-        session: &str,
-        block_id: &str,
-        path: &str,
-        call: &ToolSubCall,
-        depth: usize,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let theme = Theme::default();
-        let key = format!("{block_id}::{path}");
-        let open = self
+        self.tile_compact = compact;
+        let sessions = self
             .panels
             .entries()
             .iter()
-            .find(|panel| panel.session == session)
-            .is_some_and(|panel| panel.tool_open.contains(&key));
-        let expandable = !call.input.trim().is_empty()
-            || !call.output.trim().is_empty()
-            || !call.files.is_empty()
-            || !call.sub_calls.is_empty();
-        let toggle_session = session.to_owned();
-        let toggle_key = key.clone();
-        let (status, color) = match call.status {
-            ToolStatus::Success => ("Done", theme.green),
-            ToolStatus::Failed => ("Failed", theme.red),
-            ToolStatus::Running | ToolStatus::Streaming => ("Running", theme.yellow),
-            ToolStatus::None => ("Queued", theme.faint),
-        };
-        let head_id = format!("panel-subcall-head-{session}-{block_id}-{path}");
-        let head_selector = head_id.clone();
-        let mut head = div()
-            .id(SharedString::from(head_id))
-            .debug_selector(move || head_selector.clone())
-            .role(Role::Button)
-            .aria_label(SharedString::from(format!("{status}: {}", call.title)))
-            .aria_expanded(open)
-            .w_full()
-            .min_w_0()
-            .flex()
-            .items_center()
-            .gap(px(4.))
-            .pl(px(depth as f32 * 6.))
-            .when(expandable, |head| head.cursor_pointer())
-            .on_click(cx.listener(move |app, _, _, cx| {
-                if !expandable {
-                    return;
-                }
-                cx.stop_propagation();
-                app.panels.update(&toggle_session, |panel| {
-                    if !panel.tool_open.remove(&toggle_key) {
-                        panel.tool_open.insert(toggle_key.clone());
-                    }
-                });
-                cx.notify();
-            }))
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .truncate()
-                    .text_size(px(10.5))
-                    .text_color(theme.dim)
-                    .child(SharedString::from(call.title.clone())),
-            );
-        if !call.detail.trim().is_empty() {
-            head = head.child(
-                div()
-                    .min_w_0()
-                    .max_w(px(120.))
-                    .truncate()
-                    .text_size(px(9.5))
-                    .text_color(theme.faint)
-                    .child(SharedString::from(call.detail.clone())),
-            );
+            .map(|panel| panel.session.clone())
+            .collect::<Vec<_>>();
+        for session in sessions {
+            self.panels.update(&session, |panel| {
+                panel.composer_options_open = false;
+            });
         }
-        head = head.child(div().flex_shrink_0().text_size(px(9.)).text_color(color).child(status));
-        if expandable {
-            head = head.child(
-                div()
-                    .flex_shrink_0()
-                    .text_size(px(9.))
-                    .text_color(theme.faint)
-                    .child(if open { "▾" } else { "▸" }),
-            );
-        }
-        let mut container = div()
-            .id(SharedString::from(format!(
-                "panel-subcall-{session}-{block_id}-{path}"
-            )))
-            .role(Role::ListItem)
-            .w_full()
-            .min_w_0()
-            .flex()
-            .flex_col()
-            .gap(px(1.))
-            .py(px(1.))
-            .child(head);
-        if open && expandable {
-            let body_id = format!("panel-subcall-body-{session}-{block_id}-{path}");
-            let body_selector = body_id.clone();
-            let mut body = div()
-                .id(SharedString::from(body_id))
-                .debug_selector(move || body_selector.clone())
-                .role(Role::Region)
-                .aria_label("Nested tool output")
-                .w_full()
-                .min_w_0()
-                .flex()
-                .flex_col()
-                .gap(px(2.))
-                .pl(px(10. + depth as f32 * 6.))
-                .pr(px(2.))
-                .py(px(2.))
-                .border_t_1()
-                .border_color(theme.border_soft);
-            for (label, text) in [("IN", &call.input), ("OUT", &call.output)] {
-                if text.trim().is_empty() {
+    }
+
+    fn seed_free_slots(&mut self) {
+        let rows = self.panels.rows();
+        let len = self.panels.len();
+        let mut top = 0.;
+        for row in rows {
+            let height = row
+                .first()
+                .and_then(|(index, _)| crate::panel_layout::panel_slot(len, *index))
+                .map(|slot| slot.height)
+                .unwrap_or(100.);
+            let mut left = 0.;
+            for (index, width) in row {
+                let Some(panel) = self.panels.entries().get(index) else {
                     continue;
-                }
-                body = body.child(
-                    div()
-                        .text_size(px(9.))
-                        .font_weight(FontWeight::BOLD)
-                        .text_color(theme.faint)
-                        .child(label),
-                );
-                body = body.child(
-                    div()
-                        .text_size(px(10.))
-                        .line_height(px(15.))
-                        .text_color(theme.dim)
-                        .whitespace_normal()
-                        .child(SharedString::from(tool_view::display_output(text))),
-                );
+                };
+                let session = panel.session.clone();
+                let slot = crate::panels::PanelFreeSlot {
+                    left,
+                    top,
+                    width: width * 100.,
+                    height,
+                };
+                self.panels.update(&session, |panel| panel.free_slot = Some(slot));
+                left += width * 100.;
             }
-            if !call.files.is_empty() {
-                body = body.child(self.render_tile_tool_files(
-                    session, &key, &call.files, cx,
-                ));
-            }
-            if !call.sub_calls.is_empty() {
-                body = body.child(
-                    div()
-                        .text_size(px(9.))
-                        .font_weight(FontWeight::BOLD)
-                        .text_color(theme.faint)
-                        .child(SharedString::from(format!(
-                            "TOOL CALLS · {}",
-                            call.sub_calls.len()
-                        ))),
-                );
-                for (index, nested) in call.sub_calls.iter().enumerate() {
-                    let nested_path = format!("{path}.{index}");
-                    body = body.child(self.render_tile_tool_subcall(
-                        session,
-                        block_id,
-                        &nested_path,
-                        nested,
-                        depth + 1,
-                        cx,
-                    ));
-                }
-            }
-            container = container.child(body);
+            top += height;
         }
-        container.into_any_element()
     }
 
-    /// Inactive tiles keep a compact transcript, but their tool rows still
-    /// expose Source's expand and copy actions. State is per panel so opening
-    /// one tile's payload never changes another tile.
-    fn render_tile_tool_row(
-        &mut self,
-        session: &str,
-        block: &Block,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let theme = Theme::default();
-        let model = tool_view::presentation(block);
-        let key = block.id.to_string();
-        let open = self
+    fn slide_free_panel(&mut self, session: &str, dx: f32, total_width: f32) {
+        let Some(panel) = self
             .panels
             .entries()
             .iter()
             .find(|panel| panel.session == session)
-            .is_some_and(|panel| panel.tool_open.contains(&key));
-        let copied = self
-            .panels
-            .entries()
-            .iter()
-            .find(|panel| panel.session == session)
-            .is_some_and(|panel| panel.copied_tool.as_deref() == Some(key.as_str()));
-        let summary = model.summary.clone();
-        let expandable = model.expandable();
-        let toggle_session = session.to_owned();
-        let toggle_key = key.clone();
-        let head_id = format!("panel-tool-head-{session}-{key}");
-        let head_selector = head_id.clone();
-        let mut head = div()
-            .id(SharedString::from(head_id))
-            .debug_selector(move || head_selector.clone())
-            .role(Role::Button)
-            .aria_label(summary.clone())
-            .aria_expanded(open)
-            .w_full()
-            .min_w_0()
-            .flex()
-            .items_center()
-            .gap(px(4.))
-            .when(expandable, |head| head.cursor_pointer())
-            .on_click(cx.listener(move |app, _, _, cx| {
-                if !expandable {
-                    return;
-                }
-                cx.stop_propagation();
-                app.panels.update(&toggle_session, |panel| {
-                    if !panel.tool_open.remove(&toggle_key) {
-                        panel.tool_open.insert(toggle_key.clone());
-                    }
-                });
-                cx.notify();
-            }))
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .truncate()
-                    .text_size(px(11.))
-                    .line_height(px(16.))
-                    .text_color(theme.dim)
-                    .child(SharedString::from(summary)),
-            );
-        if expandable {
-            head = head.child(
-                div()
-                    .flex_shrink_0()
-                    .text_size(px(10.))
-                    .text_color(theme.faint)
-                    .child(if open { "▾" } else { "▸" }),
-            );
+        else {
+            return;
+        };
+        let Some(mut slot) = panel.free_slot else {
+            return;
+        };
+        if total_width <= 0. {
+            return;
         }
-        let copy_value = tool_view::copy_text(block);
-        let copy_id = format!("panel-tool-copy-{session}-{key}");
-        let copy_selector = copy_id.clone();
-        let copy_session = session.to_owned();
-        let copy_key = key.clone();
-        let copy_label = if copied { "Copied" } else { "Copy" };
-        let mut row = div()
-            .id(SharedString::from(format!("panel-tool-{session}-{key}")))
-            .role(Role::ListItem)
-            .w_full()
-            .min_w_0()
+        slot.left = (slot.left + dx / total_width * 100.)
+            .clamp(0., (100. - slot.width).max(0.));
+        self.panels
+            .update(session, |panel| panel.free_slot = Some(slot));
+    }
+
+    fn conversation_fills_workspace(&self) -> bool {
+        self.is_codex()
+            && self.active_document_key().is_none()
+            && !self.browser_open
+            && self.diff.is_none()
+            && !self.changes_open
+            && !self.tray.open
+    }
+
+    fn tiled_panel_width(&self, viewport: f32) -> f32 {
+        if self.agent_mode {
+            let rail = if self.is_codex() { RAIL_WIDTH } else { 44.2 };
+            (viewport - rail).max(0.)
+        } else if self.conversation_fills_workspace() {
+            let sidebar = if self.sidebar_open { self.sidebar_width } else { 0. };
+            (viewport - RAIL_WIDTH - sidebar).max(0.)
+        } else {
+            (viewport * TILED_PANEL_FRACTION).max(AGENT_WIDTH)
+        }
+    }
+
+    fn render_free_panels(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        let theme = Theme::default();
+        let active = self.active_id.clone();
+        let entries = self.panels.entries().to_vec();
+        let total_width = self.tiled_panel_width(f32::from(window.viewport_size().width));
+        let mut column = div()
+            .id("tiled-agent-panels")
+            .role(Role::Group)
+            .aria_label("Simultaneous agent panels")
+            .relative()
+            .h_full()
+            .when(self.agent_mode, |column| column.flex_1().min_w_0())
+            .when(!self.agent_mode, |column| column.w(px(total_width)).flex_shrink_0())
+            .overflow_hidden()
+            .bg(theme.agent)
             .flex()
             .flex_col()
-            .gap(px(1.));
-        let mut head_row = div()
-            .w_full()
-            .min_w_0()
-            .flex()
-            .items_center()
-            .gap(px(6.))
-            .child(head);
-        if expandable && !copy_value.is_empty() {
-            head_row = head_row.child(
+            .child(self.render_panel_tabs(cx));
+        let mut layer = div()
+            .id("tiled-agent-free-layer")
+            .relative()
+            .flex_1()
+            .min_h_0()
+            .w_full();
+        for panel in entries {
+            let slot = panel.free_slot.unwrap_or(crate::panels::PanelFreeSlot {
+                left: 0.,
+                top: 0.,
+                width: 100.,
+                height: 100.,
+            });
+            let is_active = active.as_deref() == Some(panel.session.as_str());
+            layer = layer.child(
                 div()
-                    .id(SharedString::from(copy_id))
-                    .debug_selector(move || copy_selector.clone())
-                    .role(Role::Button)
-                    .aria_label("Copy tool output")
-                    .flex_shrink_0()
-                    .px(px(4.))
-                    .py(px(1.))
-                    .rounded(px(4.))
-                    .text_size(px(9.5))
-                    .text_color(theme.faint)
-                    .cursor_pointer()
-                    .hover(|style| style.bg(theme.inset).text_color(theme.text))
-                    .on_click(cx.listener(move |app, _, _, cx| {
-                        if copy_value.is_empty() {
-                            return;
-                        }
-                        cx.stop_propagation();
-                        cx.write_to_clipboard(gpui::ClipboardItem::new_string(
-                            copy_value.clone(),
-                        ));
-                        app.panels.update(&copy_session, |panel| {
-                            panel.copied_tool = Some(copy_key.clone());
-                        });
-                        let reset_session = copy_session.clone();
-                        let reset_key = copy_key.clone();
-                        cx.spawn(async move |this, cx| {
-                            cx.background_executor()
-                                .timer(Duration::from_secs(2))
-                                .await;
-                            let _ = this.update(cx, |app, cx| {
-                                app.panels.update(&reset_session, |panel| {
-                                    if panel.copied_tool.as_deref()
-                                        == Some(reset_key.as_str())
-                                    {
-                                        panel.copied_tool = None;
-                                    }
-                                });
-                                cx.notify();
-                            });
-                        })
-                        .detach();
-                        cx.notify();
-                    }))
-                    .child(copy_label),
+                    .absolute()
+                    .left(gpui::relative(slot.left / 100.))
+                    .top(gpui::relative(slot.top / 100.))
+                    .w(gpui::relative(slot.width / 100.))
+                    .h(gpui::relative(slot.height / 100.))
+                    .child(self.render_panel_tile(
+                        &panel,
+                        is_active,
+                        slot.width / 100.,
+                        false,
+                        window,
+                        cx,
+                    )),
             );
         }
-        row = row.child(head_row);
-        if open && expandable {
-            let output = block.output.to_string();
-            let input = block.text.to_string();
-            let body_selector = format!("panel-tool-output-{session}-{key}");
-            let mut body = div()
-                .id(SharedString::from(format!(
-                    "panel-tool-output-{session}-{key}"
-                )))
-                .debug_selector(move || body_selector.clone())
-                .role(Role::Region)
-                .aria_label("Tool output")
-                .w_full()
-                .min_w_0()
-                .pl(px(10.))
-                .pr(px(4.))
-                .py(px(3.))
-                .flex()
-                .flex_col()
-                .gap(px(2.))
-                .border_t_1()
-                .border_color(theme.border_soft);
-            let show_input = matches!(model.kind, tool_view::Kind::Generic)
-                && !input.trim().is_empty();
-            if show_input {
-                body = body
-                    .child(
-                        div()
-                            .text_size(px(9.))
-                            .font_weight(FontWeight::BOLD)
-                            .text_color(theme.faint)
-                            .child("IN"),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(10.5))
-                            .line_height(px(16.))
-                            .text_color(theme.dim)
-                            .whitespace_normal()
-                            .child(SharedString::from(tool_view::display_output(
-                                &input,
-                            ))),
-                    );
-            }
-            if !output.trim().is_empty() {
-                body = body
-                    .child(
-                        div()
-                            .text_size(px(9.))
-                            .font_weight(FontWeight::BOLD)
-                            .text_color(theme.faint)
-                            .child("OUT"),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(10.5))
-                            .line_height(px(16.))
-                            .text_color(theme.dim)
-                            .whitespace_normal()
-                            .child(SharedString::from(tool_view::display_output(
-                                &output,
-                            ))),
-                    );
-            }
-            if !block.files.is_empty() {
-                body = body.child(self.render_tile_tool_files(
-                    session, &key, &block.files, cx,
-                ));
-            }
-            if !block.sub_calls.is_empty() {
-                body = body.child(
-                    div()
-                        .text_size(px(9.))
-                        .font_weight(FontWeight::BOLD)
-                        .text_color(theme.faint)
-                        .child(SharedString::from(format!(
-                            "TOOL CALLS · {}",
-                            block.sub_calls.len()
-                        ))),
-                );
-                for (index, call) in block.sub_calls.iter().enumerate() {
-                    body = body.child(self.render_tile_tool_subcall(
-                        session,
-                        &key,
-                        &format!("sub{index}"),
-                        call,
-                        0,
-                        cx,
-                    ));
-                }
-            }
-            let (status, color) = match block.status {
-                ToolStatus::Success => ("Success", theme.green),
-                ToolStatus::Failed => ("Failed", theme.red),
-                ToolStatus::Running | ToolStatus::Streaming => ("Running", theme.yellow),
-                ToolStatus::None => ("Queued", theme.faint),
-            };
-            body = body.child(div().text_size(px(9.)).text_color(color).child(status));
-            row = row.child(body);
+        column = column.child(layer);
+        if self.usage_open {
+            column = column.child(self.render_usage_popup(cx));
         }
-        row.into_any_element()
+        if self.picker.is_some() {
+            column = column.child(self.render_picker(cx));
+        }
+        column.into_any_element()
     }
 
     fn render_tiled_panels(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        self.sync_tile_compact();
         let theme = Theme::default();
+        let free = self
+            .panels
+            .entries()
+            .iter()
+            .any(|panel| panel.free_slot.is_some());
+        if free {
+            return self.render_free_panels(window, cx);
+        }
         let rows = self.panels.rows();
         let entries = self.panels.entries().to_vec();
         let active = self.active_id.clone();
-        let total_width =
-            (f32::from(window.viewport_size().width) * TILED_PANEL_FRACTION).max(AGENT_WIDTH);
+        let total_width = self.tiled_panel_width(f32::from(window.viewport_size().width));
         let theme_border = theme.border;
         let mut column = div()
             .id("tiled-agent-panels")
             .role(Role::Group)
             .aria_label("Simultaneous agent panels")
             .relative()
-            .w(px(total_width))
             .h_full()
-            .flex_shrink_0()
+            .when(self.agent_mode, |column| column.flex_1().min_w_0())
+            .when(!self.agent_mode, |column| column.w(px(total_width)).flex_shrink_0())
             .overflow_hidden()
             .bg(theme.agent)
             .flex()
             .flex_col()
             .child(self.render_panel_tabs(cx));
+        let mut grid = div().flex_1().min_h_0().w_full().flex().flex_col();
         for row in rows {
             let last_index = row.last().map(|(index, _)| *index);
             let height = row
@@ -9174,11 +9852,16 @@ impl VelaApp {
                 row_div = row_div
                     .child(self.render_panel_tile(panel, is_active, width, resizable, window, cx));
             }
-            column = column.child(row_div);
+            grid = grid.child(row_div);
         }
-        column
-            .child(self.panel_drag_observer(cx))
-            .into_any_element()
+        column = column.child(grid);
+        if self.usage_open {
+            column = column.child(self.render_usage_popup(cx));
+        }
+        if self.picker.is_some() {
+            column = column.child(self.render_picker(cx));
+        }
+        column.into_any_element()
     }
 
     /// Reference-shaped child-session back control. Root sessions render none.
@@ -9245,13 +9928,127 @@ impl VelaApp {
     }
 
     fn render_agent_panel(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        self.ensure_agent_tui_views(cx);
         if self.panels.len() > 1 {
             return self.render_tiled_panels(window, cx);
         }
         let theme = Theme::default();
-        let transcript = self.render_transcript(window, cx);
-        let composer = self.render_composer(window, cx);
-        let picker = self.render_picker(cx);
+        let active_session = self.active_id.clone();
+        // Source swaps the whole panel body for the embedded TUI and keeps the
+        // header available for mode switching and close.
+        let tui_session = active_session
+            .as_deref()
+            .filter(|session| {
+                self.agent_panel_mode(session) == AgentPanelMode::Tui
+                    && self.agent_tui.views.contains_key(*session)
+            })
+            .map(str::to_owned);
+        let mut options = active_session
+            .as_deref()
+            .map(|session| self.render_agent_panel_options(session, cx));
+        let mut timer = self
+            .phase
+            .is_active()
+            .then(|| turn_started_at_blocks(&self.blocks))
+            .flatten()
+            .map(|started| turn_timer_element(started, "agent-turn-timer".into(), &theme, !cx.reduce_motion()));
+        let body = if let Some(session) = tui_session.as_deref() {
+            let header_options = options.take();
+            // The header is painted after the terminal so its popup menu stays
+            // above the TUI; the body reserves the same 34px row.
+            let header = div()
+                .absolute()
+                .top_0()
+                .left_0()
+                .right_0()
+                .h(px(34.))
+                .px(px(8.))
+                .flex()
+                .items_center()
+                .justify_end()
+                .bg(theme.agent)
+                .border_b_1()
+                .border_color(theme.border)
+                .when_some(timer.take(), |row, timer| row.child(timer))
+                .when_some(header_options, |row, options| row.child(options));
+            div()
+                .relative()
+                .flex_1()
+                .min_h_0()
+                .w_full()
+                .flex()
+                .flex_col()
+                .child(
+                    div()
+                        .flex_1()
+                        .min_h_0()
+                        .w_full()
+                        .pt(px(34.))
+                        .flex()
+                        .flex_col()
+                        .child(self.render_agent_tui(session, window, cx)),
+                )
+                .child(header)
+                .into_any_element()
+        } else {
+            let notice = active_session
+                .as_deref()
+                .and_then(|session| self.agent_tui.notices.get(session))
+                .cloned()
+                .map(|message| {
+                    div()
+                        .id(SharedString::from(format!(
+                            "agent-tui-notice-{}",
+                            active_session.as_deref().unwrap_or_default()
+                        )))
+                        .debug_selector({
+                            let selector =
+                                format!("agent-tui-notice-{}", active_session.as_deref().unwrap_or_default());
+                            move || selector.clone()
+                        })
+                        .w_full()
+                        .flex_shrink_0()
+                        .px(px(12.))
+                        .pt(px(8.))
+                        .text_size(px(10.5))
+                        .line_height(px(15.))
+                        .text_color(theme.yellow)
+                        .child(message)
+                        .into_any_element()
+                });
+            div()
+                .relative()
+                .flex_1()
+                .min_h_0()
+                .w_full()
+                .flex()
+                .flex_col()
+                .when_some(notice, |body, notice| body.child(notice))
+                .child(self.render_transcript(window, cx))
+                .child(self.forms.clone())
+                .child(self.render_composer(window, cx))
+                .child(self.render_picker(cx))
+                .when(!self.is_codex() && (timer.is_some() || options.is_some()), |body| {
+                    let mut row = div()
+                        .absolute()
+                        .top_0()
+                        .right_0()
+                        .pl(px(12.))
+                        .pr(px(8.))
+                        .py(px(5.))
+                        .flex()
+                        .items_center()
+                        .gap(px(7.));
+                    if let Some(timer) = timer.take() {
+                        row = row.child(timer);
+                    }
+                    if let Some(options) = options.take() {
+                        row = row.child(options);
+                    }
+                    body.child(row)
+                })
+                .into_any_element()
+        };
         let usage_popup = self.usage_open.then(|| self.render_usage_popup(cx));
         let back = self
             .active_id
@@ -9269,6 +10066,19 @@ impl VelaApp {
             });
         let mut panel = div()
             .relative()
+            .on_key_down(cx.listener(|app, event: &KeyDownEvent, _, cx| {
+                if event.keystroke.key != "escape" {
+                    return;
+                }
+                if app.agent_tui.menu.is_some() {
+                    app.close_agent_panel_menu(cx);
+                    cx.stop_propagation();
+                } else if app.usage_open {
+                    app.usage_open = false;
+                    cx.stop_propagation();
+                    cx.notify();
+                }
+            }))
             .on_drop(cx.listener(Self::stage_dropped_files))
             .on_drag_move(cx.listener(
                 |app, event: &gpui::DragMoveEvent<gpui::ExternalPaths>, _, cx| {
@@ -9287,13 +10097,20 @@ impl VelaApp {
                     }
                 },
             ))
-            .w(px(AGENT_WIDTH))
             .h_full()
             .flex_shrink_0()
             .bg(theme.agent)
             .overflow_hidden()
             .flex()
             .flex_col();
+        if self.agent_mode {
+            panel = panel.flex_1().w_full().min_w_0();
+        } else {
+            panel = panel.w(px(AGENT_WIDTH));
+        }
+        if !self.agent_mode {
+            panel = panel.w(px(self.agent_width));
+        }
         panel = if self.is_codex() {
             panel.border_l_1().border_color(theme.border)
         } else {
@@ -9301,6 +10118,7 @@ impl VelaApp {
                 .rounded(px(PANEL_RADIUS))
                 .border_1()
                 .border_color(theme.border)
+                .shadow(theme.medium_shadow())
         };
         let content = div()
             .relative()
@@ -9312,28 +10130,40 @@ impl VelaApp {
             .flex_col()
             .child(self.render_panel_tabs(cx))
             .when_some(back, |content, back| content.child(back))
-            .child(
-                div()
-                    .relative()
-                    .flex_1()
-                    .min_h_0()
-                    .w_full()
-                    .flex()
-                    .flex_col()
-                    .child(transcript),
-            )
-            .child(self.forms.clone())
-            .child(composer)
-            .child(picker)
-            .child(self.render_usage_button(cx))
+            .child(body)
             .when_some(usage_popup, |content, popup| content.child(popup))
             .into_any_element();
-        panel
-            .child(if self.is_codex() {
-                content
-            } else {
-                RoundedSurface::new(content, px(PANEL_RADIUS - 1.)).into_any_element()
-            })
+        let panel = panel.child(if self.is_codex() {
+            content
+        } else {
+            RoundedSurface::new(content, px(PANEL_RADIUS - 1.)).into_any_element()
+        });
+        if self.agent_mode {
+            return panel.into_any_element();
+        }
+        let handle = div()
+            .id("agent-resize-left")
+            .debug_selector(|| "agent-resize-left".into())
+            .absolute()
+            .left(px(-5.))
+            .top_0()
+            .bottom_0()
+            .w(px(10.))
+            .cursor(CursorStyle::ResizeColumn)
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|app, event: &MouseDownEvent, _, cx| {
+                    app.agent_drag = Some(f32::from(event.position.x));
+                    cx.stop_propagation();
+                }),
+            );
+        div()
+            .relative()
+            .h_full()
+            .w(px(self.agent_width))
+            .flex_shrink_0()
+            .child(panel)
+            .child(handle)
             .into_any_element()
     }
 
@@ -9341,9 +10171,9 @@ impl VelaApp {
         let theme = Theme::default();
         let mut nav = div()
             .w(px(if self.is_codex() {
-                SIDEBAR_WIDTH - 1.
+                self.sidebar_width - 1.
             } else {
-                SIDEBAR_WIDTH
+                self.sidebar_width
             }))
             .h_full()
             .flex_shrink_0()
@@ -9452,12 +10282,12 @@ impl VelaApp {
         let gap = if self.is_codex() { 10. } else { 12. };
         let visible_sidebar = self.settings_open || self.sidebar_open;
         let workspace_left = if self.is_codex() {
-            RAIL_WIDTH + if visible_sidebar { SIDEBAR_WIDTH } else { 0. }
+            RAIL_WIDTH + if visible_sidebar { self.sidebar_width } else { 0. }
         } else {
             10. + 44.2
                 + 10.
                 + if visible_sidebar {
-                    SIDEBAR_WIDTH + 10.
+                    self.sidebar_width + 10.
                 } else {
                     0.
                 }
@@ -9475,22 +10305,21 @@ impl VelaApp {
                 .items_center()
                 .justify_center()
                 .text_color(theme.dim)
+                .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
                 .hover(move |style| style.bg(hover).text_color(theme.text))
         };
+        let sidebar_visible = self.sidebar_open && !self.agent_mode;
         let sidebar = control("sidebar-toggle")
             .role(gpui::Role::Button)
             .focusable()
             .tab_stop(true)
-            .aria_label(if self.sidebar_open {
+            .aria_label(if sidebar_visible {
                 "Hide left panel"
             } else {
                 "Show left panel"
             })
             .cursor_pointer()
-            .on_click(cx.listener(|this, _, _, cx| {
-                this.sidebar_open = !this.sidebar_open;
-                cx.notify();
-            }))
+            .on_click(cx.listener(|this, _, _, cx| this.toggle_sidebar_from_titlebar(cx)))
             .child(crate::icons::inherited_glyph(
                 if self.sidebar_open {
                     "panel-left"
@@ -9501,15 +10330,38 @@ impl VelaApp {
             ));
         // Multi-panel ownership and Agent Mode are still tracked as migration
         // work; this replaces the previous hand-built decorative bot geometry.
-        let agent_mode =
-            control("titlebar-theme").child(crate::icons::inherited_glyph("agent-mode", 20.));
+        let agent_mode_active = self.agent_mode;
+        let agent_mode = control("titlebar-agent-mode")
+            .role(gpui::Role::Button)
+            .focusable()
+            .tab_stop(true)
+            .aria_label(if agent_mode_active {
+                "Exit Agent Mode"
+            } else {
+                "Enter Agent Mode"
+            })
+            .aria_toggled(if agent_mode_active {
+                gpui::Toggled::True
+            } else {
+                gpui::Toggled::False
+            })
+            .cursor_pointer()
+            .when(agent_mode_active, |button| button.bg(theme.selected))
+            .on_click(cx.listener(|this, _, _, cx| this.toggle_agent_mode(cx)))
+            .child(crate::icons::inherited_glyph("agent-mode", 20.));
+        let can_add = self.occupied_panel_slots() < 8;
         let add = control("titlebar-add")
             .role(gpui::Role::Button)
             .focusable()
             .tab_stop(true)
-            .aria_label("Add model panel")
-            .cursor_pointer()
-            .on_click(cx.listener(|this, _, _, cx| this.choose_workspace(cx)))
+            .aria_label(if can_add {
+                "Add model panel"
+            } else {
+                "Agent panel limit reached"
+            })
+            .when(can_add, |button| button.cursor_pointer())
+            .opacity(if can_add { 1. } else { 0.45 })
+            .on_click(cx.listener(|this, _, _, cx| this.add_workspace_panel(cx)))
             .child(crate::icons::inherited_glyph("square-plus", 20.));
         let agent = control("titlebar-agent")
             .role(gpui::Role::Button)
@@ -9521,10 +10373,7 @@ impl VelaApp {
                 "Show agent panel"
             })
             .cursor_pointer()
-            .on_click(cx.listener(|this, _, _, cx| {
-                this.agent_panel_open = !this.agent_panel_open;
-                cx.notify();
-            }))
+            .on_click(cx.listener(|this, _, _, cx| this.toggle_agent_panel(cx)))
             .child(crate::icons::inherited_glyph(
                 if self.agent_panel_open {
                     "panel-right"
@@ -9543,23 +10392,54 @@ impl VelaApp {
             .pl(px(80.))
             .pr(px(12.))
             .gap(px(gap))
-            .window_control_area(WindowControlArea::Drag)
             .bg(theme.top)
             .when(!self.is_codex(), |bar| {
                 bar.border_b_1().border_color(theme.border)
             })
-            .child(div().w(px(leading_width)).flex_shrink_0().child(sidebar))
             .child(
                 div()
+                    .id("titlebar-drag-background")
+                    .absolute()
+                    .top_0()
+                    .left_0()
+                    .size_full()
+                    .on_mouse_down(MouseButton::Left, |_, window, cx| {
+                        window.start_window_move();
+                        cx.stop_propagation();
+                    }),
+            )
+            .child(
+                div()
+                    .id("titlebar-drag-left")
+                    .w(px(leading_width))
+                    .flex_shrink_0()
+                    .on_mouse_down(MouseButton::Left, |_, window, cx| {
+                        window.start_window_move();
+                        cx.stop_propagation();
+                    })
+                    .child(sidebar),
+            )
+            .child(
+                div()
+                    .id("titlebar-tabs-area")
                     .flex_1()
                     .min_w_0()
+                    .on_mouse_down(MouseButton::Left, |_, window, cx| {
+                        window.start_window_move();
+                        cx.stop_propagation();
+                    })
                     .child(self.render_titlebar_tabs(cx)),
             )
             .child(
                 div()
+                    .id("titlebar-actions-area")
                     .flex()
                     .items_center()
                     .gap(px(2.))
+                    .on_mouse_down(MouseButton::Left, |_, window, cx| {
+                        window.start_window_move();
+                        cx.stop_propagation();
+                    })
                     .child(agent_mode)
                     .child(add)
                     .child(agent),
@@ -9596,10 +10476,11 @@ impl VelaApp {
             SidebarTab::Changes => self.render_changes_body(cx),
         };
         let mut sidebar = div()
+            .debug_selector(|| "sidebar-root".into())
             .w(px(if self.is_codex() {
-                SIDEBAR_WIDTH - 1.
+                self.sidebar_width - 1.
             } else {
-                SIDEBAR_WIDTH
+                self.sidebar_width
             }))
             .h_full()
             .flex_shrink_0()
@@ -9614,6 +10495,7 @@ impl VelaApp {
                 .rounded(px(PANEL_RADIUS))
                 .border_1()
                 .border_color(theme.border)
+                .shadow(theme.medium_shadow())
         };
         let content = div()
             .w_full()
@@ -9622,21 +10504,25 @@ impl VelaApp {
             .flex_col()
             .child(
                 div()
-                    .h(px(if self.sidebar_tab == SidebarTab::Sessions {
-                        46.
-                    } else {
-                        56.
-                    }))
+                    .h(px(56.))
                     .flex_shrink_0()
                     .pl(px(if self.sidebar_tab == SidebarTab::Sessions {
-                        29.
+                        10.
                     } else {
                         16.
                     }))
-                    .pr(px(12.))
+                    .pr(px(if self.sidebar_tab == SidebarTab::Sessions {
+                        18.
+                    } else {
+                        12.
+                    }))
                     .flex()
                     .items_center()
-                    .gap(px(8.0))
+                    .gap(px(if self.sidebar_tab == SidebarTab::Sessions {
+                        5.
+                    } else {
+                        8.
+                    }))
                     .child(
                         div()
                             .flex_1()
@@ -9681,12 +10567,33 @@ impl VelaApp {
             )
             .child(body)
             .into_any_element();
-        sidebar
-            .child(if self.is_codex() {
-                content
-            } else {
-                RoundedSurface::new(content, px(PANEL_RADIUS - 1.)).into_any_element()
-            })
+        let sidebar = sidebar.child(if self.is_codex() {
+            content
+        } else {
+            RoundedSurface::new(content, px(PANEL_RADIUS - 1.)).into_any_element()
+        });
+        let handle = div()
+            .id("sidebar-resize")
+            .debug_selector(|| "sidebar-resize".into())
+            .absolute()
+            .right(px(-5.))
+            .top_0()
+            .bottom_0()
+            .w(px(10.))
+            .cursor(CursorStyle::ResizeColumn)
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|app, event: &MouseDownEvent, _, cx| {
+                    app.sidebar_drag = Some(f32::from(event.position.x));
+                    cx.stop_propagation();
+                }),
+            );
+        div()
+            .relative()
+            .h_full()
+            .flex_shrink_0()
+            .child(sidebar)
+            .child(handle)
             .into_any_element()
     }
 
@@ -9696,17 +10603,19 @@ impl VelaApp {
         if self.session_search_open {
             body = body.child(
                 div()
-                    .mx(px(16.))
+                    .ml(px(8.))
+                    .mr(px(6.))
+                    .mt(px(2.))
                     .mb(px(6.))
-                    .p(px(6.))
-                    .border_1()
-                    .border_color(theme.border)
-                    .rounded(px(5.))
+                    .h(px(28.))
+                    .px(px(10.))
+                    .rounded(px(8.))
+                    .bg(theme.inset)
                     .child(self.session_search_input.clone()),
             );
         }
         body = body.child(
-            div().pl(px(21.0)).pr(px(8.0)).pt(px(10.0)).child(
+            div().pl(px(11.0)).pr(px(6.0)).pt(px(0.0)).child(
                 div()
                     .id("new-session")
                     .role(Role::Button)
@@ -9714,10 +10623,10 @@ impl VelaApp {
                     .tab_index(0)
                     .h(px(30.0))
                     .px(px(8.0))
-                    .rounded(px(7.0))
+                    .rounded(px(999.0))
                     .flex()
                     .items_center()
-                    .gap(px(13.0))
+                    .gap(px(7.0))
                     .cursor_pointer()
                     .text_size(px(13.0))
                     .text_color(theme.text)
@@ -9744,16 +10653,20 @@ impl VelaApp {
             body = body
                 .child(
                     div()
-                        .pl(px(26.))
-                        .pt(px(12.))
-                        .pb(px(4.))
-                        .text_size(px(12.5))
+                        .h(px(30.))
+                        .mt(px(12.))
+                        .pl(px(14.))
+                        .pr(px(6.))
+                        .flex()
+                        .items_center()
+                        .text_size(px(13.0))
+                        .font_weight(FontWeight::MEDIUM)
                         .text_color(theme.faint)
                         .child("Pinned"),
                 )
                 .child(
                     div()
-                        .pl(px(21.))
+                        .pl(px(6.))
                         .pr(px(6.))
                         .h(px(
                             (self.filtered_pinned_sessions.len() as f32 * 28.).min(168.)
@@ -9770,9 +10683,9 @@ impl VelaApp {
         }
         body = body.child(
             div()
-                .pl(px(26.0))
-                .pr(px(10.0))
-                .pt(px(16.0))
+                .pl(px(6.0))
+                .pr(px(6.0))
+                .pt(px(21.0))
                 .pb(px(4.0))
                 .flex()
                 .items_center()
@@ -9781,6 +10694,7 @@ impl VelaApp {
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(theme.faint)
                 .id("session-projects-toggle")
+                .group("projects-section")
                 .role(Role::Button)
                 .aria_label(if self.session_projects_open {
                     "Collapse Projects"
@@ -9811,6 +10725,8 @@ impl VelaApp {
                         .tab_index(0)
                         .aria_label("Save a workspace in Vela")
                         .px(px(5.))
+                        .opacity(0.)
+                        .group_hover("projects-section", |style| style.opacity(1.))
                         .child("+")
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
                         .on_click(cx.listener(|this, _, _, cx| {
@@ -9824,9 +10740,9 @@ impl VelaApp {
         }
         body = body.child(
             div()
-                .pl(px(26.0))
-                .pr(px(10.0))
-                .pt(px(15.0))
+                .pl(px(6.0))
+                .pr(px(6.0))
+                .pt(px(20.0))
                 .pb(px(4.0))
                 .flex()
                 .items_center()
@@ -9835,6 +10751,7 @@ impl VelaApp {
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(theme.faint)
                 .id("session-recents-toggle")
+                .debug_selector(|| "session-recents-toggle".into())
                 .role(Role::Button)
                 .aria_label(if self.session_recents_open {
                     "Collapse Recents"
@@ -9863,9 +10780,9 @@ impl VelaApp {
                 .flex_1()
                 .min_h_0()
                 .w_full()
-                .pl(px(21.0))
+                .pl(px(6.0))
                 .pr(px(6.0))
-                .pt(px(12.0))
+                .pt(px(0.0))
                 .pb(px(8.0))
                 .flex()
                 .flex_col()
@@ -10314,12 +11231,19 @@ impl VelaApp {
     }
 
     fn render_transcript(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        if self.transcript_ui.user_text_session.as_deref() != self.active_id.as_deref() {
+            self.transcript_ui.user_text_selection = None;
+            self.transcript_ui.user_message_segments.clear();
+            self.transcript_ui.user_message_images.clear();
+            self.transcript_ui.user_text_session = self.active_id.clone();
+        }
         if self.active_id.is_none() {
             return self.render_empty_transcript();
         }
         if self.blocks.is_empty() {
             return self.render_empty_transcript();
         }
+        self.ensure_user_segment_texts();
         self.render_native_transcript(window, cx)
     }
 
@@ -10461,13 +11385,6 @@ impl VelaApp {
         let measured_terminal =
             terminal.map(|terminal| (terminal.id.clone(), terminal.cols, terminal.rows));
         let selection_geometry = terminal.map(|terminal| terminal.geometry.clone());
-        if let Some(terminal) = terminal {
-            terminal
-                .input
-                .read(cx)
-                .anchor
-                .set(terminal.emulator.cursor());
-        }
         let input_entity = terminal.map(|terminal| terminal.input.clone());
         let input_focus = terminal.map(|terminal| terminal.focus.clone());
         let workspace_owner = self.terminals.workspace.clone();
@@ -10481,113 +11398,39 @@ impl VelaApp {
             .unwrap_or_default();
         let rows = terminal.map(|terminal| terminal.rows as usize).unwrap_or(0);
         let cols = terminal.map(|terminal| terminal.cols as usize).unwrap_or(0);
-        let cursor = terminal
-            .and_then(|terminal| {
-                let shape = terminal.emulator.cursor_shape();
-                (shape != vela_terminal::emulator::CursorShape::Hidden)
-                    .then(|| (terminal.emulator.cursor(), shape))
-            })
-            .filter(|_| cursor_blink_visible);
-        let cursor_width = terminal
-            .map(|terminal| terminal.emulator.cursor_cell_width())
-            .unwrap_or(1);
-        let mut grid = div()
-            .relative()
-            .w_full()
-            .h(px(rows.max(1) as f32 * 15.0))
-            .overflow_hidden()
-            .font_family(theme::source_font())
-            .text_size(px(12.))
-            .line_height(px(15.))
-            .text_color(theme.text);
-        for row_ix in 0..rows {
-            let cells = terminal.unwrap().emulator.line(row_ix);
-            grid = grid.child(render_terminal_row(
-                &cells, cols, cell_width, row_ix, &theme,
-            ));
-        }
-        if let Some((cursor, shape)) = cursor
-            && cursor.row < rows
-        {
-            use vela_terminal::emulator::CursorShape;
-            let base = div()
-                .absolute()
-                .left(px(cursor.col as f32 * cell_width))
-                .top(px(cursor.row as f32 * 15.))
-                .w(px(cursor_width as f32 * cell_width))
-                .h(px(15.));
-            let cursor = match shape {
-                CursorShape::Block => base
-                    .bg(theme.accent.opacity(0.32))
-                    .border_1()
-                    .border_color(theme.accent),
-                CursorShape::Underline => base.child(
-                    div()
-                        .absolute()
-                        .left_0()
-                        .right_0()
-                        .bottom_0()
-                        .h(px(2.))
-                        .bg(theme.accent),
-                ),
-                CursorShape::Beam => base.child(
-                    div()
-                        .absolute()
-                        .left_0()
-                        .top_0()
-                        .bottom_0()
-                        .w(px(2.))
-                        .bg(theme.accent),
-                ),
-                CursorShape::HollowBlock => base.border_1().border_color(theme.accent),
-                CursorShape::Hidden => base,
-            };
-            grid = grid.child(cursor);
-        }
-        if let Some(terminal) = terminal
-            && !terminal.input.read(cx).buffer.text().is_empty()
-        {
-            let composition = &terminal.input.read(cx).buffer;
-            let caret = terminal.emulator.cursor();
-            if caret.row < rows {
-                grid = grid.child(
-                    div()
-                        .absolute()
-                        .left(px(caret.col as f32 * cell_width))
-                        .top(px(caret.row as f32 * 15.))
-                        .bg(theme.editor)
-                        .child(
-                            StyledText::new(SharedString::from(composition.text().to_owned()))
-                                .with_runs(vec![TextRun {
-                                    len: composition.text().len(),
-                                    font: theme::source_editor_font(),
-                                    color: theme.text.into(),
-                                    background_color: None,
-                                    underline: Some(gpui::UnderlineStyle {
-                                        thickness: px(1.),
-                                        color: Some(theme.accent.into()),
-                                        wavy: false,
-                                    }),
-                                    strikethrough: None,
-                                }]),
-                        ),
-                );
-            }
-        }
         let focus = terminal.map(|terminal| terminal.focus.clone());
-        if terminal.is_none() {
-            grid = grid.child(
-                div()
-                    .id("empty-terminal-message")
-                    .role(Role::Label)
-                    .aria_label("No terminal open. Press + to start one.")
-                    .child("No terminal open. Press + to start one."),
-            );
-        }
-        let active = panel == TerminalPanel::Terminal;
         let terminal_mouse = terminal.is_some_and(|terminal| {
             terminal.emulator.mouse_report_mode() != vela_terminal::emulator::MouseReportMode::Off
         });
+        let grid = match terminal {
+            Some(terminal) => render_terminal_grid(
+                terminal,
+                cell_width,
+                (rows, cols),
+                cursor_blink_visible,
+                (12., 15.),
+                &theme,
+                cx,
+            ),
+            None => div()
+                .relative()
+                .w_full()
+                .h(px(15.0))
+                .overflow_hidden()
+                .font_family(theme::source_font())
+                .text_size(px(12.))
+                .line_height(px(15.))
+                .text_color(theme.text)
+                .child(
+                    div()
+                        .id("empty-terminal-message")
+                        .role(Role::Label)
+                        .aria_label("No terminal open. Press + to start one.")
+                        .child("No terminal open. Press + to start one."),
+                )
+                .into_any_element(),
+        };
+        let active = panel == TerminalPanel::Terminal;
         let body = match panel {
             TerminalPanel::Terminal => div()
                 .id("terminal-grid")
@@ -10848,31 +11691,6 @@ impl VelaApp {
                             .child(tab("SASS OUTPUT", 2, panel == TerminalPanel::Sass, cx))
                             .children(remaining_tabs),
                     )
-                    .when(self.runtime_capabilities.tui, |bar| {
-                        bar.child(
-                            div()
-                                .id("new-tui-terminal")
-                                .debug_selector(|| "new-tui-terminal".into())
-                                .role(Role::Button)
-                                .aria_label("Open Agent TUI")
-                                .focusable()
-                                .tab_stop(true)
-                                .h(px(22.0))
-                                .px(px(5.0))
-                                .flex_shrink_0()
-                                .flex()
-                                .items_center()
-                                .justify_center()
-                                .rounded(px(5.0))
-                                .text_size(px(9.5))
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(theme.dim)
-                                .cursor_pointer()
-                                .hover(|style| style.bg(theme.inset))
-                                .on_click(cx.listener(|app, _, _, cx| app.spawn_tui_terminal(cx)))
-                                .child("TUI"),
-                        )
-                    })
                     .child(
                         div()
                             .id("new-terminal")
@@ -10963,51 +11781,226 @@ impl VelaApp {
             .into_any_element()
     }
 
-    fn render_todos(&self) -> AnyElement {
+    fn toggle_todos(&mut self, session: Option<String>, cx: &mut Context<Self>) {
+        match session {
+            Some(session) => {
+                let state = self.panel_composers.entry(session).or_default();
+                state.todos_collapsed = !state.todos_collapsed;
+            }
+            None => self.todos_collapsed = !self.todos_collapsed,
+        }
+        cx.notify();
+    }
+
+    /// Source's `OpenCodeTodoDock`: a bordered card above the composer with an
+    /// `N of M steps completed` header, collapse control and every todo row.
+    fn render_todo_dock(
+        &mut self,
+        session: Option<String>,
+        todos: Vec<TodoItem>,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         let theme = Theme::default();
-        if self.todos.is_empty() {
+        if todos.is_empty() {
             return div().into_any_element();
         }
-        let mut column = div()
-            .w_full()
-            .rounded(px(9.0))
-            .border_1()
-            .border_color(theme.border)
-            .bg(theme.inset)
-            .px(px(10.0))
-            .py(px(7.0))
-            .flex()
-            .flex_col()
-            .gap(px(3.0));
-        for todo in self.todos.iter().take(8) {
-            let (marker, color) = match todo.status.as_str() {
-                "completed" => ("✓", theme.green),
-                "in_progress" => ("●", theme.accent),
-                "cancelled" => ("–", theme.faint),
-                _ => ("○", theme.faint),
+        let key = session.clone().unwrap_or_else(|| "active".to_owned());
+        let collapsed = match &session {
+            Some(session) => self
+                .panel_composers
+                .get(session)
+                .is_some_and(|state| state.todos_collapsed),
+            None => self.todos_collapsed,
+        };
+        let completed = todos
+            .iter()
+            .filter(|todo| todo.status == "completed")
+            .count();
+        let total = todos.len();
+        let (dock_debug, progress_debug, toggle_debug, list_debug, item_prefix) =
+            if session.is_some() {
+                (
+                    format!("panel-todo-dock-{key}"),
+                    format!("panel-todo-progress-{key}"),
+                    format!("panel-todo-toggle-button-{key}"),
+                    format!("panel-todo-list-{key}"),
+                    format!("panel-todo-item-{key}"),
+                )
+            } else {
+                (
+                    "session-todo-dock".to_owned(),
+                    "session-todo-progress".to_owned(),
+                    "session-todo-toggle-button".to_owned(),
+                    "session-todo-list".to_owned(),
+                    "session-todo-item".to_owned(),
+                )
             };
-            column = column.child(
+        let toggle_session = session.clone();
+        let chevron_session = session.clone();
+        let header = div()
+            .id(SharedString::from(format!("todo-toggle-{key}")))
+            .role(Role::Button)
+            .aria_label(format!("{completed} of {total} steps completed"))
+            .h(px(42.))
+            .pl(px(16.))
+            .pr(px(8.))
+            .flex()
+            .items_center()
+            .gap(px(8.))
+            .cursor_pointer()
+            .on_click(cx.listener(move |app, _, _, cx| {
+                app.toggle_todos(toggle_session.clone(), cx);
+            }))
+            .child({
+                let selector = progress_debug.clone();
                 div()
+                    .debug_selector(move || selector.clone())
+                    .flex_shrink_0()
+                    .text_size(px(13.))
+                    .line_height(px(20.))
+                    .text_color(theme.dim)
+                    .child(SharedString::from(format!(
+                        "{completed} of {total} steps completed"
+                    )))
+            })
+            .child({
+                let id = format!("todo-toggle-button-{key}");
+                let selector = toggle_debug.clone();
+                let session = chevron_session;
+                div()
+                    .id(SharedString::from(id))
+                    .debug_selector(move || selector.clone())
+                    .role(Role::Button)
+                    .aria_label(if collapsed {
+                        "Expand todos"
+                    } else {
+                        "Collapse todos"
+                    })
+                    .size(px(28.))
+                    .ml_auto()
+                    .flex_shrink_0()
                     .flex()
                     .items_center()
-                    .gap(px(7.0))
-                    .text_size(px(10.5))
-                    .child(div().text_color(color).child(marker))
-                    .child(
+                    .justify_center()
+                    .rounded(px(6.))
+                    .cursor_pointer()
+                    .hover(|style| style.bg(theme.inset))
+                    .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+                    .on_click(cx.listener(move |app, _, _, cx| {
+                        cx.stop_propagation();
+                        app.toggle_todos(session.clone(), cx);
+                    }))
+                    .child(glyph("chevron-down", 12., theme.dim).with_transformation(
+                        gpui::Transformation::rotate(gpui::percentage(if collapsed {
+                            0.5
+                        } else {
+                            0.0
+                        })),
+                    ))
+            });
+        let mut dock = div()
+            .id(SharedString::from(format!("todo-dock-{key}")))
+            .debug_selector(move || dock_debug.clone())
+            .w_full()
+            .min_w_0()
+            .min_h(px(78.))
+            .max_h(px(244.))
+            .overflow_hidden()
+            .rounded(px(12.))
+            .border(px(0.5))
+            .border_color(theme.border)
+            .bg(theme.inset)
+            .flex()
+            .flex_col()
+            .child(header);
+        if !collapsed {
+            let mut list = div()
+                .id(SharedString::from(format!("todo-list-{key}")))
+                .debug_selector(move || list_debug.clone())
+                .w_full()
+                .min_w_0()
+                .max_h(px(168.))
+                .px(px(12.))
+                .pb(px(44.))
+                .flex()
+                .flex_col()
+                .gap(px(6.))
+                .overflow_y_scroll();
+            for (index, todo) in todos.iter().enumerate() {
+                let completed = todo.status == "completed";
+                let active = todo.status == "in_progress";
+                let cancelled = todo.status == "cancelled";
+                let selector = format!("{item_prefix}-{index}");
+                let control = div()
+                    .size(px(17.))
+                    .mt(px(1.))
+                    .flex_shrink_0()
+                    .rounded(px(999.))
+                    .border(px(2.))
+                    .border_color(if completed {
+                        theme.accent
+                    } else if active {
+                        theme.accent.opacity(0.55)
+                    } else {
+                        theme.accent.opacity(0.25)
+                    })
+                    .bg(if completed {
+                        theme.accent.opacity(0.14)
+                    } else {
+                        theme.inset
+                    })
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .child(if completed {
+                        glyph("check", 11., theme.dim).into_any_element()
+                    } else if active {
+                        use gpui::AnimationExt;
                         div()
-                            .flex_1()
-                            .min_w_0()
-                            .truncate()
-                            .text_color(if todo.status == "completed" {
-                                theme.faint
-                            } else {
-                                theme.dim
-                            })
-                            .child(SharedString::from(todo.content.clone())),
-                    ),
-            );
+                            .size(px(6.))
+                            .rounded(px(999.))
+                            .bg(theme.accent)
+                            .with_animation(
+                                SharedString::from(format!("todo-pulse-{key}-{index}")),
+                                gpui::Animation::new(Duration::from_millis(1200)).repeat(),
+                                |dot, progress| {
+                                    let pulse = 1. - (2. * progress - 1.).abs();
+                                    dot.opacity(0.45 + 0.55 * pulse)
+                                },
+                            )
+                            .into_any_element()
+                    } else {
+                        div().into_any_element()
+                    });
+                list = list.child(
+                    div()
+                        .debug_selector(move || selector.clone())
+                        .w_full()
+                        .min_w_0()
+                        .flex()
+                        .items_start()
+                        .gap(px(12.))
+                        .text_size(px(14.))
+                        .line_height(px(20.))
+                        .text_color(if completed || cancelled {
+                            theme.faint
+                        } else {
+                            theme.text
+                        })
+                        .when(todo.status == "pending", |row| row.opacity(0.92))
+                        .child(control)
+                        .child(
+                            div()
+                                .flex_1()
+                                .min_w_0()
+                                .whitespace_normal()
+                                .child(SharedString::from(todo.content.clone())),
+                        ),
+                );
+            }
+            dock = dock.child(list);
         }
-        column.into_any_element()
+        dock.into_any_element()
     }
 
     fn render_status_popover(
@@ -11019,13 +12012,28 @@ impl VelaApp {
         let theme = Theme::default();
         let validation_pending = self.pending_validation_request().is_some();
         let active_key = self.active_document_key();
+        let active_path = active_key
+            .as_ref()
+            .map(|key| key.rel.clone())
+            .unwrap_or_default();
         let result_active = self.validation_key.as_ref() == active_key.as_ref();
+        let validatable = active_key
+            .as_ref()
+            .is_some_and(|key| validation_target(&key.rel) != ValidationTarget::Unsupported);
         let validation_failed = result_active && self.validation_failed;
         let validation_summary = result_active.then_some(self.validation_summary).flatten();
+        let validation_markers = result_active
+            && self
+                .validation_result
+                .as_ref()
+                .is_some_and(|diagnostics| !diagnostics.is_empty());
+        let validation_markers_shown = validation_markers && self.validation_markers_shown;
         let validation_label = validation_action_label(
             validation_pending,
             validation_failed,
             validation_summary.is_some(),
+            validation_markers,
+            validation_markers_shown,
         );
         let row = |label: &'static str, value: String, active: bool| {
             div()
@@ -11130,62 +12138,46 @@ impl VelaApp {
             .flex()
             .flex_col()
             .gap(px(1.0))
-            .child(
-                div()
-                    .id("status-save")
-                    .role(Role::MenuItem)
-                    .aria_label("Save file")
-                    .track_focus(&self.status_action_focus[0])
-                    .cursor_pointer()
-                    .hover(|style| style.bg(theme.inset))
-                    .on_mouse_down(
-                        MouseButton::Left,
-                        cx.listener(|this, _, window, cx| {
-                            window.focus(&this.status_menu_focus, cx);
-                            this.save_editor(cx);
-                            this.status_menu_open = false;
-                            cx.notify();
-                        }),
-                    )
-                    .on_key_down(cx.listener(|this, event: &KeyDownEvent, window, cx| {
-                        if ["enter", "space"].contains(&event.keystroke.key.as_str()) {
-                            this.save_editor(cx);
-                            this.status_menu_open = false;
-                            window.focus(&this.status_menu_focus, cx);
-                            cx.stop_propagation();
-                            cx.notify();
-                        }
-                    }))
-                    .child(row("Save file", "⌘S".into(), false)),
-            )
             .child(sass_item)
             .child(
                 div()
                     .id("status-validate")
                     .debug_selector(move || {
                         if validation_pending {
-                            "validation-cancel".into()
-                        } else if validation_failed {
-                            "validation-retry".into()
+                            "validation-pending".into()
+                        } else if validation_markers {
+                            "validation-toggle".into()
                         } else {
                             "validation-action".into()
                         }
                     })
                     .role(Role::MenuItem)
-                    .aria_label(if validation_pending {
-                        "Cancel validation"
+                    .aria_label(if !validatable {
+                        "Open an HTML, CSS, or SCSS file to run validation"
+                    } else if validation_pending {
+                        "Validating"
+                    } else if validation_markers {
+                        if validation_markers_shown {
+                            "Hide validation markers"
+                        } else {
+                            "Show validation markers"
+                        }
                     } else {
                         "Validate HTML, CSS, or SCSS"
                     })
                     .track_focus(&self.status_action_focus[2])
-                    .cursor_pointer()
+                    .when(!validation_pending && validatable, |item| item.cursor_pointer())
+                    .opacity(if validation_pending || !validatable { 0.5 } else { 1. })
                     .hover(|style| style.bg(theme.inset))
                     .on_mouse_down(
                         MouseButton::Left,
                         cx.listener(move |this, _, window, cx| {
                             window.focus(&this.status_action_focus[2], cx);
-                            if validation_pending {
-                                this.cancel_validation(cx);
+                            if validation_pending || !validatable {
+                                return;
+                            }
+                            if validation_markers {
+                                this.toggle_validation_markers(cx);
                             } else {
                                 this.validate_active_document(cx);
                             }
@@ -11193,8 +12185,11 @@ impl VelaApp {
                     )
                     .on_key_down(cx.listener(move |this, event: &KeyDownEvent, _, cx| {
                         if ["enter", "space"].contains(&event.keystroke.key.as_str()) {
-                            if validation_pending {
-                                this.cancel_validation(cx);
+                            if validation_pending || !validatable {
+                                return;
+                            }
+                            if validation_markers {
+                                this.toggle_validation_markers(cx);
                             } else {
                                 this.validate_active_document(cx);
                             }
@@ -11219,6 +12214,7 @@ impl VelaApp {
             .child(div().h(px(1.0)).bg(theme.border).my(px(3.0)))
             .child(
                 div()
+                    .debug_selector(|| "status-cursor-position".into())
                     .px(px(7.0))
                     .h(px(18.0))
                     .flex()
@@ -11231,16 +12227,33 @@ impl VelaApp {
                         line + 1,
                         column + 1
                     )))
-                    .child("Spaces: 2"),
+                    .child(
+                        div()
+                            .debug_selector(|| "status-indentation".into())
+                            .child("Spaces: 2"),
+                    ),
             )
             .child(
                 div()
+                    .debug_selector(|| "status-encoding".into())
                     .px(px(7.0))
                     .h(px(18.0))
                     .text_size(px(9.5))
                     .text_color(theme.faint)
                     .child("UTF-8"),
             )
+            .when(!active_path.is_empty(), |menu| {
+                menu.child(
+                    div()
+                        .debug_selector(|| "status-menu-path".into())
+                        .px(px(7.0))
+                        .h(px(16.0))
+                        .text_size(px(9.0))
+                        .text_color(theme.faint)
+                        .truncate()
+                        .child(SharedString::from(active_path)),
+                )
+            })
             .into_any_element()
     }
 
@@ -11333,7 +12346,27 @@ impl VelaApp {
         pane.into_any_element()
     }
 
-    fn render_editor(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+/// Narrow editors show the last two path components; the workspace name is
+/// dropped so the file name remains readable instead of collapsing to one
+/// character.
+fn breadcrumb_segments(workspace_name: &str, rel: &str, compact: bool) -> Vec<String> {
+    if compact {
+        let mut tail = rel
+            .split('/')
+            .rev()
+            .take(2)
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
+        tail.reverse();
+        tail
+    } else {
+        std::iter::once(workspace_name.to_owned())
+            .chain(rel.split('/').map(str::to_owned))
+            .collect()
+    }
+}
+
+    fn render_editor(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         self.reconcile_editor_groups();
         let theme = Theme::default();
         let workspace_name = self
@@ -11357,6 +12390,7 @@ impl VelaApp {
         };
         let dirty = editor.dirty();
         let conflict = editor.conflict.clone();
+        let has_conflict = conflict.is_some();
         let deleted = editor.deleted;
         let mut path = div()
             .id("editor-breadcrumb-path")
@@ -11373,9 +12407,8 @@ impl VelaApp {
             .overflow_hidden()
             .role(gpui::Role::Group)
             .aria_label("File path");
-        let segments = std::iter::once(workspace_name)
-            .chain(rel.split('/').map(str::to_owned))
-            .collect::<Vec<_>>();
+        let compact = f32::from(window.viewport_size().width) < 900.;
+        let segments = Self::breadcrumb_segments(&workspace_name, &rel, compact);
         for (index, segment) in segments.iter().enumerate() {
             if index > 0 {
                 path = path.child(
@@ -11390,6 +12423,10 @@ impl VelaApp {
             }
             path = path.child(
                 div()
+                    .debug_selector({
+                        let label = segment.clone();
+                        move || format!("breadcrumb-segment:{label}")
+                    })
                     .h(px(24.))
                     .px(px(4.))
                     .min_w_0()
@@ -11416,7 +12453,7 @@ impl VelaApp {
         drop(documents);
         let editor = self.editor_view(key.clone(), cx);
         let conflict_banner =
-            conflict.map(|change| self.render_conflict_banner(key.clone(), change, _window, cx));
+            conflict.map(|change| self.render_conflict_banner(key.clone(), change, window, cx));
         let status_anchor = cx.weak_entity();
         let popover = if self.status_menu_open {
             Some(self.render_status_popover(cursor_line, cursor_col, cx))
@@ -11618,6 +12655,24 @@ impl VelaApp {
                     .relative()
                     .child(path)
                     .child(div().flex_1())
+                    .when(has_conflict, |bar| {
+                        bar.child(
+                            div()
+                                .debug_selector(|| "editor-stale-label".into())
+                                .text_size(px(11.))
+                                .text_color(theme.faint)
+                                .child("changed on disk"),
+                        )
+                    })
+                    .when(deleted, |bar| {
+                        bar.child(
+                            div()
+                                .debug_selector(|| "editor-deleted-label".into())
+                                .text_size(px(11.))
+                                .text_color(theme.red)
+                                .child("deleted on disk"),
+                        )
+                    })
                     .child({
                         let at_limit = group_count >= crate::editor_groups::MAX_EDITOR_GROUPS;
                         let mut controls = div().flex().items_center().gap(px(6.));
@@ -12980,12 +14035,25 @@ impl VelaApp {
                                 )
                                 .child(
                                     div()
+                                        .relative()
+                                        .overflow_hidden()
                                         .w(gpui::relative(0.27))
                                         .h_full()
                                         .rounded(px(4.0))
                                         .border_1()
                                         .border_color(soft_line)
-                                        .bg(theme::color(&profile.colors["agent"])),
+                                        .bg(theme::color(&profile.colors["agent"]))
+                                        .when(profile.id == "observatory", |pane| {
+                                            let image = Arc::new(gpui::Image::from_bytes(
+                                                gpui::ImageFormat::Png,
+                                                include_bytes!("../assets/observatory.png").to_vec(),
+                                            ));
+                                            pane.child(
+                                                gpui::img(image)
+                                                    .size_full()
+                                                    .object_fit(gpui::ObjectFit::Cover),
+                                            )
+                                        }),
                                 ),
                         )
                         .child(
@@ -13352,98 +14420,113 @@ impl VelaApp {
             let always_request = request_id.clone();
             let deny_session = session.clone();
             let deny_request = request_id.clone();
-            let resources = if request.resources.is_empty() {
-                request.message.clone().unwrap_or_default()
-            } else {
-                request.resources.join(" · ")
-            };
+            // Source renders exactly `item.resources`; it has no fallback to
+            // the request message, so an empty list stays empty.
+            let resources = request.resources.clone();
             let card_id = format!("{namespace}-{ix}");
             let debug_card = card_id.clone();
-            column = column.child(
+            let header_debug = format!("{namespace}-header");
+            let action_debug = format!("{namespace}-action");
+            let mut card = div()
+                .id(SharedString::from(card_id))
+                .debug_selector(move || debug_card.clone())
+                .w_full()
+                .rounded(px(8.0))
+                .border(px(0.5))
+                .border_color(theme.border)
+                .bg(theme.inset)
+                .p(px(12.0))
+                .flex()
+                .flex_col()
+                .gap(px(8.0))
+                .child(
+                    div()
+                        .debug_selector(move || header_debug.clone())
+                        .text_size(px(14.0))
+                        .font_weight(FontWeight::MEDIUM)
+                        .text_color(theme.text)
+                        .child("Permission required"),
+                )
+                .child(
+                    div()
+                        .debug_selector(move || action_debug.clone())
+                        .whitespace_normal()
+                        .text_size(px(12.5))
+                        .line_height(px(18.0))
+                        .text_color(theme.dim)
+                        .child(SharedString::from(request.action.clone())),
+                );
+            for (resource_ix, resource) in resources.into_iter().enumerate() {
+                let debug = format!("{namespace}-resource-{resource_ix}");
+                card = card.child(
+                    div()
+                        .debug_selector(move || debug.clone())
+                        .font(theme::markdown_code_font())
+                        .whitespace_normal()
+                        .text_size(px(11.0))
+                        .line_height(px(16.0))
+                        .text_color(theme.dim)
+                        .child(SharedString::from(resource)),
+                );
+            }
+            card = card.child(
                 div()
-                    .id(SharedString::from(card_id))
-                    .debug_selector(move || debug_card.clone())
-                    .w_full()
-                    .rounded(px(10.0))
-                    .border_1()
-                    .border_color(theme.yellow)
-                    .bg(theme.inset)
-                    .p(px(10.0))
                     .flex()
-                    .flex_col()
-                    .gap(px(7.0))
-                    .child(
-                        div().flex().items_center().gap(px(7.0)).child(
-                            div()
-                                .text_size(px(11.0))
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(theme.yellow)
-                                .child(SharedString::from(format!(
-                                    "Permission · {}",
-                                    request.action
-                                ))),
-                        ),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(11.0))
-                            .text_color(theme.dim)
-                            .child(SharedString::from(resources)),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .gap(px(6.0))
-                            .child(permission_button(
-                                SharedString::from(format!("{namespace}-button-Allow")),
-                                "Allow",
-                                theme.accent,
-                                theme.bg,
-                                move |cx| {
-                                    let _ = weak_allow.update(cx, |app, cx| {
-                                        app.engine.reply_permission(
-                                            allow_session.clone(),
-                                            allow_request.clone(),
-                                            PermissionReply::Allow,
-                                        );
-                                        cx.notify();
-                                    });
-                                },
-                            ))
-                            .child(permission_button(
-                                SharedString::from(format!("{namespace}-button-Always")),
-                                "Always",
-                                theme.elevated,
-                                theme.text,
-                                move |cx| {
-                                    let _ = weak_always.update(cx, |app, cx| {
-                                        app.engine.reply_permission(
-                                            always_session.clone(),
-                                            always_request.clone(),
-                                            PermissionReply::AllowAlways,
-                                        );
-                                        cx.notify();
-                                    });
-                                },
-                            ))
-                            .child(permission_button(
-                                SharedString::from(format!("{namespace}-button-Deny")),
-                                "Deny",
-                                theme.elevated,
-                                theme.red,
-                                move |cx| {
-                                    let _ = weak_deny.update(cx, |app, cx| {
-                                        app.engine.reply_permission(
-                                            deny_session.clone(),
-                                            deny_request.clone(),
-                                            PermissionReply::Deny,
-                                        );
-                                        cx.notify();
-                                    });
-                                },
-                            )),
-                    ),
+                    .flex_wrap()
+                    .gap(px(6.0))
+                    .child(permission_button(
+                        SharedString::from(format!("{namespace}-button-Allow")),
+                        permission_action_labels()[0],
+                        theme.accent,
+                        theme.bg,
+                        theme.accent,
+                        move |cx| {
+                            let _ = weak_allow.update(cx, |app, cx| {
+                                app.engine.reply_permission(
+                                    allow_session.clone(),
+                                    allow_request.clone(),
+                                    PermissionReply::Allow,
+                                );
+                                cx.notify();
+                            });
+                        },
+                    ))
+                    .child(permission_button(
+                        SharedString::from(format!("{namespace}-button-Always")),
+                        permission_action_labels()[1],
+                        theme.elevated,
+                        theme.text,
+                        theme.border_strong,
+                        move |cx| {
+                            let _ = weak_always.update(cx, |app, cx| {
+                                app.engine.reply_permission(
+                                    always_session.clone(),
+                                    always_request.clone(),
+                                    PermissionReply::AllowAlways,
+                                );
+                                cx.notify();
+                            });
+                        },
+                    ))
+                    .child(permission_button(
+                        SharedString::from(format!("{namespace}-button-Deny")),
+                        permission_action_labels()[2],
+                        theme::rgba(226, 152, 138, 0.14),
+                        theme.red,
+                        theme.red,
+                        move |cx| {
+                            let _ = weak_deny.update(cx, |app, cx| {
+                                app.engine.reply_permission(
+                                    deny_session.clone(),
+                                    deny_request.clone(),
+                                    PermissionReply::Deny,
+                                );
+                                cx.notify();
+                            });
+                        },
+                    )),
             );
+            column = column.child(card);
         }
         column.into_any_element()
     }
@@ -13568,6 +14651,12 @@ impl Render for VelaApp {
                 self.switch_sidebar(SidebarTab::Files, cx);
             } else if action == "sessions" {
                 self.switch_sidebar(SidebarTab::Sessions, cx);
+            } else if action == "agent" {
+                self.sidebar_before_agent_mode = Some(self.sidebar_open);
+                self.agent_mode = true;
+                self.agent_panel_open = true;
+                self.settings_open = false;
+                cx.notify();
             } else if action == "settings" {
                 self.settings_open = true;
             } else if let Some(section) = action.strip_prefix("settings:") {
@@ -13586,7 +14675,7 @@ impl Render for VelaApp {
             } else if action == "codex" {
                 self.set_shell(UiShell::Codex, cx);
             } else if action == "picker" {
-                self.picker = Some(PickerKind::Model);
+                self.open_model_picker(cx);
             } else if action == "changes" {
                 self.toggle_changes(cx);
             } else if let Some(rel) = action.strip_prefix("diff:") {
@@ -13621,6 +14710,18 @@ impl Render for VelaApp {
             let settings = self.render_settings(window, cx);
             let nav = self.render_settings_nav(cx);
             crate::settings::shell(rail, nav, settings, self.is_codex())
+        } else if self.agent_mode {
+            let rail = self.render_rail(cx);
+            let workspace = self.render_workspace(window, cx);
+            div()
+                .flex_1()
+                .min_h_0()
+                .min_w_0()
+                .flex()
+                .bg(theme.top)
+                .child(rail)
+                .child(workspace)
+                .into_any_element()
         } else if self.is_codex() {
             if self.sidebar_open {
                 self.render_codex_shell(window, cx)
@@ -13653,6 +14754,8 @@ impl Render for VelaApp {
         };
 
         let connection_recovery = self.render_connection_recovery(cx);
+        #[cfg(feature = "transcript-bench")]
+        transcript_native_bench::record_rendered_revision(self, cx);
         div()
             .size_full()
             .relative()
@@ -13689,13 +14792,7 @@ impl Render for VelaApp {
                 }
             }))
             .on_key_down(cx.listener(|this, event: &KeyDownEvent, window, cx| {
-                if this
-                    .transcript_ui
-                    .navigate(event, &this.transcript_list, window)
-                {
-                    this.stick =
-                        crate::scroll::list_distance_from_bottom(&this.transcript_list) <= px(24.);
-                    cx.notify();
+                if this.route_transcript_key(event, window, cx) {
                     cx.stop_propagation();
                     return;
                 }
@@ -13720,6 +14817,17 @@ impl Render for VelaApp {
                 }
                 if event.keystroke.key == "escape" && this.preview_menu.is_some() {
                     this.preview_menu = None;
+                    cx.notify();
+                    cx.stop_propagation();
+                    return;
+                }
+                if event.keystroke.key == "escape" && this.agent_tui.menu.is_some() {
+                    this.close_agent_panel_menu(cx);
+                    cx.stop_propagation();
+                    return;
+                }
+                if event.keystroke.key == "escape" && this.usage_open {
+                    this.usage_open = false;
                     cx.notify();
                     cx.stop_propagation();
                     return;
@@ -13825,26 +14933,131 @@ fn connection_recovery_element(
         .into_any_element()
 }
 
+/// Source's `formatTurnElapsed`: hours+minutes, minutes+seconds, else seconds.
+fn source_variant_label(variant: Option<&str>) -> String {
+    let Some(variant) = variant.filter(|value| !value.is_empty()) else {
+        return "Auto".into();
+    };
+    variant
+        .replace(['-', '_'], " ")
+        .split_whitespace()
+        .map(|word| {
+            let mut chars = word.chars();
+            chars
+                .next()
+                .map(|first| first.to_uppercase().collect::<String>() + chars.as_str())
+                .unwrap_or_default()
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn format_turn_elapsed(elapsed_ms: i64) -> String {
+    let total = (elapsed_ms.max(0) / 1000) as u64;
+    let hours = total / 3600;
+    let minutes = (total % 3600) / 60;
+    let seconds = total % 60;
+    if hours > 0 {
+        format!("{hours}h {minutes:02}m")
+    } else if minutes > 0 {
+        format!("{minutes}m {seconds:02}s")
+    } else {
+        format!("{seconds}s")
+    }
+}
+
+/// Source's `findTurnStartedAt`: the latest user message's creation time, or
+/// the trailing assistant's when no user message is present.
+fn turn_started_at_blocks(blocks: &[Block]) -> Option<i64> {
+    let mut user = None;
+    let mut assistant = None;
+    for block in blocks {
+        match block.kind {
+            BlockKind::User => user = Some(block.created_at),
+            BlockKind::Assistant => assistant = Some(block.created_at),
+            _ => {}
+        }
+    }
+    user.or(assistant).filter(|at| *at > 0)
+}
+
+/// Source's header `TurnTimer`: an accent pill with a pulsing dot.
+fn turn_timer_element(started_at: i64, selector: String, theme: &Theme, animate: bool) -> AnyElement {
+    let elapsed = crate::browser_downloads::now_ms() - started_at;
+    div()
+        .id("agent-turn-timer")
+        .role(Role::Label)
+        .debug_selector(move || selector.clone())
+        .aria_label("Time since the current turn's prompt was sent")
+        .flex_shrink_0()
+        .ml(px(8.))
+        .px(px(9.))
+        .py(px(2.))
+        .rounded(px(999.))
+        .bg(theme.accent.opacity(0.12))
+        .text_color(theme.accent)
+        .text_size(px(11.))
+        .font_weight(FontWeight::SEMIBOLD)
+        .flex()
+        .items_center()
+        .gap(px(6.))
+        .child({
+            use gpui::AnimationExt;
+            let dot = div()
+                .size(px(5.))
+                .rounded(px(999.))
+                .bg(theme.accent);
+            if animate {
+                dot.with_animation(
+                    "agent-turn-timer-dot",
+                    gpui::Animation::new(Duration::from_millis(1200)).repeat(),
+                    |dot, progress| {
+                        let pulse = 1. - (2. * progress - 1.).abs();
+                        dot.opacity(0.45 + 0.55 * pulse)
+                    },
+                ).into_any_element()
+            } else {
+                dot.into_any_element()
+            }
+        })
+        .child(SharedString::from(format_turn_elapsed(elapsed)))
+        .into_any_element()
+}
+
+/// Source's permission dock button labels, in order.
+fn permission_action_labels() -> [&'static str; 3] {
+    ["Allow once", "Always", "Deny"]
+}
+
 fn permission_button(
     id: SharedString,
     label: &'static str,
     background: gpui::Rgba,
     foreground: gpui::Rgba,
+    border: gpui::Rgba,
     action: impl Fn(&mut App) + 'static,
 ) -> AnyElement {
     let debug_id = id.to_string();
+    let aria = label;
     div()
         .id(id)
         .debug_selector(move || debug_id.clone())
-        .h(px(26.0))
-        .px(px(10.0))
-        .rounded(px(6.0))
+        .role(Role::Button)
+        .aria_label(aria)
+        .h(px(28.0))
+        .px(px(14.0))
+        .rounded(px(8.0))
+        .border_1()
+        .border_color(border)
         .bg(background)
         .cursor_pointer()
         .flex()
         .items_center()
-        .text_size(px(10.5))
+        .justify_center()
+        .text_size(px(12.5))
+        .font_weight(FontWeight::MEDIUM)
         .text_color(foreground)
+        .hover(|style| style.opacity(0.9))
         .on_mouse_down(MouseButton::Left, move |_, _, cx| action(cx))
         .child(label)
         .into_any_element()
@@ -13992,6 +15205,116 @@ fn terminal_underline_segments(kind: UnderlineKind, width: f32) -> Vec<(f32, f32
 }
 
 /// Fixed-cell rows place every glyph at an exact column-derived x offset.
+/// Shared emulator grid used by both the terminal tray and the embedded Agent
+/// TUI. Cursor, composition text and cell runs stay identical so the panel TUI
+/// has the same rendering contract as a tray terminal.
+fn render_terminal_grid(
+    terminal: &TerminalView,
+    cell_width: f32,
+    (rows, cols): (usize, usize),
+    cursor_blink_visible: bool,
+    (font_size, row_height): (f32, f32),
+    theme: &Theme,
+    cx: &mut Context<VelaApp>,
+) -> AnyElement {
+    terminal
+        .input
+        .read(cx)
+        .anchor
+        .set(terminal.emulator.cursor());
+    let cursor = {
+        let shape = terminal.emulator.cursor_shape();
+        (shape != vela_terminal::emulator::CursorShape::Hidden)
+            .then(|| (terminal.emulator.cursor(), shape))
+    }
+    .filter(|_| cursor_blink_visible);
+    let cursor_width = terminal.emulator.cursor_cell_width();
+    let mut grid = div()
+        .relative()
+        .w_full()
+        .h(px(rows.max(1) as f32 * row_height))
+        .overflow_hidden()
+        .font_family(theme::source_font())
+        .text_size(px(font_size))
+        .line_height(px(row_height))
+        .text_color(theme.text);
+    for row_ix in 0..rows {
+        let cells = terminal.emulator.line(row_ix);
+        grid = grid.child(render_terminal_row_sized(
+            &cells, cols, cell_width, row_ix, row_height, theme,
+        ));
+    }
+    if let Some((cursor, shape)) = cursor
+        && cursor.row < rows
+    {
+        use vela_terminal::emulator::CursorShape;
+        let base = div()
+            .absolute()
+            .left(px(cursor.col as f32 * cell_width))
+            .top(px(cursor.row as f32 * row_height))
+            .w(px(cursor_width as f32 * cell_width))
+            .h(px(row_height));
+        let cursor = match shape {
+            CursorShape::Block => base
+                .bg(theme.accent.opacity(0.32))
+                .border_1()
+                .border_color(theme.accent),
+            CursorShape::Underline => base.child(
+                div()
+                    .absolute()
+                    .left_0()
+                    .right_0()
+                    .bottom_0()
+                    .h(px(2.))
+                    .bg(theme.accent),
+            ),
+            CursorShape::Beam => base.child(
+                div()
+                    .absolute()
+                    .left_0()
+                    .top_0()
+                    .bottom_0()
+                    .w(px(2.))
+                    .bg(theme.accent),
+            ),
+            CursorShape::HollowBlock => base.border_1().border_color(theme.accent),
+            CursorShape::Hidden => base,
+        };
+        grid = grid.child(cursor);
+    }
+    if !terminal.input.read(cx).buffer.text().is_empty() {
+        let composition = &terminal.input.read(cx).buffer;
+        let caret = terminal.emulator.cursor();
+        if caret.row < rows {
+            grid = grid.child(
+                div()
+                    .absolute()
+                    .left(px(caret.col as f32 * cell_width))
+                    .top(px(caret.row as f32 * row_height))
+                    .bg(theme.editor)
+                    .child(
+                        StyledText::new(SharedString::from(composition.text().to_owned())).with_runs(
+                            vec![TextRun {
+                                len: composition.text().len(),
+                                font: theme::source_editor_font(),
+                                color: theme.text.into(),
+                                background_color: None,
+                                underline: Some(gpui::UnderlineStyle {
+                                    thickness: px(1.),
+                                    color: Some(theme.accent.into()),
+                                    wavy: false,
+                                }),
+                                strikethrough: None,
+                            }],
+                        ),
+                    ),
+            );
+        }
+    }
+    grid.into_any_element()
+}
+
+#[cfg(test)]
 fn render_terminal_row(
     cells: &[Cell],
     cols: usize,
@@ -13999,7 +15322,18 @@ fn render_terminal_row(
     row_index: usize,
     theme: &Theme,
 ) -> AnyElement {
-    let mut row = div().relative().h(px(15.)).w_full();
+    render_terminal_row_sized(cells, cols, cell_width, row_index, 15., theme)
+}
+
+fn render_terminal_row_sized(
+    cells: &[Cell],
+    cols: usize,
+    cell_width: f32,
+    row_index: usize,
+    row_height: f32,
+    theme: &Theme,
+) -> AnyElement {
+    let mut row = div().relative().h(px(row_height)).w_full();
     let mut column = 0;
     for cell in cells.iter().take(cols) {
         if cell.wide_spacer {
@@ -14040,7 +15374,7 @@ fn render_terminal_row(
             .absolute()
             .left(px(column as f32 * cell_width))
             .top_0()
-            .h(px(15.))
+            .h(px(row_height))
             .w(px(width as f32 * cell_width))
             .overflow_hidden()
             .when_some(background, |cell, color| cell.bg(color))
@@ -14298,6 +15632,11 @@ fn settings_rail_tool(
         .id("rail-settings")
         .role(gpui::Role::Button)
         .aria_label("Settings")
+        .aria_toggled(if active {
+            gpui::Toggled::True
+        } else {
+            gpui::Toggled::False
+        })
         .focusable()
         .tab_stop(true)
         .size(px(36.0))
@@ -14354,6 +15693,13 @@ fn rail_tool(
         .id(SharedString::from(format!("rail-{icon_code}")))
         .role(gpui::Role::Button)
         .aria_label(label)
+        .when(icon_code != "eb01", |tool| {
+            tool.aria_toggled(if active {
+                gpui::Toggled::True
+            } else {
+                gpui::Toggled::False
+            })
+        })
         .focusable()
         .tab_stop(true)
         .size(px(36.0))
@@ -14407,6 +15753,30 @@ fn tree_status_dot(label: &'static str, color: gpui::Rgba, blur: f32) -> gpui::S
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn compaction_block(id: &str, streaming: bool) -> Block {
+        Block {
+            id: id.into(),
+            message_id: "compact-message".into(),
+            part_id: id.into(),
+            kind: BlockKind::Compaction,
+            text: "Context compacted".into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            status: ToolStatus::None,
+            streaming,
+            agent: None,
+            model: None,
+            created_at: 1000,
+            completed_at: None,
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        }
+    }
 
     #[test]
     fn terminal_rows_have_byte_exact_runs() {
@@ -14857,6 +16227,8 @@ mod tests {
                 files: Vec::new(),
                 sub_calls: Vec::new(),
                 attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
             }]);
             waiting.forms = vec![vela_opencode::FormRequest {
                 id: "form-waiting".into(),
@@ -14881,7 +16253,7 @@ mod tests {
         draw(cx);
         cx.run_until_parked();
         let copy = cx
-            .debug_bounds("panel-answer-copy-ses_waiting-answer-1")
+            .debug_bounds("answer-copy:ses_waiting:answer-message")
             .expect("answer copy action");
         cx.simulate_click(copy.center(), gpui::Modifiers::default());
         draw(cx);
@@ -14964,7 +16336,602 @@ mod tests {
     }
 
     #[gpui::test]
-    fn inactive_tile_user_actions_and_work_rows_are_interactive(
+    fn user_message_selection_spans_consecutive_messages_in_order(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let user = |id: &str, text: &str| Block {
+            id: id.into(),
+            message_id: format!("message-{id}").into(),
+            part_id: id.into(),
+            kind: BlockKind::User,
+            text: text.into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            status: ToolStatus::None,
+            streaming: false,
+            agent: Some("build".into()),
+            model: Some("claude".into()),
+            created_at: 1_600_000_000_000,
+            completed_at: None,
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_multi_selection".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![
+                user("user-1", "First message."),
+                user("user-2", "Second message."),
+                user("user-3", "Third message."),
+            ]);
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_multi_selection",
+                &app.transcript_ui,
+            );
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        let first = cx
+            .debug_bounds("user-bubble:user-1")
+            .expect("first message renders");
+        let second = cx
+            .debug_bounds("user-bubble:user-2")
+            .expect("second message renders");
+        assert!(
+            cx.debug_bounds("user-bubble:user-3").is_some(),
+            "the third message renders"
+        );
+        let start = point(first.left() + px(14.), first.center().y);
+        let end = point(second.right() - px(14.), second.center().y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            end,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let (selected, anchor, head) = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| {
+                        (
+                            selection.selected_text(&app.transcript_ui.user_message_segments),
+                            selection.anchor,
+                            selection.head,
+                        )
+                    })
+            })
+            .expect("dragging spans two user messages");
+        assert_eq!(anchor.message, 0);
+        assert_eq!(head.message, 1);
+        assert!(
+            selected.contains("First message.") && selected.contains("Second message."),
+            "both selected messages are copied in order: {selected:?}"
+        );
+        assert!(
+            !selected.contains("Third message."),
+            "messages outside the drag remain unselected: {selected:?}"
+        );
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some("First message.\nSecond message.".to_string()),
+            "Cmd+C copies consecutive messages in transcript order"
+        );
+
+        cx.simulate_mouse_down(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            start,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let reversed = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| {
+                        selection.selected_text(&app.transcript_ui.user_message_segments)
+                    })
+            })
+            .expect("a reverse drag keeps the selection");
+        assert_eq!(
+            reversed, "First message.\nSecond message.",
+            "reverse drags still copy in transcript order"
+        );
+
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(
+                "First message.\nSecond message.\nThird message.".to_string()
+            ),
+            "Cmd+A spans every rendered user message"
+        );
+
+        app.update(cx, |app, cx| {
+            app.active_id = Some("ses_other".into());
+            app.blocks = Arc::new(Vec::new());
+            app.transcript_rows = Arc::new(Vec::new());
+            app.transcript_list = ListState::new(0, ListAlignment::Top, px(420.));
+            cx.notify();
+        });
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| app.transcript_ui.user_text_selection.is_none()),
+            "switching sessions clears the cross-message selection"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn user_message_selection_includes_fenced_code_blocks(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_code_selection".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![Block {
+                id: "user-code-selection".into(),
+                message_id: "message-code-selection".into(),
+                part_id: "user-code-selection".into(),
+                kind: BlockKind::User,
+                text:
+                    "Before text.\n\n```rust\nlet x = 1;\nlet y = 2;\n```\n\nAfter text."
+                        .into(),
+                detail: String::new().into(),
+                output: String::new().into(),
+                status: ToolStatus::None,
+                streaming: false,
+                agent: Some("build".into()),
+                model: Some("claude".into()),
+                created_at: 1_600_000_000_000,
+                completed_at: None,
+                child_session_id: None,
+                files: Vec::new(),
+                sub_calls: Vec::new(),
+                attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
+            }]);
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_code_selection",
+                &app.transcript_ui,
+            );
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        let first = cx
+            .debug_bounds("label:user:user-code-selection:0")
+            .expect("leading paragraph renders");
+        let last = cx
+            .debug_bounds("label:user:user-code-selection:2")
+            .expect("trailing paragraph renders");
+        assert!(
+            cx.debug_bounds("user-code:user:user-code-selection:1")
+                .is_some(),
+            "the fenced code block renders"
+        );
+        let start = point(first.left() + px(1.), first.center().y);
+        let end = point(last.right() - px(1.), last.center().y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            end,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let selected = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| selection.selected_text(&app.transcript_ui.user_message_segments))
+            })
+            .expect("dragging selects the code block too");
+        assert!(
+            selected.contains("let x = 1;") && selected.contains("let y = 2;"),
+            "the cross-block selection includes fenced code: {selected:?}"
+        );
+
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(
+                "Before text.\nlet x = 1;\nlet y = 2;\nAfter text.".to_string()
+            ),
+            "Cmd+A copies prose and fenced code in document order"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn select_all_includes_virtualized_user_messages_that_never_painted(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1000.), px(320.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1000.), px(320.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let user = |index: usize| Block {
+            id: format!("user-{index}").into(),
+            message_id: format!("message-{index}").into(),
+            part_id: format!("user-{index}").into(),
+            kind: BlockKind::User,
+            text: format!("Message {index}").into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            status: ToolStatus::None,
+            streaming: false,
+            agent: Some("build".into()),
+            model: Some("claude".into()),
+            created_at: 1_600_000_000_000,
+            completed_at: None,
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_virtual_selection".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new((0..30).map(user).collect::<Vec<_>>());
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_virtual_selection",
+                &app.transcript_ui,
+            );
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.transcript_ui.user_message_segments.len()),
+            30,
+            "all user-message text is projected before any row paints"
+        );
+        assert!(
+            cx.debug_bounds("user-bubble:user-0").is_some(),
+            "the first message is visible"
+        );
+        assert!(
+            cx.debug_bounds("user-bubble:user-29").is_none(),
+            "the last message is virtualized out of the viewport"
+        );
+        let first = cx.debug_bounds("user-bubble:user-0").unwrap();
+        cx.simulate_click(first.center(), gpui::Modifiers::default());
+        draw(cx);
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        let expected = (0..30)
+            .map(|index| format!("Message {index}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(expected),
+            "select-all copies never-painted user messages in transcript order"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn tab_indented_code_block_selection_hit_tests_and_copies_with_tabs(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_tab_code".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![Block {
+                id: "user-tab-code".into(),
+                message_id: "message-tab-code".into(),
+                part_id: "user-tab-code".into(),
+                kind: BlockKind::User,
+                text: "Before.\n\n```\n\tlet x = 1;\n\tlet y = 2;\n```\n\nAfter."
+                    .into(),
+                detail: String::new().into(),
+                output: String::new().into(),
+                status: ToolStatus::None,
+                streaming: false,
+                agent: Some("build".into()),
+                model: Some("claude".into()),
+                created_at: 1_600_000_000_000,
+                completed_at: None,
+                child_session_id: None,
+                files: Vec::new(),
+                sub_calls: Vec::new(),
+                attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
+            }]);
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_tab_code",
+                &app.transcript_ui,
+            );
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        let code = cx
+            .debug_bounds("user-code:user:user-tab-code:1")
+            .expect("the tab-indented code block renders");
+        let start = point(code.left() + px(14.), code.top() + px(21.));
+        let end = point(code.right() - px(14.), code.bottom() - px(21.));
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            end,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let selected = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| {
+                        selection.selected_text(&app.transcript_ui.user_message_segments)
+                    })
+            })
+            .expect("dragging inside tab-laid-out code selects it");
+        assert!(
+            selected.contains("let x = 1;") && selected.contains("let y = 2;"),
+            "tab-layout hit testing selects code characters: {selected:?}"
+        );
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(selected),
+            "Cmd+C copies the tab-code selection"
+        );
+
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(
+                "Before.\n\tlet x = 1;\n\tlet y = 2;\nAfter.".to_string()
+            ),
+            "select-all preserves tabs inside the code block"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn user_message_selection_carries_image_alt_text_in_document_order(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        const PNG: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+        let text = format!(
+            "Before image.\n\n![diagram](data:image/png;base64,{PNG})\n\nAfter image."
+        );
+        app.update(cx, move |app, _| {
+            app.active_id = Some("ses_image_selection".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![Block {
+                id: "user-image-selection".into(),
+                message_id: "message-image-selection".into(),
+                part_id: "user-image-selection".into(),
+                kind: BlockKind::User,
+                text: text.into(),
+                detail: String::new().into(),
+                output: String::new().into(),
+                status: ToolStatus::None,
+                streaming: false,
+                agent: Some("build".into()),
+                model: Some("claude".into()),
+                created_at: 1_600_000_000_000,
+                completed_at: None,
+                child_session_id: None,
+                files: Vec::new(),
+                sub_calls: Vec::new(),
+                attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
+            }]);
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_image_selection",
+                &app.transcript_ui,
+            );
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        let first = cx
+            .debug_bounds("label:user:user-image-selection:0")
+            .expect("leading paragraph renders");
+        let last = cx
+            .debug_bounds("label:user:user-image-selection:2")
+            .expect("trailing paragraph renders");
+        assert!(
+            cx.debug_bounds("image-container:user:user-image-selection:1:0")
+                .is_some(),
+            "the image renders between the paragraphs"
+        );
+        let start = point(first.left() + px(1.), first.center().y);
+        let end = point(last.right() - px(1.), last.center().y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            end,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let selected = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| selection.selected_text(&app.transcript_ui.user_message_segments))
+            })
+            .expect("dragging selects across the image");
+        assert!(
+            selected.contains("diagram"),
+            "the selection carries the image alt text: {selected:?}"
+        );
+
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        let (payload_text, payload_images) = app
+            .read_with(cx, |app, _| app.user_clipboard_payload())
+            .expect("select-all produces a clipboard payload");
+        assert_eq!(payload_text, "Before image.\ndiagram\nAfter image.");
+        assert_eq!(payload_images.len(), 1);
+        assert_eq!(payload_images[0].format, gpui::ImageFormat::Png);
+        assert!(!payload_images[0].bytes.is_empty());
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        let clipboard = cx.read_from_clipboard().expect("clipboard is written");
+        assert_eq!(
+            clipboard.text(),
+            Some("Before image.\ndiagram\nAfter image.".to_string()),
+            "Cmd+A copies image alt text in document order"
+        );
+        assert!(
+            clipboard
+                .entries
+                .iter()
+                .any(|entry| matches!(entry, gpui::ClipboardEntry::Image(_))),
+            "the clipboard item carries the encoded image alongside the text"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn inactive_tile_user_text_is_selectable_without_activating_the_panel(
         cx: &mut gpui::TestAppContext,
     ) {
         let runtime = tokio::runtime::Builder::new_current_thread()
@@ -14979,6 +16946,7 @@ mod tests {
             VelaApp::new(engine_for_app, settings, None, pending, cx)
         });
         cx.simulate_resize(size(px(1400.), px(900.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
         let draw = |cx: &mut gpui::VisualTestContext| {
             cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
                 app.clone().into_any_element()
@@ -15005,6 +16973,8 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
         app.update(cx, |app, _| {
             app.bootstrapped = true;
@@ -15019,131 +16989,246 @@ mod tests {
                 .unwrap();
             let mut waiting =
                 crate::panels::PanelState::new("ses_waiting", "Waiting thread");
+            waiting.blocks = Arc::new(vec![block(
+                "user-1",
+                "message-1",
+                BlockKind::User,
+                "inactive selection text",
+            )]);
+            app.panels.open(waiting).unwrap();
+            app.panels.activate("ses_active");
+        });
+        draw(cx);
+        cx.run_until_parked();
+        let text = cx
+            .debug_bounds("user-bubble:user-1")
+            .expect("inactive user row renders selectable Markdown");
+        let start = point(text.left() + px(16.), text.center().y);
+        let end = point(text.right() - px(16.), text.center().y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            point(text.center().x, text.center().y),
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_move(
+            end,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let dragged = app
+            .read_with(cx, |app, _| {
+                Some(app.user_selection_text_for("ses_waiting"))
+            })
+            .expect("dragging starts a selection in the inactive tile");
+        assert!(
+            !dragged.is_empty(),
+            "inactive tile drag produces selected text"
+        );
+        assert_eq!(
+            app.read_with(cx, |app, _| app.active_id.clone()),
+            Some("ses_active".into()),
+            "selecting text does not activate the inactive tile"
+        );
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(dragged),
+            "Cmd+C copies the dragged inactive-tile selection"
+        );
+
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some("inactive selection text".to_string()),
+            "Cmd+A copies the whole inactive tile message"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn inactive_tile_keeps_chronological_prose_and_expands_reasoning(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let block = |id: &str, message: &str, kind: BlockKind, text: &str| Block {
+            id: id.into(),
+            message_id: message.into(),
+            part_id: id.into(),
+            kind,
+            text: text.into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at: 1000,
+            completed_at: Some(2000),
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_active".into());
+            app.panels
+                .open(crate::panels::PanelState::new(
+                    "ses_active",
+                    "Active thread",
+                ))
+                .unwrap();
+            let mut waiting =
+                crate::panels::PanelState::new("ses_waiting", "Waiting thread");
+            waiting.phase = vela_core::session::SessionPhase::Busy;
             waiting.blocks = Arc::new(vec![
                 block("user-1", "message-1", BlockKind::User, "fix it"),
                 block("reason-1", "", BlockKind::Reasoning, "checked the parser"),
                 block("activity-1", "", BlockKind::Activity, "indexed files"),
-                block("answer-1", "", BlockKind::Assistant, "done"),
+                {
+                    let mut answer = block("answer-1", "", BlockKind::Assistant, "done");
+                    answer.interrupted = true;
+                    answer
+                },
+                block("error-1", "", BlockKind::Error, "Provider failed"),
             ]);
             app.panels.open(waiting).unwrap();
             app.panels.activate("ses_active");
         });
         draw(cx);
         cx.run_until_parked();
+        for selector in [
+            "panel-message-copy-ses_waiting-user-1",
+            "panel-message-undo-ses_waiting-user-1",
+            "panel-message-edit-ses_waiting-user-1",
+        ] {
+            assert!(
+                cx.debug_bounds(selector).is_none(),
+                "VelaTurn user bubbles expose no row actions: {selector}"
+            );
+        }
         assert!(
-            cx.debug_bounds("panel-message-copy-ses_waiting-user-1")
-                .is_some(),
-            "inactive user rows expose Copy"
-        );
-        assert!(
-            cx.debug_bounds("panel-message-undo-ses_waiting-user-1")
-                .is_some(),
-            "inactive user rows expose Undo"
-        );
-        assert!(
-            cx.debug_bounds("panel-message-edit-ses_waiting-user-1")
-                .is_some(),
-            "inactive user rows expose Edit"
-        );
-        assert!(
-            cx.debug_bounds("panel-work-body-ses_waiting-1")
-                .is_none(),
-            "work rows start collapsed"
-        );
-        let work = cx
-            .debug_bounds("panel-work-ses_waiting-1")
-            .expect("work row head");
-        cx.simulate_click(work.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert!(
-            cx.debug_bounds("panel-work-body-ses_waiting-1").is_some(),
-            "clicking the work row expands its reasoning and activity"
+            cx.debug_bounds("answer-meta").is_some(),
+            "the tile answer footer shows the turn duration"
         );
         assert!(
-            cx.debug_bounds("panel-work-row-ses_waiting-1-1").is_some(),
-            "expanded work rows keep every step"
-        );
-        assert_eq!(
-            app.read_with(cx, |app, _| app.active_id.clone()),
-            Some("ses_active".into()),
-            "expanding work does not steal the active panel"
-        );
-
-        let copy = cx
-            .debug_bounds("panel-message-copy-ses_waiting-user-1")
-            .expect("copy action");
-        cx.simulate_click(copy.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert_eq!(
-            cx.read_from_clipboard()
-                .and_then(|item| item.text())
-                .as_deref(),
-            Some("fix it")
-        );
-        assert_eq!(
-            app.read_with(cx, |app, _| {
-                app.panels
-                    .entries()
-                    .iter()
-                    .find(|panel| panel.session == "ses_waiting")
-                    .and_then(|panel| panel.copied_message.clone())
-            }),
-            Some("user-1".to_owned())
-        );
-        assert_eq!(
-            app.read_with(cx, |app, _| app.active_id.clone()),
-            Some("ses_active".into()),
-            "copying does not steal the active panel"
-        );
-
-        let edit = cx
-            .debug_bounds("panel-message-edit-ses_waiting-user-1")
-            .expect("edit action");
-        cx.simulate_click(edit.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert_eq!(
-            app.read_with(cx, |app, _| app.active_id.clone()),
-            Some("ses_waiting".into()),
-            "Edit focuses the tile that owns the message"
+            cx.debug_bounds("answer-stopped").is_some(),
+            "interrupted tile answers show Source's Stopped marker"
         );
         assert!(
-            app.read_with(cx, |app, _| {
-                app.revert_requests
-                    .values()
-                    .any(|(session, prompt)| {
-                        session == "ses_waiting"
-                            && prompt.as_deref() == Some("fix it")
-                    })
-            }),
-            "Edit stages the prompt on the owning session"
+            cx.debug_bounds("conversation-row:ses_waiting:note:error-1").is_some(),
+            "tile error rows render Source's red answer-error text"
         );
-
-        app.update(cx, |app, cx| {
-            app.active_id = Some("ses_active".into());
-            app.panels.activate("ses_active");
-            app.revert_requests.clear();
-            cx.notify();
+        assert!(
+            cx.debug_bounds("conversation-row:ses_waiting:text:answer-1").is_some(),
+            "tile answer text renders through the Markdown surface"
+        );
+        let timer = cx
+            .debug_bounds("panel-turn-timer-ses_waiting")
+            .expect("a busy tile header shows Source's turn timer");
+        let options = cx
+            .debug_bounds("agent-panel-options-ses_waiting")
+            .expect("the tile header options menu");
+        assert!(
+            timer.left() < options.left(),
+            "the timer sits before the options menu like Source"
+        );
+        app.update(cx, |app, _| {
+            app.panels.update("ses_waiting", |panel| panel.stick = false);
+            app.panel_tile_lists.get("ses_waiting").unwrap()
+                .scroll_to_reveal_item(1);
         });
         draw(cx);
-        let undo = cx
-            .debug_bounds("panel-message-undo-ses_waiting-user-1")
-            .expect("undo action");
-        cx.simulate_click(undo.center(), gpui::Modifiers::default());
+        let work = cx.debug_bounds("work-summary:Thought")
+            .expect("internal reasoning starts behind its compact work disclosure");
+        cx.simulate_click(work.center(), gpui::Modifiers::default());
         draw(cx);
-        assert_eq!(
-            app.read_with(cx, |app, _| app.active_id.clone()),
-            Some("ses_waiting".into()),
-            "Undo focuses the tile that owns the message"
-        );
+        let thought = cx.debug_bounds("reasoning-trigger:ses_waiting:reason-1")
+            .expect("work disclosure exposes inspectable reasoning");
+        cx.simulate_click(thought.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("label:reason-1:0").is_some(),
+            "reasoning expands inside the explicitly opened work details");
+        assert_eq!(app.read_with(cx, |app, _| app.active_id.clone()),
+            Some("ses_active".into()), "inspecting reasoning does not activate the panel");
+        // Finishing the run must retain the manually expanded disclosure.
+        app.update(cx, |app, _| app.panels.update("ses_waiting", |panel| panel.phase = SessionPhase::Idle));
+        draw(cx);
+        assert!(cx.debug_bounds("label:reason-1:0").is_some());
+                let options = cx
+            .debug_bounds("agent-panel-options-ses_waiting")
+            .expect("tile options");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
         assert!(
-            app.read_with(cx, |app, _| {
-                app.revert_requests
-                    .values()
-                    .any(|(session, prompt)| {
-                        session == "ses_waiting" && prompt.is_none()
-                    })
-            }),
-            "Undo targets the owning session without edit text"
+            cx.debug_bounds("agent-panel-options-menu-ses_waiting").is_some(),
+            "tiles expose Source's options menu per panel"
+        );
+        let escape = gpui::Keystroke::parse("escape").unwrap();
+        cx.update(|window, cx| {
+            app.update(cx, |app, cx| {
+                app.ensure_panel_input("ses_waiting", cx);
+                app.agent_tui.menu = Some("ses_waiting".into());
+                assert!(
+                    app.on_tile_composer_key(
+                        "ses_waiting",
+                        &KeyDownEvent {
+                            keystroke: escape.clone(),
+                            is_held: false,
+                            prefer_character_input: false,
+                        },
+                        window,
+                        cx,
+                    ),
+                    "the tile composer key path handles Escape"
+                );
+            });
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-panel-options-menu-ses_waiting").is_none(),
+            "Escape closes the tile options menu"
+        );
+        let options = cx
+            .debug_bounds("agent-panel-options-ses_waiting")
+            .expect("tile options");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
+        let outside = cx
+            .debug_bounds("panel-tile-header-ses_waiting")
+            .expect("outside the menu");
+        cx.simulate_click(outside.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-panel-options-menu-ses_waiting").is_none(),
+            "clicking outside closes the tile options menu"
         );
         runtime.block_on(engine.shutdown_and_wait());
     }
@@ -15366,8 +17451,626 @@ mod tests {
         runtime.block_on(engine.shutdown_and_wait());
     }
 
+    fn agent_tui_test_app<'a>(
+        cx: &'a mut gpui::TestAppContext,
+        runtime: &tokio::runtime::Runtime,
+    ) -> (gpui::Entity<VelaApp>, &'a mut gpui::VisualTestContext) {
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1400.), px(900.)));
+        (app, cx)
+    }
+
     #[gpui::test]
-    fn agent_tui_exit_removes_the_tab_and_emits_a_notice(cx: &mut gpui::TestAppContext) {
+    fn agent_panel_mode_menu_gates_tui_and_switches_the_body(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _cx| {
+            app.ui_shell = UiShell::Classic; // This test targets the Classic panel header.
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.test_workspace_directory = Some("/workspace".into());
+            app.active_id = Some("ses_tui".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_tui", "TUI panel"))
+                .unwrap();
+            app.panels.activate("ses_tui");
+            app.runtime_capabilities = RuntimeCapabilities::opencode(false);
+        });
+        draw(cx);
+        cx.run_until_parked();
+
+        let options = cx
+            .debug_bounds("agent-panel-options-ses_tui")
+            .expect("Source header exposes the agent panel options menu");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-panel-options-menu-ses_tui")
+                .is_some(),
+            "the options menu opens from the header"
+        );
+        assert!(cx.debug_bounds("agent-panel-mode-gui-ses_tui").is_some());
+        let disabled_tui = cx
+            .debug_bounds("agent-panel-mode-tui-ses_tui")
+            .expect("TUI stays visible but disabled when the runtime cannot host it");
+        cx.simulate_click(disabled_tui.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.agent_panel_mode("ses_tui")),
+            AgentPanelMode::Gui,
+            "a disabled runtime TUI cannot become the panel mode"
+        );
+        assert!(
+            cx.debug_bounds("agent-tui-notice-ses_tui").is_some(),
+            "Source explains why the runtime TUI is unavailable"
+        );
+
+        app.update(cx, |app, _| {
+            app.runtime_capabilities = RuntimeCapabilities::opencode(true);
+        });
+        draw(cx);
+        let options = cx
+            .debug_bounds("agent-panel-options-ses_tui")
+            .expect("options toggle remains in the header");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
+        let tui = cx
+            .debug_bounds("agent-panel-mode-tui-ses_tui")
+            .expect("TUI becomes selectable once the runtime reports the capability");
+        cx.simulate_click(tui.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.agent_panel_mode("ses_tui")),
+            AgentPanelMode::Tui
+        );
+        assert_eq!(
+            app.read_with(cx, |app, _| {
+                app.settings.agent_panel_modes.get("ses_tui").cloned()
+            }),
+            Some("tui".to_owned()),
+            "the per-session mode is persisted through native settings"
+        );
+        app.update(cx, |app, cx| {
+            let mut view = TerminalView::new("term-agent".into(), 80, 24, cx);
+            view.emulator.feed(b"embedded output");
+            app.agent_tui
+                .insert_view("ses_tui", "/workspace", view);
+        });
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| app.agent_tui.views.contains_key("ses_tui")),
+            "the embedded view survives the mode switch"
+        );
+        assert!(
+            cx.debug_bounds("agent-tui-ses_tui").is_some(),
+            "the focused panel hosts the embedded runtime TUI"
+        );
+
+        app.update(cx, |app, cx| {
+            app.feed_agent_tui("term-agent", b"\r\nmore output", cx);
+        });
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| {
+                app.agent_tui
+                    .views
+                    .get("ses_tui")
+                    .map(|entry| entry.view.emulator.line(0))
+                    .map(|cells| {
+                        cells
+                            .iter()
+                            .map(|cell| cell.ch)
+                            .collect::<String>()
+                            .trim_end()
+                            .to_owned()
+                    })
+            }),
+            Some("embedded output".to_owned()),
+            "PTY output keeps feeding the embedded emulator"
+        );
+
+        let options = cx
+            .debug_bounds("agent-panel-options-ses_tui")
+            .expect("the TUI header still exposes options");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
+        let gui = cx
+            .debug_bounds("agent-panel-mode-gui-ses_tui")
+            .expect("the menu can switch back to the GUI");
+        cx.simulate_click(gui.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.agent_panel_mode("ses_tui")),
+            AgentPanelMode::Gui
+        );
+        assert!(
+            app.read_with(cx, |app, _| app.agent_tui.views.is_empty()),
+            "switching to GUI stops and drops the embedded PTY"
+        );
+        runtime.block_on(
+            app.read_with(cx, |app, _| app.engine.clone())
+                .shutdown_and_wait(),
+        );
+    }
+
+    #[gpui::test]
+    fn inactive_tile_renders_full_history_and_early_user_text(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let block = |id: String, kind: BlockKind, text: String| Block {
+            id: id.as_str().into(),
+            message_id: id.as_str().into(),
+            part_id: id.as_str().into(),
+            kind,
+            text: text.as_str().into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at: 1000,
+            completed_at: Some(2000),
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        };
+        let mut blocks = vec![block(
+            "early".into(),
+            BlockKind::User,
+            "x".repeat(500),
+        )];
+        for index in 0..200 {
+            blocks.push(block(
+                format!("step-{index}"),
+                BlockKind::Assistant,
+                format!("Step {index}"),
+            ));
+        }
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_active".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_active", "Active"))
+                .unwrap();
+            let mut long = crate::panels::PanelState::new("ses_long", "Long");
+            long.blocks = Arc::new(blocks);
+            app.panels.open(long).unwrap();
+            app.panel_scroll_memory.insert("ses_long".into(), px(100.));
+            // A remembered distance belongs to the session being reopened.
+            app.queue_scroll_restore("ses_long");
+            app.panels.activate("ses_active");
+        });
+        for _ in 0..6 {
+            draw(cx);
+        }
+        app.update(cx, |app, _| {
+            assert!(app.panel_transcripts["ses_long"].rows.len() > 200,
+                "history remains in the shared projection beyond the old tail cap");
+            assert!(!app.pending_scroll_restore.contains_key("ses_long"));
+            assert!(!app.panels.entries().iter().find(|panel| panel.session == "ses_long").unwrap().stick);
+            app.panels.update("ses_long", |panel| panel.stick = false);
+            app.panel_tile_lists.get("ses_long").unwrap().scroll_to(ListOffset::default());
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("user-bubble:early").is_some(),
+            "tile rendering keeps the first user message beyond 24 blocks"
+        );
+        assert!(
+            !app.read_with(cx, |app, _| {
+                app.panels
+                    .entries()
+                    .iter()
+                    .find(|panel| panel.session == "ses_long")
+                    .is_some_and(|panel| panel.stick)
+            }),
+            "remembered distance unpins the tile"
+        );
+        assert!(
+            cx.debug_bounds("panel-to-bottom-ses_long").is_some(),
+            "a remembered distance from the bottom restores the unpinned state"
+        );
+        let jump = cx
+            .debug_bounds("panel-to-bottom-ses_long")
+            .expect("tile to-bottom control");
+        cx.simulate_click(jump.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| {
+                app.panels
+                    .entries()
+                    .iter()
+                    .find(|panel| panel.session == "ses_long")
+                    .is_some_and(|panel| panel.stick)
+            }),
+            "to-bottom re-pins the tile"
+        );
+        assert!(
+            cx.debug_bounds("conversation-row:ses_long:text:step-199").is_some(),
+            "the latest assistant row still renders"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn closing_a_sibling_panel_keeps_the_reader_follow_state(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let block = |id: &str, kind: BlockKind, text: String| Block {
+            id: id.into(),
+            message_id: id.into(),
+            part_id: id.into(),
+            kind,
+            text: text.into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at: 1000,
+            completed_at: Some(2000),
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        };
+        let mut reader_blocks = vec![block("early", BlockKind::User, "x".repeat(500))];
+        for index in 0..200 {
+            reader_blocks.push(block(
+                &format!("step-{index}"),
+                BlockKind::Assistant,
+                format!("Step {index}"),
+            ));
+        }
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            let summary = |id: &str, title: &str| vela_core::session::SessionSummary {
+                id: id.into(),
+                title: title.into(),
+                directory: "/work/demo".into(),
+                updated_at: 1,
+                parent_id: None,
+                agent: None,
+            };
+            app.sessions = Arc::new(vec![
+                summary("ses_active", "Active"),
+                summary("ses_reader", "Reader"),
+                summary("ses_other", "Other"),
+            ]);
+            app.active_id = Some("ses_active".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_active", "Active"))
+                .unwrap();
+            let mut reader = crate::panels::PanelState::new("ses_reader", "Reader");
+            reader.blocks = Arc::new(reader_blocks);
+            app.panels.open(reader).unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_other", "Other"))
+                .unwrap();
+            app.panels.activate("ses_active");
+        });
+        for _ in 0..6 {
+            draw(cx);
+        }
+        app.update(cx, |app, _| {
+            app.panels.update("ses_reader", |panel| panel.stick = false);
+            app.panel_tile_lists
+                .get("ses_reader")
+                .unwrap()
+                .scroll_to(ListOffset::default());
+        });
+        draw(cx);
+        let reader_list = app.read_with(cx, |app, _| {
+            app.panel_tile_lists.get("ses_reader").unwrap().clone()
+        });
+        let before = reader_list.logical_scroll_top();
+        // Closing a sibling in the same workspace records a bottom distance.
+        // It must not rewrite the reader's deliberate follow-OFF state.
+        app.update(cx, |app, cx| app.finish_close_panel("ses_other".into(), cx));
+        draw(cx);
+        assert!(
+            !app.read_with(cx, |app, _| {
+                app.panels
+                    .entries()
+                    .iter()
+                    .find(|panel| panel.session == "ses_reader")
+                    .is_some_and(|panel| panel.stick)
+            }),
+            "a sibling close must not re-enable following"
+        );
+        let after = reader_list.logical_scroll_top();
+        assert_eq!(
+            (after.item_ix, after.offset_in_item),
+            (before.item_ix, before.offset_in_item),
+            "the reader's retained scroll position survives the sibling close"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn inactive_tile_answer_copy_joins_all_answer_parts(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let block = |id: &str, kind: BlockKind, text: &str, message: &str| Block {
+            id: id.into(),
+            message_id: message.into(),
+            part_id: id.into(),
+            kind,
+            text: text.into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at: 1000,
+            completed_at: Some(2000),
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_active".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_active", "Active"))
+                .unwrap();
+            let mut waiting = crate::panels::PanelState::new("ses_waiting", "Waiting");
+            waiting.blocks = Arc::new(vec![
+                block("user-1", BlockKind::User, "fix it", "u"),
+                block("a1", BlockKind::Assistant, "First part.", "answer"),
+                block("a2", BlockKind::Assistant, "Second part.", "answer"),
+            ]);
+            app.panels.open(waiting).unwrap();
+            app.panels.activate("ses_active");
+        });
+        draw(cx);
+        let answer = cx
+            .debug_bounds("conversation-row:ses_waiting:text:a2")
+            .expect("tile answer body");
+        cx.simulate_mouse_move(
+            answer.center(),
+            None,
+            gpui::Modifiers::default(),
+        );
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app
+                .hovered_answer_for("ses_waiting")),
+            Some(Arc::from("answer")),
+            "hovering the tile answer reveals its footer"
+        );
+        let copy = cx
+            .debug_bounds("answer-copy:ses_waiting:answer")
+            .expect("tile answer copy");
+        cx.simulate_click(copy.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard()
+                .and_then(|item| item.text())
+                .as_deref(),
+            Some("First part.\n\nSecond part."),
+            "the tile copies the whole answer, matching VelaTurn"
+        );
+        cx.simulate_mouse_move(point(px(4.), px(4.)), None, gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app
+                .hovered_answer_for("ses_waiting")),
+            None,
+            "leaving the answer clears the hovered footer state"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn saved_project_row_toggles_and_name_opens_workspace(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.active_id = Some("ses_project".into());
+            app.settings.workspaces = vec![vela_engine::migration::WorkspaceBookmark {
+                directory: "/workspace".into(),
+                name: "Workspace".into(),
+            }];
+            app.session_projects_open = true;
+            app.sessions = Arc::new(vec![SessionSummary {
+                id: "ses_project".into(),
+                title: "Project chat".into(),
+                directory: "/workspace".into(),
+                updated_at: 1,
+                parent_id: None,
+                agent: None,
+            }]);
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("session-recents-toggle").is_some(),
+            "sidebar renders"
+        );
+        let row = cx.debug_bounds("workspace-0").expect("project row");
+        cx.simulate_click(
+            point(row.left() + px(2.), row.center().y),
+            gpui::Modifiers::default(),
+        );
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| app
+                .expanded_session_projects
+                .contains("/workspace")),
+            "clicking the project row toggles its history like Source"
+        );
+        let open = cx
+            .debug_bounds("project-open-0")
+            .expect("project name button");
+        cx.simulate_click(open.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.active_id.clone()),
+            Some("ses_project".into()),
+            "the project name opens the workspace"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[test]
+    fn tile_scroll_memory_keys_by_workspace_not_session() {
+        let first = SessionSummary {
+            id: "first".into(),
+            title: "First".into(),
+            directory: "/work/demo".into(),
+            updated_at: 1,
+            parent_id: None,
+            agent: None,
+        };
+        let second = SessionSummary {
+            id: "second".into(),
+            ..first.clone()
+        };
+        let sessions = vec![first, second];
+        assert_eq!(scroll_key_for(&sessions, "first"), "/work/demo");
+        assert_eq!(scroll_key_for(&sessions, "second"), "/work/demo");
+        assert_eq!(scroll_key_for(&sessions, "missing"), "missing");
+    }
+
+    #[gpui::test]
+    fn finished_compaction_snapshots_the_current_input(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, _| {
+            app.usage = Some(SessionUsage {
+                input_tokens: 90_000,
+                output_tokens: 0,
+                reasoning_tokens: 0,
+                cache_read_tokens: 0,
+                cache_write_tokens: 0,
+                cost: 0.,
+            });
+            let running = compaction_block("compact", true);
+            let mut done = compaction_block("compact", false);
+            app.note_finished_compactions(&[running], &[done.clone()], "ses_compact");
+            assert_eq!(
+                app.settings.compaction_baselines.get("ses_compact"),
+                Some(&90_000)
+            );
+            done.streaming = false;
+            app.note_finished_compactions(&[done.clone()], &[done], "ses_compact");
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn closing_panel_blocks_on_external_conflicts(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -15380,32 +18083,1170 @@ mod tests {
             VelaApp::new(engine_for_app, settings, None, pending, cx)
         });
         app.update(cx, |app, cx| {
-            let mut tui = TerminalView::new("term-tui".into(), 80, 24, cx);
-            tui.name = Some("Agent TUI".into());
-            app.terminals.insert(tui);
-            app.handle_terminal_exit("term-tui", Some(7), cx);
+            app.panels
+                .open(crate::panels::PanelState::new("ses_close", "Close"))
+                .unwrap();
+            app.document_scopes
+                .insert("ses_close".into(), "scope-close".into());
+            let key = DocumentKey::new("scope-close".into(), "a.txt".into());
+            app.documents.borrow_mut().open(1, key.clone(), true);
+            app.documents
+                .borrow_mut()
+                .finish_load(1, "a.txt", Some("disk".into()));
+            app.documents
+                .borrow_mut()
+                .edit(&key, |buffer| buffer.insert("local "));
+            app.documents.borrow_mut().mark_conflict(
+                &key,
+                vela_core::document::ExternalChange {
+                    content: Some("external".into()),
+                    ..Default::default()
+                },
+            );
+            app.close_panel("ses_close".into(), cx);
         });
-        app.read_with(cx, |app, cx| {
-            assert!(app.terminals.views.is_empty());
+        assert!(
+            app.read_with(cx, |app, _| app.panels.contains("ses_close")),
+            "a conflicting dirty tab keeps the panel open"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn closing_panel_waits_for_dirty_tab_saves(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.panels
+                .open(crate::panels::PanelState::new("ses_save", "Save"))
+                .unwrap();
+            app.document_scopes
+                .insert("ses_save".into(), "scope-save".into());
+            let key = DocumentKey::new("scope-save".into(), "a.txt".into());
+            app.documents.borrow_mut().open(1, key.clone(), true);
+            app.documents
+                .borrow_mut()
+                .finish_load(1, "a.txt", Some("disk".into()));
+            app.documents
+                .borrow_mut()
+                .edit(&key, |buffer| buffer.insert("local "));
+            app.close_panel("ses_save".into(), cx);
+            let pending_saves = app
+                .panel_close_saves
+                .get("ses_save")
+                .map(|(requests, _)| requests.len());
+            app.close_panel("ses_save".into(), cx);
             assert_eq!(
-                app.toasts.read(cx).texts(),
-                vec!["Agent TUI exited with code 7.".to_owned()]
+                app.panel_close_saves
+                    .get("ses_save")
+                    .map(|(requests, _)| requests.len()),
+                pending_saves,
+                "a second close reuses the pending save barrier"
+            );
+            assert!(
+                app.panels.contains("ses_save"),
+                "the panel waits for the dirty tab save"
+            );
+        });
+        let request = app.read_with(cx, |app, _| {
+            app.panel_close_saves
+                .get("ses_save")
+                .and_then(|(requests, _)| requests.iter().next().copied())
+                .expect("pending panel save")
+        });
+        app.update(cx, |app, cx| {
+            app.on_update(
+                EngineUpdate::FileSaved {
+                    request_id: request,
+                    rel: "a.txt".into(),
+                    error: None,
+                    conflict: None,
+                },
+                cx,
+            );
+        });
+        assert!(
+            app.read_with(cx, |app, _| !app.panels.contains("ses_save")),
+            "the panel closes once its dirty tabs save"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn closing_panel_stays_open_when_a_save_fails(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.panels
+                .open(crate::panels::PanelState::new("ses_fail", "Fail"))
+                .unwrap();
+            app.document_scopes
+                .insert("ses_fail".into(), "scope-fail".into());
+            let key = DocumentKey::new("scope-fail".into(), "a.txt".into());
+            app.documents.borrow_mut().open(1, key.clone(), true);
+            app.documents
+                .borrow_mut()
+                .finish_load(1, "a.txt", Some("disk".into()));
+            app.documents
+                .borrow_mut()
+                .edit(&key, |buffer| buffer.insert("local "));
+            app.close_panel("ses_fail".into(), cx);
+        });
+        let request = app.read_with(cx, |app, _| {
+            app.panel_close_saves
+                .get("ses_fail")
+                .and_then(|(requests, _)| requests.iter().next().copied())
+                .expect("pending panel save")
+        });
+        app.update(cx, |app, cx| {
+            app.on_update(
+                EngineUpdate::FileSaved {
+                    request_id: request,
+                    rel: "a.txt".into(),
+                    error: Some("disk full".into()),
+                    conflict: None,
+                },
+                cx,
+            );
+        });
+        assert!(
+            app.read_with(cx, |app, _| app.panels.contains("ses_fail")),
+            "a failed save keeps the panel open"
+        );
+        assert!(
+            app.read_with(cx, |app, _| !app.panel_close_saves.contains_key("ses_fail")),
+            "the failed close request is cleared"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn closing_panel_forgets_compaction_baseline(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.panels
+                .open(crate::panels::PanelState::new("ses_closed", "Closed"))
+                .unwrap();
+            app.settings
+                .compaction_baselines
+                .insert("ses_closed".into(), 15_000);
+            app.close_panel("ses_closed".into(), cx);
+        });
+        assert!(
+            app.read_with(cx, |app, _| !app
+                .settings
+                .compaction_baselines
+                .contains_key("ses_closed")),
+            "closing a panel forgets its compaction baseline"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn attached_workspaces_are_remembered_once(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.settings.workspaces.clear();
+            app.remember_workspace("/work/demo", cx);
+            app.remember_workspace("/work/demo", cx);
+        });
+        let workspaces = app.read_with(cx, |app, _| app.settings.workspaces.clone());
+        assert_eq!(workspaces.len(), 1);
+        assert_eq!(workspaces[0].directory, "/work/demo");
+        assert_eq!(workspaces[0].name, "demo");
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn tile_header_drag_resizes_the_row(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1400.), px(900.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_a".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_a", "A"))
+                .unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_b", "B"))
+                .unwrap();
+            app.panels.activate("ses_a");
+            app.agent_mode = true;
+            app.agent_panel_open = true;
+            app.ensure_panel_input("ses_a", cx);
+        });
+        draw(cx);
+        let drag = cx
+            .debug_bounds("panel-tile-drag-ses_a")
+            .expect("tile header drag zone");
+        let start = drag.center();
+        let end = point(drag.center().x + px(48.), drag.center().y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(end, Some(gpui::MouseButton::Left), gpui::Modifiers::default());
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| {
+                app.panels.entries().iter().any(|panel| {
+                    panel.free_slot.is_some_and(|slot| slot.left > 0.)
+                })
+            }),
+            "dragging the tile header slides its free slot"
+        );
+        app.update(cx, |app, _| app.usage_open = true);
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-usage-popup").is_some(),
+            "tiled Agent Mode renders the usage popup overlay"
+        );
+        let outside = cx
+            .debug_bounds("agent-panel-options-ses_a")
+            .expect("another tile control");
+        cx.simulate_click(outside.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-usage-popup").is_none(),
+            "clicking outside dismisses the tiled usage popup"
+        );
+        app.update(cx, |app, _| app.picker = Some(PickerKind::Model));
+        draw(cx);
+        assert!(
+            cx.debug_bounds("model-picker-menu").is_some(),
+            "tiled Agent Mode renders the picker overlay"
+        );
+        assert!(
+            app.read_with(cx, |app, _| app.panel_tile_lists.contains_key("ses_a")),
+            "tile rendering owns a per-panel list state"
+        );
+        app.update(cx, |app, cx| {
+            app.forget_panel_widgets("ses_a");
+            assert!(!app.panel_tile_lists.contains_key("ses_a"));
+            cx.notify();
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn hidden_anchor_survives_closing_the_last_visible_panel(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            for (id, title) in [("ses_anchor", "Anchor"), ("ses_visible", "Visible")] {
+                app.panels
+                    .open(crate::panels::PanelState::new(id, title))
+                    .unwrap();
+            }
+            app.panels.activate("ses_visible");
+            app.active_id = Some("ses_visible".into());
+            app.agent_mode = true;
+            app.agent_panel_open = true;
+            app.toggle_agent_panel(cx);
+            assert_eq!(app.panels.len(), 1);
+            assert_eq!(
+                app.hidden_agent_anchor.as_ref().map(|panel| panel.session.as_str()),
+                Some("ses_anchor")
+            );
+            app.finish_close_panel("ses_visible".into(), cx);
+            assert!(app.panels.is_empty());
+            assert!(app.agent_mode, "the hidden anchor keeps Agent Mode alive");
+            assert!(app.hidden_agent_anchor.is_some());
+            assert!(
+                app.agent_panel_session_choices()
+                    .iter()
+                    .any(|(id, _, _)| id == "ses_anchor"),
+                "the hidden anchor stays listed as an active session"
+            );
+            app.choose_agent_panel_session("ses_anchor".into(), cx);
+            assert_eq!(app.panels.len(), 1);
+            assert_eq!(
+                app.panels.entries()[0].session.as_str(),
+                "ses_anchor"
+            );
+            assert!(app.hidden_agent_anchor.is_none());
+            app.toggle_agent_panel(cx);
+            assert!(app.panels.is_empty());
+            app.agent_tui.menu = Some("ses_anchor".into());
+            app.retire_session_ui("ses_anchor", cx);
+            assert!(!app.agent_mode);
+            assert!(app.hidden_agent_anchor.is_none());
+            assert!(app.agent_tui.menu.is_none());
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn agent_mode_opens_the_full_workspace_layout(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.ui_shell = UiShell::Classic; // This test targets the Classic panel header.
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_two".into());
+            for (id, title) in [("ses_one", "One"), ("ses_two", "Two"), ("ses_three", "Three")] {
+                app.panels
+                    .open(crate::panels::PanelState::new(id, title))
+                    .unwrap();
+            }
+            app.panels.activate("ses_two");
+            app.agent_panel_open = true;
+            app.sidebar_open = true;
+            app.settings_open = true;
+            app.toggle_agent_mode(cx);
+            assert!(!app.settings_open, "Agent Mode closes settings");
+            assert_eq!(
+                app.panels
+                    .entries()
+                    .iter()
+                    .map(|panel| panel.session.as_str())
+                    .collect::<Vec<_>>(),
+                ["ses_two"]
+            );
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-mode-root").is_some(),
+            "agent mode fills the workspace with the panel layout"
+        );
+        assert!(
+            cx.debug_bounds("panel-tile-drag-ses_two").is_none(),
+            "the single-panel AgentPanel header has no tile drag zone"
+        );
+        assert!(
+            cx.debug_bounds("agent-panel-options-ses_two").is_some(),
+            "the single-panel header still exposes the options menu"
+        );
+        app.update(cx, |app, cx| {
+            app.toggle_agent_panel(cx);
+            assert!(app.panels.is_empty());
+            assert!(app.hidden_agent_anchor.is_some());
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("agent-mode-hidden").is_some());
+        assert!(cx.debug_bounds("agent-mode-root").is_some());
+        app.update(cx, |app, cx| {
+            app.toggle_agent_panel(cx);
+            assert_eq!(app.panels.len(), 1);
+            assert!(app.hidden_agent_anchor.is_none());
+        });
+        draw(cx);
+        app.update(cx, |app, cx| {
+            app.leave_agent_mode_for_manual_adjustment(cx);
+            assert!(!app.agent_mode, "manual resize leaves Agent Mode");
+            app.toggle_agent_mode(cx);
+        });
+        app.update(cx, |app, cx| {
+            app.sidebar_open = false;
+            app.toggle_agent_mode(cx);
+            assert!(
+                app.sidebar_open,
+                "leaving Agent Mode restores the sidebar state"
+            );
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("agent-mode-root").is_none());
+        assert!(app.read_with(cx, |app, _| app.panels.len() == 1));
+        app.update(cx, |app, cx| {
+            app.toggle_agent_mode(cx);
+            app.activate_sidebar_tab(SidebarTab::Files, cx);
+            assert!(!app.agent_mode, "a rail tab exits Agent Mode");
+            assert!(app.sidebar_open);
+            assert!(matches!(app.sidebar_tab, SidebarTab::Files));
+            app.toggle_agent_mode(cx);
+            app.toggle_sidebar_from_titlebar(cx);
+            assert!(
+                !app.agent_mode,
+                "the titlebar sidebar control exits Agent Mode"
+            );
+            assert!(app.sidebar_open);
+            app.toggle_agent_mode(cx);
+            let session = app.panels.active().unwrap().session.clone();
+            app.finish_close_panel(session, cx);
+            assert!(!app.agent_mode, "closing the last panel exits Agent Mode");
+            assert!(app.panels.is_empty());
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn titlebar_add_stops_at_the_eight_panel_limit(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            for index in 0..8 {
+                app.panels
+                    .open(crate::panels::PanelState::new(
+                        format!("ses_{index}"),
+                        format!("Session {index}"),
+                    ))
+                    .unwrap();
+            }
+            app.workspace_open_adds = false;
+            app.add_workspace_panel(cx);
+            assert!(!app.workspace_open_adds);
+            assert!(!app.workspace_chooser_pending);
+            assert_eq!(app.panels.len(), 8);
+            app.workspace_hint = Some("/work/overflow".into());
+            app.workspace_open_adds = true;
+            app.on_update(
+                EngineUpdate::WorkspaceOpened {
+                    directory: "/work/overflow".into(),
+                    result: Ok("ses_overflow".into()),
+                },
+                cx,
+            );
+            assert_eq!(
+                app.panels.len(),
+                8,
+                "a late add cannot exceed the eight-panel ceiling"
+            );
+            let texts = app
+                .toasts
+                .read_with(cx, |toasts, _| toasts.texts());
+            assert!(texts.iter().any(|text| text == "Agent panel limit reached"));
+            app.agent_mode = true;
+            app.agent_panel_open = true;
+            app.toggle_agent_panel(cx);
+            assert_eq!(app.panels.len(), 7);
+            assert!(app.hidden_agent_anchor.is_some());
+            assert_eq!(app.occupied_panel_slots(), 8);
+            app.workspace_open_adds = false;
+            app.add_workspace_panel(cx);
+            assert!(!app.workspace_open_adds);
+            assert!(!app.workspace_chooser_pending);
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn new_session_replaces_panels_and_first_add_enters_agent_mode(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.panels
+                .open(crate::panels::PanelState::new("ses_one", "One"))
+                .unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_two", "Two"))
+                .unwrap();
+            app.workspace_hint = Some("/work/demo".into());
+            app.workspace_open_adds = false;
+            app.on_update(
+                EngineUpdate::WorkspaceOpened {
+                    directory: "/work/demo".into(),
+                    result: Ok("ses_new".into()),
+                },
+                cx,
+            );
+            let sessions = app
+                .panels
+                .entries()
+                .iter()
+                .map(|panel| panel.session.clone())
+                .collect::<Vec<_>>();
+            assert_eq!(sessions, ["ses_new"]);
+        });
+        app.update(cx, |app, cx| {
+            app.workspace_hint = Some("/work/added".into());
+            app.workspace_open_adds = true;
+            app.on_update(
+                EngineUpdate::WorkspaceOpened {
+                    directory: "/work/added".into(),
+                    result: Ok("ses_added".into()),
+                },
+                cx,
+            );
+            let sessions = app
+                .panels
+                .entries()
+                .iter()
+                .map(|panel| panel.session.clone())
+                .collect::<Vec<_>>();
+            assert_eq!(
+                sessions,
+                ["ses_added"],
+                "the first titlebar add enters Agent Mode with the opened panel"
             );
         });
         app.update(cx, |app, cx| {
-            let mut shell = TerminalView::new("term-shell".into(), 80, 24, cx);
-            shell.name = Some("zsh".into());
-            app.terminals.insert(shell);
-            app.handle_terminal_exit("term-shell", Some(1), cx);
+            app.workspace_hint = Some("/work/another".into());
+            app.workspace_open_adds = true;
+            app.on_update(
+                EngineUpdate::WorkspaceOpened {
+                    directory: "/work/another".into(),
+                    result: Ok("ses_more".into()),
+                },
+                cx,
+            );
+            let sessions = app
+                .panels
+                .entries()
+                .iter()
+                .map(|panel| panel.session.clone())
+                .collect::<Vec<_>>();
+            assert_eq!(sessions, ["ses_added", "ses_more"]);
         });
-        app.read_with(cx, |app, cx| {
-            assert!(app.terminals.views.is_empty());
-            assert_eq!(
-                app.toasts.read(cx).texts(),
-                vec!["Agent TUI exited with code 7.".to_owned()],
-                "ordinary terminal exits stay silent"
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn workspace_open_toasts_the_resolved_directory(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.workspace_hint = Some("/work/demo".into());
+            app.on_update(
+                EngineUpdate::WorkspaceOpened {
+                    directory: "/work/demo".into(),
+                    result: Ok("ses_open".into()),
+                },
+                cx,
             );
         });
+        let texts = app.read_with(cx, |app, cx| app.toasts.read_with(cx, |toasts, _| toasts.texts()));
+        assert!(
+            texts.iter().any(|text| text == "Opened /work/demo"),
+            "workspace open toasts the resolved directory"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[test]
+    fn source_variant_label_matches_source_format() {
+        assert_eq!(source_variant_label(None), "Auto");
+        assert_eq!(source_variant_label(Some("")), "Auto");
+        assert_eq!(source_variant_label(Some("high")), "High");
+        assert_eq!(source_variant_label(Some("team-plan")), "Team Plan");
+        assert_eq!(source_variant_label(Some("x_y")), "X Y");
+    }
+
+    #[gpui::test]
+    fn detaching_forgets_hidden_anchor_widgets(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.hidden_agent_anchor = Some(crate::panels::PanelState::new("hidden", "Hidden"));
+            app.panel_tile_lists.insert(
+                "hidden".into(),
+                ListState::new(0, ListAlignment::Top, px(10.)),
+            );
+            app.panel_transcripts.insert("hidden".into(), Default::default());
+            app.detach_panels_except("ses_keep", cx);
+            assert!(app.hidden_agent_anchor.is_none());
+            assert!(!app.panel_tile_lists.contains_key("hidden"));
+            assert!(!app.panel_transcripts.contains_key("hidden"));
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn closing_a_panel_forgets_all_panel_widget_state(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.panels
+                .open(crate::panels::PanelState::new("ses_close", "Close"))
+                .unwrap();
+            app.active_id = Some("ses_close".into());
+            app.ensure_panel_input("ses_close", cx);
+            app.panel_tile_lists.insert(
+                "ses_close".into(),
+                ListState::new(0, ListAlignment::Top, px(10.)),
+            );
+            app.panel_transcripts.insert("ses_close".into(), Default::default());
+            app.finish_close_panel("ses_close".into(), cx);
+            assert!(!app.panel_inputs.contains_key("ses_close"));
+            assert!(!app.panel_tile_lists.contains_key("ses_close"));
+            assert!(!app.panel_transcripts.contains_key("ses_close"));
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn tile_model_control_opens_picker_for_its_panel(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_a".into());
+            for id in ["ses_a", "ses_b", "ses_c"] {
+                app.panels
+                    .open(crate::panels::PanelState::new(id, id))
+                    .unwrap();
+            }
+            app.panels.activate("ses_a");
+            app.agent_mode = true;
+            app.agent_panel_open = true;
+            app.ensure_panel_input("ses_b", cx);
+            app.panels.update("ses_b", |panel| {
+                panel.selected_model = Some(vela_opencode::client::ModelInfo {
+                    id: "test-model".into(),
+                    provider_id: "test-provider".into(),
+                    name: "Test Model".into(),
+                    context_limit: None,
+                    variant: Some("high".into()),
+                    variants: vec!["high".into(), "low".into()],
+                });
+            });
+        });
+        draw(cx);
+        let options = cx
+            .debug_bounds("agent-panel-options-ses_b")
+            .expect("tile options");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.active_id.clone()),
+            Some("ses_a".into()),
+            "opening tile options does not activate the panel"
+        );
+        let header = cx
+            .debug_bounds("panel-tile-header-ses_b")
+            .expect("tile header");
+        cx.simulate_click(
+            header.origin + point(px(10.), px(10.)),
+            gpui::Modifiers::default(),
+        );
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.active_id.clone()),
+            Some("ses_a".into()),
+            "clicking the header while options are open does not activate the panel"
+        );
+        assert!(
+            cx.debug_bounds("agent-panel-options-menu-ses_b").is_none(),
+            "clicking the header closes the open options menu"
+        );
+        app.update(cx, |app, _| {
+            app.agent_tui.menu = None;
+            app.panels.update("ses_b", |panel| {
+                panel.composer_options_open = true;
+            });
+        });
+        draw(cx);
+        let strength = cx
+            .debug_bounds("panel-tile-strength-ses_b")
+            .expect("tile response strength control");
+        cx.simulate_click(strength.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| (app.picker, app.active_id.clone())),
+            (Some(PickerKind::Strength), Some("ses_b".into())),
+            "the tile strength control activates its panel and opens the strength picker"
+        );
+        assert!(cx.debug_bounds("response-strength-menu").is_some());
+        app.update(cx, |app, _| {
+            app.picker = None;
+            app.active_id = Some("ses_a".into());
+            app.panels.activate("ses_a");
+            app.panels.update("ses_b", |panel| {
+                if let Some(model) = panel.selected_model.as_mut() {
+                    model.variants.clear();
+                }
+            });
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("panel-tile-strength-ses_b").is_none(),
+            "the strength control disappears without model variants"
+        );
+        let model = cx
+            .debug_bounds("panel-tile-model-ses_b")
+            .expect("tile model control");
+        cx.simulate_click(model.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| (app.picker, app.active_id.clone())),
+            (Some(PickerKind::Model), Some("ses_b".into())),
+            "the tile model control activates its panel and opens the picker"
+        );
+        app.update(cx, |app, _| {
+            app.picker = None;
+            app.active_id = Some("ses_a".into());
+            app.panels.activate("ses_a");
+        });
+        draw(cx);
+        let agent = cx
+            .debug_bounds("panel-tile-agent-ses_b")
+            .expect("tile agent control");
+        cx.simulate_click(agent.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| (app.picker, app.active_id.clone())),
+            (Some(PickerKind::Agent), Some("ses_b".into())),
+            "the tile agent control activates its panel and opens the picker"
+        );
+        assert!(cx.debug_bounds("agent-picker-menu").is_some());
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn saved_workspace_menu_closes_on_outside_click(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.saved_workspace_menu =
+                Some(("/tmp/workspace".into(), point(px(40.), px(40.))));
+            app.session_context_menu =
+                Some(("ses_context".into(), point(px(300.), px(40.))));
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("saved-workspace-menu").is_some());
+        assert!(cx.debug_bounds("session-context-menu").is_some());
+        cx.simulate_click(point(px(900.), px(700.)), gpui::Modifiers::default());
+        draw(cx);
+        assert!(
+            cx.debug_bounds("saved-workspace-menu").is_none(),
+            "clicking outside closes the saved-workspace menu"
+        );
+        assert!(
+            cx.debug_bounds("session-context-menu").is_none(),
+            "clicking outside closes the session context menu"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn panel_usage_activates_its_own_panel(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.panels
+                .open(crate::panels::PanelState::new("ses_a", "A"))
+                .unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_b", "B"))
+                .unwrap();
+            app.panels.activate("ses_a");
+            app.active_id = Some("ses_a".into());
+            app.open_panel_usage("ses_b".into(), cx);
+            assert_eq!(app.active_id.as_deref(), Some("ses_b"));
+            assert!(app.usage_open);
+            app.open_panel_usage("ses_a".into(), cx);
+            assert_eq!(app.active_id.as_deref(), Some("ses_a"));
+            assert!(
+                app.usage_open,
+                "switching panels keeps the usage popup open for the new panel"
+            );
+            app.usage_anchor = Some(gpui::Bounds {
+                origin: point(px(10.), px(10.)),
+                size: size(px(20.), px(20.)),
+            });
+            app.finish_close_panel("ses_a".into(), cx);
+            assert!(!app.usage_open, "closing the active panel closes its usage popup");
+            assert!(app.usage_anchor.is_none());
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn delete_title_prefers_panel_then_summary_then_id(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, _| {
+            app.sessions = Arc::new(vec![SessionSummary {
+                id: "ses_title".into(),
+                title: "Summary title".into(),
+                directory: "/workspace".into(),
+                updated_at: 1,
+                parent_id: None,
+                agent: None,
+            }]);
+            assert_eq!(
+                app.session_title_for_delete("ses_title"),
+                "Summary title"
+            );
+            app.panels
+                .open(crate::panels::PanelState::new("ses_title", "Panel title"))
+                .unwrap();
+            assert_eq!(app.session_title_for_delete("ses_title"), "Panel title");
+            assert_eq!(app.session_title_for_delete("missing"), "missing");
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn deleted_session_forgets_compaction_baseline(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.session_deletions
+                .insert("ses_delete".into(), (7, "Delete me".into()));
+            app.settings
+                .compaction_baselines
+                .insert("ses_delete".into(), 12_000);
+            app.finish_session_deletion(7, "ses_delete", None, cx);
+        });
+        assert!(
+            app.read_with(cx, |app, _| !app
+                .settings
+                .compaction_baselines
+                .contains_key("ses_delete")),
+            "a deleted session forgets its compaction baseline"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn accepted_session_delete_starts_deletion(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.sessions = Arc::new(vec![SessionSummary {
+                id: "ses_delete".into(),
+                title: "Delete me".into(),
+                directory: "/workspace".into(),
+                updated_at: 1,
+                parent_id: None,
+                agent: None,
+            }]);
+            app.panels
+                .open(crate::panels::PanelState::new("ses_delete", "Delete me"))
+                .unwrap();
+            app.begin_session_deletion("ses_delete".into(), cx);
+        });
+        assert!(
+            app.read_with(cx, |app, _| app
+                .session_deletions
+                .contains_key("ses_delete")),
+            "after confirmation, the delete request is dispatched"
+        );
+        assert!(
+            app.read_with(cx, |app, _| !app.panels.contains("ses_delete")),
+            "the accepted deletion closes the panel before awaiting the engine"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn agent_usage_lives_in_the_panel_options_menu(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.ui_shell = UiShell::Classic; // This test targets the Classic panel header.
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.test_workspace_directory = Some("/workspace".into());
+            app.active_id = Some("ses_usage".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_usage", "Usage panel"))
+                .unwrap();
+            app.panels.activate("ses_usage");
+            app.selected_model = Some(ModelInfo {
+                id: "usage-model".into(),
+                name: "Usage Model".into(),
+                provider_id: "provider".into(),
+                context_limit: Some(1000),
+                variant: None,
+                variants: Vec::new(),
+            });
+            app.usage = None;
+            app.usage_open = false;
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-usage-toggle").is_none(),
+            "Source keeps usage inside the options menu"
+        );
+        let options = cx
+            .debug_bounds("agent-panel-options-ses_usage")
+            .expect("panel options toggle");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
+        let usage = cx
+            .debug_bounds("agent-usage-toggle")
+            .expect("usage menu item");
+        assert!(
+            cx.debug_bounds("usage-ring").is_some(),
+            "the menu item shows Source's context ring"
+        );
+        cx.simulate_click(usage.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(app.read_with(cx, |app, _| app.usage_open));
+        assert!(!app.read_with(cx, |app, _| app.agent_panel_menu_open("ses_usage")));
+        assert!(cx.debug_bounds("agent-usage-popup").is_some());
+        cx.simulate_keystrokes("escape");
+        draw(cx);
+        assert!(
+            !app.read_with(cx, |app, _| app.usage_open),
+            "Escape dismisses Source's usage popup"
+        );
+        runtime.block_on(
+            app.read_with(cx, |app, _| app.engine.clone())
+                .shutdown_and_wait(),
+        );
+    }
+
+    #[gpui::test]
+    fn agent_tui_exit_returns_to_gui_with_source_notice(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.test_workspace_directory = Some("/workspace".into());
+            app.active_id = Some("ses_exit".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_exit", "Exit panel"))
+                .unwrap();
+            app.panels.activate("ses_exit");
+            app.runtime_capabilities = RuntimeCapabilities::opencode(true);
+            app.settings
+                .agent_panel_modes
+                .insert("ses_exit".into(), "tui".into());
+            let view = TerminalView::new("term-exit".into(), 80, 24, cx);
+            app.agent_tui.insert_view("ses_exit", "/workspace", view);
+        });
+        draw(cx);
+        cx.run_until_parked();
+        assert!(
+            cx.debug_bounds("agent-tui-ses_exit").is_some(),
+            "the saved TUI mode starts in the embedded terminal"
+        );
+        app.update(cx, |app, cx| {
+            assert!(app.handle_agent_tui_exit("term-exit", Some(3), cx));
+        });
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| app.agent_tui.views.is_empty()),
+            "an exited TUI is stopped and unmounted like Source's AgentTui"
+        );
+        assert_eq!(
+            app.read_with(cx, |app, _| {
+                app.settings.agent_panel_modes.get("ses_exit").cloned()
+            }),
+            Some("gui".to_owned())
+        );
+        assert_eq!(
+            app.read_with(cx, |app, _| {
+                app.agent_tui.notices.get("ses_exit").cloned()
+            }),
+            Some("Agent TUI exited with code 3.".to_owned())
+        );
+        assert!(cx.debug_bounds("agent-tui-ses_exit").is_none());
+        assert!(
+            cx.debug_bounds("agent-tui-notice-ses_exit").is_some(),
+            "Source keeps the exit notice above the GUI transcript"
+        );
+        runtime.block_on(
+            app.read_with(cx, |app, _| app.engine.clone())
+                .shutdown_and_wait(),
+        );
     }
 
     #[test]
@@ -15422,6 +19263,19 @@ mod tests {
         assert_eq!(encode_terminal_key(&event, false), vec![0x03]);
         event.keystroke = Keystroke::parse("enter").unwrap();
         assert_eq!(encode_terminal_key(&event, false), b"\r");
+    }
+
+    #[test]
+    fn compact_commands_share_source_toast() {
+        assert_eq!(
+            compaction_command_toast("compact"),
+            Some("Compacting session…")
+        );
+        assert_eq!(
+            compaction_command_toast("compress"),
+            Some("Compacting session…")
+        );
+        assert_eq!(compaction_command_toast("review"), None);
     }
 
     #[test]
@@ -15573,18 +19427,29 @@ mod tests {
     #[test]
     fn validation_action_labels_reflect_pending_failure_and_summary() {
         assert_eq!(
-            validation_action_label(true, false, false),
-            "Cancel validation"
+            validation_action_label(true, false, false, false, false),
+            "Validating…"
         );
         assert_eq!(
-            validation_action_label(false, true, false),
-            "Retry validation"
+            validation_action_label(false, true, false, true, false),
+            "Show errors"
         );
         assert_eq!(
-            validation_action_label(false, false, true),
+            validation_action_label(false, false, true, true, true),
+            "Hide errors"
+        );
+        assert_eq!(
+            validation_action_label(false, true, false, false, false),
             "Validate again"
         );
-        assert_eq!(validation_action_label(false, false, false), "Validate");
+        assert_eq!(
+            validation_action_label(false, false, true, false, false),
+            "Validate again"
+        );
+        assert_eq!(
+            validation_action_label(false, false, false, false, false),
+            "Validate"
+        );
     }
 
     #[test]
@@ -15612,15 +19477,19 @@ mod tests {
     fn usage_formatting_matches_source_compact_counts_and_costs() {
         assert_eq!(usage_count(0), "0");
         assert_eq!(usage_count(999), "999");
-        assert_eq!(usage_count(1_250), "1.2k");
+        assert_eq!(usage_count(1_250), "1.3k");
+        assert_eq!(usage_count(99_999), "100.0k");
+        assert_eq!(usage_count(150_000), "150k");
+        assert_eq!(usage_count(999_999), "1000k");
         assert_eq!(usage_count(2_500_000), "2.5M");
+        assert_eq!(usage_count(12_500_000), "13M");
         assert_eq!(usage_cost(0.), "$0.00");
         assert_eq!(usage_cost(0.01234), "$0.0123");
         assert_eq!(usage_cost(1.5), "$1.50");
     }
 
     #[gpui::test]
-    fn active_user_message_renders_agent_and_catalog_model_metadata(
+    fn active_user_message_renders_only_the_live_markdown_bubble(
         cx: &mut gpui::TestAppContext,
     ) {
         let runtime = tokio::runtime::Builder::new_current_thread()
@@ -15664,12 +19533,14 @@ mod tests {
                 streaming: false,
                 agent: Some("build".into()),
                 model: Some("claude".into()),
-                created_at: 0,
+                created_at: 1_600_000_000_000,
                 completed_at: None,
                 child_session_id: None,
                 files: Vec::new(),
                 sub_calls: Vec::new(),
                 attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
             }]);
             let rows = transcript_view::project(
                 &app.blocks,
@@ -15683,8 +19554,244 @@ mod tests {
         });
         draw(cx);
         assert!(
-            cx.debug_bounds("user-message-meta-user-1").is_some(),
-            "user messages expose Source's agent · model metadata"
+            cx.debug_bounds("user-bubble:user-1").is_some(),
+            "the live VelaTurn bubble renders the user Markdown"
+        );
+        assert!(
+            cx.debug_bounds("user-message-meta-user-1").is_none(),
+            "VelaTurn renders no agent/model metadata"
+        );
+        assert!(
+            cx.debug_bounds("user-message-meta-tail-user-1").is_none(),
+            "VelaTurn renders no timestamp metadata"
+        );
+        assert!(
+            cx.debug_bounds("user-attachments:message-1").is_none(),
+            "VelaTurn renders no attachment chips under the bubble"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn user_message_text_selection_copies_the_visible_text_with_keyboard_actions(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_selection".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![Block {
+                id: "user-selection".into(),
+                message_id: "message-selection".into(),
+                part_id: "user-selection".into(),
+                kind: BlockKind::User,
+                text: "hello brave world".into(),
+                detail: String::new().into(),
+                output: String::new().into(),
+                status: ToolStatus::None,
+                streaming: false,
+                agent: Some("build".into()),
+                model: Some("claude".into()),
+                created_at: 1_600_000_000_000,
+                completed_at: None,
+                child_session_id: None,
+                files: Vec::new(),
+                sub_calls: Vec::new(),
+                attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
+            }]);
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_selection",
+                &app.transcript_ui,
+            );
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        let bubble = cx
+            .debug_bounds("user-bubble:user-selection")
+            .expect("user bubble renders");
+        let start = point(bubble.left() + px(14.), bubble.center().y);
+        let end = point(bubble.right() - px(14.), bubble.center().y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            end,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let expected = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| selection.selected_text(&app.transcript_ui.user_message_segments))
+            })
+            .expect("dragging selects user text");
+        assert!(!expected.is_empty(), "drag produced a non-empty selection");
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(expected),
+            "Cmd+C copies the selected visible characters"
+        );
+
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        let all = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| selection.selected_text(&app.transcript_ui.user_message_segments))
+            })
+            .expect("Cmd+A keeps a selection");
+        assert_eq!(all, "hello brave world");
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some("hello brave world".to_string()),
+            "Cmd+A plus Cmd+C copies the whole message"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn structured_user_message_selection_spans_paragraphs_and_copies_in_order(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        cx.update(|_, cx| crate::input::install_menu(cx));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_structured_selection".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![Block {
+                id: "user-structured".into(),
+                message_id: "message-structured".into(),
+                part_id: "user-structured".into(),
+                kind: BlockKind::User,
+                text: "# Title\n\nFirst paragraph.\n\n- first item\n- second item\n\nSecond paragraph."
+                    .into(),
+                detail: String::new().into(),
+                output: String::new().into(),
+                status: ToolStatus::None,
+                streaming: false,
+                agent: Some("build".into()),
+                model: Some("claude".into()),
+                created_at: 1_600_000_000_000,
+                completed_at: None,
+                child_session_id: None,
+                files: Vec::new(),
+                sub_calls: Vec::new(),
+                attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
+            }]);
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_structured_selection",
+                &app.transcript_ui,
+            );
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        let first = cx
+            .debug_bounds("label:user:user-structured:1")
+            .expect("first paragraph renders");
+        let second = cx
+            .debug_bounds("label:user:user-structured:3")
+            .expect("last paragraph renders");
+        let start = point(first.left() + px(1.), first.center().y);
+        let end = point(second.right() - px(1.), second.center().y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(
+            end,
+            Some(gpui::MouseButton::Left),
+            gpui::Modifiers::default(),
+        );
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        let (selected, anchor, head) = app
+            .read_with(cx, |app, _| {
+                app.transcript_ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| {
+                        (
+                            selection.selected_text(&app.transcript_ui.user_message_segments),
+                            selection.anchor,
+                            selection.head,
+                        )
+                    })
+            })
+            .expect("dragging across paragraphs selects user text");
+        assert!(
+            selected.contains("First paragraph.")
+                && selected.contains("first item")
+                && selected.contains("Second paragraph."),
+            "the selection spans paragraphs and list items: {selected:?} anchor={anchor:?} head={head:?}"
+        );
+        assert!(
+            selected.contains('\n'),
+            "cross-paragraph copy keeps a line break: {selected:?}"
+        );
+
+        cx.simulate_keystrokes("cmd-a");
+        draw(cx);
+        cx.simulate_keystrokes("cmd-c");
+        draw(cx);
+        assert_eq!(
+            cx.read_from_clipboard().and_then(|item| item.text()),
+            Some(
+                "Title\nFirst paragraph.\nfirst item\nsecond item\nSecond paragraph."
+                    .to_string()
+            ),
+            "Cmd+A selects every rendered heading, paragraph and list item in document order"
         );
         runtime.block_on(engine.shutdown_and_wait());
     }
@@ -16017,7 +20124,6 @@ mod tests {
         assert!(cx.debug_bounds("composer-add").is_some());
         assert!(cx.debug_bounds("agent-picker").is_some());
         assert!(cx.debug_bounds("composer-slash-menu").is_some());
-        assert!(cx.debug_bounds("new-tui-terminal").is_some());
 
         app.update(cx, |app, cx| {
             app.runtime_capabilities.attachments = false;
@@ -16030,7 +20136,47 @@ mod tests {
         assert!(cx.debug_bounds("composer-add").is_none());
         assert!(cx.debug_bounds("agent-picker").is_none());
         assert!(cx.debug_bounds("composer-slash-menu").is_none());
-        assert!(cx.debug_bounds("new-tui-terminal").is_none());
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn servers_settings_surface_only_source_preview_servers(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.settings_open = true;
+            app.settings_section = SettingsSection::Servers;
+            app.preview_servers.clear();
+        });
+        draw(cx);
+        // Current Source's Servers section only manages Vite preview servers;
+        // the former MCP/plugin/skill inventory was not a Source control.
+        for selector in [
+            "inventory-mcp",
+            "inventory-plugin",
+            "inventory-skill",
+            "integrations-retry",
+        ] {
+            assert!(
+                cx.debug_bounds(selector).is_none(),
+                "{selector} must not be rendered by Settings > Servers"
+            );
+        }
         runtime.block_on(engine.shutdown_and_wait());
     }
 
@@ -16147,6 +20293,58 @@ mod tests {
         assert_eq!(resized_split_fraction(0.5, 10000., 1000.), 0.8);
         assert_eq!(resized_split_fraction(0.5, -10000., 1000.), 0.2);
         assert_eq!(resized_split_fraction(0.5, 100., 0.), 0.5);
+    }
+
+    #[gpui::test]
+    fn browser_address_restores_committed_url_on_blur(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.browser_url = "https://committed.example/path".into();
+            app.browser_address = "https://unfinished.example".into();
+            app.browser_editing = true;
+            app.finish_browser_edit(cx);
+            assert!(!app.browser_editing);
+            assert_eq!(app.browser_address, "https://committed.example/path");
+            assert_eq!(
+                app.browser_input.read(cx).buffer.text(),
+                "https://committed.example/path"
+            );
+        });
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn browser_address_focus_starts_an_edit_session(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        app.update(cx, |app, cx| {
+            app.browser_url = "https://committed.example/path".into();
+            app.browser_address = "https://committed.example/path".into();
+            app.browser_editing = false;
+            app.begin_browser_edit(cx);
+            assert!(app.browser_editing);
+            assert_eq!(app.browser_address, "https://committed.example/path");
+        });
+        runtime.block_on(engine.shutdown_and_wait());
     }
 
     #[gpui::test]
@@ -16382,6 +20580,113 @@ mod tests {
             }),
             "0"
         );
+    }
+
+    #[test]
+    fn session_labels_follow_source_title_directory_agent_and_id_order() {
+        assert_eq!(session_display_label("Title", "/work/dir", None, "ses"), "Title");
+        assert_eq!(session_labels_with_empty_title("/work/dir", Some("build"), "ses"), "dir");
+        assert_eq!(session_labels_with_empty_title("/", Some("build"), "ses"), "build");
+        assert_eq!(session_labels_with_empty_title("/", None, "ses"), "ses");
+    }
+
+    fn session_labels_with_empty_title(
+        directory: &str,
+        agent: Option<&str>,
+        id: &str,
+    ) -> String {
+        session_display_label("", directory, agent, id)
+    }
+
+    #[test]
+    fn compaction_baseline_freezes_input_minus_estimated_window() {
+        assert_eq!(inferred_compaction_baseline(false, 50_000, None), None);
+        assert_eq!(inferred_compaction_baseline(true, 10_000, None), None);
+        assert_eq!(inferred_compaction_baseline(true, 25_000, None), Some(15_000));
+        assert_eq!(
+            inferred_compaction_baseline(true, 90_000, Some(7_000)),
+            Some(7_000),
+            "an existing estimate is kept"
+        );
+    }
+
+    #[gpui::test]
+    fn usage_popup_subtracts_the_compaction_baseline_and_shows_the_note(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.active_id = Some("ses_usage".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.usage = Some(SessionUsage {
+                input_tokens: 20_000,
+                output_tokens: 1_000,
+                reasoning_tokens: 0,
+                cache_read_tokens: 0,
+                cache_write_tokens: 0,
+                cost: 0.5,
+            });
+            app.selected_model = Some(ModelInfo {
+                id: "claude".into(),
+                provider_id: "anthropic".into(),
+                name: "Claude".into(),
+                context_limit: Some(100_000),
+                variant: None,
+                variants: Vec::new(),
+            });
+            app.usage_open = true;
+            app.settings.compaction_baselines.insert("ses_usage".into(), 15_000);
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-usage-content").is_some(),
+            "the usage popup renders"
+        );
+        assert!(
+            cx.debug_bounds("usage-close").is_none(),
+            "Source's usage popup has no inline Close action"
+        );
+        assert!(
+            cx.debug_bounds("usage-compaction-note").is_some(),
+            "the popup shows the pre-compaction estimate"
+        );
+        app.update(cx, |app, _| {
+            app.selected_model.as_mut().unwrap().context_limit = None;
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("usage-context").is_none(),
+            "Source hides the whole context block when the model has no limit"
+        );
+        assert!(cx.debug_bounds("usage-compaction-note").is_none());
+        assert!(
+            cx.debug_bounds("usage-share-bar").is_some(),
+            "the popup shows the four-segment usage bar"
+        );
+        app.update(cx, |app, _| {
+            app.settings.compaction_baselines.remove("ses_usage");
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("usage-compaction-note").is_none());
+        runtime.block_on(engine.shutdown_and_wait());
     }
 
     #[gpui::test]
@@ -16745,6 +21050,8 @@ mod tests {
                 files: Vec::new(),
                 sub_calls: Vec::new(),
                 attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
             }]);
             let rows = transcript_view::project(
                 &app.blocks,
@@ -16835,6 +21142,8 @@ mod tests {
                 files: Vec::new(),
                 sub_calls: Vec::new(),
                 attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
             }]);
             app.panels
                 .open(crate::panels::PanelState::new(
@@ -16922,6 +21231,8 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
         app.update(cx, |app, _| {
             app.active_id = Some("ses_parent".into());
@@ -16989,7 +21300,7 @@ mod tests {
     }
 
     #[gpui::test]
-    fn retry_notice_renders_spinner_message_and_info(cx: &mut gpui::TestAppContext) {
+    fn retry_notice_renders_source_single_line_note(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -17029,6 +21340,8 @@ mod tests {
                 files: Vec::new(),
                 sub_calls: Vec::new(),
                 attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
             }]);
             let rows =
                 transcript_view::project(&app.blocks, false, "ses_retry", &app.transcript_ui);
@@ -17038,13 +21351,16 @@ mod tests {
         });
         draw(cx);
         assert!(cx.debug_bounds("retry-notice").is_some());
-        assert!(cx.debug_bounds("retry-message").is_some());
-        assert!(cx.debug_bounds("retry-info").is_some());
+        assert!(
+            cx.debug_bounds("retry-message").is_none(),
+            "Source renders one plain note, not a two-line spinner block"
+        );
+        assert!(cx.debug_bounds("retry-info").is_none());
         runtime.block_on(engine.shutdown_and_wait());
     }
 
     #[gpui::test]
-    fn compaction_notice_renders_divider_and_error(cx: &mut gpui::TestAppContext) {
+    fn compaction_notice_renders_plain_source_status_note(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -17084,6 +21400,8 @@ mod tests {
                 files: Vec::new(),
                 sub_calls: Vec::new(),
                 attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
             }]);
             let rows =
                 transcript_view::project(&app.blocks, false, "ses_compact", &app.transcript_ui);
@@ -17093,12 +21411,15 @@ mod tests {
         });
         draw(cx);
         assert!(cx.debug_bounds("compaction-notice").is_some());
-        assert!(cx.debug_bounds("compaction-error").is_some());
+        assert!(
+            cx.debug_bounds("compaction-error").is_none(),
+            "Source's compaction event is a single status note"
+        );
         runtime.block_on(engine.shutdown_and_wait());
     }
 
     #[gpui::test]
-    fn skill_notice_renders_label_detail_and_text(cx: &mut gpui::TestAppContext) {
+    fn skill_notice_renders_live_context_row(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -17138,6 +21459,8 @@ mod tests {
                 files: Vec::new(),
                 sub_calls: Vec::new(),
                 attachments: Vec::new(),
+                progress: Arc::from(""),
+                interrupted: false,
             }]);
             let rows =
                 transcript_view::project(&app.blocks, false, "ses_skill", &app.transcript_ui);
@@ -17148,12 +21471,15 @@ mod tests {
         draw(cx);
         assert!(cx.debug_bounds("skill-notice").is_some());
         assert!(cx.debug_bounds("skill-label").is_some());
-        assert!(cx.debug_bounds("skill-detail").is_some());
+        assert!(
+            cx.debug_bounds("skill-detail").is_none(),
+            "the live context row shows the skill label and Markdown only"
+        );
         runtime.block_on(engine.shutdown_and_wait());
     }
 
     #[gpui::test]
-    fn running_shimmer_renders_on_tool_and_compaction_labels(cx: &mut gpui::TestAppContext) {
+    fn running_shimmer_belongs_to_the_work_summary(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -17189,6 +21515,8 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
         let compaction = Block {
             id: "compaction".into(),
@@ -17208,6 +21536,8 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
         app.update(cx, |app, _| {
             app.active_id = Some("ses_shimmer".into());
@@ -17221,8 +21551,21 @@ mod tests {
             app.transcript_rows = Arc::new(rows);
         });
         draw(cx);
-        assert!(cx.debug_bounds("tool-shimmer").is_some());
-        assert!(cx.debug_bounds("compaction-shimmer").is_some());
+        assert!(cx.debug_bounds("tool-group-trigger").is_some(), "running work updates its compact trace line");
+        assert!(cx.debug_bounds("work-summary-shimmer").is_some());
+        assert!(cx.debug_bounds("tool-status-running").is_none(), "ordinary running calls stay behind disclosure");
+        cx.update(|_, cx| cx.set_reduce_motion(true));
+        draw(cx);
+        assert!(cx.debug_bounds("work-summary-shimmer").is_none());
+        assert!(cx.debug_bounds("tool-group-trigger").is_some());
+        cx.update(|_, cx| cx.set_reduce_motion(false));
+        let trace = cx.debug_bounds("tool-group-trigger").unwrap();
+        cx.simulate_click(trace.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("tool-status-running").is_some());
+        assert!(cx.debug_bounds("work-summary-shimmer").is_some());
+        assert!(cx.debug_bounds("tool-shimmer").is_none());
+        assert!(cx.debug_bounds("compaction-shimmer").is_none());
 
         app.update(cx, |app, _| {
             let mut done_tool = tool.clone();
@@ -17241,8 +21584,8 @@ mod tests {
             app.transcript_rows = Arc::new(rows);
         });
         draw(cx);
+        assert!(cx.debug_bounds("work-summary-shimmer").is_none());
         assert!(cx.debug_bounds("tool-shimmer").is_none());
-        assert!(cx.debug_bounds("compaction-shimmer").is_none());
         runtime.block_on(engine.shutdown_and_wait());
     }
 
@@ -17285,6 +21628,8 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
         let mut answer = block(
             "answer",
@@ -17346,7 +21691,7 @@ mod tests {
     }
 
     #[gpui::test]
-    fn large_tool_output_and_patch_render_scrollable_regions(cx: &mut gpui::TestAppContext) {
+    fn exec_and_patch_rows_render_source_scrollable_bodies(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -17364,12 +21709,12 @@ mod tests {
                 app.clone().into_any_element()
             });
         };
-        let tool = |id: &str, detail: &str, output: String| Block {
+        let tool = |id: &str, detail: &str, text: &str, output: String| Block {
             id: id.into(),
             message_id: "assistant-tools".into(),
             part_id: id.into(),
             kind: BlockKind::Tool,
-            text: "{}".into(),
+            text: text.into(),
             detail: detail.into(),
             output: output.into(),
             status: ToolStatus::Success,
@@ -17382,197 +21727,73 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
-        let mut file_tool = tool("file-tool", "custom", "done".into());
-        file_tool.text = "{\"query\":\"fixture\"}".into();
-        file_tool.files = vec![
-            vela_core::transcript::ToolFile {
-                uri: "https://example.com/report.csv".into(),
-                name: Some("report.csv".into()),
-                mime: Some("text/csv".into()),
-            },
-            vela_core::transcript::ToolFile {
-                uri: "file:///tmp/private.log".into(),
-                name: None,
-                mime: None,
-            },
-        ];
-        file_tool.sub_calls = vec![
-            vela_core::transcript::ToolSubCall {
-                id: "sub-1".into(),
-                title: "Inspect".into(),
-                detail: "src/a.ts".into(),
-                status: ToolStatus::Success,
-                input: "{}".into(),
-                output: "ok".into(),
-                files: vec![vela_core::transcript::ToolFile {
-                    uri: "https://example.com/nested.txt".into(),
-                    name: Some("nested.txt".into()),
-                    mime: Some("text/plain".into()),
-                }],
-                sub_calls: vec![vela_core::transcript::ToolSubCall {
-                    id: "sub-1-1".into(),
-                    title: "Nested child".into(),
-                    detail: "src/a.ts".into(),
-                    status: ToolStatus::Success,
-                    input: "{\"path\":\"src/a.ts\"}".into(),
-                    output: "child ok".into(),
-                    files: Vec::new(),
-                    sub_calls: Vec::new(),
-                }],
-            },
-            vela_core::transcript::ToolSubCall {
-                id: "sub-2".into(),
-                title: "Skip".into(),
-                detail: String::new(),
-                status: ToolStatus::Failed,
-                input: String::new(),
-                output: String::new(),
-                files: Vec::new(),
-                sub_calls: Vec::new(),
-            },
-        ];
-        app.update(cx, |app, _| {
+        let render = |app: &mut VelaApp, blocks: Vec<Block>| {
             app.active_id = Some("ses_tools".into());
             app.loading = false;
             app.workspace_closed = false;
-            app.blocks = Arc::new(vec![
-                tool("read-tool", "read", "x".repeat(7000)),
-                tool(
-                    "patch-tool",
-                    "patch",
-                    "--- a\n+++ b\n@@ -1 +1 @@\n-old\n+new".into(),
-                ),
-                file_tool.clone(),
-            ]);
-            app.transcript_ui
-                .work_open
-                .insert("ses_tools:assistant-tools".into());
-            app.transcript_ui
-                .tool_open
-                .insert("ses_tools:read-tool".into());
-            app.transcript_ui
-                .tool_open
-                .insert("ses_tools:patch-tool".into());
-            app.transcript_ui
-                .tool_open
-                .insert("ses_tools:file-tool".into());
-            let rows =
-                transcript_view::project(&app.blocks, false, "ses_tools", &app.transcript_ui);
+            app.blocks = Arc::new(blocks);
+            let rows = transcript_view::project(
+                &app.blocks,
+                false,
+                "ses_tools",
+                &app.transcript_ui,
+            );
             app.transcript_list =
                 ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
             app.transcript_rows = Arc::new(rows);
-        });
+        };
+
+        let exec = tool(
+            "exec-tool",
+            "bash",
+            r#"{"command":"print big"}"#,
+            "x".repeat(7000),
+        );
+        app.update(cx, |app, _| render(app, vec![exec]));
+        draw(cx);
+        let trace = cx.debug_bounds("tool-group-trigger").expect("successful command is summarized");
+        assert!(cx.debug_bounds("tool-trigger").is_none());
+        cx.simulate_click(trace.center(), gpui::Modifiers::default());
+        draw(cx);
+        let trigger = cx.debug_bounds("tool-trigger").expect("exec trigger");
+        cx.simulate_click(trigger.center(), gpui::Modifiers::default());
         draw(cx);
         assert!(cx.debug_bounds("tool-output-region").is_some());
-        assert!(cx.debug_bounds("tool-io-input").is_some());
-        assert!(cx.debug_bounds("tool-io-output").is_some());
-        assert!(cx.debug_bounds("tool-output-diff").is_some());
-        assert!(cx.debug_bounds("tool-file:file-tool:0").is_some());
-        assert!(cx.debug_bounds("tool-file:file-tool:1").is_some());
-        assert!(
-            cx.debug_bounds("tool-status-footer:file-tool").is_some(),
-            "completed tools render Source's Success/Failed footer"
-        );
-        assert!(cx.debug_bounds("tool-subcall:file-tool:0").is_some());
-        assert!(cx.debug_bounds("tool-subcall:file-tool:1").is_some());
-        assert!(
-            cx.debug_bounds("tool-subcall-io:file-tool:0").is_none(),
-            "nested tool payloads start collapsed like Source's recursive ToolPart"
-        );
-        let nested = cx
-            .debug_bounds("tool-subcall-head:file-tool:0")
-            .expect("nested tool head");
-        cx.simulate_click(nested.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert!(
-            cx.debug_bounds("tool-subcall-io:file-tool:0").is_some(),
-            "expanding a nested tool call reveals its IN/OUT payload"
-        );
-        assert!(
-            cx.debug_bounds("tool-file:file-tool:0:files:0").is_some(),
-            "nested files render inside the expanded nested card"
-        );
-        assert!(
-            cx.debug_bounds("tool-subcall:file-tool:0:0").is_some(),
-            "nested sub-calls recurse inside the expanded card"
-        );
-        app.update(cx, |app, _| {
-            app.transcript_ui
-                .tool_open
-                .insert("file-tool::sub::0::0".into());
-        });
-        draw(cx);
-        assert!(
-            cx.debug_bounds("tool-subcall-io:file-tool:0:0").is_some(),
-            "a recursively nested tool card expands its own payload"
-        );
-        runtime.block_on(engine.shutdown_and_wait());
-    }
+        assert!(cx.debug_bounds("tool-copy").is_none(), "no copy action in VelaToolRow");
 
-    #[gpui::test]
-    fn expanded_shell_copy_writes_command_and_output(cx: &mut gpui::TestAppContext) {
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
-        let settings = engine.settings();
-        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
-        let engine_for_app = engine.clone();
-        let (app, cx) = cx.add_window_view(move |_, cx| {
-            VelaApp::new(engine_for_app, settings, None, pending, cx)
-        });
-        cx.simulate_resize(size(px(1200.), px(800.)));
-        let draw = |cx: &mut gpui::VisualTestContext| {
-            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
-                app.clone().into_any_element()
-            });
-        };
-        app.update(cx, |app, _| {
-            app.active_id = Some("ses_copy".into());
-            app.loading = false;
-            app.workspace_closed = false;
-            app.blocks = Arc::new(vec![Block {
-                id: "shell-tool".into(),
-                message_id: "assistant-copy".into(),
-                part_id: "shell-tool".into(),
-                kind: BlockKind::Tool,
-                text: "{\"command\":\"printf hi\"}".into(),
-                detail: "bash".into(),
-                output: "hello".into(),
-                status: ToolStatus::Success,
-                streaming: false,
-                agent: None,
-                model: None,
-                created_at: 1000,
-                completed_at: Some(2000),
-                child_session_id: None,
-                files: Vec::new(),
-                sub_calls: Vec::new(),
-                attachments: Vec::new(),
-            }]);
-            app.transcript_ui
-                .work_open
-                .insert("ses_copy:assistant-copy".into());
-            app.transcript_ui
-                .tool_open
-                .insert("ses_copy:shell-tool".into());
-            let rows = transcript_view::project(&app.blocks, false, "ses_copy", &app.transcript_ui);
-            app.transcript_list =
-                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
-            app.transcript_rows = Arc::new(rows);
-        });
-        draw(cx);
-        let copy = cx.debug_bounds("tool-copy").expect("copy action");
-        cx.simulate_click(copy.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert_eq!(
-            cx.read_from_clipboard()
-                .and_then(|item| item.text())
-                .as_deref(),
-            Some("$ printf hi\n\nhello")
+        let patch = tool(
+            "patch-tool",
+            "patch",
+            r#"{"path":"src/a"}"#,
+            "--- a\n+++ b\n@@ -1 +1 @@\n-old\n+new".into(),
         );
+        app.update(cx, |app, _| {
+            app.transcript_ui.tool_open.clear();
+            render(app, vec![patch]);
+        });
+        draw(cx);
+        let trigger = cx.debug_bounds("tool-trigger").expect("patch trigger");
+        cx.simulate_click(trigger.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("tool-output-diff").is_some());
+
+        let read = tool("read-tool", "read", r#"{"filePath":"/a"}"#, "contents".into());
+        app.update(cx, |app, _| {
+            app.transcript_ui.tool_open.clear();
+            render(app, vec![read]);
+        });
+        draw(cx);
+        let trace = cx.debug_bounds("tool-group-trigger").expect("read work is summarized");
+        cx.simulate_click(trace.center(), gpui::Modifiers::default());
+        draw(cx);
+        let trigger = cx.debug_bounds("tool-trigger").expect("read payload is inspectable");
+        assert!(cx.debug_bounds("tool-output-region").is_none());
+        cx.simulate_click(trigger.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("tool-output-region").is_some(), "read output expands on request");
         runtime.block_on(engine.shutdown_and_wait());
     }
 
@@ -17604,13 +21825,13 @@ mod tests {
             });
             cx.simulate_event(gpui::KeyUpEvent { keystroke });
         };
-        let tool = |id: &str, text: &str, output: &str| Block {
+        let tool = |id: &str, detail: &str, text: &str, output: &str| Block {
             id: id.into(),
             message_id: "assistant-a11y".into(),
             part_id: id.into(),
             kind: BlockKind::Tool,
             text: text.into(),
-            detail: "read".into(),
+            detail: detail.into(),
             output: output.into(),
             status: ToolStatus::Success,
             streaming: false,
@@ -17622,26 +21843,34 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
         app.update(cx, |app, _| {
             app.active_id = Some("ses_a11y".into());
             app.loading = false;
             app.workspace_closed = false;
             app.blocks = Arc::new(vec![
-                tool("read-tool", r#"{"filePath":"/tmp/a"}"#, "output"),
-                tool("static-tool", "", ""),
+                tool(
+                    "exec-tool",
+                    "bash",
+                    r#"{"command":"cargo test"}"#,
+                    "output",
+                ),
+                tool("read-tool", "read", r#"{"filePath":"/tmp/a"}"#, ""),
             ]);
-            app.transcript_ui
-                .work_open
-                .insert("ses_a11y:assistant-a11y".into());
             let rows = transcript_view::project(&app.blocks, false, "ses_a11y", &app.transcript_ui);
             app.transcript_list =
                 ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
             app.transcript_rows = Arc::new(rows);
         });
         draw(cx);
+        let group = cx.debug_bounds("tool-group-trigger").expect("compact tool group");
+        assert!(cx.debug_bounds("tool-trigger").is_none());
+        cx.simulate_click(group.center(), gpui::Modifiers::default());
+        draw(cx);
         assert!(cx.debug_bounds("tool-trigger").is_some());
-        assert!(cx.debug_bounds("tool-disabled").is_some());
+        assert!(cx.debug_bounds("tool-disabled").is_none(), "input-only tools are explicitly inspectable too");
         assert!(cx.debug_bounds("tool-output-region").is_none());
 
         let trigger = cx.debug_bounds("tool-trigger").unwrap();
@@ -17742,7 +21971,156 @@ mod tests {
     }
 
     #[gpui::test]
-    fn validation_status_menu_renders_cancel_and_retry_states(cx: &mut gpui::TestAppContext) {
+    fn model_picker_reopens_on_list_search_collapse_and_strength_view(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let variants = vec!["high".into(), "low".into()];
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.active_id = Some("ses_models".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.runtime_capabilities = RuntimeCapabilities::opencode(true);
+            app.models = vec![
+                ModelInfo {
+                    id: "alpha".into(),
+                    name: "Alpha".into(),
+                    provider_id: "p".into(),
+                    context_limit: None,
+                    variant: None,
+                    variants: Vec::new(),
+                },
+                ModelInfo {
+                    id: "beta".into(),
+                    name: "Beta".into(),
+                    provider_id: "q".into(),
+                    context_limit: None,
+                    variant: Some("high".into()),
+                    variants,
+                },
+            ];
+            app.selected_model = app.models.get(1).cloned();
+            app.picker = None;
+            app.model_menu_settings = true;
+        });
+        draw(cx);
+        let trigger = cx.debug_bounds("model-picker").expect("model trigger");
+        cx.simulate_click(trigger.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| (app.picker, app.model_menu_settings)),
+            (Some(PickerKind::Model), false),
+            "opening the model menu resets Source's settings view to the list"
+        );
+
+        app.update(cx, |app, _| {
+            app.model_search = "q".into();
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("model-row-q::beta").is_some());
+        assert!(
+            cx.debug_bounds("model-row-p::alpha").is_none(),
+            "search matches provider, id and name like Source"
+        );
+        app.update(cx, |app, _| {
+            app.model_search.clear();
+        });
+        draw(cx);
+
+        let collapse = cx
+            .debug_bounds("collapse-models-p")
+            .expect("provider collapse control");
+        cx.simulate_click(collapse.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("model-row-p::alpha").is_none());
+        let collapse = cx
+            .debug_bounds("collapse-models-p")
+            .expect("collapsed provider remains expandable");
+        cx.simulate_click(collapse.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("model-row-p::alpha").is_some());
+
+        let strength = cx
+            .debug_bounds("model-menu-strength")
+            .expect("response strength row");
+        cx.simulate_click(strength.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("response-strength-menu").is_some());
+        assert!(cx.debug_bounds("strength-option-0").is_some());
+        assert!(cx.debug_bounds("strength-option-1").is_some());
+        assert!(cx.debug_bounds("strength-option-2").is_some());
+        let back = cx
+            .debug_bounds("strength-back")
+            .expect("strength back action");
+        cx.simulate_click(back.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| (app.picker, app.model_menu_settings)),
+            (Some(PickerKind::Model), false)
+        );
+        assert!(cx.debug_bounds("model-picker-menu").is_some());
+        cx.simulate_keystrokes("escape");
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.picker),
+            None,
+            "Source's menu dismissal closes the picker on Escape"
+        );
+
+        let trigger = cx.debug_bounds("model-picker").expect("model trigger");
+        cx.simulate_click(trigger.center(), gpui::Modifiers::default());
+        draw(cx);
+        let strength = cx
+            .debug_bounds("model-menu-strength")
+            .expect("response strength row");
+        cx.simulate_click(strength.center(), gpui::Modifiers::default());
+        draw(cx);
+        cx.simulate_keystrokes("escape");
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.picker),
+            None,
+            "Escape from the strength view closes the menu rather than going back"
+        );
+
+        let agent_trigger = cx.debug_bounds("agent-picker").expect("agent trigger");
+        cx.simulate_click(agent_trigger.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.picker),
+            Some(PickerKind::Agent)
+        );
+        assert!(cx.debug_bounds("agent-picker-menu").is_some());
+        cx.simulate_keystrokes("escape");
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.picker),
+            None,
+            "the agent menu follows the same Escape dismissal as Source"
+        );
+
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn validation_status_menu_renders_pending_and_failed_states(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -17777,22 +22155,503 @@ mod tests {
             });
         };
         draw(cx);
-        let cancel = cx
-            .debug_bounds("validation-cancel")
-            .expect("pending validation cancel action");
-        cx.simulate_click(cancel.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert!(app.read_with(cx, |app, _| app.validation_requests.is_empty()));
-        assert!(!app.read_with(cx, |app, _| app.status_menu_open));
+        assert!(
+            cx.debug_bounds("status-save").is_none(),
+            "Source's status menu has no Save row"
+        );
+        assert!(
+            cx.debug_bounds("validation-pending").is_some(),
+            "Source disables the validate action while a run is pending"
+        );
+        assert!(cx.debug_bounds("validation-action").is_none());
+        assert!(app.read_with(cx, |app, _| !app.validation_requests.is_empty()));
 
         app.update(cx, |app, _| {
+            app.validation_requests.clear();
             app.status_menu_open = true;
             app.validation_key = Some(key.clone());
             app.validation_failed = true;
         });
         draw(cx);
-        assert!(cx.debug_bounds("validation-retry").is_some());
+        assert!(cx.debug_bounds("validation-action").is_some());
         assert!(cx.debug_bounds("validation-failed-row").is_some());
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn todo_dock_shows_source_progress_and_collapses(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_todo".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.todos = vec![
+                TodoItem {
+                    id: "t1".into(),
+                    content: "Read the plan".into(),
+                    status: "completed".into(),
+                    priority: String::new(),
+                },
+                TodoItem {
+                    id: "t2".into(),
+                    content: "Implement the dock".into(),
+                    status: "in_progress".into(),
+                    priority: String::new(),
+                },
+                TodoItem {
+                    id: "t3".into(),
+                    content: "Verify the layout".into(),
+                    status: "pending".into(),
+                    priority: String::new(),
+                },
+            ];
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("session-todo-dock").is_some());
+        assert!(cx.debug_bounds("session-todo-progress").is_some());
+        assert!(cx.debug_bounds("session-todo-list").is_some());
+        for selector in [
+            "session-todo-item-0",
+            "session-todo-item-1",
+            "session-todo-item-2",
+        ] {
+            assert!(
+                cx.debug_bounds(selector).is_some(),
+                "all todos render, not just a truncated prefix: {selector}"
+            );
+        }
+
+        let toggle = cx
+            .debug_bounds("session-todo-toggle-button")
+            .expect("collapse control");
+        cx.simulate_click(toggle.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("session-todo-dock").is_some());
+        assert!(cx.debug_bounds("session-todo-progress").is_some());
+        assert!(
+            cx.debug_bounds("session-todo-list").is_none(),
+            "collapsed dock hides the todo rows"
+        );
+
+        let toggle = cx
+            .debug_bounds("session-todo-toggle-button")
+            .expect("expand control");
+        cx.simulate_click(toggle.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("session-todo-list").is_some());
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[test]
+    fn turn_elapsed_formatting_matches_source() {
+        assert_eq!(format_turn_elapsed(0), "0s");
+        assert_eq!(format_turn_elapsed(999), "0s");
+        assert_eq!(format_turn_elapsed(59_999), "59s");
+        assert_eq!(format_turn_elapsed(60_000), "1m 00s");
+        assert_eq!(format_turn_elapsed(90_500), "1m 30s");
+        assert_eq!(format_turn_elapsed(3_600_000), "1h 00m");
+        assert_eq!(format_turn_elapsed(3_661_000), "1h 01m");
+        assert_eq!(format_turn_elapsed(-5_000), "0s");
+    }
+
+    #[test]
+    fn turn_start_prefers_the_latest_user_message_then_the_assistant() {
+        let block = |kind, created_at| Block {
+            id: "b".into(),
+            message_id: "m".into(),
+            part_id: "b".into(),
+            kind,
+            text: String::new().into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            progress: Arc::from(""),
+            interrupted: false,
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at,
+            completed_at: None,
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+        };
+        assert_eq!(
+            turn_started_at_blocks(&[block(BlockKind::User, 1_000), block(BlockKind::User, 2_000), block(BlockKind::Assistant, 3_000)]),
+            Some(2_000)
+        );
+        assert_eq!(
+            turn_started_at_blocks(&[block(BlockKind::Assistant, 1_500)]),
+            Some(1_500)
+        );
+        assert_eq!(
+            turn_started_at_blocks(&[block(BlockKind::User, 0), block(BlockKind::Assistant, 0)]),
+            None,
+            "a missing creation time renders no timer"
+        );
+    }
+
+    #[gpui::test]
+    fn agent_header_turn_timer_renders_only_while_running(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let started = crate::browser_downloads::now_ms() - 5_000;
+        let user = Block {
+            id: "user".into(),
+            message_id: "user".into(),
+            part_id: "user".into(),
+            kind: BlockKind::User,
+            text: "hello".into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            progress: Arc::from(""),
+            interrupted: false,
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at: started,
+            completed_at: None,
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+        };
+        app.update(cx, |app, _| {
+            app.ui_shell = UiShell::Classic; // This test targets the Classic panel header.
+            app.active_id = Some("ses_timer".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![user.clone()]);
+            app.phase = SessionPhase::Busy;
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-turn-timer").is_some(),
+            "busy turns show Source's header timer"
+        );
+        app.update(cx, |app, _| {
+            app.phase = SessionPhase::Idle;
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("agent-turn-timer").is_none());
+        app.update(cx, |app, _| {
+            app.ui_shell = UiShell::Codex;
+            app.phase = SessionPhase::Busy;
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("agent-turn-timer").is_none(),
+            "the Codex shell keeps the elapsed timer in flow, not in an overlay"
+        );
+        assert!(
+            cx.debug_bounds("agent-panel-options-ses_timer").is_none(),
+            "the Codex shell has no top-right panel-options overlay"
+        );
+        assert!(
+            cx.debug_bounds("codex-conversation-root")
+                .is_some_and(|bounds| f32::from(bounds.size.width) > 600.),
+            "Codex gives an open conversation the workspace width"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn agent_options_menu_lists_and_switches_active_sessions(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_a".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_a", "Alpha thread"))
+                .unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_b", "Beta thread"))
+                .unwrap();
+            app.panels.activate("ses_a");
+            app.toggle_agent_panel_menu("ses_a", cx);
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("agent-panel-sessions-heading").is_some());
+        assert!(
+            cx.debug_bounds("agent-panel-session-choice-ses_a").is_some(),
+            "the current session is listed and checked"
+        );
+        let choice = cx
+            .debug_bounds("agent-panel-session-choice-ses_b")
+            .expect("other active session");
+        cx.simulate_click(choice.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.active_id.clone()),
+            Some("ses_b".into()),
+            "choosing an attached session focuses its panel"
+        );
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn interrupted_answer_renders_source_stopped_marker(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        let block = |id: &str, message: &str, kind: BlockKind, text: &str| Block {
+            id: id.into(),
+            message_id: message.into(),
+            part_id: id.into(),
+            kind,
+            text: text.into(),
+            detail: String::new().into(),
+            output: String::new().into(),
+            progress: Arc::from(""),
+            interrupted: false,
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at: 1000,
+            completed_at: Some(2000),
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+        };
+        let mut answer = block("a", "a", BlockKind::Assistant, "Partial answer");
+        answer.interrupted = true;
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_stop".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.blocks = Arc::new(vec![
+                block("u", "u", BlockKind::User, "Prompt"),
+                answer.clone(),
+            ]);
+            let rows =
+                transcript_view::project(&app.blocks, false, "ses_stop", &app.transcript_ui);
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("answer-stopped").is_some(),
+            "Source marks an interrupted answer with Stopped"
+        );
+        app.update(cx, |app, _| {
+            let mut settled = answer.clone();
+            settled.interrupted = false;
+            app.blocks = Arc::new(vec![
+                block("u", "u", BlockKind::User, "Prompt"),
+                settled,
+            ]);
+            let rows =
+                transcript_view::project(&app.blocks, false, "ses_stop", &app.transcript_ui);
+            app.transcript_list =
+                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
+            app.transcript_rows = Arc::new(rows);
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("answer-stopped").is_none());
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn permission_dock_matches_source_header_action_resources_and_buttons(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        assert_eq!(
+            permission_action_labels(),
+            ["Allow once", "Always", "Deny"],
+            "Source's permission buttons"
+        );
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.active_id = Some("ses_perm".into());
+            app.loading = false;
+            app.workspace_closed = false;
+            app.permissions = vec![
+                PermissionRequest {
+                    id: "perm-1".into(),
+                    session_id: "ses_perm".into(),
+                    action: "bash: pnpm test".into(),
+                    resources: vec!["pnpm test".into(), "src/main.rs".into()],
+                    message: None,
+                },
+                PermissionRequest {
+                    id: "perm-2".into(),
+                    session_id: "ses_perm".into(),
+                    action: "bash: pnpm build".into(),
+                    resources: Vec::new(),
+                    message: Some("fallback message".into()),
+                },
+            ];
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("permission-header").is_some());
+        assert!(cx.debug_bounds("permission-action").is_some());
+        assert!(cx.debug_bounds("permission-resource-0").is_some());
+        assert!(cx.debug_bounds("permission-resource-1").is_some());
+        assert!(
+            cx.debug_bounds("permission-resource-2").is_none(),
+            "an empty resource list renders no fallback row"
+        );
+        assert!(cx.debug_bounds("permission-button-Allow").is_some());
+        assert!(cx.debug_bounds("permission-button-Always").is_some());
+        assert!(cx.debug_bounds("permission-button-Deny").is_some());
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn inactive_tile_todo_docks_are_independent_and_collapsible(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_active".into());
+            app.panels
+                .open(crate::panels::PanelState::new(
+                    "ses_active",
+                    "Active thread",
+                ))
+                .unwrap();
+            let mut waiting = crate::panels::PanelState::new("ses_waiting", "Waiting thread");
+            waiting.todos = vec![
+                TodoItem {
+                    id: "w1".into(),
+                    content: "Waiting task".into(),
+                    status: "in_progress".into(),
+                    priority: String::new(),
+                },
+                TodoItem {
+                    id: "w2".into(),
+                    content: "Later task".into(),
+                    status: "pending".into(),
+                    priority: String::new(),
+                },
+            ];
+            app.panels.open(waiting).unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_other", "Other thread"))
+                .unwrap();
+            app.panels.activate("ses_active");
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("panel-todo-dock-ses_waiting").is_some());
+        assert!(cx.debug_bounds("panel-todo-progress-ses_waiting").is_some());
+        assert!(cx.debug_bounds("panel-todo-list-ses_waiting").is_some());
+        assert!(
+            cx.debug_bounds("panel-todo-dock-ses_other").is_none(),
+            "a tile without todos renders no dock"
+        );
+
+        let toggle = cx
+            .debug_bounds("panel-todo-toggle-button-ses_waiting")
+            .expect("tile collapse control");
+        cx.simulate_click(toggle.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("panel-todo-dock-ses_waiting").is_some());
+        assert!(cx.debug_bounds("panel-todo-list-ses_waiting").is_none());
         runtime.block_on(engine.shutdown_and_wait());
     }
 
@@ -17888,94 +22747,6 @@ mod tests {
     }
 
     #[gpui::test]
-    fn expanded_tool_copy_is_focus_visible_and_keyboard_activated(cx: &mut gpui::TestAppContext) {
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
-        let settings = engine.settings();
-        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
-        let engine_for_app = engine.clone();
-        let (app, cx) = cx.add_window_view(move |_, cx| {
-            VelaApp::new(engine_for_app, settings, None, pending, cx)
-        });
-        cx.simulate_resize(size(px(1200.), px(800.)));
-        let draw = |cx: &mut gpui::VisualTestContext| {
-            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
-                app.clone().into_any_element()
-            });
-        };
-        app.update(cx, |app, _| {
-            app.active_id = Some("ses_copy_keys".into());
-            app.loading = false;
-            app.workspace_closed = false;
-            app.blocks = Arc::new(vec![Block {
-                id: "shell-tool".into(),
-                message_id: "assistant-copy-keys".into(),
-                part_id: "shell-tool".into(),
-                kind: BlockKind::Tool,
-                text: "{\"command\":\"printf hi\"}".into(),
-                detail: "bash".into(),
-                output: "hello".into(),
-                status: ToolStatus::Success,
-                streaming: false,
-                agent: None,
-                model: None,
-                created_at: 1000,
-                completed_at: Some(2000),
-                child_session_id: None,
-                files: Vec::new(),
-                sub_calls: Vec::new(),
-                attachments: Vec::new(),
-            }]);
-            app.transcript_ui
-                .work_open
-                .insert("ses_copy_keys:assistant-copy-keys".into());
-            let rows =
-                transcript_view::project(&app.blocks, false, "ses_copy_keys", &app.transcript_ui);
-            app.transcript_list =
-                ListState::new(rows.len(), ListAlignment::Top, px(420.)).measure_all();
-            app.transcript_rows = Arc::new(rows);
-        });
-        draw(cx);
-        let trigger = cx.debug_bounds("tool-trigger").expect("tool trigger");
-        cx.simulate_click(trigger.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert!(cx.debug_bounds("tool-output-region").is_some());
-        assert!(cx.debug_bounds("tool-copy").is_some());
-        let copy = cx.debug_bounds("tool-copy").expect("copy action");
-        cx.simulate_click(copy.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert!(cx.debug_bounds("tool-copy-visible").is_some());
-        app.update(cx, |app, cx| {
-            app.transcript_ui.copied_tool = None;
-            cx.notify();
-        });
-        draw(cx);
-        assert!(
-            cx.debug_bounds("tool-copy-visible").is_some(),
-            "keyboard focus should reveal the copy action"
-        );
-        cx.write_to_clipboard(gpui::ClipboardItem::new_string(String::new()));
-        let keystroke = gpui::Keystroke::parse("enter").expect("enter");
-        cx.simulate_event(gpui::KeyDownEvent {
-            keystroke: keystroke.clone(),
-            is_held: false,
-            prefer_character_input: false,
-        });
-        cx.simulate_event(gpui::KeyUpEvent { keystroke });
-        draw(cx);
-        assert_eq!(
-            cx.read_from_clipboard()
-                .and_then(|item| item.text())
-                .as_deref(),
-            Some("$ printf hi\n\nhello")
-        );
-        runtime.block_on(engine.shutdown_and_wait());
-    }
-
-    #[gpui::test]
     fn queue_chips_mix_runtime_and_local_recovery_actions(cx: &mut gpui::TestAppContext) {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -18059,6 +22830,21 @@ mod tests {
         assert!(cx.debug_bounds("queue-remove-local1").is_some());
         assert!(cx.debug_bounds("queue-1-local1").is_some());
 
+        let steer = cx
+            .debug_bounds("queue-steer-runtime2")
+            .expect("runtime steer");
+        cx.simulate_click(steer.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert_eq!(
+            app.read_with(cx, |app, _| {
+                app.inbox.iter().map(|item| item.id.clone()).collect::<Vec<_>>()
+            }),
+            vec!["runtime1".to_owned()],
+            "Source removes a runtime chip optimistically when Send now is clicked"
+        );
+        assert!(cx.debug_bounds("queue-preview-runtime2").is_none());
+        assert!(cx.debug_bounds("queue-preview-runtime1").is_some());
+
         let edit = cx
             .debug_bounds("queue-edit-runtime1")
             .expect("runtime edit");
@@ -18068,7 +22854,11 @@ mod tests {
             app.read_with(cx, |app, _| app.composer.clone()),
             "Runtime one"
         );
-        assert_eq!(app.read_with(cx, |app, _| app.inbox.len()), 1);
+        assert_eq!(
+            app.read_with(cx, |app, _| app.inbox.len()),
+            0,
+            "the previously steered chip was already removed"
+        );
         runtime.block_on(engine.shutdown_and_wait());
     }
 
@@ -18347,6 +23137,7 @@ mod tests {
         draw(cx);
         cx.run_until_parked();
         app.update(cx, |app, cx| {
+            app.ui_shell = UiShell::Classic;
             app.bootstrapped = true;
             app.loading = false;
             app.workspace_closed = false;
@@ -18371,8 +23162,15 @@ mod tests {
                     "Waiting thread",
                 ))
                 .unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_extra", "Extra thread"))
+                .unwrap();
             app.panels.activate("ses_active");
+            app.agent_mode = true;
             app.ensure_panel_input("ses_waiting", cx);
+            app.panels.update("ses_waiting", |panel| {
+                panel.phase = vela_core::session::SessionPhase::Busy;
+            });
             app.panel_composers
                 .entry("ses_waiting".into())
                 .or_default()
@@ -18385,9 +23183,78 @@ mod tests {
         });
         draw(cx);
         assert!(
+            cx.debug_bounds("panel-tile-options-ses_waiting").is_some(),
+            "compact Agent Mode composers expose the options toggle"
+        );
+        assert!(cx.debug_bounds("panel-tile-attach-ses_waiting").is_none());
+        assert!(
+            cx.debug_bounds("panel-tile-attach-ses_waiting").is_none(),
+            "compact prompt options stay hidden until opened"
+        );
+        assert!(cx.debug_bounds("panel-tile-model-ses_waiting").is_none());
+        let options = cx
+            .debug_bounds("panel-tile-options-ses_waiting")
+            .expect("compact composer options toggle");
+        cx.simulate_click(options.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(
+            cx.debug_bounds("panel-tile-attach-ses_waiting").is_some(),
+            "opening prompt options reveals the attach action"
+        );
+        assert!(cx.debug_bounds("panel-tile-model-ses_waiting").is_some());
+        assert!(cx.debug_bounds("panel-tile-agent-ses_waiting").is_some());
+        let escape = gpui::Keystroke::parse("escape").unwrap();
+        cx.update(|window, cx| {
+            app.update(cx, |app, cx| {
+                assert!(
+                    app.on_tile_composer_key(
+                        "ses_waiting",
+                        &KeyDownEvent {
+                            keystroke: escape,
+                            is_held: false,
+                            prefer_character_input: false,
+                        },
+                        window,
+                        cx,
+                    ),
+                    "Escape closes the compact prompt options"
+                );
+            });
+        });
+        draw(cx);
+        assert!(
+            cx.debug_bounds("panel-tile-attach-ses_waiting").is_none(),
+            "closing prompt options hides the attach action again"
+        );
+        assert!(
             cx.debug_bounds("panel-attachment-ses_waiting-0").is_some(),
             "inactive tile renders its staged attachment"
         );
+        assert!(
+            cx.debug_bounds("panel-tile-stop-ses_waiting").is_some(),
+            "busy tile composers morph the send action into Stop"
+        );
+        let escape = gpui::Keystroke::parse("escape").unwrap();
+        cx.update(|window, cx| {
+            app.update(cx, |app, cx| {
+                app.agent_tui.menu = None;
+                app.usage_open = true;
+                assert!(
+                    app.on_tile_composer_key(
+                        "ses_waiting",
+                        &KeyDownEvent {
+                            keystroke: escape,
+                            is_held: false,
+                            prefer_character_input: false,
+                        },
+                        window,
+                        cx,
+                    ),
+                    "the tile composer key path handles usage Escape"
+                );
+                assert!(!app.usage_open);
+            });
+        });
         let remove = cx
             .debug_bounds("panel-remove-attachment-ses_waiting-0")
             .expect("attachment remove action");
@@ -18560,11 +23427,46 @@ mod tests {
             "",
             "choosing a slash command submits and clears the tile composer"
         );
+        app.update(cx, |app, _| {
+            app.panels.update("ses_waiting", |panel| {
+                panel.composer_options_open = true;
+            });
+        });
+        draw(cx);
+        app.update(cx, |app, _| app.agent_mode = false);
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| {
+                app.panels
+                    .entries()
+                    .iter()
+                    .all(|panel| !panel.composer_options_open)
+            }),
+            "leaving compact mode resets tile prompt options"
+        );
+        app.update(cx, |app, _| {
+            app.panels.update("ses_waiting", |panel| {
+                panel.composer_options_open = true;
+            });
+        });
+        draw(cx);
+        app.update(cx, |app, _| app.agent_mode = true);
+        draw(cx);
+        assert!(
+            app.read_with(cx, |app, _| {
+                app.panels
+                    .entries()
+                    .iter()
+                    .all(|panel| !panel.composer_options_open)
+            }),
+            "entering compact mode resets tile prompt options"
+        );
+
         runtime.block_on(engine.shutdown_and_wait());
     }
 
     #[gpui::test]
-    fn inactive_tile_tool_rows_expand_and_copy_without_stealing_focus(
+    fn inactive_tile_exec_rows_expand_without_stealing_focus(
         cx: &mut gpui::TestAppContext,
     ) {
         let runtime = tokio::runtime::Builder::new_current_thread()
@@ -18578,21 +23480,18 @@ mod tests {
         let (app, cx) = cx.add_window_view(move |_, cx| {
             VelaApp::new(engine_for_app, settings, None, pending, cx)
         });
-        cx.simulate_resize(size(px(1400.), px(900.)));
+        cx.simulate_resize(size(px(1200.), px(800.)));
         let draw = |cx: &mut gpui::VisualTestContext| {
-            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
                 app.clone().into_any_element()
             });
         };
-        runtime.block_on(engine.shutdown_and_wait());
-        draw(cx);
-        cx.run_until_parked();
         let tool = Block {
             id: "tool-waiting".into(),
-            message_id: "message-waiting".into(),
+            message_id: "assistant-tile".into(),
             part_id: "tool-waiting".into(),
             kind: BlockKind::Tool,
-            text: "{\"command\":\"printf hi\"}".into(),
+            text: r#"{"command":"printf hi"}"#.into(),
             detail: "bash".into(),
             output: "hello".into(),
             status: ToolStatus::Success,
@@ -18602,35 +23501,11 @@ mod tests {
             created_at: 1000,
             completed_at: Some(2000),
             child_session_id: None,
-            files: vec![ToolFile {
-                uri: "file:///tmp/private.log".into(),
-                name: Some("private.log".into()),
-                mime: None,
-            }],
-            sub_calls: vec![ToolSubCall {
-                id: "read-call".into(),
-                title: "Read".into(),
-                detail: "src/lib.rs".into(),
-                status: ToolStatus::Success,
-                input: "{}".into(),
-                output: "file body".into(),
-                files: vec![ToolFile {
-                    uri: "https://example.com/report.csv".into(),
-                    name: Some("report.csv".into()),
-                    mime: Some("text/csv".into()),
-                }],
-                sub_calls: vec![ToolSubCall {
-                    id: "nested-grep".into(),
-                    title: "Grep".into(),
-                    detail: "src".into(),
-                    status: ToolStatus::Success,
-                    input: "fixture".into(),
-                    output: "matched line".into(),
-                    files: Vec::new(),
-                    sub_calls: Vec::new(),
-                }],
-            }],
+            files: Vec::new(),
+            sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         };
         app.update(cx, |app, _| {
             app.bootstrapped = true;
@@ -18650,107 +23525,59 @@ mod tests {
             let mut other = crate::panels::PanelState::new("ses_other", "Other thread");
             other.blocks = Arc::new(vec![tool]);
             app.panels.open(other).unwrap();
+            app.panels
+                .open(crate::panels::PanelState::new("ses_empty", "Empty thread"))
+                .unwrap();
             app.panels.activate("ses_active");
         });
         draw(cx);
         cx.run_until_parked();
         assert!(
-            cx.debug_bounds("panel-tool-head-ses_waiting-tool-waiting")
-                .is_some(),
-            "inactive tile renders a tool head"
+            cx.debug_bounds("panel-column-ses_waiting").is_some(),
+            "tiles use Source's centred transcript column"
         );
         assert!(
-            cx.debug_bounds("panel-tool-output-ses_waiting-tool-waiting")
-                .is_none(),
-            "tool payload starts collapsed"
+            cx.debug_bounds("panel-empty-ses_empty").is_some(),
+            "an empty tile renders VelaTranscript's empty state"
         );
-        let head = cx
-            .debug_bounds("panel-tool-head-ses_waiting-tool-waiting")
-            .expect("tool head");
-        cx.simulate_click(head.center(), gpui::Modifiers::default());
+        let work = cx.debug_bounds("conversation-row:ses_waiting:trace-line:activity:tool-waiting")
+            .expect("routine tool work is summarized in its own panel");
+        cx.simulate_click(work.center(), gpui::Modifiers::default());
         draw(cx);
-        assert!(
-            cx.debug_bounds("panel-tool-output-ses_waiting-tool-waiting")
-                .is_some(),
-            "clicking the tool head expands its output"
-        );
-        assert!(
-            cx.debug_bounds("panel-tool-output-ses_other-tool-waiting")
-                .is_none(),
-            "another panel keeps its own collapsed tool row"
-        );
-        assert!(
-            cx.debug_bounds("panel-tool-file-ses_waiting-tool-waiting-0")
-                .is_some(),
-            "top-level tool files render inside the inactive tile"
-        );
-        assert!(
-            cx.debug_bounds("panel-subcall-head-ses_waiting-tool-waiting-sub0")
-                .is_some(),
-            "an expanded tool lists its nested calls"
-        );
-        assert!(
-            cx.debug_bounds("panel-subcall-body-ses_waiting-tool-waiting-sub0")
-                .is_none(),
-            "nested calls start collapsed"
-        );
-        let subcall = cx
-            .debug_bounds("panel-subcall-head-ses_waiting-tool-waiting-sub0")
-            .expect("nested tool head");
-        cx.simulate_click(subcall.center(), gpui::Modifiers::default());
+        let head = cx.debug_bounds("conversation-row:ses_waiting:activity:tool-waiting")
+            .expect("explicit disclosure reveals the tool");
+        assert!(cx.debug_bounds("tool-output-region").is_none());
+        cx.simulate_click(head.origin + point(px(46.), px(15.)), gpui::Modifiers::default());
         draw(cx);
-        assert!(
-            cx.debug_bounds("panel-subcall-body-ses_waiting-tool-waiting-sub0")
-                .is_some(),
-            "clicking a nested call expands its input and output"
-        );
-        assert!(
-            cx.debug_bounds(
-                "panel-tool-file-ses_waiting-tool-waiting::sub0-0"
-            )
-            .is_some(),
-            "nested call files render inside the inactive tile"
-        );
-        let deep = cx
-            .debug_bounds("panel-subcall-head-ses_waiting-tool-waiting-sub0.0")
-            .expect("deep nested tool head");
-        cx.simulate_click(deep.center(), gpui::Modifiers::default());
-        draw(cx);
-        assert!(
-            cx.debug_bounds("panel-subcall-body-ses_waiting-tool-waiting-sub0.0")
-                .is_some(),
-            "recursive nested calls keep independent expansion state"
-        );
-        assert!(
-            cx.debug_bounds("panel-subcall-body-ses_other-tool-waiting-sub0")
-                .is_none(),
-            "another panel keeps its nested calls collapsed"
-        );
+        assert!(cx.debug_bounds("tool-output-region").is_some(), "tool output expands");
+        app.update(cx, |app, _| {
+            assert!(app.ui_for_mut("ses_waiting").unwrap().tool_open.contains("ses_waiting:tool-waiting"));
+            assert!(!app.ui_for_mut("ses_other").unwrap().tool_open.contains("ses_other:tool-waiting"));
+        });
         assert_eq!(
             app.read_with(cx, |app, _| app.active_id.clone()),
             Some("ses_active".into()),
-            "inspecting an inactive tool row does not steal the active panel"
+            "expanding a tile payload does not steal focus"
         );
-        let copy = cx
-            .debug_bounds("panel-tool-copy-ses_waiting-tool-waiting")
-            .expect("copy action");
-        cx.simulate_click(copy.center(), gpui::Modifiers::default());
+        app.update(cx, |app, _| {
+            app.panels.update("ses_waiting", |panel| panel.stick = false);
+        });
         draw(cx);
-        assert_eq!(
-            cx.read_from_clipboard()
-                .and_then(|item| item.text())
-                .as_deref(),
-            Some("$ printf hi\n\nhello")
-        );
-        assert_eq!(
+        let jump = cx
+            .debug_bounds("panel-to-bottom-ses_waiting")
+            .expect("tile scroll-to-bottom control");
+        cx.simulate_click(jump.center(), gpui::Modifiers::default());
+        draw(cx);
+        assert!(cx.debug_bounds("panel-to-bottom-ses_waiting").is_none());
+        assert!(
             app.read_with(cx, |app, _| {
                 app.panels
                     .entries()
                     .iter()
                     .find(|panel| panel.session == "ses_waiting")
-                    .and_then(|panel| panel.copied_tool.clone())
+                    .is_some_and(|panel| panel.stick)
             }),
-            Some("tool-waiting".to_owned())
+            "jumping to the bottom re-enables tail following"
         );
         runtime.block_on(engine.shutdown_and_wait());
     }
@@ -18771,4 +23598,354 @@ mod tests {
             ]
         );
     }
+
+    #[gpui::test]
+    fn sidebar_and_agent_edges_resize(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1400.), px(900.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.ui_shell = UiShell::Classic;
+            app.active_id = Some("ses_resize".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_resize", "Resize"))
+                .unwrap();
+            app.agent_panel_open = true;
+            app.sidebar_open = true;
+            app.ensure_panel_input("ses_resize", cx);
+        });
+        draw(cx);
+        let sidebar = cx.debug_bounds("sidebar-resize").expect("sidebar handle");
+        let before_sidebar = app.read_with(cx, |app, _| app.sidebar_width);
+        let start = sidebar.center();
+        let end = point(start.x + px(40.), start.y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(end, Some(gpui::MouseButton::Left), gpui::Modifiers::default());
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        assert!(app.read_with(cx, |app, _| app.sidebar_width) > before_sidebar);
+
+        let agent = cx
+            .debug_bounds("agent-resize-left")
+            .expect("agent handle");
+        let before_agent = app.read_with(cx, |app, _| app.agent_width);
+        let start = agent.center();
+        let end = point(start.x - px(40.), start.y);
+        cx.simulate_mouse_down(start, gpui::MouseButton::Left, gpui::Modifiers::default());
+        cx.simulate_mouse_move(end, Some(gpui::MouseButton::Left), gpui::Modifiers::default());
+        cx.simulate_mouse_up(end, gpui::MouseButton::Left, gpui::Modifiers::default());
+        draw(cx);
+        assert!(app.read_with(cx, |app, _| app.agent_width) > before_agent);
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn session_title_inset_matches_source(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.agent_panel_open = false;
+            app.settings_open = false;
+            app.agent_mode = false;
+            app.ui_shell = UiShell::Classic;
+            app.active_id = Some("ses_inset".into());
+            app.sessions = Arc::new(vec![SessionSummary {
+                id: "ses_inset".into(),
+                title: "Inset".into(),
+                directory: "/workspace".into(),
+                updated_at: 1,
+                parent_id: None,
+                agent: None,
+            }]);
+            app.refresh_session_filter();
+        });
+        draw(cx);
+        let sidebar = cx.debug_bounds("sidebar-root").unwrap();
+        let title = cx.debug_bounds("session-title:ses_inset").unwrap();
+        let inset = f32::from(title.left() - sidebar.left());
+        assert!((inset - 14.).abs() <= 2., "session title inset was {inset}");
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[test]
+    fn breadcrumb_compacts_to_the_last_two_components() {
+        assert_eq!(
+            VelaApp::breadcrumb_segments("workspace", "src/main.rs", true),
+            vec!["src".to_string(), "main.rs".to_string()]
+        );
+        assert_eq!(
+            VelaApp::breadcrumb_segments("workspace", "README.md", true),
+            vec!["README.md".to_string()]
+        );
+        assert_eq!(
+            VelaApp::breadcrumb_segments("workspace", "src/main.rs", false),
+            vec![
+                "workspace".to_string(),
+                "src".to_string(),
+                "main.rs".to_string()
+            ]
+        );
+    }
+
+    #[gpui::test]
+    fn compact_breadcrumb_renders_the_file_name_at_800px(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(800.), px(600.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(800.), px(600.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.settings_open = false;
+            app.agent_mode = false;
+            app.agent_panel_open = false;
+            app.ui_shell = UiShell::Classic;
+            app.active_id = Some("ses_breadcrumb".into());
+            app.document_scopes
+                .insert("ses_breadcrumb".into(), "ws_breadcrumb".into());
+            app.test_workspace_directory = Some("/private/tmp".into());
+            let key = DocumentKey::in_workspace(
+                "ws_breadcrumb".into(),
+                "/private/tmp".into(),
+                "src/main.rs".into(),
+            );
+            let mut documents = app.documents.borrow_mut();
+            documents.open(1, key, false);
+            documents.finish_load(1, "src/main.rs", Some("fn main() {}\n".into()));
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("breadcrumb-segment:src").is_some());
+        assert!(cx.debug_bounds("breadcrumb-segment:main.rs").is_some());
+        assert!(cx.debug_bounds("breadcrumb-segment:README.md").is_none());
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+    #[gpui::test]
+    fn shared_transcript_retains_disclosures_and_reading_intent_across_activation(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let engine = app.read_with(cx, |app, _| app.engine.clone());
+        runtime.block_on(engine.shutdown_and_wait());
+        cx.run_until_parked();
+        let tool = Block {
+            id: "same-tool".into(), message_id: "message".into(), part_id: "same-tool".into(),
+            kind: BlockKind::Tool, text: r#"{"command":"echo retained"}"#.into(),
+            detail: "bash".into(), output: "retained output".into(), status: ToolStatus::Success,
+            streaming: false, agent: None, model: None, created_at: 1, completed_at: Some(2),
+            child_session_id: None, files: Vec::new(), sub_calls: Vec::new(), attachments: Vec::new(),
+            progress: "".into(), interrupted: false,
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            for id in ["retained-a", "retained-b"] {
+                let mut panel = crate::panels::PanelState::new(id, id);
+                let mut blocks = vec![tool.clone()];
+                blocks.extend((0..30).map(|index| Block {
+                    id: format!("history-{index}#0").into(),
+                    message_id: format!("history-{index}").into(),
+                    part_id: format!("history-{index}").into(),
+                    kind: BlockKind::User,
+                    text: "Previous prompt".into(),
+                    ..tool.clone()
+                }));
+                panel.blocks = Arc::new(blocks);
+                app.panels.open(panel).unwrap();
+            }
+            app.open_session("retained-a".into(), cx);
+            app.transcript_ui.tool_open.insert("retained-a:same-tool".into());
+            app.stop_conversation_follow("retained-a");
+            app.rebuild_conversation_rows("retained-a", cx);
+            app.open_session("retained-b".into(), cx);
+            assert!(!app.transcript_ui.tool_open.contains("retained-b:same-tool"));
+            assert!(app.panel_transcripts["retained-a"].ui.tool_open.contains("retained-a:same-tool"));
+            assert!(!app.panels.entries().iter().find(|p| p.session == "retained-a").unwrap().stick);
+            app.panel_tile_lists["retained-a"].scroll_to(ListOffset { item_ix: 8, offset_in_item: px(3.) });
+            // A new payload revision in the inactive panel must retain manual disclosure/follow.
+            app.panels.update("retained-a", |panel| {
+                let mut blocks = (*panel.blocks).clone();
+                blocks[0].output = "new output arrived while reading".into();
+                panel.blocks = Arc::new(blocks);
+                panel.phase = SessionPhase::Busy;
+            });
+            let panel = app.panels.entries().iter().find(|p| p.session == "retained-a").unwrap().clone();
+            app.prepare_panel_conversation(&panel);
+            assert!(app.panel_transcripts["retained-a"].ui.tool_open.contains("retained-a:same-tool"));
+            assert!(!app.panel_tile_lists["retained-a"].is_following_tail());
+            assert_eq!(app.active_id.as_deref(), Some("retained-b"));
+            app.open_session("retained-a".into(), cx);
+            assert!(app.transcript_ui.tool_open.contains("retained-a:same-tool"));
+            assert!(!app.stick, "activation preserves the reader's follow choice");
+            assert_eq!(app.transcript_list.logical_scroll_top().item_ix, 8,
+                "reactivation must use the retained list position rather than the older saved offset");
+            assert_eq!(app.blocks[0].output.as_ref(), "new output arrived while reading");
+            // Explicit teardown removes retained presentation, never recreates it.
+            app.forget_panel_widgets("retained-b");
+            app.panels.close("retained-b");
+            assert!(app.ui_for_mut("retained-b").is_none());
+        });
+    }
+
+    #[gpui::test]
+    fn submitted_turn_waits_for_canonical_user_and_preserves_short_reply_anchor(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let engine = app.read_with(cx, |app, _| app.engine.clone());
+        runtime.block_on(engine.shutdown_and_wait());
+        cx.run_until_parked();
+        let user = |id: &str, text: &str, at: i64| Block {
+            id: format!("{id}#0").into(), message_id: id.into(), part_id: id.into(),
+            kind: BlockKind::User, text: text.into(), detail: "".into(), output: "".into(),
+            status: ToolStatus::None, streaming: false, agent: None, model: None,
+            created_at: at, completed_at: Some(at), child_session_id: None,
+            files: Vec::new(), sub_calls: Vec::new(), attachments: Vec::new(),
+            progress: "".into(), interrupted: false,
+        };
+        let history = (0..30).map(|i| user(&format!("old-{i}"), "previous context", i)).collect::<Vec<_>>();
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            for _ in 0..3 {
+                cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| app.clone().into_any_element());
+                cx.run_until_parked();
+            }
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true; app.loading = false; app.workspace_closed = false;
+            app.active_id = Some("anchor-session".into());
+            app.blocks = Arc::new(history.clone()); app.phase = SessionPhase::Busy;
+            app.rebuild_conversation_rows("anchor-session", cx);
+            app.composer = "queued prompt".into();
+        });
+        draw(cx);
+        cx.update(|window, cx| app.update(cx, |app, cx| app.send(window, cx)));
+        let arrived = crate::browser_downloads::now_ms() + 1;
+        // An older identical prompt can appear when history is expanded while
+        // the live submit is still queued. It cannot consume the new intent.
+        let history = std::iter::once(user("prepended", "queued prompt", 0))
+            .chain(history)
+            .collect::<Vec<_>>();
+        app.update(cx, |app, cx| {
+            let mut blocks = history.clone();
+            blocks.push(user("local:pending", "queued prompt", arrived));
+            app.blocks = Arc::new(blocks);
+            app.rebuild_conversation_rows("anchor-session", cx);
+            app.anchor_pending_active_turn("anchor-session");
+        });
+        draw(cx);
+        let local = cx.debug_bounds("conversation-row:anchor-session:user:local:pending").unwrap();
+        let viewport = app.read_with(cx, |app, _| app.transcript_list.viewport_bounds());
+        assert!(local.top() > viewport.top() + px(100.), "optimistic queued prompt must not acquire a top reservation");
+        app.update(cx, |app, cx| {
+            let mut blocks = history.clone();
+            blocks.push(user("canonical", "queued prompt", arrived));
+            app.blocks = Arc::new(blocks);
+            app.rebuild_conversation_rows("anchor-session", cx);
+            app.anchor_pending_active_turn("anchor-session");
+        });
+        draw(cx);
+        let anchored = cx.debug_bounds("conversation-row:anchor-session:user:canonical").unwrap();
+        assert!(anchored.top() >= viewport.top() && anchored.top() <= viewport.top() + px(64.),
+            "canonical user should anchor near the viewport top: {anchored:?} {viewport:?}");
+        app.update(cx, |app, cx| {
+            let mut blocks = (*app.blocks).clone();
+            let mut answer = user("answer", "short streaming reply", arrived + 1);
+            answer.kind = BlockKind::Assistant; answer.streaming = true; answer.completed_at = None;
+            blocks.push(answer); app.blocks = Arc::new(blocks);
+            app.rebuild_conversation_rows("anchor-session", cx);
+            app.anchor_pending_active_turn("anchor-session");
+        });
+        draw(cx);
+        assert_eq!(cx.debug_bounds("conversation-row:anchor-session:user:canonical").unwrap().top(), anchored.top(),
+            "a short reply grows below the prompt without pushing it away");
+        app.update(cx, |app, cx| {
+            let mut blocks = (*app.blocks).clone();
+            blocks.extend((0..40).map(|index| {
+                let mut answer = user(&format!("long-{index}"), "The continuing answer fills the viewport.", arrived + 2);
+                answer.kind = BlockKind::Assistant;
+                answer
+            }));
+            app.blocks = Arc::new(blocks);
+            app.rebuild_conversation_rows("anchor-session", cx);
+        });
+        draw(cx);
+        app.read_with(cx, |app, _| {
+            assert!(app.transcript_list.is_following_tail());
+            assert!(crate::scroll::list_distance_from_bottom(&app.transcript_list) <= px(1.));
+            assert!(app.transcript_list.logical_scroll_top().item_ix > 30);
+        });
+        cx.simulate_event(gpui::ScrollWheelEvent {
+            position: viewport.center(),
+            delta: gpui::ScrollDelta::Pixels(point(px(0.), px(10_000.))),
+            ..Default::default()
+        });
+        draw(cx);
+        let reading = app.read_with(cx, |app, _| app.transcript_list.logical_scroll_top());
+        assert!(reading.item_ix < 30, "the wheel scroll moved away from the reply tail");
+        app.update(cx, |app, cx| {
+            assert!(!app.stick, "a real wheel event on the owning list cancels following");
+            app.rebuild_conversation_rows("anchor-session", cx);
+            app.anchor_pending_active_turn("anchor-session");
+        });
+        draw(cx);
+        app.read_with(cx, |app, _| {
+            assert!(!app.stick);
+            assert!(!app.transcript_list.is_following_tail(), "consumed intent must not reactivate on later snapshots");
+            let offset = app.transcript_list.logical_scroll_top();
+            assert_eq!((offset.item_ix, offset.offset_in_item), (reading.item_ix, reading.offset_in_item));
+        });
+    }
+
 }

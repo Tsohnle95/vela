@@ -2,6 +2,8 @@
 # Lossless window-only captures. Does not activate, move, resize or mask a window.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=scripts/build-env.sh
+source scripts/build-env.sh
 surface="${1:?Usage: capture-parity.sh original|native capture-name [evidence-directory] [window-id] [context-window-id] [--single-window]}"
 name="${2:?A capture name is required}"
 evidence="${3:-docs/parity/2026-10-25}"
@@ -50,7 +52,7 @@ elif [[ -n "${6:-}" ]]; then
 fi
 /usr/sbin/screencapture "${capture_flags[@]}" -l "$window_id" "$output"
 after="$(env CLANG_MODULE_CACHE_PATH=/private/tmp/vela-capture-swift swift scripts/parity-window-info.swift --all-layers)"
-python3 -c 'import datetime,hashlib,json,pathlib,struct,subprocess,sys
+python3 -c 'import datetime,hashlib,json,os,pathlib,struct,subprocess,sys
 path=pathlib.Path(sys.argv[1]);data=path.read_bytes()
 if data[:8]!=b"\x89PNG\r\n\x1a\n":raise SystemExit("Capture must be a lossless PNG")
 width,height=struct.unpack(">II",data[16:24]);requested=json.loads(sys.argv[2]);surface=sys.argv[3];window=json.loads(sys.argv[4])
@@ -62,7 +64,7 @@ for before in (requested,window):
 point_width,point_height=window["bounds"]["Width"],window["bounds"]["Height"]
 if point_width<=0 or point_height<=0 or abs(width/point_width-height/point_height)>0.01:
  raise SystemExit("Captured pixels do not match the window aspect ratio. macOS can include a sheets parent; specify its context-window-id explicitly.")
-repo=pathlib.Path.cwd() if surface=="native" else pathlib.Path.cwd().parent/"vela"
+repo=pathlib.Path.cwd() if surface=="native" else pathlib.Path(os.environ.get("VELA_REFERENCE_ROOT",str(pathlib.Path.cwd()/"archive/vela-electron")))
 def git(*args):return subprocess.check_output(["git","-C",str(repo),*args])
 record={"captured_utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"surface":surface,"window":window,"requested_window":requested,"capture_surface":"window_group" if requested["id"]!=window["id"] else "window","capture_window_inventory":[json.loads(line) for line in sys.argv[5].splitlines() if line],"encoding":"PNG","lossless":True,"pixel_size":[width,height],"point_size":[point_width,point_height],"sha256":hashlib.sha256(data).hexdigest(),"head":git("rev-parse","HEAD").decode().strip(),"tracked_diff_sha256":hashlib.sha256(git("diff","--binary","HEAD")).hexdigest(),"capture_command":["screencapture","-x","-o","-l",str(requested["id"])],"resized":False,"cropped":False,"masked":False}
 record["capture_stable"]=True;record["capture_window_inventory_after"]=list(after.values())
@@ -84,7 +86,7 @@ record["source_tree_roots"]=roots;record["source_tree_includes_untracked"]=True
 if surface=="original" and (repo/"out").is_dir():
  record["reference_bundle_sha256"],record["reference_bundle_files"]=tree_hash(sorted(str(p.relative_to(repo)) for p in (repo/"out").rglob("*") if p.is_file()))
 if surface=="native":
- name=window["owner"];binary=pathlib.Path(f"target/debug/{name}.app/Contents/MacOS/{name}")
+ name=window["owner"];target=pathlib.Path(os.environ.get("VELA_TARGET_DIR",str(pathlib.Path.cwd().parent/"build-junk/vela-target")));binary=target/f"debug/{name}.app/Contents/MacOS/{name}"
  record["binary_path"]=str(binary)
  record["binary_sha256"]=hashlib.sha256(binary.read_bytes()).hexdigest()
 path.with_suffix(".json").write_text(json.dumps(record,indent=2)+"\n")

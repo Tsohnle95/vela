@@ -9,16 +9,19 @@ use gpui::prelude::*;
 use gpui::{AnyElement, FontWeight, IntoElement, Rgba, SharedString, div, px, relative};
 use vela_engine::provider_usage::{ProviderUsageCredits, ProviderUsageResult, UsageWindow};
 
+fn js_fixed(value: f64, places: usize) -> String {
+    let factor = 10f64.powi(places as i32);
+    let rounded = (value * factor).round() / factor;
+    format!("{rounded:.places$}")
+}
+
 pub(super) fn format_provider_count(value: f64) -> String {
-    let value = value.max(0.0);
     if value >= 1_000_000.0 {
-        format!("{:.1}M", value / 1_000_000.0)
+        format!("{}M", js_fixed(value / 1_000_000.0, 1))
     } else if value >= 1_000.0 {
-        format!("{:.1}k", value / 1_000.0)
-    } else if (value - value.round()).abs() < f64::EPSILON {
-        format!("{}", value.round() as u64)
+        format!("{}k", js_fixed(value / 1_000.0, 1))
     } else {
-        format!("{value:.1}")
+        format!("{value}")
     }
 }
 
@@ -40,8 +43,14 @@ pub(super) fn format_provider_credits(credits: &ProviderUsageCredits) -> String 
 }
 
 pub(super) fn format_provider_plan(plan: &str) -> String {
-    let mut formatted = plan
-        .replace(['_', '-'], " ")
+    let normalized = plan
+        .chars()
+        .map(|character| match character {
+            '_' | '-' => ' ',
+            other => other,
+        })
+        .collect::<String>();
+    let mut formatted = normalized
         .split_whitespace()
         .map(|word| {
             let mut chars = word.chars();
@@ -92,7 +101,7 @@ fn window_tone(percent: f64) -> Rgba {
     } else if percent >= 60. {
         theme::rgba(0xf0, 0xa6, 0x4b, 1.)
     } else {
-        theme.accent
+        theme.green
     }
 }
 
@@ -105,6 +114,7 @@ fn window_row(provider: &str, index: usize, window: &UsageWindow, now_ms: i64) -
     div()
         .id(SharedString::from(id))
         .debug_selector(move || selector.clone())
+        .mt(px(6.))
         .flex()
         .flex_col()
         .gap(px(2.))
@@ -113,14 +123,14 @@ fn window_row(provider: &str, index: usize, window: &UsageWindow, now_ms: i64) -
                 .flex()
                 .items_center()
                 .justify_between()
-                .text_size(px(10.5))
+                .text_size(px(11.5))
                 .text_color(theme.dim)
                 .child(SharedString::from(window.label.clone()))
                 .child(format!("{left}% left")),
         )
         .child(
             div()
-                .h(px(3.))
+                .h(px(4.))
                 .w_full()
                 .rounded(px(999.))
                 .bg(theme.inset)
@@ -132,15 +142,26 @@ fn window_row(provider: &str, index: usize, window: &UsageWindow, now_ms: i64) -
                         .w(relative((used / 100.) as f32)),
                 ),
         )
-        .when_some(window.resets_at, |row, resets| {
+        .when_some(window.resets_at.filter(|resets| *resets != 0), |row, resets| {
             row.child(
                 div()
+                    .debug_selector(|| "provider-window-reset".into())
                     .text_size(px(9.))
                     .text_color(theme.faint)
                     .child(format_provider_resets(resets, now_ms)),
             )
         })
         .into_any_element()
+}
+
+fn provider_tone(status: &str) -> Rgba {
+    let theme = Theme::default();
+    match status {
+        "ok" => theme.green,
+        "stale" | "unavailable" => theme::rgba(0xf0, 0xa6, 0x4b, 1.),
+        "unauthenticated" => theme.red,
+        _ => theme.text.opacity(0.46),
+    }
 }
 
 fn provider_card(result: &ProviderUsageResult, now_ms: i64) -> AnyElement {
@@ -152,20 +173,20 @@ fn provider_card(result: &ProviderUsageResult, now_ms: i64) -> AnyElement {
     } else {
         result.display_name.clone()
     };
-    let tone = match result.status.as_str() {
-        "ok" => theme.green,
-        "stale" => theme::rgba(0xf0, 0xa6, 0x4b, 1.),
-        _ => theme.red,
-    };
+    let tone = provider_tone(&result.status);
     let mut card = div()
         .id(SharedString::from(id))
         .debug_selector(move || selector.clone())
         .flex()
         .flex_col()
         .gap(px(5.))
-        .p(px(7.))
-        .rounded(px(7.))
-        .bg(theme.inset)
+        .mb(px(6.))
+        .border_1()
+        .border_color(theme.border)
+        .py(px(7.))
+        .px(px(9.))
+        .rounded(px(6.))
+        .bg(theme.elevated)
         .child(
             div()
                 .flex()
@@ -176,7 +197,7 @@ fn provider_card(result: &ProviderUsageResult, now_ms: i64) -> AnyElement {
                         .flex_1()
                         .min_w_0()
                         .truncate()
-                        .text_size(px(11.))
+                        .text_size(px(12.5))
                         .font_weight(FontWeight::SEMIBOLD)
                         .text_color(theme.text)
                         .child(SharedString::from(name)),
@@ -189,13 +210,20 @@ fn provider_card(result: &ProviderUsageResult, now_ms: i64) -> AnyElement {
                     |head, plan| {
                         head.child(
                             div()
-                                .text_size(px(9.))
-                                .text_color(theme.faint)
-                                .child(format_provider_plan(plan)),
+                                .rounded(px(3.))
+                                .px(px(5.))
+                                .py(px(1.))
+                                .text_size(px(10.))
+                                .font_weight(FontWeight::BOLD)
+                                .text_color(theme.dim)
+                                .bg(theme.inset)
+                                .child(SharedString::from(
+                                    format_provider_plan(plan).to_uppercase(),
+                                )),
                         )
                     },
                 )
-                .child(div().size(px(6.)).flex_shrink_0().rounded_full().bg(tone)),
+                .child(div().size(px(7.)).flex_shrink_0().rounded_full().bg(tone)),
         );
     if let Some(snapshot) = &result.snapshot {
         for (index, window) in snapshot.windows.iter().enumerate() {
@@ -215,8 +243,9 @@ fn provider_card(result: &ProviderUsageResult, now_ms: i64) -> AnyElement {
                     .debug_selector(move || selector.clone())
                     .flex()
                     .items_center()
+                    .mt(px(6.))
                     .justify_between()
-                    .text_size(px(10.))
+                    .text_size(px(11.5))
                     .text_color(theme.dim)
                     .child(SharedString::from(
                         credits.label.clone().unwrap_or_else(|| "Credits".into()),
@@ -272,20 +301,34 @@ pub(super) fn render_provider_usage_with_refresh(
                 .justify_between()
                 .child(
                     div()
-                        .text_size(px(9.5))
-                        .font_weight(FontWeight::BOLD)
-                        .text_color(theme.dim)
-                        .child("PROVIDER USAGE"),
+                        .flex()
+                        .items_center()
+                        .gap(px(5.))
+                        .child(
+                            div()
+                                .size(px(10.))
+                                .rounded(px(999.))
+                                .border_1()
+                                .border_color(theme.dim)
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .child(
+                                    div()
+                                        .size(px(3.))
+                                        .rounded(px(999.))
+                                        .bg(theme.dim),
+                                ),
+                        )
+                        .child(
+                            div()
+                                .text_size(px(9.5))
+                                .font_weight(FontWeight::BOLD)
+                                .text_color(theme.dim)
+                                .child("PROVIDER USAGE"),
+                        ),
                 )
-                .when_some(refresh, |head, refresh| head.child(refresh))
-                .when(loading, |head| {
-                    head.child(
-                        div()
-                            .text_size(px(9.))
-                            .text_color(theme.faint)
-                            .child("Refreshing…"),
-                    )
-                }),
+                .when_some(refresh, |head, refresh| head.child(refresh)),
         );
     if loading && results.is_empty() {
         return section
@@ -293,9 +336,27 @@ pub(super) fn render_provider_usage_with_refresh(
                 div()
                     .id("provider-usage-loading")
                     .debug_selector(|| "provider-usage-loading".into())
-                    .text_size(px(10.5))
+                    .flex()
+                    .items_center()
+                    .gap(px(6.))
+                    .py(px(2.))
+                    .text_size(px(12.))
                     .text_color(theme.faint)
-                    .child("Loading provider usage…"),
+                    .child({
+                        use gpui::AnimationExt;
+                        crate::icons::glyph("working-spinner", 11., theme.faint)
+                            .with_animation(
+                                "provider-usage-spinner",
+                                gpui::Animation::new(std::time::Duration::from_millis(700))
+                                    .repeat(),
+                                |svg, progress| {
+                                    svg.with_transformation(gpui::Transformation::rotate(
+                                        gpui::percentage(progress),
+                                    ))
+                                },
+                            )
+                    })
+                    .child("Checking provider usage…"),
             )
             .into_any_element();
     }
@@ -331,6 +392,19 @@ mod tests {
     use vela_engine::provider_usage::ProviderUsageSnapshot;
 
     #[test]
+    fn provider_status_tones_match_source_dots() {
+        let theme = Theme::default();
+        assert_eq!(provider_tone("ok"), theme.green);
+        assert_eq!(
+            provider_tone("stale"),
+            theme::rgba(0xf0, 0xa6, 0x4b, 1.)
+        );
+        assert_eq!(provider_tone("unavailable"), provider_tone("stale"));
+        assert_eq!(provider_tone("unauthenticated"), theme.red);
+        assert_eq!(provider_tone("unsupported"), theme.text.opacity(0.46));
+    }
+
+    #[test]
     fn provider_usage_formatters_match_reference_wording() {
         assert_eq!(format_provider_count(999.), "999");
         assert_eq!(format_provider_count(1_500.), "1.5k");
@@ -340,6 +414,8 @@ mod tests {
             "Self-serve Business"
         );
         assert_eq!(format_provider_plan("team-plan"), "Team Plan");
+        assert_eq!(format_provider_plan("team--plan"), "Team Plan");
+        assert_eq!(format_provider_plan("pro__plus"), "Pro Plus");
         assert_eq!(
             format_provider_resets(1_000, 1_000_000),
             "resets any moment"
@@ -371,6 +447,11 @@ mod tests {
             }),
             "250 / 1.0k"
         );
+        assert_eq!(format_provider_count(1_250.0), "1.3k");
+        assert_eq!(format_provider_count(12.5), "12.5");
+        assert_eq!(format_provider_count(12.55), "12.55");
+        assert_eq!(format_provider_count(999.9), "999.9");
+        assert_eq!(format_provider_count(-5.0), "-5");
     }
 
     fn sample() -> Vec<ProviderUsageResult> {
@@ -385,7 +466,7 @@ mod tests {
                         label: "5h".into(),
                         used_percent: 42.,
                         window_minutes: Some(300),
-                        resets_at: None,
+                        resets_at: Some(0),
                     }],
                     credits: Some(ProviderUsageCredits {
                         has_credits: true,
@@ -498,5 +579,17 @@ mod tests {
                 assert!(cx.debug_bounds(selector).is_some(), "missing {selector}");
             }
         }
+        let (probe, cx) = cx.add_window_view(|_, _| UsageProbe {
+            results: sample(),
+            loading: false,
+        });
+        cx.simulate_resize(size(px(300.), px(300.)));
+        cx.draw(point(px(0.), px(0.)), size(px(300.), px(300.)), |_, _| {
+            probe.clone().into_any_element()
+        });
+        assert!(
+            cx.debug_bounds("provider-window-reset").is_none(),
+            "a zero reset timestamp is treated as absent"
+        );
     }
 }

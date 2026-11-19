@@ -162,6 +162,8 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         }
     }
 

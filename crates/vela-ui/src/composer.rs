@@ -1,6 +1,10 @@
 //! Native composer controls share the acknowledged runtime model selection.
 use super::*;
 
+/// Source's `Composer` placeholder, shared by focused and tiled composers.
+pub(crate) const COMPOSER_PLACEHOLDER: &str =
+    "Ask about this repository or describe a change…";
+
 /// Menu rows are transient; their owning toolbar controls survive view changes.
 pub(super) struct PickerAnchors {
     pub(super) keyboard: crate::focus::KeyboardMode,
@@ -46,6 +50,7 @@ impl VelaApp {
             .unwrap_or(100.);
         let mut menu = div()
             .id("agent-picker-menu")
+            .debug_selector(|| "agent-picker-menu".into())
             .track_focus(&self.picker_anchors.scope)
             .role(gpui::Role::Menu)
             .aria_label("Agent selection")
@@ -66,6 +71,14 @@ impl VelaApp {
             .flex()
             .flex_col()
             .overflow_y_scroll()
+            .on_key_down(cx.listener(|app, event: &KeyDownEvent, _, cx| {
+                if event.keystroke.key == "escape" {
+                    app.picker = None;
+                    app.picker_anchors.pending = Some(PickerKind::Agent);
+                    cx.stop_propagation();
+                    cx.notify();
+                }
+            }))
             .on_mouse_down_out(
                 cx.listener(|app, event: &gpui::MouseDownEvent, window, cx| {
                     if !app
@@ -177,6 +190,10 @@ impl VelaApp {
                     true,
                     div()
                         .id(SharedString::from(format!("strength-option-{index}")))
+                        .debug_selector({
+                            let selector = format!("strength-option-{index}");
+                            move || selector.clone()
+                        })
                         .role(gpui::Role::MenuItem)
                         .aria_label(SharedString::from(label.clone()))
                         .aria_selected(chosen)
@@ -213,6 +230,7 @@ impl VelaApp {
         }
         let menu = div()
             .id("response-strength-menu")
+            .debug_selector(|| "response-strength-menu".into())
             .track_focus(&self.picker_anchors.scope)
             .role(gpui::Role::Menu)
             .aria_label("Response strength")
@@ -233,6 +251,14 @@ impl VelaApp {
             .flex()
             .flex_col()
             .overflow_y_scroll()
+            .on_key_down(cx.listener(|app, event: &KeyDownEvent, _, cx| {
+                if event.keystroke.key == "escape" {
+                    app.picker = None;
+                    app.picker_anchors.pending = Some(PickerKind::Strength);
+                    cx.stop_propagation();
+                    cx.notify();
+                }
+            }))
             .on_mouse_down_out(
                 cx.listener(|app, event: &gpui::MouseDownEvent, window, cx| {
                     if !app
@@ -272,6 +298,7 @@ impl VelaApp {
                     .child(
                         div()
                             .id("strength-back")
+                            .debug_selector(|| "strength-back".into())
                             .role(gpui::Role::Button)
                             .aria_label("Back to model list")
                             .focusable()
@@ -284,9 +311,8 @@ impl VelaApp {
                             .font_family("codicon")
                             .text_size(px(16.))
                             .on_click(cx.listener(|app, _, _, cx| {
-                                app.picker = Some(PickerKind::Model);
+                                app.open_model_picker(cx);
                                 app.picker_anchors.pending = Some(PickerKind::Model);
-                                cx.notify();
                             }))
                             .child(icon("ea9b")),
                     ),
@@ -499,7 +525,7 @@ impl VelaApp {
         let can_send = self.can_send();
         let busy = self.phase.is_active();
         let can_stop = busy;
-        let placeholder = "Ask about this repository or describe a change…";
+        let placeholder = COMPOSER_PLACEHOLDER;
         self.composer_input
             .update(cx, |input, _| input.set_placeholder(placeholder));
         let input = div()
@@ -508,7 +534,7 @@ impl VelaApp {
             .on_key_down(cx.listener(Self::on_composer_key))
             .w_full()
             .min_w_0()
-            .min_h(px(44.))
+            .min_h(px(36.))
             .max_h(px(120.))
             .px(px(3.))
             .pt(px(2.))
@@ -516,7 +542,6 @@ impl VelaApp {
             .line_height(px(18.))
             .text_color(theme.text)
             .child(self.composer_input.clone());
-        let codex = self.is_codex();
         let strength = self
             .selected_model
             .as_ref()
@@ -543,12 +568,16 @@ impl VelaApp {
         let slash_argument_menu = self.render_slash_argument_menu(cx);
         div()
             .relative()
-            .p(px(10.))
+            .pl(px(6.))
+            .pr(px(12.))
+            .pt(px(4.))
+            .pb(px(6.))
             .flex()
             .flex_col()
             .gap(px(4.0))
             .when(!self.todos.is_empty(), |root| {
-                root.child(self.render_todos())
+                let todos = self.todos.clone();
+                root.child(self.render_todo_dock(None, todos, cx))
             })
             .when(self.staged_revert_active(), |root| {
                 root.child(self.render_staged_revert(cx))
@@ -573,20 +602,17 @@ impl VelaApp {
                         div()
                             .relative()
                             .w_full()
-                            .min_h(px(96.))
-                            .rounded(px(if codex { 16.0 } else { 13.0 }))
+                            .min_h(px(91.))
+                            .rounded(px(10.0))
                             .border_1()
-                            .border_color(if codex {
-                                theme.text.opacity(0.06)
-                            } else {
-                                theme.border_strong
-                            })
-                            .bg(theme.elevated)
+                            .border_color(theme.border_strong)
+                            .bg(theme.inset)
+                            .shadow(theme.medium_shadow())
                             .px(px(8.0))
-                            .py(px(8.0))
+                            .py(px(7.0))
                             .flex()
                             .flex_col()
-                            .gap(px(6.0))
+                            .gap(px(5.0))
                             .child(input)
                             .child(
                                 div()
@@ -678,15 +704,9 @@ impl VelaApp {
                                                 )
                                                 .hover(|style| style.bg(theme.inset))
                                                 .on_click(cx.listener(|this, _, _, cx| {
-                                                    this.picker =
-                                                        if this.picker == Some(PickerKind::Agent) {
-                                                            None
-                                                        } else {
-                                                            Some(PickerKind::Agent)
-                                                        };
+                                                    this.toggle_agent_picker(cx);
                                                     this.picker_anchors.pending =
                                                         Some(PickerKind::Agent);
-                                                    cx.notify();
                                                 }))
                                                 .font_family("codicon")
                                                 .text_size(px(16.))
@@ -698,6 +718,7 @@ impl VelaApp {
                                     .child(
                                         div()
                                             .id("model-picker")
+                                            .debug_selector(|| "model-picker".into())
                                             .role(gpui::Role::Button)
                                             .aria_label(SharedString::from(format!(
                                                 "Change model: {model_label}"
@@ -729,15 +750,9 @@ impl VelaApp {
                                             .text_color(theme.text)
                                             .hover(|style| style.bg(theme.inset))
                                             .on_click(cx.listener(|this, _, _, cx| {
-                                                this.picker =
-                                                    if this.picker == Some(PickerKind::Model) {
-                                                        None
-                                                    } else {
-                                                        Some(PickerKind::Model)
-                                                    };
+                                                this.toggle_model_picker(cx);
                                                 this.picker_anchors.pending =
                                                     Some(PickerKind::Model);
-                                                cx.notify();
                                             }))
                                             .child(
                                                 div()

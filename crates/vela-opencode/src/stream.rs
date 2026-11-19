@@ -96,12 +96,22 @@ async fn read_once(
                 return Ok(());
             }
         };
-        for data in decoder.push(&chunk) {
-            if data == "[DONE]" {
+        for frame in decoder.push(&chunk) {
+            if frame.data == "[DONE]" {
                 continue;
             }
-            match serde_json::from_str::<Value>(&data) {
-                Ok(value) => {
+            match serde_json::from_str::<Value>(&frame.data) {
+                Ok(mut value) => {
+                    // Preserve transport identity separately from message and
+                    // tool IDs in the protocol payload. Only an explicit ID on
+                    // this frame is an event identity; inheriting the SSE last
+                    // ID would incorrectly deduplicate subsequent id-less deltas.
+                    if let Some(object) = value.as_object_mut() {
+                        object.remove("_velaEventId");
+                        if let Some(id) = frame.id {
+                            object.insert("_velaEventId".into(), Value::String(id));
+                        }
+                    }
                     if tokio::select! {
                         _ = cancel.cancelled() => return Ok(()),
                         result = tx.send(value) => result.is_err(),
@@ -124,9 +134,17 @@ struct EventDecoder {
     data: Vec<String>,
     skip_lf: bool,
     saw_line: bool,
+    id: Option<String>,
 }
+
+#[derive(Debug, PartialEq, Eq)]
+struct SseFrame {
+    data: String,
+    id: Option<String>,
+}
+
 impl EventDecoder {
-    fn push(&mut self, bytes: &[u8]) -> Vec<String> {
+    fn push(&mut self, bytes: &[u8]) -> Vec<SseFrame> {
         let mut events = Vec::new();
         for &byte in bytes {
             if self.skip_lf {
@@ -146,7 +164,7 @@ impl EventDecoder {
         }
         events
     }
-    fn finish_line(&mut self) -> Option<String> {
+    fn finish_line(&mut self) -> Option<SseFrame> {
         let line = String::from_utf8_lossy(&self.line);
         let line = if self.saw_line {
             line.as_ref()
@@ -155,12 +173,19 @@ impl EventDecoder {
         };
         self.saw_line = true;
         let event = if line.is_empty() {
-            (!self.data.is_empty()).then(|| std::mem::take(&mut self.data).join("\n"))
+            let id = self.id.take();
+            (!self.data.is_empty()).then(|| SseFrame {
+                data: std::mem::take(&mut self.data).join("\n"),
+                id,
+            })
         } else {
             let (field, value) = line.split_once(':').unwrap_or((line, ""));
             if field == "data" {
                 self.data
                     .push(value.strip_prefix(' ').unwrap_or(value).to_owned());
+            } else if field == "id" && !value.contains('\0') {
+                let value = value.strip_prefix(' ').unwrap_or(value);
+                self.id = (!value.is_empty()).then(|| value.to_owned());
             }
             None
         };
@@ -223,7 +248,7 @@ mod tests {
     fn parses_multiline_frames_with_comments() {
         let mut decoder = EventDecoder::default();
         assert_eq!(
-            decoder.push(b": keepalive\ndata: {\"type\":\"a\"}\n\n"),
+            decoder.push(b": keepalive\ndata: {\"type\":\"a\"}\n\n").into_iter().map(|frame| frame.data).collect::<Vec<_>>(),
             vec!["{\"type\":\"a\"}"]
         );
         assert!(decoder.line.is_empty());
@@ -233,7 +258,7 @@ mod tests {
     fn handles_crlf_and_multiple_frames() {
         let mut decoder = EventDecoder::default();
         assert_eq!(
-            decoder.push(b"data: one\r\n\r\ndata: two\n\npartial"),
+            decoder.push(b"data: one\r\n\r\ndata: two\n\npartial").into_iter().map(|frame| frame.data).collect::<Vec<_>>(),
             vec!["one", "two"]
         );
         assert_eq!(decoder.line, b"partial");
@@ -248,8 +273,24 @@ mod tests {
                 .as_bytes()
                 .chunks(width)
                 .flat_map(|chunk| decoder.push(chunk))
+                .map(|frame| frame.data)
                 .collect::<Vec<_>>();
             assert_eq!(events, vec!["first\n second", ""], "chunk width {width}");
+        }
+    }
+
+    #[test]
+    fn explicit_frame_ids_survive_chunk_boundaries_without_inheriting_ids() {
+        let stream = b"id: event-1\r\ndata: first\r\n\r\ndata: next\n\nid: bad\0id\ndata: third\n\nid:\ndata: fourth\n\n";
+        for width in 1..=stream.len() {
+            let mut decoder = EventDecoder::default();
+            let frames = stream.chunks(width).flat_map(|chunk| decoder.push(chunk)).collect::<Vec<_>>();
+            assert_eq!(frames, vec![
+                SseFrame { data: "first".into(), id: Some("event-1".into()) },
+                SseFrame { data: "next".into(), id: None },
+                SseFrame { data: "third".into(), id: None },
+                SseFrame { data: "fourth".into(), id: None },
+            ]);
         }
     }
 }

@@ -7433,9 +7433,11 @@ dependencies = [
 name = "vela-ui"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "base64 0.22.1",
  "block2 0.6.2",
  "chrono",
+ "futures-util",
  "gpui",
  "gpui_platform",
  "image",

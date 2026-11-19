@@ -29,6 +29,10 @@ const ICONS: &[(&str, &[u8])] = &[
         include_bytes!("../assets/icons/arrow-right.svg"),
     ),
     ("close", include_bytes!("../assets/icons/close.svg")),
+    (
+        "more-horizontal",
+        include_bytes!("../assets/icons/more-horizontal.svg"),
+    ),
     ("refresh", include_bytes!("../assets/icons/refresh.svg")),
     ("image", include_bytes!("../assets/icons/image.svg")),
     ("arrow-up", include_bytes!("../assets/icons/arrow-up.svg")),

@@ -3,8 +3,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const crypto = require('node:crypto');
-const root = path.resolve(__dirname, '../../vela/node_modules/@xterm/xterm/src');
-const ts = require(path.resolve(__dirname, '../../vela/node_modules/typescript'));
+const reference = path.resolve(
+  process.argv[2] || process.env.VELA_REFERENCE_ROOT || path.resolve(__dirname, '../archive/vela-electron'),
+);
+const root = path.join(reference, 'node_modules/@xterm/xterm/src');
+const ts = require(path.join(reference, 'node_modules/typescript'));
 const cache = new Map();
 function load(name) {
   if (!name.startsWith('common/') || name.includes('..')) throw new Error(`Unsupported module: ${name}`);

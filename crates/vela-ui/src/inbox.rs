@@ -90,6 +90,15 @@ fn action_button(
 }
 
 impl VelaApp {
+    pub(super) fn discard_inbox_item(&mut self, item: &InboxItem) {
+        self.turn_anchors.discard_queued(&item.session_id, &item.text);
+        if item.kind == "local-recovery" {
+            self.engine.remove_queued(self.workspace_directory(), item.session_id.clone(), item.id.clone());
+        } else {
+            self.engine.cancel_inbox(item.session_id.clone(), item.id.clone());
+        }
+    }
+
     fn edit_inbox(&mut self, item: InboxItem, window: &mut Window, cx: &mut Context<Self>) {
         if self.active_id.as_deref() != Some(item.session_id.as_str()) {
             return;
@@ -108,13 +117,10 @@ impl VelaApp {
                 return;
             };
             self.restore_prompt_files(&queued.files);
-            self.engine
-                .remove_queued(directory, item.session_id.clone(), item.id.clone());
         } else {
-            self.engine
-                .cancel_inbox(item.session_id.clone(), item.id.clone());
             self.attachments.clear();
         }
+        self.discard_inbox_item(&item);
         self.inbox.retain(|entry| entry.id != item.id);
         self.composer = item.text;
         self.composer_input
@@ -237,6 +243,9 @@ impl VelaApp {
                             steer.id.clone(),
                         );
                     } else {
+                        // Source removes a runtime chip optimistically before
+                        // awaiting steer; a failed steer refreshes it back.
+                        app.inbox.retain(|entry| entry.id != steer.id);
                         app.engine
                             .steer_inbox(steer.session_id.clone(), steer.id.clone());
                     }
@@ -248,18 +257,7 @@ impl VelaApp {
                 format!("queue-remove-{}", item.id),
                 "Remove queued message",
                 "close",
-                move |app, _, _| {
-                    if remove.kind == "local-recovery" {
-                        app.engine.remove_queued(
-                            app.workspace_directory(),
-                            remove.session_id.clone(),
-                            remove.id.clone(),
-                        );
-                    } else {
-                        app.engine
-                            .cancel_inbox(remove.session_id.clone(), remove.id.clone());
-                    }
-                },
+                move |app, _, _| app.discard_inbox_item(&remove),
                 self.inbox_scroll.clone(),
                 cx,
             ));

@@ -1,0 +1,130 @@
+{
+  "captured_utc": "2026-11-13T05:17:36.670985+00:00",
+  "surface": "original",
+  "window": {
+    "active": false,
+    "bounds": {
+      "Height": 800,
+      "Width": 1280,
+      "X": 320,
+      "Y": 73
+    },
+    "id": 248,
+    "layer": 0,
+    "owner": "Electron",
+    "pid": 7167,
+    "title": "Vela"
+  },
+  "requested_window": {
+    "active": false,
+    "bounds": {
+      "Height": 800,
+      "Width": 1280,
+      "X": 320,
+      "Y": 73
+    },
+    "id": 248,
+    "layer": 0,
+    "owner": "Electron",
+    "pid": 7167,
+    "title": "Vela"
+  },
+  "capture_surface": "window",
+  "capture_window_inventory": [
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 320,
+        "Y": 73
+      },
+      "id": 248,
+      "layer": 0,
+      "owner": "Electron",
+      "pid": 7167,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 736,
+        "Width": 1258,
+        "X": 2251,
+        "Y": 285
+      },
+      "id": 245,
+      "layer": 0,
+      "owner": "Vela Native",
+      "pid": 6718,
+      "title": "Vela"
+    }
+  ],
+  "encoding": "PNG",
+  "lossless": true,
+  "pixel_size": [
+    1280,
+    800
+  ],
+  "point_size": [
+    1280,
+    800
+  ],
+  "sha256": "0c1b77fe8781efc2f0d6b015c5def6933f42b5c85c2a32c728d92c100bd22aa1",
+  "head": "585402696a2b2c80773ba007edcb65de4a706274",
+  "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "capture_command": [
+    "screencapture",
+    "-x",
+    "-o",
+    "-l",
+    "248"
+  ],
+  "resized": false,
+  "cropped": false,
+  "masked": false,
+  "capture_stable": true,
+  "capture_window_inventory_after": [
+    {
+      "active": false,
+      "bounds": {
+        "Height": 800,
+        "Width": 1280,
+        "X": 320,
+        "Y": 73
+      },
+      "id": 248,
+      "layer": 0,
+      "owner": "Electron",
+      "pid": 7167,
+      "title": "Vela"
+    },
+    {
+      "active": false,
+      "bounds": {
+        "Height": 736,
+        "Width": 1258,
+        "X": 2251,
+        "Y": 285
+      },
+      "id": 245,
+      "layer": 0,
+      "owner": "Vela Native",
+      "pid": 6718,
+      "title": "Vela"
+    }
+  ],
+  "attached_windows_included": true,
+  "source_tree_sha256": "a0ef509a62e3513c6aec148dbf1b3621adbe8714713c7ab5ae5e54e0eca31a84",
+  "source_tree_files": 590,
+  "source_tree_roots": [
+    "src",
+    "resources",
+    "package.json",
+    "package-lock.json",
+    "electron-vite.config.ts"
+  ],
+  "source_tree_includes_untracked": true,
+  "reference_bundle_sha256": "1876de7ebf470e56b5234a3a63c69e92358e3172c20c8555d12b7208e90871ff",
+  "reference_bundle_files": 786
+}

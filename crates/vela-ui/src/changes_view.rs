@@ -155,6 +155,24 @@ impl ChangesView {
         view.rebuild();
         view
     }
+    /// Source unmounts the Changes view when it closes, so collapse, wrap,
+    /// selection, per-section scroll and cached diffs start fresh each open.
+    pub fn reset_transient(&mut self, cx: &mut Context<Self>) {
+        self.collapsed_dirs.clear();
+        self.collapsed_sections.clear();
+        self.selected = None;
+        self.wrap = true;
+        self.diffs.clear();
+        self.pending.clear();
+        self.section_horizontal.clear();
+        self.clear_selection();
+        self.line_geometry.borrow_mut().clear();
+        self.rebuild();
+        self.list.scroll_to(ListOffset::default());
+        self.tree_list.scroll_to(ListOffset::default());
+        cx.notify();
+    }
+
     pub fn receive(&mut self, changes: &[ObservedFile], cx: &mut Context<Self>) {
         for change in changes {
             self.diffs.remove(&change.rel);
@@ -1238,6 +1256,39 @@ mod tests {
             "Added line 1: ".chars().count() + 161
         );
     }
+    #[gpui::test]
+    fn reset_transient_matches_source_remount_defaults(cx: &mut TestAppContext) {
+        let files = vec![file("src/a.txt".into()), file("src/b.txt".into())];
+        let (view, _) =
+            cx.add_window_view(|_, cx| ChangesView::new("/fixture".into(), &files, cx));
+        view.update(cx, |view, cx| {
+            view.collapsed_dirs.insert("src".into());
+            view.collapsed_sections.insert("src/a.txt".into());
+            view.selected = Some("src/a.txt".into());
+            view.wrap = false;
+            view.list.scroll_to(gpui::ListOffset {
+                item_ix: 1,
+                offset_in_item: px(0.),
+            });
+            view.tree_list.scroll_to(gpui::ListOffset {
+                item_ix: 1,
+                offset_in_item: px(0.),
+            });
+
+            view.reset_transient(cx);
+
+            assert!(view.collapsed_dirs.is_empty());
+            assert!(view.collapsed_sections.is_empty());
+            assert!(view.selected.is_none());
+            assert!(view.wrap, "Source remounts with line wrap enabled");
+            assert!(view.diffs.is_empty());
+            assert!(view.pending.is_empty());
+            assert!(view.ordered_selection.is_none());
+            assert_eq!(view.list.logical_scroll_top().item_ix, 0);
+            assert_eq!(view.tree_list.logical_scroll_top().item_ix, 0);
+        });
+    }
+
     #[gpui::test]
     fn large_review_only_diffs_visible_sections_and_tree_reveal_reaches_the_last_file(
         cx: &mut TestAppContext,

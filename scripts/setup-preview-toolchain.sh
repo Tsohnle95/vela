@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-# Install only into this checkout. No global npm packages or shell-profile edits.
+# Install optional Node/Vite/Sass tooling under build-junk, outside the source tree.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=scripts/build-env.sh
+source scripts/build-env.sh
 version=v22.23.2
 case "$(uname -m)" in arm64) architecture=arm64 ;; x86_64) architecture=x64 ;; *) echo 'Unsupported preview toolchain architecture' >&2; exit 1 ;; esac
 case "$(uname -s)" in Darwin) platform=darwin ;; Linux) platform=linux ;; *) echo 'Unsupported preview toolchain platform' >&2; exit 1 ;; esac
-cache="$PWD/.tools/preview"
+cache="$VELA_PREVIEW_ROOT/toolchain"
+deps="$VELA_PREVIEW_ROOT/deps"
 archive="node-$version-$platform-$architecture.tar.gz"
 distribution="node-$version-$platform-$architecture"
-mkdir -p "$cache/downloads"
+mkdir -p "$cache/downloads" "$deps"
 if [[ ! -x "$cache/$distribution/bin/node" ]]; then
   curl -fsSL "https://nodejs.org/dist/$version/SHASUMS256.txt" -o "$cache/downloads/SHASUMS256.txt"
   curl -fsSL "https://nodejs.org/dist/$version/$archive" -o "$cache/downloads/$archive"
@@ -31,6 +34,12 @@ if [[ -e "$cache/node" || -L "$cache/node" ]]; then
 else
   ln -s "$distribution" "$cache/node"
 fi
+cp tools/preview/package.json tools/preview/package-lock.json "$deps/"
+export npm_config_cache="$VELA_PREVIEW_ROOT/npm-cache"
 "$cache/node/bin/node" "$cache/node/lib/node_modules/npm/bin/npm-cli.js" ci \
-  --prefix tools/preview --ignore-scripts --no-audit --no-fund
-"$cache/node/bin/node" tools/preview/node_modules/vite/bin/vite.js --version
+  --prefix "$deps" --ignore-scripts --no-audit --no-fund
+if [[ -e tools/preview/node_modules && ! -L tools/preview/node_modules ]]; then
+  rm -rf tools/preview/node_modules
+fi
+ln -sfn "$deps/node_modules" tools/preview/node_modules
+"$cache/node/bin/node" "$deps/node_modules/vite/bin/vite.js" --version

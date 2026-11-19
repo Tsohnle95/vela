@@ -9,21 +9,28 @@ pub(crate) fn list_distance_from_bottom(list: &ListState) -> Pixels {
     (list.max_offset_for_scrollbar().y + list.scroll_px_offset_for_scrollbar().y).max(px(0.))
 }
 
+/// Read only after a native user-scroll callback has released the list borrow.
+/// A content/height update alone must never use this to resume following.
+pub(crate) fn list_at_live_edge(list: &ListState, padding: Pixels) -> bool {
+    // GPUI's scrollbar maximum deliberately omits list padding. Use the same
+    // content + padding maximum as its wheel implementation; otherwise an
+    // upward scroll inside bottom padding would be mistaken for the edge.
+    let content = list.offset_for_item(list.item_count());
+    let maximum = (content + padding - list.viewport_bounds().size.height).max(px(0.));
+    maximum + list.scroll_px_offset_for_scrollbar().y <= px(0.)
+}
+
 pub(crate) fn observe_list_scroll(
-    list: &ListState,
     event: &ListScrollEvent,
     cx: &mut App,
     callback: impl FnOnce(bool, &mut App) + 'static,
 ) {
-    if event.is_scrolled {
-        // GPUI invokes this observer while its ListState RefCell is borrowed.
-        // Read the settled position only after dispatch releases that borrow.
-        let list = list.clone();
-        let following = event.is_following_tail;
-        cx.defer(move |cx| {
-            callback(following || list_distance_from_bottom(&list) <= px(24.), cx);
-        });
-    }
+    // GPUI invokes this only for user wheel input, while its ListState RefCell
+    // is borrowed. `is_scrolled` describes an explicit logical offset, not
+    // whether input occurred: bottom-aligned lists clear it at the live edge.
+    // Deliver that final event too, so a reader can resume by scrolling down.
+    let following = event.is_following_tail;
+    cx.defer(move |cx| callback(following, cx));
 }
 
 #[derive(Clone, Default)]
@@ -262,8 +269,10 @@ impl Element for FocusReveal {
         state.0.paint(window, cx);
     }
 }
-/// The same overflow gutter and draggable thumb for independently virtualized
-/// lists. Metrics are sampled after child prepaint, outside ListState's borrow.
+/// A fixed gutter and an overflow-only draggable thumb for virtualized lists.
+/// Metrics are sampled after child prepaint, outside ListState's borrow.
+const LIST_SCROLLBAR_WIDTH: Pixels = px(8.);
+
 #[derive(Clone, Default)]
 pub(crate) struct ListViewportHandle(Rc<RefCell<ListViewportState>>);
 impl ListViewportHandle {
@@ -274,9 +283,6 @@ impl ListViewportHandle {
 #[derive(Default)]
 struct ListViewportState {
     viewport_height: Pixels,
-    gutter: bool,
-    applied: bool,
-    measured: Option<(Size<Pixels>, Pixels)>,
     dragging: Option<Pixels>,
     hovered: bool,
 }
@@ -331,12 +337,7 @@ impl Element for ListViewport {
         window: &mut Window,
         cx: &mut App,
     ) -> (LayoutId, AnyElement) {
-        let gutter = if self.handle.0.borrow().gutter {
-            8.
-        } else {
-            0.
-        };
-        let mut child = self.build.take().expect("list viewport is laid out once")(px(gutter));
+        let mut child = self.build.take().expect("list viewport is laid out once")(LIST_SCROLLBAR_WIDTH);
         (child.request_layout(window, cx), child)
     }
     fn prepaint(
@@ -350,33 +351,21 @@ impl Element for ListViewport {
     ) {
         let _ = child.prepaint(window, cx);
         let maximum = self.list.max_offset_for_scrollbar().y;
-        let measurement = (bounds.size, bounds.size.height + maximum);
         let mut state = self.handle.0.borrow_mut();
         state.viewport_height = bounds.size.height;
-        if state.applied {
-            state.applied = false;
-            state.measured = Some(measurement);
-        } else if state.measured != Some(measurement) {
-            if state.gutter {
-                state.gutter = false;
-                state.measured = None;
-                window.on_next_frame(|window, _| window.refresh());
-            } else if maximum > px(0.) {
-                state.gutter = true;
-                state.applied = true;
-                window.on_next_frame(|window, _| window.refresh());
-            } else {
-                state.measured = Some(measurement);
-            }
-        }
-        if state.gutter && maximum > px(0.) {
+        if maximum > px(0.) {
             let _ = window.insert_hitbox(
                 Bounds::new(
-                    point(bounds.right() - px(8.), bounds.top()),
-                    size(px(8.), bounds.size.height),
+                    point(bounds.right() - LIST_SCROLLBAR_WIDTH, bounds.top()),
+                    size(LIST_SCROLLBAR_WIDTH, bounds.size.height),
                 ),
                 HitboxBehavior::Normal,
             );
+        } else {
+            state.hovered = false;
+            if state.dragging.take().is_some() {
+                self.list.scrollbar_drag_ended();
+            }
         }
     }
     fn paint(
@@ -392,12 +381,12 @@ impl Element for ListViewport {
         child.paint(window, cx);
         let maximum = self.list.max_offset_for_scrollbar().y;
         let state = self.handle.0.borrow();
-        if !state.gutter || maximum <= px(0.) {
+        if maximum <= px(0.) {
             return;
         }
         let track = Bounds::new(
-            point(bounds.right() - px(8.), bounds.top()),
-            size(px(8.), bounds.size.height),
+            point(bounds.right() - LIST_SCROLLBAR_WIDTH, bounds.top()),
+            size(LIST_SCROLLBAR_WIDTH, bounds.size.height),
         );
         let height = (bounds.size.height * (bounds.size.height / (bounds.size.height + maximum)))
             .max(px(18.))
@@ -779,9 +768,9 @@ mod tests {
         }
     }
     #[gpui::test]
-    fn virtual_transcript_gutter_tracks_overflow_removal_and_resize(cx: &mut TestAppContext) {
+    fn virtual_transcript_width_is_stable_as_overflow_appears_and_disappears(cx: &mut TestAppContext) {
         let (view, cx) = cx.add_window_view(|_, _| ViewportFixture {
-            list: gpui::ListState::new(50, gpui::ListAlignment::Top, px(100.))
+            list: gpui::ListState::new(2, gpui::ListAlignment::Top, px(100.))
                 .with_uniform_item_height(px(20.)),
             handle: super::ListViewportHandle::default(),
         });
@@ -794,24 +783,37 @@ mod tests {
             }
         };
         draw(cx, px(200.));
-        view.read_with(cx, |view, _| {
-            assert!(view.handle.0.borrow().gutter);
-            assert_eq!(view.list.viewport_bounds().size.width, px(292.));
+        let initial = view.read_with(cx, |view, _| {
+            assert_eq!(view.list.max_offset_for_scrollbar().y, px(0.));
+            view.list.viewport_bounds()
         });
-        view.update(cx, |view, cx| {
-            view.list.reset_with_uniform_height(2, px(20.));
-            cx.notify();
-        });
-        draw(cx, px(200.));
-        view.read_with(cx, |view, _| assert!(!view.handle.0.borrow().gutter));
+        for (rows, overflowing) in [(50, true), (2, false), (53, true), (2, false)] {
+            view.update(cx, |view, cx| {
+                view.list.reset_with_uniform_height(rows, px(20.));
+                cx.notify();
+            });
+            cx.draw(point(px(0.), px(0.)), size(px(300.), px(200.)), |_, _| {
+                view.clone().into_any_element()
+            });
+            view.read_with(cx, |view, _| {
+                assert_eq!(view.list.max_offset_for_scrollbar().y > px(0.), overflowing);
+                assert_eq!(view.list.viewport_bounds(), initial);
+            });
+        }
         view.update(cx, |view, cx| {
             view.list.reset_with_uniform_height(50, px(20.));
             cx.notify();
         });
         draw(cx, px(200.));
-        view.read_with(cx, |view, _| assert!(view.handle.0.borrow().gutter));
+        view.read_with(cx, |view, _| {
+            assert!(view.list.max_offset_for_scrollbar().y > px(0.));
+            assert_eq!(view.list.viewport_bounds(), initial);
+        });
         draw(cx, px(1600.));
-        view.read_with(cx, |view, _| assert!(!view.handle.0.borrow().gutter));
+        view.read_with(cx, |view, _| {
+            assert_eq!(view.list.max_offset_for_scrollbar().y, px(0.));
+            assert_eq!(view.list.viewport_bounds().size.width, initial.size.width);
+        });
     }
     impl Render for ListFixture {
         fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
@@ -832,15 +834,24 @@ mod tests {
     ) {
         let observed = Rc::new(RefCell::new(Vec::new()));
         let values = observed.clone();
+        let scroll_state = Rc::new(RefCell::new(None::<gpui::ListState>));
+        let test_state = scroll_state.clone();
         let (view, cx) = cx.add_window_view(move |_, _| {
             let state = gpui::ListState::new(50, gpui::ListAlignment::Top, px(100.)).measure_all();
-            let scroll_state = state.clone();
+            state.set_follow_mode(gpui::FollowMode::Tail);
+            let weak_test_state = Rc::downgrade(&test_state);
             state.set_scroll_handler(move |event, _, cx| {
                 let values = values.clone();
-                super::observe_list_scroll(&scroll_state, event, cx, move |following, _| {
-                    values.borrow_mut().push(following)
+                let test_state = weak_test_state.upgrade();
+                super::observe_list_scroll(event, cx, move |_, _| {
+                    if let Some(state) = test_state.as_ref().and_then(|state| state.borrow().clone()) {
+                        let following = super::list_at_live_edge(&state, px(0.));
+                        values.borrow_mut().push(following);
+                        state.set_follow_mode(if following { gpui::FollowMode::Tail } else { gpui::FollowMode::Normal });
+                    }
                 });
             });
+            *test_state.borrow_mut() = Some(state.clone());
             ListFixture(state)
         });
         cx.simulate_resize(size(px(300.), px(200.)));
@@ -852,11 +863,12 @@ mod tests {
         draw(cx);
         cx.simulate_event(gpui::ScrollWheelEvent {
             position: point(px(150.), px(100.)),
-            delta: gpui::ScrollDelta::Pixels(point(px(0.), px(-200.))),
+            delta: gpui::ScrollDelta::Pixels(point(px(0.), px(200.))),
             ..Default::default()
         });
         draw(cx);
         assert_eq!(observed.borrow().last(), Some(&false));
+        assert!(!scroll_state.borrow().as_ref().unwrap().is_following_tail());
         cx.simulate_event(gpui::ScrollWheelEvent {
             position: point(px(150.), px(100.)),
             delta: gpui::ScrollDelta::Pixels(point(px(0.), px(-10000.))),
@@ -864,16 +876,7 @@ mod tests {
         });
         draw(cx);
         assert_eq!(observed.borrow().last(), Some(&true));
-        // Match the reference's inclusive 24 px floor threshold.
-        for (delta, following) in [(24., true), (1., false)] {
-            cx.simulate_event(gpui::ScrollWheelEvent {
-                position: point(px(150.), px(100.)),
-                delta: gpui::ScrollDelta::Pixels(point(px(0.), px(delta))),
-                ..Default::default()
-            });
-            draw(cx);
-            assert_eq!(observed.borrow().last(), Some(&following));
-        }
+        assert!(scroll_state.borrow().as_ref().unwrap().is_following_tail());
         cx.simulate_event(gpui::ScrollWheelEvent {
             position: point(px(150.), px(100.)),
             delta: gpui::ScrollDelta::Pixels(point(px(0.), px(10000.))),

@@ -1,8 +1,12 @@
 /target
 /.tools
 /tools/preview/node_modules
+__pycache__/
+*.pyc
+.pytest_cache/
 .DS_Store
 *.log
 .env
 .env.*
 /vela-data
+.vela-live-build-failed

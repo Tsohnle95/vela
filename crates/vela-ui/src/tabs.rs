@@ -255,6 +255,10 @@ impl VelaApp {
             .flex()
             .items_center()
             .overflow_hidden()
+            .on_mouse_down(MouseButton::Left, |_, window, cx| {
+                window.start_window_move();
+                cx.stop_propagation();
+            })
             .when(codex, |strip| strip.px(px(8.)).gap(px(4.)));
         let mut tab_list = div()
             .id("titlebar-tabs")
@@ -266,7 +270,11 @@ impl VelaApp {
             .min_w_0()
             .flex()
             .items_center()
-            .overflow_hidden();
+            .overflow_hidden()
+            .on_mouse_down(MouseButton::Left, |_, window, cx| {
+                window.start_window_move();
+                cx.stop_propagation();
+            });
         let measured = cx.weak_entity();
         tab_list = tab_list.child(
             gpui::canvas(
@@ -356,6 +364,7 @@ impl VelaApp {
                 .on_mouse_down(
                     MouseButton::Left,
                     cx.listener(move |app, event: &gpui::MouseDownEvent, window, cx| {
+                        cx.stop_propagation();
                         app.select_titlebar_tab(&target, event.click_count >= 2, window, cx);
                     }),
                 );
@@ -668,6 +677,7 @@ fn overflow_button(
         .font_family("codicon")
         .text_size(px(16.))
         .text_color(theme.dim)
+        .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
         .on_click(move |event, window, cx| {
             window.focus(&click_focus, cx);
             activate(event, window, cx);

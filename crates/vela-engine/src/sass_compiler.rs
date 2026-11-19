@@ -51,22 +51,24 @@ struct ValidationDiagnostic {
 }
 impl Program {
     pub fn discover() -> Result<Self, String> {
-        let executable = std::env::current_exe().map_err(|error| error.to_string())?;
-        let bundled = executable
-            .parent()
-            .and_then(Path::parent)
-            .map(|path| path.join("Resources/preview"));
-        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let candidates = bundled
+        let source = super::preview_tools::source_root();
+        let script = source.join("tools/preview/sass-compile.mjs");
+        let candidates = super::preview_tools::bundled_root()
             .into_iter()
             .map(|root| Self {
                 node: root.join("node/bin/node"),
                 script: root.join("sass-compile.mjs"),
             })
-            .chain(std::iter::once(Self {
-                node: source.join(".tools/preview/node/bin/node"),
-                script: source.join("tools/preview/sass-compile.mjs"),
-            }));
+            .chain([
+                Self {
+                    node: super::preview_tools::node(),
+                    script: script.clone(),
+                },
+                Self {
+                    node: super::preview_tools::legacy_node(),
+                    script,
+                },
+            ]);
         candidates.into_iter().find(|program| program.node.is_file() && program.script.is_file())
             .ok_or_else(|| "Vela's bundled Sass tools are missing. Run scripts/setup-preview-toolchain.sh and rebuild the app.".into())
     }

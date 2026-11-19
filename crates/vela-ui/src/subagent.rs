@@ -305,15 +305,17 @@ fn match_child(
         }
         candidates = by_agent;
     }
-    candidates
-        .into_iter()
-        .max_by_key(|session| session.updated_at)
-        .map(|session| session.id.clone())
-        .unwrap_or_default()
+    // A description/agent is a hint, not a dispatch ID. Choosing the newest
+    // updated session makes an unresolved row switch children as parallel
+    // workers finish. Wait for explicit metadata when the hint is ambiguous.
+    match candidates.as_slice() {
+        [session] => session.id.clone(),
+        _ => String::new(),
+    }
 }
 
 /// Explicit ids always resolve; legacy notices match a child under the active
-/// parent by description and agent, preferring the most recently updated one.
+/// parent by description and agent only when that identifies a unique child.
 pub(crate) fn child_id(
     reference: &SubagentRef,
     sessions: &[SessionSummary],
@@ -498,7 +500,8 @@ mod tests {
                 ..session("foreign", "Run the tests", Some("build"), 400)
             },
         ];
-        assert_eq!(child_id(&reference, &sessions, "parent"), "newer");
+        assert_eq!(child_id(&reference, &sessions, "parent"), "");
+        assert_eq!(child_id(&reference, &sessions[..1], "parent"), "older");
         assert_eq!(child_id(&reference, &sessions, ""), "");
         let unknown = SubagentRef {
             agent: "review".into(),
@@ -534,6 +537,28 @@ mod tests {
         );
         assert!(tool_dispatch_signature("bash", r#"{"agent":"build"}"#).is_none());
         assert!(tool_dispatch_signature("task", "{").is_none());
+    }
+
+    #[test]
+    fn ambiguous_parallel_children_do_not_change_target_on_completion() {
+        let mut sessions = vec![
+            session("first", "Inspect parser", Some("build"), 10),
+            session("second", "Inspect parser", Some("build"), 20),
+        ];
+        let reference = SubagentRef {
+            id: String::new(),
+            agent: "build".into(),
+            description: "Inspect parser".into(),
+            state: "running".into(),
+        };
+        assert!(child_id(&reference, &sessions, "parent").is_empty());
+        sessions[0].updated_at = 500;
+        assert!(child_id(&reference, &sessions, "parent").is_empty());
+        let explicit = SubagentRef {
+            id: "second".into(),
+            ..reference
+        };
+        assert_eq!(child_id(&explicit, &sessions, "parent"), "second");
     }
 
     #[test]

@@ -88,6 +88,10 @@ impl Theme {
             code_bg: c("console"),
         }
     }
+    pub fn is_kitty(&self) -> bool {
+        self.kitty
+    }
+
     pub fn small_shadow(&self) -> Vec<gpui::BoxShadow> {
         vec![
             gpui::BoxShadow::new(
@@ -244,6 +248,27 @@ pub fn ui_font() -> gpui::Font {
             .collect(),
         )),
         ..gpui::font(FONT_UI)
+    }
+}
+
+/// The OpenCode timeline loads Inter as its sans family. Keep the shell on the
+/// system UI font, but use this inside the agent transcript and Markdown.
+pub fn agent_font() -> gpui::Font {
+    gpui::Font {
+        fallbacks: Some(gpui::FontFallbacks::from_fonts(
+            [
+                "Apple Color Emoji",
+                "Segoe UI",
+                "Helvetica",
+                "Arial",
+                "Segoe UI Emoji",
+                "Segoe UI Symbol",
+            ]
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+        )),
+        ..gpui::font("Inter")
     }
 }
 

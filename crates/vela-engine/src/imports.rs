@@ -32,6 +32,17 @@ const LIMITS: Limits = Limits {
     files: 10_000,
     bytes: 2 * 1024 * 1024 * 1024,
 };
+/// Source's IPC list guard rejects empty batches and more than 2000 paths.
+const MAX_SOURCES: usize = 2000;
+fn validate_sources(sources: &[PathBuf]) -> Result<()> {
+    if sources.is_empty() || sources.len() > MAX_SOURCES {
+        return Err(invalid("invalid absolute file path list"));
+    }
+    if sources.iter().any(|source| !source.is_absolute()) {
+        return Err(invalid("invalid absolute file path"));
+    }
+    Ok(())
+}
 struct CopyBudget {
     files: Vec<String>,
     bytes: u64,
@@ -155,6 +166,7 @@ fn copy_with_limits(
     limits: Limits,
     mut before_install: impl FnMut(&Path, &str) -> Result<()>,
 ) -> Result<Vec<Outcome>> {
+    validate_sources(sources)?;
     crate::recovery::initialize(root)?;
     let root = root.canonicalize()?;
     files::normalize_rel(parent)?;
@@ -309,6 +321,78 @@ mod tests {
         assert!(!root.path().join("folder/node_modules").exists());
         assert!(!root.path().join("folder/link").exists());
     }
+    #[test]
+    fn batch_order_relative_paths_source_cap_and_top_level_links_match_source_guards() {
+        let root = tempfile::tempdir().unwrap();
+        let first = tempfile::tempdir().unwrap();
+        let second = tempfile::tempdir().unwrap();
+        fs::write(first.path().join("same.txt"), "first").unwrap();
+        fs::write(second.path().join("same.txt"), "second").unwrap();
+        let sources = [
+            first.path().join("same.txt"),
+            second.path().join("same.txt"),
+            first.path().join("missing.txt"),
+        ];
+        let outcomes = copy(root.path(), "", &sources).unwrap();
+        assert_eq!(outcomes.len(), 3);
+        assert_eq!(outcomes[0].name, "same.txt");
+        assert!(outcomes[0].imported);
+        assert_eq!(outcomes[1].name, "same.txt");
+        assert!(!outcomes[1].imported);
+        assert_eq!(outcomes[1].reason.as_deref(), Some("already exists"));
+        assert_eq!(outcomes[2].reason.as_deref(), Some("not found"));
+        assert_eq!(
+            fs::read_to_string(root.path().join("same.txt")).unwrap(),
+            "first",
+            "the first source wins in request order"
+        );
+
+        assert!(
+            copy(root.path(), "", &[PathBuf::from("relative.txt")]).is_err(),
+            "Source's IPC accepts absolute paths only"
+        );
+        let repeated = vec![first.path().join("same.txt"); MAX_SOURCES + 1];
+        assert!(copy(root.path(), "", &repeated).is_err());
+        assert!(
+            copy(root.path(), "", &[]).is_err(),
+            "an empty batch is rejected before any filesystem work"
+        );
+
+        #[cfg(unix)]
+        {
+            let linked = first.path().join("linked.txt");
+            std::os::unix::fs::symlink(first.path().join("same.txt"), &linked).unwrap();
+            let outcome = copy(root.path(), "", std::slice::from_ref(&linked)).unwrap();
+            assert!(outcome[0].imported);
+            assert_eq!(
+                fs::read_to_string(root.path().join("linked.txt")).unwrap(),
+                "first",
+                "a top-level link resolves to its target like Source's realpath"
+            );
+
+            let inside = root.path().join("inside.txt");
+            fs::write(&inside, "inside").unwrap();
+            let inside_link = first.path().join("inside-link.txt");
+            std::os::unix::fs::symlink(&inside, &inside_link).unwrap();
+            let outcome = copy(root.path(), "", &[inside_link]).unwrap();
+            assert!(!outcome[0].imported);
+            assert_eq!(
+                outcome[0].reason.as_deref(),
+                Some("already in the workspace")
+            );
+        }
+
+        let parent = tempfile::tempdir().unwrap();
+        let nested_root = parent.path().join("workspace");
+        fs::create_dir(&nested_root).unwrap();
+        let outcome = copy(&nested_root, "", &[parent.path().to_path_buf()]).unwrap();
+        assert!(!outcome[0].imported);
+        assert_eq!(
+            outcome[0].reason.as_deref(),
+            Some("import source contains the workspace")
+        );
+    }
+
     #[test]
     fn destination_created_during_copy_survives_atomic_install() {
         for directory in [false, true] {

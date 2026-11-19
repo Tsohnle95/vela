@@ -16,7 +16,10 @@ impl VelaApp {
                     let active = movement
                         .update(cx, |app, cx| {
                             if !app.tray.dragging() {
-                                return app.update_terminal_selection(event, cx);
+                                if app.update_terminal_selection(event, cx) {
+                                    return true;
+                                }
+                                return app.update_agent_tui_selection(event, cx);
                             }
                             if event.pressed_button == Some(MouseButton::Left) {
                                 app.tray.move_to(f32::from(event.position.y), viewport);
@@ -38,7 +41,10 @@ impl VelaApp {
                     }
                     if event.button != MouseButton::Left {
                         let handled = release
-                            .update(cx, |app, cx| app.finish_terminal_mouse(event, cx))
+                            .update(cx, |app, cx| {
+                                app.finish_terminal_mouse(event, cx)
+                                    || app.finish_agent_tui_mouse(event, cx)
+                            })
                             .unwrap_or(false);
                         if handled {
                             cx.stop_propagation();
@@ -47,7 +53,9 @@ impl VelaApp {
                     }
                     let active = release
                         .update(cx, |app, cx| {
-                            if app.finish_terminal_mouse(event, cx) {
+                            if app.finish_terminal_mouse(event, cx)
+                                || app.finish_agent_tui_mouse(event, cx)
+                            {
                                 return true;
                             }
                             if let Some(view) = app.terminals.active_mut()

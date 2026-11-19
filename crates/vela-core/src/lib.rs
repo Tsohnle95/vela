@@ -7,6 +7,7 @@
 //! so they are unit-testable without a display server.
 
 pub mod event;
+pub mod conversation;
 pub mod layout;
 pub mod markdown;
 pub mod session;
@@ -24,3 +25,5 @@ pub mod text;
 pub mod search;
 
 pub mod tray;
+pub mod activity;
+pub mod run_log;

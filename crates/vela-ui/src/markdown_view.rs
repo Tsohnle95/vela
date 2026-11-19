@@ -1,17 +1,176 @@
 //! Native structured Markdown. The parser owns syntax; GPUI owns presentation.
 use super::*;
-use vela_core::markdown::{self, CodeBlockKind, Event, Tag};
+use vela_core::markdown::{self, CodeBlockKind, Event, Tag, Node};
+#[cfg(test)]
+use vela_core::markdown::{heal_streaming_markdown, tree};
+
+/// A transcript-order position: user message ordinal, prose segment, byte.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(super) struct UserSelectionPoint {
+    pub message: usize,
+    pub segment: usize,
+    pub offset: usize,
+}
+
+/// A document-order selection over a user message's rendered prose segments.
+#[derive(Clone)]
+pub(super) enum UserSelectionChange {
+    Start {
+        point: UserSelectionPoint,
+        text: SharedString,
+        click_count: usize,
+        shift: bool,
+    },
+    Extend {
+        point: UserSelectionPoint,
+    },
+    End,
+}
+
+pub(super) type UserSelectionHandler =
+    std::rc::Rc<dyn Fn(UserSelectionChange, &mut Window, &mut App)>;
+
+/// Registration for browser-style selection while a user document renders.
+pub(super) struct UserSelectionSpec {
+    pub message: usize,
+    pub anchor: Option<UserSelectionPoint>,
+    pub head: Option<UserSelectionPoint>,
+    pub segments: std::rc::Rc<std::cell::RefCell<Vec<SharedString>>>,
+    pub drag: std::rc::Rc<std::cell::Cell<bool>>,
+    pub fill: gpui::Rgba,
+    pub on_change: UserSelectionHandler,
+}
+
+struct SelectionDocument {
+    message: usize,
+    anchor: Option<UserSelectionPoint>,
+    head: Option<UserSelectionPoint>,
+    segments: std::rc::Rc<std::cell::RefCell<Vec<SharedString>>>,
+    drag: std::rc::Rc<std::cell::Cell<bool>>,
+    fill: gpui::Rgba,
+    on_change: UserSelectionHandler,
+}
+
+impl SelectionDocument {
+    fn local_range(&self, segment: usize, len: usize) -> Option<std::ops::Range<usize>> {
+        let (anchor, head) = (self.anchor?, self.head?);
+        let (start, end) = if anchor <= head {
+            (anchor, head)
+        } else {
+            (head, anchor)
+        };
+        if self.message < start.message || self.message > end.message {
+            return None;
+        }
+        let from = if self.message == start.message {
+            if segment < start.segment {
+                return None;
+            }
+            if segment == start.segment {
+                start.offset.min(len)
+            } else {
+                0
+            }
+        } else {
+            0
+        };
+        let to = if self.message == end.message {
+            if segment > end.segment {
+                return None;
+            }
+            if segment == end.segment {
+                end.offset.min(len)
+            } else {
+                len
+            }
+        } else {
+            len
+        };
+        (from < to).then_some(from..to)
+    }
+
+    /// Register a segment that contributes text to a selection without being
+    /// painted by an inline flow (used for image alt text).
+    fn register(&mut self, text: &str) -> usize {
+        let segment = self.segments.borrow().len();
+        self.segments.borrow_mut().push(SharedString::from(text));
+        segment
+    }
+
+    fn binding(&mut self, text: &str) -> inline_flow::SelectionBinding {
+        self.binding_shared(SharedString::from(text))
+    }
+
+    fn binding_shared(&mut self, text: SharedString) -> inline_flow::SelectionBinding {
+        let segment = self.segments.borrow().len();
+        self.segments.borrow_mut().push(text.clone());
+        let range = self.local_range(segment, text.len());
+        let message = self.message;
+        let handler = self.on_change.clone();
+        let on_change: inline_flow::SelectionHandler =
+            std::rc::Rc::new(move |change, window, cx| {
+                let change = match change {
+                    inline_flow::SelectionChange::Start {
+                        index,
+                        text,
+                        click_count,
+                        shift,
+                    } => UserSelectionChange::Start {
+                        point: UserSelectionPoint {
+                            message,
+                            segment,
+                            offset: index,
+                        },
+                        text,
+                        click_count,
+                        shift,
+                    },
+                    inline_flow::SelectionChange::Extend { index } => {
+                        UserSelectionChange::Extend {
+                            point: UserSelectionPoint {
+                                message,
+                                segment,
+                                offset: index,
+                            },
+                        }
+                    }
+                    inline_flow::SelectionChange::End => UserSelectionChange::End,
+                };
+                handler(change, window, cx);
+            });
+        inline_flow::SelectionBinding {
+            range,
+            fill: self.fill,
+            drag: self.drag.clone(),
+            on_change,
+        }
+    }
+}
 
 #[derive(Default)]
 pub(super) struct MarkdownUi {
+    prepared: Arc<markdown::PreparedMarkdown>,
+    fallback: std::cell::RefCell<MarkdownFallback>,
+    row_key: Option<SharedString>,
+    viewport_width: Pixels,
+    session: String,
     wrap: HashMap<String, bool>,
     copied: Option<String>,
     copy_generation: u64,
+    instance: Arc<()>,
     focus: HashMap<String, MarkdownFocus>,
     image_sizes: HashMap<String, Option<gpui::Size<gpui::Pixels>>>,
     horizontal: HashMap<String, crate::scroll::AutoScrollHandle>,
     pub(super) keyboard: crate::focus::KeyboardMode,
+    selection: Option<SelectionDocument>,
 }
+#[derive(Default)]
+struct MarkdownFallback {
+    documents: HashMap<Arc<str>, Vec<Arc<markdown::PreparedDocument>>>,
+    bytes: usize,
+    count: usize,
+}
+
 struct MarkdownFocus {
     handle: gpui::FocusHandle,
     answer: Option<Arc<str>>,
@@ -19,6 +178,72 @@ struct MarkdownFocus {
     subscriptions: Vec<gpui::Subscription>,
 }
 impl MarkdownUi {
+    pub(super) fn install(&mut self, prepared: Arc<markdown::PreparedMarkdown>) {
+        self.prepared = prepared;
+    }
+
+    pub(super) fn snapshot(&self) -> Arc<markdown::PreparedMarkdown> {
+        self.prepared.clone()
+    }
+
+    pub(super) fn attach_session(&mut self, session: &str) {
+        self.session = session.to_owned();
+    }
+
+    pub(super) fn attach_row(&mut self, key: SharedString) {
+        self.row_key = Some(key);
+    }
+
+    pub(super) fn set_viewport_width(&mut self, width: Pixels) {
+        self.viewport_width = width;
+    }
+
+    pub(super) fn dependency_fingerprint(&self, id: &str) -> u64 {
+        self.prepared.dependency_fingerprint(id)
+    }
+
+    #[cfg(test)]
+    fn document(&self, key: &str, text: &str, streaming: bool) -> Arc<markdown::PreparedDocument> {
+        if let Some(document) = self.prepared.get(key, text, streaming)
+            .or_else(|| self.prepared.find(text, streaming)) {
+            return document;
+        }
+        self.document_shared(key, Arc::from(text), streaming)
+    }
+
+    fn document_shared(&self, key: &str, source: Arc<str>, streaming: bool) -> Arc<markdown::PreparedDocument> {
+        if let Some(document) = self.prepared.get(key, &source, streaming) {
+            return document;
+        }
+        if self.prepared.revision != 0 {
+            // Rich syntax can be evicted from the bounded engine cache. Render
+            // the original shared source without parsing, repairing, truncating,
+            // or interpreting new links/images on the GPUI thread.
+            return Arc::new(markdown::PreparedDocument::deferred(source, streaming));
+        }
+        // Standalone surfaces and isolated fixtures have no engine snapshot.
+        // They retain a bounded rich fallback; production transcript misses
+        // above can never enter this parser path.
+        let mut fallback = self.fallback.borrow_mut();
+        if let Some(document) = fallback.documents.get(source.as_ref())
+            .and_then(|documents| documents.iter().find(|document| document.streaming == streaming)) {
+            return document.clone();
+        }
+        let document = Arc::new(markdown::PreparedDocument::parse(source, streaming));
+        let bytes = document.estimated_bytes();
+        if fallback.count >= 256 || fallback.bytes.saturating_add(bytes) > 8 * 1024 * 1024 {
+            fallback.documents.clear();
+            fallback.bytes = 0;
+            fallback.count = 0;
+        }
+        if bytes <= 8 * 1024 * 1024 {
+            fallback.bytes += bytes;
+            fallback.count += 1;
+            fallback.documents.entry(document.source.clone()).or_default().push(document.clone());
+        }
+        document
+    }
+
     pub(super) fn contains_focused(&self, window: &Window) -> bool {
         self.focus
             .values()
@@ -73,33 +298,49 @@ enum CodeAction {
     Copy(Arc<str>),
     Wrap(String),
 }
-fn code_action(app: &mut VelaApp, key: &str, action: &CodeAction, cx: &mut Context<VelaApp>) {
-    let ui = &mut app.transcript_ui.markdown;
+fn code_action(
+    app: &mut VelaApp,
+    session: &str,
+    key: &str,
+    action: &CodeAction,
+    row_key: Option<&str>,
+    cx: &mut Context<VelaApp>,
+) {
+    app.stop_conversation_follow(session);
+    let Some(transcript) = app.ui_for_mut(session) else { return; };
+    let ui = &mut transcript.markdown;
     match action {
         CodeAction::Wrap(target) => {
             let wrap = ui.wrap.entry(target.clone()).or_insert(true);
             *wrap = !*wrap;
-            app.transcript_list.remeasure();
+            if let Some(row_key) = row_key {
+                app.remeasure_conversation_row(session, row_key);
+            }
         }
         CodeAction::Copy(text) => {
             cx.write_to_clipboard(gpui::ClipboardItem::new_string(text.to_string()));
             ui.copied = Some(key.to_owned());
             ui.copy_generation += 1;
             let generation = ui.copy_generation;
+            let copy_owner = ui.instance.clone();
+            let session = session.to_owned();
             cx.spawn(async move |this, cx| {
                 cx.background_executor().timer(Duration::from_secs(2)).await;
                 let _ = this.update(cx, |app, cx| {
-                    if app.transcript_ui.markdown.copy_generation == generation {
-                        app.transcript_ui.markdown.copied = None;
+                    if let Some(ui) = app.ui_for_mut(&session)
+                        && Arc::ptr_eq(&ui.markdown.instance, &copy_owner)
+                        && ui.markdown.copy_generation == generation
+                    {
+                        ui.markdown.copied = None;
                         cx.notify();
                     }
                 });
-            })
-            .detach();
+            }).detach();
         }
     }
     cx.notify();
 }
+
 fn code_button(
     key: &str,
     label: &str,
@@ -110,6 +351,8 @@ fn code_button(
     let focus = control_focus(key, context);
     let action_key = key.to_owned();
     let owner = context.owner.clone();
+    let session = context.ui.session.clone();
+    let row_key = context.ui.row_key.clone();
     focused_button(
         key,
         label,
@@ -118,7 +361,7 @@ fn code_button(
         &context.ui.keyboard,
         move |_, cx| {
             if let Some(owner) = &owner {
-                let _ = owner.update(cx, |app, cx| code_action(app, &action_key, &action, cx));
+                let _ = owner.update(cx, |app, cx| code_action(app, &session, &action_key, &action, row_key.as_deref(), cx));
             }
         },
     )
@@ -136,6 +379,10 @@ fn focused_button(
     let click_focus = focus.clone();
     div()
         .id(SharedString::from(format!("code-action:{key}")))
+        .debug_selector({
+            let selector = format!("code-action:{key}");
+            move || selector.clone()
+        })
         .track_focus(focus)
         .map(|button| {
             crate::focus::outline(button, focus, 6., 1., 0., theme.accent.into(), keyboard)
@@ -156,6 +403,7 @@ fn focused_button(
         // GPUI on_click includes a guarded Enter/Space down-up activation.
         // Another key handler would execute the action twice.
         .on_click(move |_, window, cx| {
+            cx.stop_propagation();
             window.focus(&click_focus, cx);
             action(window, cx);
         })
@@ -163,23 +411,6 @@ fn focused_button(
         .into_any_element()
 }
 
-#[derive(Clone, Debug)]
-enum Node {
-    Container(Tag<'static>, Vec<Node>),
-    Leaf(Event<'static>),
-}
-
-fn tree(events: &mut impl Iterator<Item = Event<'static>>) -> Vec<Node> {
-    let mut nodes = Vec::new();
-    while let Some(event) = events.next() {
-        match event {
-            Event::Start(tag) => nodes.push(Node::Container(tag, tree(events))),
-            Event::End(_) => break,
-            event => nodes.push(Node::Leaf(event)),
-        }
-    }
-    nodes
-}
 
 fn task_state(nodes: &[Node]) -> Option<bool> {
     nodes.iter().find_map(|node| match node {
@@ -230,18 +461,13 @@ impl Inline {
         if let Some(url) = &style.link {
             self.links.push((start..self.text.len(), url.clone()));
         }
-        let path_code = style.code
-            && matches!(
-                crate::syntax::inline_code_kind(text),
-                Some(crate::syntax::InlineCodeKind::Path)
-            );
         self.runs.push(TextRun {
             len: text.len(),
             font: Font {
                 family: if style.math {
                     crate::math::MATH_FONT.into()
                 } else if style.code {
-                    theme::source_font().into()
+                    theme::markdown_code_font().family
                 } else {
                     theme::FONT_UI.into()
                 },
@@ -251,9 +477,9 @@ impl Inline {
                 } else {
                     gpui::FontStyle::Normal
                 },
-                ..theme::ui_font()
+                ..theme::agent_font()
             },
-            color: if path_code { theme.accent } else { ink }.into(),
+            color: ink.into(),
             background_color: style.code.then(|| theme.text.opacity(0.08).into()),
             underline: style.link.as_ref().map(|_| gpui::UnderlineStyle {
                 thickness: px(1.),
@@ -276,18 +502,11 @@ fn flatten(
 ) {
     for node in nodes {
         match node {
+            Node::PlainText(text) => result.append(text, style, ink, theme),
             Node::Container(tag, children) => {
                 let mut style = style.clone();
                 match tag {
-                    Tag::Strong => {
-                        style.weight = if style.weight.0 >= 550. {
-                            FontWeight::BLACK
-                        } else if style.weight.0 >= 350. {
-                            FontWeight::BOLD
-                        } else {
-                            FontWeight::NORMAL
-                        }
-                    }
+                    Tag::Strong => style.weight = FontWeight::MEDIUM,
                     Tag::Emphasis => style.italic = true,
                     Tag::Strikethrough => style.strike = true,
                     Tag::Link { dest_url, .. } => style.link = Some(dest_url.to_string()),
@@ -302,6 +521,7 @@ fn flatten(
                 text,
                 &InlineStyle {
                     code: true,
+                    weight: FontWeight::MEDIUM,
                     ..style.clone()
                 },
                 ink,
@@ -408,17 +628,32 @@ fn remember_image_size(
     key: &str,
     size: Option<gpui::Size<gpui::Pixels>>,
 ) {
-    if cache_image_size(&mut context.ui.image_sizes, key, size)
-        && let Some(owner) = context.owner.clone()
-    {
-        // Resolving a lazy image changes a virtual row's height. Its owner
-        // invalidates the list only after the current row borrow is released.
-        context.cx.defer(move |cx| {
+    if cache_image_size(&mut context.ui.image_sizes, key, size) {
+        context.cx.defer(row_remeasure_callback(context));
+    }
+}
+
+fn row_remeasure_callback(context: &RenderContext) -> impl Fn(&mut App) + use<> {
+    let panel = context.owner.clone().zip(context.ui.row_key.clone());
+    let session = context.ui.session.clone();
+    let instance = context.ui.instance.clone();
+    let view = context.window.current_view();
+    let standalone_list = context.owner.is_none().then(|| context.list.clone()).flatten();
+    move |cx| {
+        if let Some((owner, row_key)) = &panel {
             let _ = owner.update(cx, |app, cx| {
-                app.transcript_list.remeasure();
-                cx.notify();
+                if app.ui_for_mut(&session).is_some_and(|ui| Arc::ptr_eq(&ui.markdown.instance, &instance))
+                    && app.remeasure_conversation_row(&session, row_key)
+                {
+                    cx.notify();
+                }
             });
-        });
+        } else {
+            if let Some(list) = &standalone_list {
+                list.remeasure();
+            }
+            cx.notify(view);
+        }
     }
 }
 
@@ -446,10 +681,24 @@ fn render_image(
             markdown_images::fit(natural.width.0 as f32, natural.height.0 as f32)
         });
     remember_image_size(context, key, observed);
+    let selected = context
+        .ui
+        .selection
+        .as_mut()
+        .map(|document| {
+            let segment = document.register(alt);
+            document.local_range(segment, alt.len()).is_some()
+        })
+        .unwrap_or(false);
     let background = if context.user {
         theme.user_bubble
     } else {
         theme.agent
+    };
+    let image_border = if selected {
+        theme.accent
+    } else {
+        theme.border_soft
     };
     let content = match resolved {
         Some(Ok(image)) => {
@@ -466,7 +715,7 @@ fn render_image(
                 .bg(background)
                 .rounded(px(6.))
                 .border_1()
-                .border_color(theme.border_soft)
+                .border_color(image_border)
                 .shadow(theme.small_shadow())
                 .overflow_hidden()
                 .child(
@@ -485,7 +734,7 @@ fn render_image(
             .h(px(24.75))
             .rounded(px(6.))
             .border_1()
-            .border_color(theme.border_soft)
+            .border_color(image_border)
             .shadow(theme.small_shadow())
             .overflow_hidden()
             .flex()
@@ -535,9 +784,28 @@ fn render_image(
         .child(content)
         .into_any_element()
 }
-fn inline_element(result: Inline, key: &str, theme: &Theme) -> AnyElement {
+fn inline_element(
+    result: Inline,
+    key: &str,
+    theme: &Theme,
+    selection: Option<inline_flow::SelectionBinding>,
+    streaming: Option<bool>,
+) -> AnyElement {
     if result.text.is_empty() {
         return div().h(px(0.)).into_any_element();
+    }
+    // Plain, very long prose does not need per-word interaction geometry.
+    // Shape it as one wrapped native run instead of allocating a shaped
+    // element for every word. Keep the exact source and accessibility label.
+    if result.text.len() >= 16 * 1024
+        && result.text.is_ascii()
+        && result.runs.len() == 1
+        && result.code.is_empty()
+        && result.links.is_empty()
+        && selection.is_none()
+    {
+        return crate::preformatted::PreformattedText::with_runs(result.text, true, result.runs)
+            .into_any_element();
     }
     // Accumulate CSS fractional line heights before the containing block is
     // snapped to the display grid. StyledText snaps each line independently,
@@ -549,15 +817,61 @@ fn inline_element(result: Inline, key: &str, theme: &Theme) -> AnyElement {
         result.code,
         result.links,
         theme.text.opacity(0.08),
+        selection,
     )
+    .with_stream_fade(streaming)
     .into_any_element()
 }
+fn plain_inline(
+    source: &Arc<str>,
+    key: &str,
+    ink: gpui::Rgba,
+    theme: &Theme,
+    selection: Option<&mut SelectionDocument>,
+    streaming: Option<bool>,
+) -> AnyElement {
+    let text = SharedString::from(source.clone());
+    let binding = selection.map(|document| document.binding_shared(text.clone()));
+    let run = TextRun {
+        len: text.len(), font: theme::agent_font(), color: ink.into(),
+        background_color: None, underline: None, strikethrough: None,
+    };
+    div()
+        .id(SharedString::from(format!("label:{key}")))
+        .debug_selector(|| format!("label:{key}"))
+        .min_w_0().whitespace_normal().role(gpui::Role::Label).aria_label(text.clone())
+        .child(inline_flow::InlineFlow::new(
+            SharedString::from(format!("mixed-inline:{key}")), text, vec![run],
+            Vec::new(), Vec::new(), theme.text.opacity(0.08), binding,
+        ).with_stream_fade(streaming))
+        .into_any_element()
+}
+
+fn heading_size(level: markdown::HeadingLevel) -> f32 {
+    match level {
+        markdown::HeadingLevel::H1 => 17.,
+        markdown::HeadingLevel::H2 => 15.,
+        markdown::HeadingLevel::H3 => 13.,
+        markdown::HeadingLevel::H4
+        | markdown::HeadingLevel::H5
+        | markdown::HeadingLevel::H6 => 13.,
+    }
+}
+
+fn heading_weight(level: markdown::HeadingLevel) -> FontWeight {
+    match level {
+        markdown::HeadingLevel::H1 | markdown::HeadingLevel::H2 => FontWeight::SEMIBOLD,
+        _ => FontWeight::MEDIUM,
+    }
+}
+
 fn inline(
     nodes: &[Node],
     key: &str,
     ink: gpui::Rgba,
     theme: &Theme,
     weight: FontWeight,
+    context: &mut RenderContext,
 ) -> AnyElement {
     let mut result = Inline::default();
     flatten(
@@ -573,6 +887,7 @@ fn inline(
     let label = result.text.clone();
     let math_source = (!result.math_sources.is_empty())
         .then(|| format!("TeX: {}", result.math_sources.join(" | ")));
+    let binding = context.ui.selection.as_mut().map(|document| document.binding(&result.text));
     div()
         .id(SharedString::from(format!("label:{key}")))
         .debug_selector(|| format!("label:{key}"))
@@ -581,14 +896,11 @@ fn inline(
         .role(gpui::Role::Label)
         .aria_label(SharedString::from(label))
         .when_some(math_source, |label, source| label.aria_description(source))
-        .child(inline_element(result, key, theme))
+        .child(inline_element(result, key, theme, binding, (!context.user && context.answer.is_some()).then_some(context.streaming)))
         .into_any_element()
 }
 
-/// Keep the bubble's intrinsic text width available to the surrounding flex
-/// row. A stack of auto-width flex containers collapses that measurement.
-fn user_inline(text: &str, key: &str, ink: gpui::Rgba, theme: &Theme) -> AnyElement {
-    let nodes = tree(&mut markdown::events(text).into_iter());
+fn user_inline_nodes(nodes: &[Node], ink: gpui::Rgba, theme: &Theme) -> Inline {
     let mut result = Inline::default();
     for (index, node) in nodes.iter().enumerate() {
         if index > 0 {
@@ -602,7 +914,21 @@ fn user_inline(text: &str, key: &str, ink: gpui::Rgba, theme: &Theme) -> AnyElem
             theme,
         );
     }
-    inline_element(result, &format!("user:{key}"), theme)
+    result
+}
+
+/// Keep the bubble's intrinsic text width available to the surrounding flex
+/// row. A stack of auto-width flex containers collapses that measurement.
+fn user_inline(
+    nodes: &[Node],
+    key: &str,
+    ink: gpui::Rgba,
+    theme: &Theme,
+    selection: Option<&mut SelectionDocument>,
+) -> AnyElement {
+    let result = user_inline_nodes(nodes, ink, theme);
+    let binding = selection.map(|document| document.binding(&result.text));
+    inline_element(result, &format!("user:{key}"), theme, binding, None)
 }
 /// The source user message is a column aligned to its end. Keeping that
 /// cross-axis contract lets a structured document retain its intrinsic width.
@@ -639,14 +965,38 @@ fn bubble(
         )
         .into_any_element()
 }
-pub(super) fn user(
-    text: &str,
+pub(super) fn user_block(
+    block: &Block,
     key: &str,
     theme: &Theme,
     ui: &mut MarkdownUi,
     window: &mut Window,
     cx: &mut Context<VelaApp>,
+    selection: Option<UserSelectionSpec>,
 ) -> AnyElement {
+    user_shared(block.text.clone(), key, theme, ui, window, cx, selection)
+}
+
+fn user_shared(
+    source: Arc<str>,
+    key: &str,
+    theme: &Theme,
+    ui: &mut MarkdownUi,
+    window: &mut Window,
+    cx: &mut Context<VelaApp>,
+    selection: Option<UserSelectionSpec>,
+) -> AnyElement {
+    if let Some(spec) = selection {
+        ui.selection = Some(SelectionDocument {
+            message: spec.message,
+            anchor: spec.anchor,
+            head: spec.head,
+            segments: spec.segments,
+            drag: spec.drag,
+            fill: spec.fill,
+            on_change: spec.on_change,
+        });
+    }
     let mut context = RenderContext {
         ui,
         window,
@@ -658,20 +1008,44 @@ pub(super) fn user(
         list: None,
         answer: None,
     };
-    let (content, label) = user_document(text, key, theme, &mut context);
+    let prepared = context.ui.document_shared(key, source.clone(), false);
+    let (content, label) = user_document_nodes(&source, prepared.nodes(), key, theme, &mut context);
+    context.ui.selection = None;
     bubble(content, key, theme, label)
 }
+#[cfg(test)]
 fn user_document(
     text: &str,
     key: &str,
     theme: &Theme,
     context: &mut RenderContext,
 ) -> (AnyElement, Option<SharedString>) {
-    let nodes = tree(&mut markdown::events(text).into_iter());
-    if matches!(nodes.as_slice(),[Node::Container(Tag::Paragraph,children)] if !image_parts(children,None).iter().any(|part|matches!(part,InlinePart::Image {..})))
-    {
+    let prepared = context.ui.document(key, text, false);
+    user_document_nodes(text, prepared.nodes(), key, theme, context)
+}
+
+fn user_document_nodes(
+    text: &str,
+    nodes: &[Node],
+    key: &str,
+    theme: &Theme,
+    context: &mut RenderContext,
+) -> (AnyElement, Option<SharedString>) {
+    if let [Node::PlainText(source)] = nodes {
         return (
-            user_inline(text, key, theme.text, theme),
+            plain_inline(source, &format!("user:{key}"), theme.text, theme, context.ui.selection.as_mut(), None),
+            Some(SharedString::from(source.clone())),
+        );
+    }
+    if single_text_paragraph(nodes) {
+        return (
+            user_inline(
+                nodes,
+                key,
+                theme.text,
+                theme,
+                context.ui.selection.as_mut(),
+            ),
             Some(SharedString::from(text.to_owned())),
         );
     }
@@ -689,6 +1063,189 @@ fn user_document(
     })).into_any_element();
     (content, None)
 }
+fn single_text_paragraph(nodes: &[Node]) -> bool {
+    matches!(nodes,[Node::Container(Tag::Paragraph,children)] if !image_parts(children,None).iter().any(|part|matches!(part,InlinePart::Image {..})))
+}
+
+pub(super) struct UserSegmentProjection {
+    pub texts: Vec<SharedString>,
+    pub images: Vec<(usize, Arc<gpui::Image>)>,
+}
+
+#[derive(Default)]
+struct SegmentCollector {
+    texts: Vec<SharedString>,
+    images: Vec<(usize, Arc<gpui::Image>)>,
+}
+
+impl SegmentCollector {
+    fn text(&mut self, text: String) {
+        self.texts.push(SharedString::from(text));
+    }
+
+    fn image(&mut self, alt: &str, uri: &str) {
+        let index = self.texts.len();
+        self.texts.push(SharedString::from(alt));
+        if let Some(image) = markdown_images::clipboard_image(uri) {
+            self.images.push((index, image));
+        }
+    }
+}
+
+/// Project a user document's selectable text and image bytes without
+/// rendering. This mirrors the segment registration in
+/// `user_document`/`render` so Cmd+A can include user messages whose
+/// virtualized rows have never been painted.
+#[cfg(test)]
+pub(super) fn user_segment_texts(
+    text: &str,
+    ink: gpui::Rgba,
+    theme: &Theme,
+) -> UserSegmentProjection {
+    let nodes = tree(&mut markdown::events(text).into_iter());
+    user_segments_nodes(&nodes, ink, theme)
+}
+
+pub(super) fn user_segment_texts_block_cached(
+    block: &Block,
+    ink: gpui::Rgba,
+    theme: &Theme,
+    ui: &MarkdownUi,
+) -> UserSegmentProjection {
+    let document = ui.document_shared(&block.id, block.text.clone(), false);
+    user_segments_nodes(document.nodes(), ink, theme)
+}
+
+fn user_segments_nodes(nodes: &[Node], ink: gpui::Rgba, theme: &Theme) -> UserSegmentProjection {
+    if let [Node::PlainText(source)] = nodes {
+        return UserSegmentProjection { texts: vec![SharedString::from(source.clone())], images: Vec::new() };
+    }
+    if single_text_paragraph(nodes) {
+        return UserSegmentProjection {
+            texts: vec![SharedString::from(user_inline_nodes(nodes, ink, theme).text)],
+            images: Vec::new(),
+        };
+    }
+    let mut segments = SegmentCollector::default();
+    collect_segments(nodes, ink, theme, &mut segments);
+    UserSegmentProjection { texts: segments.texts, images: segments.images }
+}
+
+fn collect_inline(
+    nodes: &[Node],
+    ink: gpui::Rgba,
+    theme: &Theme,
+    out: &mut SegmentCollector,
+) {
+    let mut inline = Inline::default();
+    flatten(nodes, &InlineStyle::default(), &mut inline, ink, theme);
+    out.text(inline.text);
+}
+
+fn collect_segments(
+    nodes: &[Node],
+    ink: gpui::Rgba,
+    theme: &Theme,
+    out: &mut SegmentCollector,
+) {
+    for node in nodes {
+        collect_node(node, ink, theme, out);
+    }
+}
+
+fn collect_node(
+    node: &Node,
+    ink: gpui::Rgba,
+    theme: &Theme,
+    out: &mut SegmentCollector,
+) {
+    let Node::Container(tag, children) = node else {
+        if !matches!(node, Node::Leaf(Event::Rule) | Node::Leaf(Event::DisplayMath(_))) {
+            collect_inline(std::slice::from_ref(node), ink, theme, out);
+        }
+        return;
+    };
+    match tag {
+        Tag::Paragraph if contains_images(children) => {
+            for part in image_parts(children, None) {
+                match part {
+                    InlinePart::Text(nodes) => collect_inline(&nodes, ink, theme, out),
+                    InlinePart::Image { uri, alt, .. } => out.image(&alt, &uri),
+                }
+            }
+        }
+        Tag::Paragraph
+            if children
+                .iter()
+                .any(|child| matches!(child, Node::Leaf(Event::DisplayMath(_)))) =>
+        {
+            for child in children {
+                if !matches!(child, Node::Leaf(Event::DisplayMath(_))) {
+                    collect_inline(std::slice::from_ref(child), ink, theme, out);
+                }
+            }
+        }
+        Tag::Paragraph | Tag::Heading { .. } => {
+            collect_inline(children, ink, theme, out);
+        }
+        Tag::BlockQuote(_) => collect_segments(children, ink, theme, out),
+        Tag::List(_) => {
+            for child in children {
+                let body = if let Node::Container(Tag::Item, body) = child {
+                    body.as_slice()
+                } else {
+                    std::slice::from_ref(child)
+                };
+                let body = body
+                    .iter()
+                    .filter(|node| !matches!(node, Node::Leaf(Event::TaskListMarker(_))))
+                    .cloned()
+                    .collect::<Vec<_>>();
+                collect_segments(&body, ink, theme, out);
+            }
+        }
+        Tag::CodeBlock(_) => {
+            let mut inline = Inline::default();
+            flatten(children, &InlineStyle::default(), &mut inline, ink, theme);
+            let raw = inline
+                .text
+                .strip_suffix('\n')
+                .unwrap_or(&inline.text)
+                .to_owned();
+            out.text(raw);
+        }
+        Tag::Table(_) => {
+            for row in children {
+                let cells = match row {
+                    Node::Container(Tag::TableHead, cells)
+                    | Node::Container(Tag::TableRow, cells) => cells.as_slice(),
+                    _ => std::slice::from_ref(row),
+                };
+                for cell in cells {
+                    let body = if let Node::Container(Tag::TableCell, body) = cell {
+                        body.as_slice()
+                    } else {
+                        std::slice::from_ref(cell)
+                    };
+                    if contains_images(body) {
+                        for part in image_parts(body, None) {
+                            match part {
+                                InlinePart::Text(nodes) => {
+                                    collect_inline(&nodes, ink, theme, out)
+                                }
+                                InlinePart::Image { uri, alt, .. } => out.image(&alt, &uri),
+                            }
+                        }
+                    } else {
+                        collect_inline(body, ink, theme, out);
+                    }
+                }
+            }
+        }
+        _ => collect_inline(children, ink, theme, out),
+    }
+}
+
 fn image_paragraph(node: &Node) -> bool {
     let Node::Container(Tag::Paragraph, children) = node else {
         return false;
@@ -772,8 +1329,18 @@ impl BlockSpacing {
         }
     }
 }
+#[cfg(test)]
 pub(super) fn block_spacing(text: &str) -> BlockSpacing {
     let nodes = tree(&mut markdown::events(text).into_iter());
+    block_spacing_nodes(&nodes)
+}
+
+pub(super) fn block_spacing_cached(block: &Block, ui: &MarkdownUi) -> BlockSpacing {
+    let document = ui.document_shared(&block.id, block.text.clone(), block.streaming);
+    block_spacing_nodes(document.nodes())
+}
+
+fn block_spacing_nodes(nodes: &[Node]) -> BlockSpacing {
     let Some(first) = nodes.first() else {
         return BlockSpacing::default();
     };
@@ -834,6 +1401,132 @@ fn stack(
 struct TableColumn {
     minimum: f32,
     maximum: f32,
+}
+
+/// Full-height, visible-range materialization for wide, plain assistant
+/// tables. Complex cells keep the general interactive table renderer.
+struct PlainTableRows {
+    key: String,
+    rows: Vec<Vec<SharedString>>,
+    widths: Vec<TableColumn>,
+    ink: gpui::Rgba,
+    border: gpui::Rgba,
+}
+
+impl PlainTableRows {
+    const ROW: f32 = 35.75; // 22.75 line + 12 vertical padding + 1 bottom border.
+
+    fn new(
+        nodes: &[Node],
+        key: &str,
+        widths: &[TableColumn],
+        ink: gpui::Rgba,
+        theme: &Theme,
+        context: &RenderContext,
+    ) -> Option<Self> {
+        if context.user || context.answer.is_none() || context.list_depth != 0
+            || nodes.len() < 128 || context.ui.selection.is_some()
+        {
+            return None;
+        }
+        // The enclosing ListState is mutably borrowed during its row render.
+        // This width is sampled before GPUI starts laying out that list.
+        let viewport = context.ui.viewport_width;
+        let widest = widths.iter().map(|width| width.maximum).sum::<f32>();
+        // The list's measured width already accounts for the tile padding
+        // and scrollbar. The row itself adds 20px per side.
+        if viewport.min(px(768.)) < px(widest + 42.) {
+            return None;
+        }
+        let rows = nodes.iter().map(|row| {
+            let Node::Container(Tag::TableHead | Tag::TableRow, cells) = row else { return None; };
+            cells.iter().map(|cell| {
+                let Node::Container(Tag::TableCell, body) = cell else { return None; };
+                match body.as_slice() {
+                    [Node::Leaf(Event::Text(text))] if !text.contains(['\n', '\r', '\t']) =>
+                        Some(SharedString::from(text.to_string())),
+                    [] => Some(SharedString::default()),
+                    _ => None,
+                }
+            }).collect::<Option<Vec<_>>>()
+        }).collect::<Option<Vec<_>>>()?;
+        Some(Self { key: key.into(), rows, widths: widths.to_vec(), ink, border: theme.border_soft })
+    }
+
+    fn top(index: usize) -> Pixels {
+        px(index as f32 * Self::ROW + if index > 0 { 1. } else { 0. })
+    }
+
+    fn row(&self, index: usize) -> AnyElement {
+        let header = index == 0;
+        let id = format!("table-row:{}:{index}", self.key);
+        let selector = id.clone();
+        div().id(SharedString::from(id))
+            .debug_selector(move || selector.clone())
+            .role(gpui::Role::Row)
+            .aria_row_index(index)
+            .flex().w_full()
+            .h(Self::top(index + 1) - Self::top(index))
+            .text_size(px(12.25)).line_height(px(22.75))
+            .font(theme::agent_font())
+            .text_color(self.ink)
+            .when(header, |row| row.font_weight(FontWeight::BOLD))
+            .children(self.rows[index].iter().enumerate().map(|(column, text)| {
+                let id = format!("table-cell:{}:{index}:{column}", self.key);
+                let selector = id.clone();
+                table_column(self.widths[column], 0.)
+                    .id(SharedString::from(id))
+                    .debug_selector(move || selector.clone())
+                    .role(table_cell_role(header))
+                    .aria_label(if text.is_empty() { format!("Row {}, column {}", index + 1, column + 1).into() } else { text.clone() })
+                    .when_some(table_cell_description(header), |cell, description| cell.aria_description(description))
+                    .aria_row_index(index).aria_column_index(column)
+                    .flex().flex_col().justify_center().whitespace_nowrap()
+                    .border_b_1().border_r_1()
+                    .when(header, |cell| cell.border_t_1())
+                    .border_color(self.border)
+                    .px(px(10.)).py(px(6.))
+                    .child(text.clone())
+            }))
+            .into_any_element()
+    }
+}
+
+impl gpui::IntoElement for PlainTableRows {
+    type Element = Self;
+    fn into_element(self) -> Self { self }
+}
+
+impl gpui::Element for PlainTableRows {
+    type RequestLayoutState = ();
+    type PrepaintState = Vec<AnyElement>;
+
+    fn id(&self) -> Option<gpui::ElementId> { None }
+    fn source_location(&self) -> Option<&'static std::panic::Location<'static>> { None }
+    fn request_layout(&mut self, _: Option<&gpui::GlobalElementId>, _: Option<&gpui::InspectorElementId>, window: &mut Window, cx: &mut App) -> (gpui::LayoutId, ()) {
+        let style = gpui::Style {
+            size: size(gpui::relative(1.).into(), Self::top(self.rows.len()).into()),
+            ..Default::default()
+        };
+        (window.request_layout(style, None, cx), ())
+    }
+    fn prepaint(&mut self, _: Option<&gpui::GlobalElementId>, _: Option<&gpui::InspectorElementId>, bounds: Bounds<Pixels>, _: &mut (), window: &mut Window, cx: &mut App) -> Self::PrepaintState {
+        let clip = window.content_mask().bounds;
+        let from = ((f32::from(clip.top() - bounds.top()) / Self::ROW).floor() as usize).saturating_sub(1).min(self.rows.len());
+        let to = ((f32::from(clip.bottom() - bounds.top()) / Self::ROW).ceil() as usize).saturating_add(1).min(self.rows.len());
+        (from..to).map(|index| {
+            let mut row = self.row(index);
+            row.prepaint_as_root(
+                bounds.origin + point(px(0.), Self::top(index)),
+                size(gpui::AvailableSpace::Definite(bounds.size.width), gpui::AvailableSpace::MinContent),
+                window, cx,
+            );
+            row
+        }).collect()
+    }
+    fn paint(&mut self, _: Option<&gpui::GlobalElementId>, _: Option<&gpui::InspectorElementId>, _: Bounds<Pixels>, _: &mut (), rows: &mut Self::PrepaintState, window: &mut Window, cx: &mut App) {
+        for row in rows { row.paint(window, cx); }
+    }
 }
 fn table_shrink_factors(columns: &[TableColumn]) -> Vec<f32> {
     let factors = columns
@@ -970,7 +1663,7 @@ fn syntax_runs(
     if streaming {
         return None;
     }
-    let language = crate::syntax::language(language)?;
+    let language = crate::syntax::live_language(language)?;
     if text.is_empty() || text.contains('\t') || text.contains('\r') {
         return None;
     }
@@ -1134,6 +1827,7 @@ fn table_node_text(nodes: &[Node], out: &mut String) {
                 }
             }
             Node::Container(_, children) => table_node_text(children, out),
+            Node::PlainText(text) => { out.push_str(text); out.push(' '); },
             Node::Leaf(
                 Event::Text(text)
                 | Event::Code(text)
@@ -1160,37 +1854,18 @@ fn table_widths(
     context: &mut RenderContext,
 ) -> Vec<TableColumn> {
     let mut widths: Vec<TableColumn> = Vec::new();
+    // Repeated plain labels/values within a table share intrinsic measurements.
+    // Rich or image cells still take their full path, including late image sizing.
+    let mut measured_plain = HashMap::<(&str, bool), (f32, f32)>::new();
     for (row_index, row) in rows.iter().enumerate() {
         let Node::Container(tag, cells) = row else {
             continue;
         };
+        let header = matches!(tag, Tag::TableHead);
         for (column, cell) in cells.iter().enumerate() {
             let Node::Container(_, body) = cell else {
                 continue;
             };
-            let image_width =
-                cell_image_width(body, &format!("{key}:{row_index}:{column}"), context);
-            let mut value = Inline::default();
-            flatten(
-                body,
-                &InlineStyle {
-                    weight: if matches!(tag, Tag::TableHead) {
-                        FontWeight::BOLD
-                    } else {
-                        FontWeight::NORMAL
-                    },
-                    ..Default::default()
-                },
-                &mut value,
-                ink,
-                theme,
-            );
-            let line = context.window.text_system().shape_line(
-                SharedString::from(value.text.clone()),
-                px(12.25),
-                &value.runs,
-                None,
-            );
             if widths.len() <= column {
                 widths.resize(
                     column + 1,
@@ -1200,31 +1875,52 @@ fn table_widths(
                     },
                 );
             }
-            // CSS auto tables shrink at normal Unicode line-break
-            // opportunities. overflow-wrap:break-word does not shrink the
-            // min-content width of an otherwise unbreakable identifier.
-            let mut start = 0;
-            let mut minimum: f32 = 0.;
-            for (end, _) in unicode_linebreak::linebreaks(&value.text) {
-                let segment = &value.text[start..end];
-                let trimmed_end = start + segment.trim_end_matches(char::is_whitespace).len();
-                minimum = minimum.max(f32::from(
-                    line.x_for_index(trimmed_end) - line.x_for_index(start),
-                ));
-                start = end;
-            }
-            widths[column].minimum = widths[column]
-                .minimum
-                .max(minimum + 21.)
-                .max(image_width + 21.);
-            widths[column].maximum = widths[column]
-                .maximum
-                .max(f32::from(line.width()) + 21.)
-                .max(image_width + 21.);
+            let plain = match body.as_slice() {
+                [Node::Leaf(Event::Text(text))] => Some((text.as_ref(), header)),
+                _ => None,
+            };
+            let (minimum, maximum) = plain.and_then(|plain| measured_plain.get(&plain).copied())
+                .unwrap_or_else(|| {
+                    let image_width = if plain.is_some() { 0. } else {
+                        cell_image_width(body, &format!("{key}:{row_index}:{column}"), context)
+                    };
+                    let (minimum, maximum) = measure_table_cell_text(body, ink, theme, header, context.window);
+                    let measured = (minimum.max(image_width), maximum.max(image_width));
+                    if let Some(plain) = plain { measured_plain.insert(plain, measured); }
+                    measured
+                });
+            widths[column].minimum = widths[column].minimum.max(minimum + 21.);
+            widths[column].maximum = widths[column].maximum.max(maximum + 21.);
         }
     }
     snap_table_columns(&mut widths, context.window.scale_factor());
     widths
+}
+
+fn measure_table_cell_text(
+    body: &[Node],
+    ink: gpui::Rgba,
+    theme: &Theme,
+    header: bool,
+    window: &Window,
+) -> (f32, f32) {
+    let mut value = Inline::default();
+    flatten(body, &InlineStyle {
+        weight: if header { FontWeight::BOLD } else { FontWeight::NORMAL },
+        ..Default::default()
+    }, &mut value, ink, theme);
+    let line = window.text_system().shape_line(
+        SharedString::from(value.text.clone()), px(12.25), &value.runs, None,
+    );
+    // A CSS table column's minimum width is the widest unbreakable segment.
+    let mut start = 0;
+    let mut minimum: f32 = 0.;
+    for (end, _) in unicode_linebreak::linebreaks(&value.text) {
+        let trimmed_end = start + value.text[start..end].trim_end_matches(char::is_whitespace).len();
+        minimum = minimum.max(f32::from(line.x_for_index(trimmed_end) - line.x_for_index(start)));
+        start = end;
+    }
+    (minimum, f32::from(line.width()))
 }
 
 /// Source renders table cells through the same inline token renderer as prose,
@@ -1239,7 +1935,14 @@ fn table_cell(
     context: &mut RenderContext,
 ) -> AnyElement {
     if !contains_images(body) {
-        return inline(body, key, ink, theme, weight);
+        return inline(
+            body,
+            key,
+            ink,
+            theme,
+            weight,
+            context,
+        );
     }
     let parts = image_parts(body, None);
     div()
@@ -1257,6 +1960,7 @@ fn table_cell(
                         ink,
                         theme,
                         weight,
+                        context,
                     ),
                     InlinePart::Image { uri, alt, link } => render_image(
                         &uri,
@@ -1291,7 +1995,7 @@ fn math_block(tex: &str, key: &str, theme: &Theme) -> AnyElement {
         .text_color(theme.text)
         .font(Font {
             family: crate::math::MATH_FONT.into(),
-            ..theme::ui_font()
+            ..theme::agent_font()
         })
         .child(SharedString::from(text))
         .into_any_element()
@@ -1304,6 +2008,9 @@ fn render(
     theme: &Theme,
     context: &mut RenderContext,
 ) -> AnyElement {
+    if let Node::PlainText(source) = node {
+        return plain_inline(source, key, ink, theme, context.ui.selection.as_mut(), (!context.user && context.answer.is_some()).then_some(context.streaming));
+    }
     let Node::Container(tag, children) = node else {
         return if matches!(node, Node::Leaf(Event::Rule)) {
             div()
@@ -1320,6 +2027,7 @@ fn render(
                 ink,
                 theme,
                 FontWeight::NORMAL,
+                context,
             )
         };
     };
@@ -1342,6 +2050,7 @@ fn render(
                                 ink,
                                 theme,
                                 FontWeight::NORMAL,
+                                context,
                             ),
                             InlinePart::Image { uri, alt, link } => render_image(
                                 &uri,
@@ -1372,29 +2081,45 @@ fn render(
                         ink,
                         theme,
                         FontWeight::NORMAL,
+                        context,
                     ));
                 }
             }
             body.into_any_element()
         }
-        Tag::Paragraph => inline(children, key, ink, theme, FontWeight::NORMAL),
+        Tag::Paragraph => inline(
+            children,
+            key,
+            ink,
+            theme,
+            FontWeight::NORMAL,
+            context,
+        ),
         Tag::Heading { level, .. } => {
-            let size = match *level as u8 {
-                1 => 21.,
-                2 => 18.2,
-                3 => 16.1,
-                _ => 14.,
+            let size = heading_size(*level);
+            let weight = heading_weight(*level);
+            let heading_ink = if matches!(*level, markdown::HeadingLevel::H4 | markdown::HeadingLevel::H5 | markdown::HeadingLevel::H6) {
+                ink.opacity(0.62)
+            } else {
+                ink
             };
             let mut label = Inline::default();
-            flatten(children, &InlineStyle::default(), &mut label, ink, theme);
+            flatten(children, &InlineStyle::default(), &mut label, heading_ink, theme);
             div()
                 .id(SharedString::from(format!("heading:{key}")))
                 .text_size(px(size))
-                .line_height(px(size * 1.3))
+                .line_height(px(size * 1.5))
                 .role(gpui::Role::Heading)
                 .aria_level(*level as usize)
                 .aria_label(SharedString::from(label.text))
-                .child(inline(children, key, ink, theme, FontWeight::SEMIBOLD))
+                .child(inline(
+                    children,
+                    key,
+                    heading_ink,
+                    theme,
+                    weight,
+                    context,
+                ))
                 .into_any_element()
         }
         Tag::BlockQuote(_) => div()
@@ -1547,8 +2272,17 @@ fn render(
                     .strip_suffix('\n')
                     .unwrap_or(&code.text)
                     .to_owned();
+                let binding = context
+                    .ui
+                    .selection
+                    .as_mut()
+                    .map(|document| document.binding(&raw));
                 return div()
                     .id(SharedString::from(format!("user-code:{key}")))
+                    .debug_selector({
+                        let selector = format!("user-code:{key}");
+                        move || selector.clone()
+                    })
                     .role(gpui::Role::Label)
                     .aria_label(SharedString::from(raw.clone()))
                     .min_w_0()
@@ -1559,7 +2293,10 @@ fn render(
                     .text_size(px(12.25))
                     .line_height(px(18.375))
                     .whitespace_normal()
-                    .child(crate::preformatted::PreformattedText::new(raw, true))
+                    .child(
+                        crate::preformatted::PreformattedText::new(raw, true)
+                            .with_selection(binding),
+                    )
                     .into_any_element();
             }
             let language = match kind {
@@ -1579,7 +2316,7 @@ fn render(
                 .strip_suffix('\n')
                 .unwrap_or(&code.text)
                 .to_owned();
-            let (display, highlighted) = if crate::syntax::language(language) == Some("ansi") {
+            let (display, highlighted) = if crate::syntax::live_language(language) == Some("ansi") {
                 let (display, spans) = crate::syntax::ansi(&raw);
                 let runs = ansi_runs(&display, &spans, theme, ink);
                 (display, Some(runs))
@@ -1611,8 +2348,7 @@ fn render(
                 .clone();
             let body_id = SharedString::from(format!("code-body:{key}"));
             let body_debug = body_id.to_string();
-            let layout_owner = context.window.current_view();
-            let layout_list = context.list.clone();
+            let remeasure_row = row_remeasure_callback(context);
             // Text can paint past a constrained no-wrap box without expanding
             // GPUI's scroll extent. Give the text its measured intrinsic width.
             let unwrapped_width = if wrap {
@@ -1668,12 +2404,7 @@ fn render(
                     )
                     .into_any_element()
             })
-            .on_gutter_change(move |cx| {
-                if let Some(list) = &layout_list {
-                    list.remeasure();
-                }
-                cx.notify(layout_owner);
-            });
+            .on_gutter_change(remeasure_row);
             div()
                 .w_full()
                 .min_w_0()
@@ -1698,7 +2429,7 @@ fn render(
                         .child(
                             div()
                                 .font(theme::markdown_code_font())
-                                .child(language.to_lowercase()),
+                                .child(SharedString::from(language)),
                         )
                         .child(
                             div()
@@ -1714,8 +2445,11 @@ fn render(
         }
         Tag::Table(_) => {
             let widths = table_widths(children, key, ink, theme, context);
+            let virtual_rows = PlainTableRows::new(children, key, &widths, ink, theme, context);
             let shrink = table_shrink_factors(&widths);
-            let minimum_width = widths.iter().map(|column| column.minimum).sum::<f32>() + 1.;
+            let minimum_width = widths.iter().map(|column| {
+                if virtual_rows.is_some() { column.maximum } else { column.minimum }
+            }).sum::<f32>() + 1.;
             let table_key = format!("table:{key}");
             let focus = control_focus(&table_key, context);
             let scroll = context
@@ -1726,7 +2460,7 @@ fn render(
                 .clone();
             let navigation = scroll.native_handle();
             let layout_owner = context.window.current_view();
-            let layout_list = context.list.clone();
+            let remeasure_row = row_remeasure_callback(context);
             let keyboard = context.ui.keyboard.clone();
             let outline_color = theme.accent.into();
             let table_debug = table_key.clone();
@@ -1742,7 +2476,9 @@ fn render(
                 .border_color(theme.border_soft)
                 .text_size(px(12.25))
                 .line_height(px(22.75))
-                .children(children.iter().enumerate().map(|(index, row)| {
+                .map(|table| match virtual_rows {
+                    Some(rows) => table.child(rows),
+                    None => table.children(children.iter().enumerate().map(|(index, row)| {
                     let (header, cells) = match row {
                         Node::Container(Tag::TableHead, cells) => (true, cells.as_slice()),
                         Node::Container(Tag::TableRow, cells) => (false, cells.as_slice()),
@@ -1801,7 +2537,8 @@ fn render(
                                     context,
                                 ))
                         }))
-                }));
+                    })),
+                });
             crate::scroll::AutoScroll::horizontal(scroll, move |scroll, gutter| {
                 div()
                     .id(SharedString::from(format!("table-scroller:{table_key}")))
@@ -1847,15 +2584,17 @@ fn render(
                     )
                     .into_any_element()
             })
-            .on_gutter_change(move |cx| {
-                if let Some(list) = &layout_list {
-                    list.remeasure();
-                }
-                cx.notify(layout_owner);
-            })
+            .on_gutter_change(remeasure_row)
             .into_any_element()
         }
-        _ => inline(children, key, ink, theme, FontWeight::NORMAL),
+        _ => inline(
+            children,
+            key,
+            ink,
+            theme,
+            FontWeight::NORMAL,
+            context,
+        ),
     }
 }
 
@@ -1872,8 +2611,8 @@ pub(super) fn block(
     window: &mut Window,
     cx: &mut Context<VelaApp>,
 ) -> AnyElement {
-    document(
-        &block.text,
+    document_shared(
+        block.text.clone(),
         &block.id,
         ink,
         theme,
@@ -1890,6 +2629,8 @@ pub(super) fn block(
         },
     )
 }
+
+#[cfg(test)]
 fn document(
     text: &str,
     key: &str,
@@ -1897,19 +2638,99 @@ fn document(
     theme: &Theme,
     context: &mut RenderContext,
 ) -> AnyElement {
-    let nodes = tree(&mut markdown::events(text).into_iter());
+    let prepared = context.ui.document(key, text, context.streaming);
+    prepared_document(&prepared, key, ink, theme, context)
+}
+
+fn document_shared(
+    source: Arc<str>,
+    key: &str,
+    ink: gpui::Rgba,
+    theme: &Theme,
+    context: &mut RenderContext,
+) -> AnyElement {
+    let prepared = context.ui.document_shared(key, source, context.streaming);
+    prepared_document(&prepared, key, ink, theme, context)
+}
+
+fn prepared_document(
+    prepared: &markdown::PreparedDocument,
+    key: &str,
+    ink: gpui::Rgba,
+    theme: &Theme,
+    context: &mut RenderContext,
+) -> AnyElement {
+    if prepared.sections.len() > 1 {
+        let streaming = context.streaming;
+        let mut body = div().flex().flex_col().min_w_0().gap(px(14.));
+        for (index, section) in prepared.sections.iter().enumerate() {
+            context.streaming = section.streaming;
+            body = body.child(parsed_document(
+                &section.nodes,
+                &format!("{key}:block:{index}"),
+                ink,
+                theme,
+                context,
+            ));
+        }
+        context.streaming = streaming;
+        body.into_any_element()
+    } else {
+        parsed_document(prepared.nodes(), key, ink, theme, context)
+    }
+}
+
+fn parsed_document(
+    nodes: &[Node],
+    key: &str,
+    ink: gpui::Rgba,
+    theme: &Theme,
+    context: &mut RenderContext,
+) -> AnyElement {
     div()
         .min_w_0()
         .text_size(px(14.))
         .line_height(px(22.75))
         .text_color(ink)
-        .child(stack(&nodes, key, ink, theme, 14., context))
+        .child(stack(nodes, key, ink, theme, 14., context))
         .into_any_element()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn user_segment_projection_matches_structured_document_order() {
+        let theme = Theme::default();
+        let projection = user_segment_texts(
+            "# Title\n\nFirst.\n\n- a\n- b\n\n```\ncode\n```\n\n![alt](file:///x.png)",
+            theme.text,
+            &theme,
+        );
+        assert_eq!(
+            projection.texts,
+            vec!["Title", "First.", "a", "b", "code", "alt"]
+                .into_iter()
+                .map(SharedString::from)
+                .collect::<Vec<_>>()
+        );
+        assert!(projection.images.is_empty());
+    }
+
+    #[test]
+    fn user_segment_projection_carries_image_bytes_with_their_segment() {
+        let theme = Theme::default();
+        let projection = user_segment_texts(
+            "before ![pic](data:image/png;base64,iVBORw0KGgo=) after",
+            theme.text,
+            &theme,
+        );
+        assert_eq!(projection.texts.len(), 3);
+        assert_eq!(projection.images.len(), 1);
+        assert_eq!(projection.images[0].0, 1);
+        assert_eq!(projection.images[0].1.format, gpui::ImageFormat::Png);
+    }
 
     #[test]
     fn rust_type_tokens_use_the_github_type_palette() {
@@ -1963,7 +2784,7 @@ mod tests {
         assert!(
             text.runs
                 .iter()
-                .any(|run| run.font.weight == FontWeight::BOLD)
+                .any(|run| run.font.weight == FontWeight::MEDIUM)
         );
     }
     struct CodeControlFixture {
@@ -2067,7 +2888,7 @@ mod tests {
         fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
             let theme = Theme::default();
             div().w(px(284.)).child(bubble(
-                user_inline(self.0, "test", theme.text, &theme),
+                user_inline(&tree(&mut markdown::events(self.0).into_iter()), "test", theme.text, &theme, None),
                 "test",
                 &theme,
                 None,
@@ -2191,6 +3012,37 @@ mod tests {
                 .child(div().track_focus(&self.outside).h(px(20.)).child("Outside"))
         }
     }
+    #[test]
+    fn fences_highlight_only_the_live_highlighter_languages() {
+        let theme = Theme::default();
+        for language in [
+            "bash", "css", "diff", "html", "javascript", "json", "jsx", "markdown",
+            "python", "sql", "tsx", "typescript", "yaml", "ansi",
+        ] {
+            assert!(
+                crate::syntax::live_language(language).is_some(),
+                "{language} is in Source's live highlighter set"
+            );
+        }
+        for language in ["rust", "lua", "cmake", "proto", "groovy", "sass", "latex", "nim"] {
+            assert!(
+                crate::syntax::live_language(language).is_none(),
+                "{language} stays plain in the live transcript"
+            );
+            assert!(
+                syntax_runs(language, "fn main() {}", false, &theme, theme.text).is_none(),
+                "{language} must not produce highlight runs"
+            );
+        }
+        let live = syntax_runs("python", "print(1)", false, &theme, theme.text)
+            .expect("python highlight runs");
+        assert_eq!(live.iter().map(|run| run.len).sum::<usize>(), "print(1)".len());
+        assert!(
+            syntax_runs("python", "print(1)", true, &theme, theme.text).is_none(),
+            "streaming fences stay plain"
+        );
+    }
+
     #[gpui::test]
     fn ansi_code_fence_renders_cleaned_styled_text(cx: &mut gpui::TestAppContext) {
         let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
@@ -2211,805 +3063,6 @@ mod tests {
         assert!(
             body.size.height >= px(18.) && body.size.height < px(80.),
             "escape bytes are stripped before layout: {body:?}"
-        );
-    }
-
-    #[gpui::test]
-    fn lua_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "local function greet(name)\n  print(\"hi \" .. name)\nend";
-        let runs = syntax_runs("lua", code, false, &theme, theme.text)
-            .expect("lua highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/strings/functions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "lua",
-        });
-        cx.simulate_resize(size(px(300.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(300.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Lua fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn r_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "values <- c(1, 2, 3)\nmean(values)";
-        let runs = syntax_runs("r", code, false, &theme, theme.text)
-            .expect("R highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "functions/numbers get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "r",
-        });
-        cx.simulate_resize(size(px(300.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(300.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "R fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn scala_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "object Main {\n  def main(args: Array[String]): Unit = println(\"hi\")\n}";
-        let runs = syntax_runs("scala", code, false, &theme, theme.text)
-            .expect("Scala highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/types/functions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "scala",
-        });
-        cx.simulate_resize(size(px(300.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(300.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Scala fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn dart_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "void main() {\n  print('hello');\n}";
-        let runs = syntax_runs("dart", code, false, &theme, theme.text)
-            .expect("Dart highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "types/functions/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "dart",
-        });
-        cx.simulate_resize(size(px(300.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(300.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Dart fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn powershell_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "param([string]$Name)\nWrite-Host \"Hi $Name\"";
-        let runs = syntax_runs("powershell", code, false, &theme, theme.text)
-            .expect("PowerShell highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/types/variables get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "powershell",
-        });
-        cx.simulate_resize(size(px(320.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(320.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "PowerShell fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn elixir_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "defmodule Demo do\n  def greet(name), do: IO.puts(\"hi \" <> name)\nend";
-        let runs = syntax_runs("elixir", code, false, &theme, theme.text)
-            .expect("Elixir highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/types/functions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "elixir",
-        });
-        cx.simulate_resize(size(px(340.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(340.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Elixir fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn haskell_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "main :: IO ()\nmain = putStrLn \"hi\"";
-        let runs = syntax_runs("haskell", code, false, &theme, theme.text)
-            .expect("Haskell highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "functions/types/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "haskell",
-        });
-        cx.simulate_resize(size(px(320.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(320.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Haskell fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn clojure_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "(defn greet [name]\n  (println \"Hello, \" name))";
-        let runs = syntax_runs("clojure", code, false, &theme, theme.text)
-            .expect("Clojure highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/functions/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "clojure",
-        });
-        cx.simulate_resize(size(px(340.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(340.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Clojure fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn julia_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "function greet(name)\n  println(\"Hello, $name\")\nend";
-        let runs = syntax_runs("julia", code, false, &theme, theme.text)
-            .expect("Julia highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/functions/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "julia",
-        });
-        cx.simulate_resize(size(px(340.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(340.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Julia fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn ocaml_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "let rec map f = function\n  | [] -> []\n  | x :: xs -> f x :: map f xs";
-        let runs = syntax_runs("ocaml", code, false, &theme, theme.text)
-            .expect("OCaml highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/functions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "ocaml",
-        });
-        cx.simulate_resize(size(px(360.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(360.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "OCaml fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn erlang_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "-module(demo).\ngreet(Name) ->\n    io:format(\"Hello, ~s~n\", [Name]).";
-        let runs = syntax_runs("erlang", code, false, &theme, theme.text)
-            .expect("Erlang highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "attributes/functions/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "erlang",
-        });
-        cx.simulate_resize(size(px(380.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(380.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Erlang fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn elm_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "module Demo exposing (main)\n\nmain =\n    Html.text \"hi\"";
-        let runs = syntax_runs("elm", code, false, &theme, theme.text)
-            .expect("Elm highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/types/functions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "elm",
-        });
-        cx.simulate_resize(size(px(360.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(360.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Elm fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn hcl_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "resource \"aws_instance\" \"web\" {\n  count = 2\n  tags = { Name = \"web-${count.index}\" }\n}";
-        let runs = syntax_runs("hcl", code, false, &theme, theme.text)
-            .expect("HCL highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/attributes/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "hcl",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "HCL fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn nix_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "{ pkgs, ... }:\n\n{\n  name = \"demo\";\n  message = builtins.concatStringsSep \", \" [ \"a\" \"b\" ];\n}";
-        let runs = syntax_runs("nix", code, false, &theme, theme.text)
-            .expect("Nix highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "attributes/functions/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "nix",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Nix fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn puppet_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "class nginx {\n  package { 'nginx':\n    ensure => installed,\n  }\n}";
-        let runs = syntax_runs("puppet", code, false, &theme, theme.text)
-            .expect("Puppet highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "types/attributes/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "puppet",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Puppet fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn graphql_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "query GetUser($id: ID!) {\n  user(id: $id) {\n    id\n    name\n  }\n}";
-        let runs = syntax_runs("graphql", code, false, &theme, theme.text)
-            .expect("GraphQL highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/types/variables get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "graphql",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "GraphQL fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn vue_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "<template>\n  <div>{{ message }}</div>\n</template>\n\n<script setup>\nconst message = \"hi\"\n</script>";
-        let runs = syntax_runs("vue", code, false, &theme, theme.text)
-            .expect("Vue highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/directives/scripts get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "vue",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Vue fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn svelte_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "<script>\nlet count = 0;\n</script>\n\n{#if count}\n  <p>{count}</p>\n{/if}";
-        let runs = syntax_runs("svelte", code, false, &theme, theme.text).expect("Svelte highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/blocks/scripts get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "svelte",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Svelte fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn astro_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "---\nconst title = \"Hi\";\n---\n\n<h1>{title}</h1>\n\n<style>\n.title { color: red; }\n</style>";
-        let runs =
-            syntax_runs("astro", code, false, &theme, theme.text).expect("Astro highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "frontmatter/tags/expressions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "astro",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Astro fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn zig_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "const std = @import(\"std\");\n\npub fn main() void {\n    const answer: u8 = 42;\n    std.debug.print(\"{d}\\n\", .{answer});\n}";
-        let runs =
-            syntax_runs("zig", code, false, &theme, theme.text).expect("Zig highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/builtins/types get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "zig",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Zig fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn solidity_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ncontract Counter {\n    uint256 public value = 42;\n\n    function set(uint256 next) external {\n        require(next > 0, \"zero\");\n        value = next;\n    }\n}";
-        let runs = syntax_runs("solidity", code, false, &theme, theme.text)
-            .expect("Solidity highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "comments/keywords/types get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "solidity",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Solidity fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn mdx_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "---\ntitle: \"Hello\"\n---\nimport { Card } from \"./Card\";\n\n# Hello {name}\n\n<Card count={2}>**Hi**</Card>\n\n```ts\nconst value = { ignored: true };\n```";
-        let runs =
-            syntax_runs("mdx", code, false, &theme, theme.text).expect("MDX highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "frontmatter/ESM/JSX/expressions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "mdx",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "MDX fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn prisma_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "datasource db {\n  provider = \"postgresql\"\n  url = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id Int @id\n  role Role @default(USER)\n}\n\nenum Role {\n  USER\n}";
-        let runs = syntax_runs("prisma", code, false, &theme, theme.text)
-            .expect("Prisma highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "blocks/fields/attributes get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "prisma",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Prisma fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn handlebars_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "<div class=\"page\">\n{{#if user}}\n<p>{{user.name}}</p>\n{{else}}\n<p>Guest</p>\n{{/if}}\n{{> footer year=2026}}\n</div>";
-        let runs = syntax_runs("handlebars", code, false, &theme, theme.text)
-            .expect("Handlebars highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/mustaches/attributes get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "handlebars",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Handlebars fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn liquid_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "<div>\n{% if product.available %}\n<h1>{{ product.title | escape }}</h1>\n{% else %}\n<p>{{ 'Sold out' | t }}</p>\n{% endif %}\n{% raw %}{{ literal }}{% endraw %}\n</div>";
-        let runs = syntax_runs("liquid", code, false, &theme, theme.text)
-            .expect("Liquid highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/objects/filters get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "liquid",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Liquid fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn blade_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "<div class=\"card\">\n{{-- hidden --}}\n@if ($user->active)\n<h1>{{ $user->name }}</h1>\n@else\n<p>{!! $fallback !!}</p>\n@endif\n@include('partials.footer')\n</div>";
-        let runs =
-            syntax_runs("blade", code, false, &theme, theme.text).expect("Blade highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/directives/echoes get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "blade",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Blade fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn templ_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "package components\n\ntempl Hello(name string) {\n  <div class=\"hello\">Hello, { name }!</div>\n  if len(name) == 0 {\n    <p>Empty</p>\n  }\n}\n\n@Layout() {\n  <h1>Title</h1>\n}";
-        let runs =
-            syntax_runs("templ", code, false, &theme, theme.text).expect("Templ highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/go/expressions get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "templ",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Templ fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn pascal_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "program Hello;\n{$mode objfpc}\n\nfunction Add(A, B: Integer): Integer;\nbegin\n  Result := A + B;\n  if Result > 10 then Exit(Result);\n  WriteLn('O''Brien', #13, $FF);\nend.";
-        let runs = syntax_runs("pascal", code, false, &theme, theme.text)
-            .expect("Pascal highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "keywords/types/strings get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "pascal",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Pascal fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn makefile_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "# Build\nCC := clang\nSRC = $(wildcard src/*.c)\n\n.PHONY: all\nall: $(SRC)";
-        let runs = syntax_runs("makefile", code, false, &theme, theme.text)
-            .expect("Makefile highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "variables/targets/recipes get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "makefile",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Makefile fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn twig_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "<div class=\"page\">\n{# hidden #}\n{% if user.active %}\n<h1>{{ user.name | upper }}</h1>\n{% else %}\n<p>{{ 'Guest' }}</p>\n{% endif %}\n{% verbatim %}{{ not_twig }}{% endverbatim %}\n</div>";
-        let runs =
-            syntax_runs("twig", code, false, &theme, theme.text).expect("Twig highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/filters/comments get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "twig",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Twig fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn pug_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "doctype html\nhtml\n  body\n    // comment\n    h1#title Hello #{user.name}\n    if user.active\n      p Welcome !{user.name}\n    include partials/footer";
-        let runs =
-            syntax_runs("pug", code, false, &theme, theme.text).expect("Pug highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "tags/attributes/interpolations get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "pug",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "Pug fences render through the highlighted code body"
-        );
-    }
-
-    #[gpui::test]
-    fn ini_code_fence_renders_highlighted_body(cx: &mut gpui::TestAppContext) {
-        let theme = Theme::default();
-        let code = "# config\n[server]\nhost = \"localhost\"\nport = 8080\npath = 'C:\\Program Files'\n\n[client]\ntheme = \"dark\"";
-        let runs =
-            syntax_runs("ini", code, false, &theme, theme.text).expect("INI highlight runs");
-        assert_eq!(runs.iter().map(|run| run.len).sum::<usize>(), code.len());
-        assert!(runs.len() > 2, "comments/sections/keys get distinct runs");
-
-        let (view, cx) = cx.add_window_view(|_, _| CodeSurfaceFixture {
-            ui: MarkdownUi::default(),
-            wrap: true,
-            code: Some(code.into()),
-            language: "ini",
-        });
-        cx.simulate_resize(size(px(420.), px(240.)));
-        cx.draw(point(px(0.), px(0.)), size(px(420.), px(240.)), |_, _| {
-            view.into_any_element()
-        });
-        assert!(
-            cx.debug_bounds("code-body:surface-test").is_some(),
-            "INI fences render through the highlighted code body"
         );
     }
 
@@ -3248,6 +3301,7 @@ mod tests {
 
     struct EntitySurfaceFixture {
         ui: MarkdownUi,
+        source: &'static str,
     }
     impl Render for EntitySurfaceFixture {
         fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
@@ -3264,7 +3318,7 @@ mod tests {
                 answer: None,
             };
             div().w(px(420.)).child(document(
-                "Tom &amp; Jerry &lt;3",
+                self.source,
                 "entity-test",
                 theme.text,
                 &theme,
@@ -3277,6 +3331,7 @@ mod tests {
     fn decoded_entities_render_through_the_prose_label(cx: &mut gpui::TestAppContext) {
         let (view, cx) = cx.add_window_view(|_, _| EntitySurfaceFixture {
             ui: MarkdownUi::default(),
+            source: "Tom &amp; Jerry &lt;3",
         });
         cx.simulate_resize(size(px(420.), px(160.)));
         cx.draw(point(px(0.), px(0.)), size(px(420.), px(160.)), |_, _| {
@@ -3286,6 +3341,27 @@ mod tests {
             cx.debug_bounds("label:entity-test:0").is_some(),
             "decoded entities render through the prose label"
         );
+    }
+
+    #[gpui::test]
+    fn tight_list_renders_each_mixed_inline_item_as_one_line(cx: &mut gpui::TestAppContext) {
+        let (view, cx) = cx.add_window_view(|_, _| EntitySurfaceFixture {
+            ui: MarkdownUi::default(),
+            source: "- `projects.html` — project listing\n- Case studies: `dinobase`, `luno`.",
+        });
+        cx.simulate_resize(size(px(420.), px(160.)));
+        cx.draw(point(px(0.), px(0.)), size(px(420.), px(160.)), |_, _| {
+            view.into_any_element()
+        });
+        for (first, extra) in [
+            ("label:entity-test:0:0:0", "label:entity-test:0:0:1"),
+            ("label:entity-test:0:1:0", "label:entity-test:0:1:1"),
+        ] {
+            let line = cx.debug_bounds(first).expect("list item text");
+            assert!(line.size.height <= px(24.), "{line:?}");
+            assert!(cx.debug_bounds(extra).is_none(),
+                "inline code and punctuation must not get independent block rows");
+        }
     }
 
     struct MathSurfaceFixture {
@@ -3355,7 +3431,7 @@ mod tests {
     }
 
     #[test]
-    fn inline_path_code_uses_the_accent_color_but_plain_code_stays_ink() {
+    fn inline_code_stays_plain_ink_with_the_markdown_mono_font() {
         let nodes = tree(
             &mut markdown::events("`src/main.rs` and `plain`").into_iter(),
         );
@@ -3368,9 +3444,10 @@ mod tests {
             theme.text,
             &theme,
         );
-        assert_eq!(inline.runs[0].color, theme.accent.into());
+        // Source's `vela-md-codespan` has no path/URL affordance or accent.
+        assert_eq!(inline.runs[0].color, theme.text.into());
         assert_eq!(inline.runs[2].color, theme.text.into());
-        assert_eq!(inline.runs[0].font.family.as_ref(), theme::source_font());
+        assert_eq!(inline.runs[0].font.family.as_ref(), theme::FONT_MONO);
     }
 
     #[test]
@@ -3477,6 +3554,36 @@ mod tests {
             "Image",
             "an image without alt text still gets a useful cell label"
         );
+    }
+
+    #[gpui::test]
+    fn large_plain_table_keeps_full_height_and_materializes_only_visible_rows(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let cx = cx.add_empty_window();
+        let draw = |cx: &mut gpui::VisualTestContext, offset: Pixels| {
+            let theme = Theme::default();
+            cx.draw(point(px(0.), px(0.)), size(px(420.), px(180.)), |_, _| {
+                div().relative().w(px(420.)).h(px(180.)).overflow_hidden()
+                    .child(div().absolute().top(-offset).w_full()
+                        .debug_selector(|| "virtual-table-height".into())
+                        .child(PlainTableRows {
+                            key: "large-fixture".into(),
+                            rows: (0..512).map(|index| vec![format!("Row {index}").into()]).collect(),
+                            widths: vec![TableColumn { minimum: 80., maximum: 200. }],
+                            ink: theme.text,
+                            border: theme.border_soft,
+                        }))
+            });
+        };
+        draw(cx, px(0.));
+        assert!(cx.debug_bounds("table-cell:large-fixture:0:0").is_some());
+        assert!(cx.debug_bounds("table-cell:large-fixture:400:0").is_none());
+        assert_eq!(cx.debug_bounds("virtual-table-height").unwrap().size.height, PlainTableRows::top(512));
+        draw(cx, PlainTableRows::top(400));
+        assert!(cx.debug_bounds("table-cell:large-fixture:400:0").is_some());
+        assert!(cx.debug_bounds("table-cell:large-fixture:0:0").is_none());
+        assert_eq!(cx.debug_bounds("virtual-table-height").unwrap().size.height, PlainTableRows::top(512));
     }
 
     struct TableInlineFixture {
@@ -4139,15 +4246,11 @@ mod tests {
             result
                 .runs
                 .iter()
-                .any(|run| run.font.weight == FontWeight::BOLD
+                .any(|run| run.font.weight == FontWeight::MEDIUM
                     && run.font.style == gpui::FontStyle::Italic)
         );
-        assert_eq!(result.runs.last().unwrap().font.weight, FontWeight::NORMAL);
-        for (base, expected) in [
-            (FontWeight::NORMAL, FontWeight::BOLD),
-            (FontWeight::SEMIBOLD, FontWeight::BLACK),
-            (FontWeight::BOLD, FontWeight::BLACK),
-        ] {
+        assert_eq!(result.runs.last().unwrap().font.weight, FontWeight::MEDIUM);
+        for base in [FontWeight::NORMAL, FontWeight::SEMIBOLD, FontWeight::BOLD] {
             let mut styled = Inline::default();
             flatten(
                 &nodes,
@@ -4160,14 +4263,44 @@ mod tests {
                 &theme,
             );
             assert_eq!(
-                styled.runs[0].font.weight, expected,
-                "strong uses CSS relative weight inside headings and headers"
+                styled.runs[0].font.weight,
+                FontWeight::MEDIUM,
+                "strong is an absolute medium weight in Source Markdown"
             );
             assert_eq!(
                 styled.runs.last().unwrap().font.weight,
-                base,
-                "a closed strong span restores its inherited weight"
+                FontWeight::MEDIUM,
+                "inline code is medium weight in Source Markdown"
             );
         }
+    }
+
+    #[test]
+    fn heading_typography_matches_source_markdown() {
+        use markdown::HeadingLevel::*;
+        let cases = [
+            (H1, 17., FontWeight::SEMIBOLD),
+            (H2, 15., FontWeight::SEMIBOLD),
+            (H3, 13., FontWeight::MEDIUM),
+            (H4, 13., FontWeight::MEDIUM),
+            (H5, 13., FontWeight::MEDIUM),
+            (H6, 13., FontWeight::MEDIUM),
+        ];
+        for (level, size, weight) in cases {
+            assert_eq!(heading_size(level), size);
+            assert_eq!(heading_weight(level), weight);
+        }
+    }
+
+    #[test]
+    fn streaming_healing_closes_incomplete_markdown() {
+        assert_eq!(heal_streaming_markdown("This is **bold"), "This is **bold**");
+        assert_eq!(heal_streaming_markdown("`code"), "`code`");
+        assert_eq!(heal_streaming_markdown("~~strike"), "~~strike~~");
+        assert_eq!(
+            heal_streaming_markdown("```rust\nfn main() {"),
+            "```rust\nfn main() {\n```"
+        );
+        assert_eq!(heal_streaming_markdown("`**literal`"), "`**literal`");
     }
 }

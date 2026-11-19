@@ -3,13 +3,14 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::Range;
 use std::sync::Arc;
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::event::{AgentEvent, ExecutionOutcome};
+use crate::event::{AgentEvent, ExecutionOutcome, TodoItem};
 use crate::markdown;
 use crate::session::SessionPhase;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Role {
     User,
     Assistant,
@@ -19,7 +20,7 @@ pub enum Role {
     Skill,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ToolStatus {
     #[default]
     None,
@@ -29,14 +30,14 @@ pub enum ToolStatus {
     Failed,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ToolFile {
     pub uri: String,
     pub name: Option<String>,
     pub mime: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ToolSubCall {
     pub id: String,
     pub title: String,
@@ -48,7 +49,7 @@ pub struct ToolSubCall {
     pub sub_calls: Vec<ToolSubCall>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ToolPart {
     pub call_id: String,
     pub name: String,
@@ -56,8 +57,14 @@ pub struct ToolPart {
     pub status: ToolStatus,
     pub input: String,
     pub output: String,
+    /// Latest live progress text/metadata reported while the tool runs.
+    /// Source keeps this in `state.progress` and renders it below the head.
+    pub progress: String,
     pub detail: String,
     pub error: Option<String>,
+    /// Previous failed attempts retained for explicit output disclosure.
+    #[serde(default)]
+    pub failure_history: Vec<String>,
     pub started_at: Option<i64>,
     pub finished_at: Option<i64>,
     /// Child session reported by a delegated task tool's metadata.
@@ -77,8 +84,10 @@ impl Default for ToolPart {
             status: ToolStatus::None,
             input: String::new(),
             output: String::new(),
+            progress: String::new(),
             detail: String::new(),
             error: None,
+            failure_history: Vec::new(),
             started_at: None,
             finished_at: None,
             child_session_id: None,
@@ -88,7 +97,50 @@ impl Default for ToolPart {
     }
 }
 
-#[derive(Clone, Debug)]
+impl ToolPart {
+    fn failure_detail(&self) -> Option<String> {
+        if self.status != ToolStatus::Failed && self.error.is_none() {
+            return None;
+        }
+        let error = self.error.as_deref().unwrap_or("");
+        let detail = if error.is_empty() {
+            self.output.clone()
+        } else if self.output.is_empty() || self.output == error {
+            error.to_owned()
+        } else {
+            format!("{error}\n\n{}", self.output)
+        };
+        Some(if detail.is_empty() { "Tool failed".into() } else { detail })
+    }
+
+    fn retain_failure(&mut self) {
+        if let Some(detail) = self.failure_detail() {
+            push_failure(&mut self.failure_history, &detail);
+        }
+    }
+
+    /// Phase updates within an attempt do not clear its payload. Only a new
+    /// attempt after a terminal result discards stale attempt-local fields.
+    fn begin_attempt(&mut self) -> bool {
+        if !matches!(self.status, ToolStatus::Failed | ToolStatus::Success) && self.finished_at.is_none() {
+            return false;
+        }
+        self.retain_failure();
+        self.output.clear();
+        self.error = None;
+        self.progress.clear();
+        self.finished_at = None;
+        true
+    }
+}
+
+fn push_failure(history: &mut Vec<String>, detail: &str) {
+    if !detail.trim().is_empty() && !history.iter().any(|previous| previous == detail) {
+        history.push(detail.to_owned());
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PartKind {
     Text { text: String, streaming: bool },
     Reasoning { text: String, streaming: bool },
@@ -111,14 +163,14 @@ impl PartKind {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Part {
     pub id: String,
     pub ordinal: u32,
     pub kind: PartKind,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Message {
     pub id: String,
     pub role: Role,
@@ -129,13 +181,18 @@ pub struct Message {
     pub parts: Vec<Part>,
     pub finish: Option<String>,
     pub error: Option<String>,
+    #[serde(default)]
+    pub failure_history: Vec<String>,
+    /// Source's `messagePresentation.interrupted`: an aborted/interrupted run
+    /// keeps its partial answer and renders a `Stopped` marker.
+    pub interrupted: bool,
     pub retry: Option<RetryState>,
     pub skill_id: Option<String>,
     pub skill_name: Option<String>,
     pub attachments: Vec<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RetryState {
     pub attempt: u32,
     pub message: String,
@@ -143,6 +200,15 @@ pub struct RetryState {
 }
 
 impl Message {
+    fn retain_failure_details(&mut self) {
+        if let Some(error) = &self.error {
+            push_failure(&mut self.failure_history, error);
+        }
+        if let Some(retry) = &self.retry {
+            push_failure(&mut self.failure_history, &retry.message);
+        }
+    }
+
     pub fn new(id: impl Into<String>, role: Role, created_at: i64) -> Self {
         Self {
             id: id.into(),
@@ -154,6 +220,8 @@ impl Message {
             parts: Vec::new(),
             finish: None,
             error: None,
+            failure_history: Vec::new(),
+            interrupted: false,
             retry: None,
             skill_id: None,
             skill_name: None,
@@ -189,6 +257,50 @@ impl Message {
     }
 }
 
+fn merge_tool_history(next: &mut ToolPart, previous: &ToolPart) {
+    let mut retained = previous.failure_history.clone();
+    if previous.status == ToolStatus::Failed
+        && (next.status != ToolStatus::Failed || next.error != previous.error || next.output != previous.output)
+        && let Some(detail) = previous.failure_detail()
+    {
+        push_failure(&mut retained, &detail);
+    }
+    for detail in &next.failure_history {
+        push_failure(&mut retained, detail);
+    }
+    next.failure_history = retained;
+    if let Some(started) = previous.started_at {
+        next.started_at = Some(next.started_at.map_or(started, |next| started.min(next)));
+    }
+    if matches!(next.status, ToolStatus::Streaming | ToolStatus::Running)
+        && matches!(previous.status, ToolStatus::Failed | ToolStatus::Success)
+    {
+        if next.output == previous.output { next.output.clear(); }
+        if next.error == previous.error { next.error = None; }
+        if next.progress == previous.progress { next.progress.clear(); }
+        next.finished_at = None;
+    }
+}
+
+fn merge_message_history(next: &mut Message, previous: &Message) {
+    let mut retained = previous.failure_history.clone();
+    if let Some(error) = &previous.error { push_failure(&mut retained, error); }
+    if let Some(retry) = &previous.retry { push_failure(&mut retained, &retry.message); }
+    for detail in &next.failure_history {
+        push_failure(&mut retained, detail);
+    }
+    next.failure_history = retained;
+    for part in &mut next.parts {
+        let PartKind::Tool(next_tool) = &mut part.kind else { continue; };
+        if let Some(previous_part) = previous.parts.iter().find(|previous_part| {
+            matches!(&previous_part.kind, PartKind::Tool(tool) if tool.call_id == next_tool.call_id)
+        }) && let PartKind::Tool(previous_tool) = &previous_part.kind {
+            merge_tool_history(next_tool, previous_tool);
+            part.id = previous_part.id.clone();
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BlockKind {
     User,
@@ -215,6 +327,10 @@ pub struct Block {
     pub detail: Arc<str>,
     /// Tool output or status detail.
     pub output: Arc<str>,
+    /// Live tool progress reported while the call is running.
+    pub progress: Arc<str>,
+    /// The originating assistant message was aborted/interrupted.
+    pub interrupted: bool,
     pub status: ToolStatus,
     pub streaming: bool,
     /// Agent id/name that produced this block, when known.
@@ -240,6 +356,8 @@ impl Block {
         self.text.hash(&mut hasher);
         self.detail.hash(&mut hasher);
         self.output.hash(&mut hasher);
+        self.progress.hash(&mut hasher);
+        self.interrupted.hash(&mut hasher);
         self.status.hash(&mut hasher);
         self.streaming.hash(&mut hasher);
         self.agent.hash(&mut hasher);
@@ -253,6 +371,7 @@ impl Block {
         for call in &self.sub_calls {
             call.hash(&mut hasher);
         }
+        self.attachments.hash(&mut hasher);
         hasher.finish()
     }
 
@@ -332,6 +451,12 @@ impl Transcript {
 
     /// Replace the transcript from an authoritative message replay.
     pub fn hydrate(&mut self, messages: Vec<Message>) {
+        let mut messages = messages;
+        for message in &mut messages {
+            if let Some(previous) = self.message(&message.id) {
+                merge_message_history(message, previous);
+            }
+        }
         let live_compaction = self
             .messages
             .iter()
@@ -411,7 +536,8 @@ impl Transcript {
         let mut message = Message::text(id, Role::User, at, text);
         message.attachments = attachments;
         self.upsert_message(message);
-        self.needs_assemble = true;
+        // A send publishes immediately, even when no runtime event follows.
+        self.revision += 1;
     }
 
     pub fn apply(&mut self, event: &AgentEvent) -> bool {
@@ -438,6 +564,7 @@ impl Transcript {
                     })
                     .map(|message| {
                         message.completed_at = Some(*at);
+                        message.retain_failure_details();
                         message.retry = None;
                         message.id.clone()
                     })
@@ -446,6 +573,7 @@ impl Transcript {
                     self.finish_message_parts(&id);
                 }
                 let message = self.ensure_message(message_id, Role::Assistant, *at);
+                message.retain_failure_details();
                 message.agent = agent.clone();
                 message.model = model.clone();
                 message.completed_at = None;
@@ -463,8 +591,12 @@ impl Transcript {
                 at,
             } => {
                 let message = self.ensure_message(message_id, Role::Assistant, *at);
+                message.retain_failure_details();
                 message.completed_at = Some(*at);
                 message.finish = finish.clone();
+                if matches!(finish.as_deref(), Some("stop" | "length" | "tool-calls")) {
+                    message.error = None;
+                }
                 message.retry = None;
                 self.finish_message_parts(message_id);
                 self.needs_assemble = true;
@@ -498,6 +630,7 @@ impl Transcript {
                 message.completed_at = Some(*at);
                 message.finish = Some("error".into());
                 message.error = Some(error.clone());
+                message.retain_failure_details();
                 message.retry = None;
                 self.finish_message_parts(message_id);
                 self.needs_assemble = true;
@@ -561,6 +694,9 @@ impl Transcript {
                 ..
             } => {
                 self.ensure_tool(message_id, call_id, *at, |tool| {
+                    if tool.begin_attempt() {
+                        tool.input.clear();
+                    }
                     tool.name = name.clone();
                     tool.title = name.clone();
                     tool.status = ToolStatus::Streaming;
@@ -574,6 +710,9 @@ impl Transcript {
                 ..
             } => {
                 self.ensure_tool(message_id, call_id, *at, |tool| {
+                    if tool.begin_attempt() {
+                        tool.input.clear();
+                    }
                     tool.input.push_str(delta);
                     tool.status = ToolStatus::Streaming;
                 });
@@ -586,6 +725,7 @@ impl Transcript {
                 ..
             } => {
                 self.ensure_tool(message_id, call_id, *at, |tool| {
+                    tool.begin_attempt();
                     tool.input = input.clone();
                     tool.status = ToolStatus::Running;
                 });
@@ -598,6 +738,7 @@ impl Transcript {
                 ..
             } => {
                 self.ensure_tool(message_id, call_id, *at, |tool| {
+                    tool.begin_attempt();
                     tool.input = input.clone();
                     if tool.started_at.is_none() {
                         tool.started_at = Some(*at);
@@ -608,11 +749,15 @@ impl Transcript {
             AgentEvent::ToolProgress {
                 message_id,
                 call_id,
+                progress,
                 detail,
+                at,
                 ..
             } => {
-                self.ensure_tool(message_id, call_id, 0, |tool| {
-                    tool.detail = detail.clone();
+                self.ensure_tool(message_id, call_id, *at, |tool| {
+                    // Source keeps progress beside the collected metadata; the
+                    // card subtitle is derived from the tool input, not here.
+                    tool.progress = progress.clone();
                     if let Ok(metadata) = serde_json::from_str::<Value>(detail) {
                         if let Some(id) = metadata
                             .get("sessionId")
@@ -640,6 +785,7 @@ impl Transcript {
                 ..
             } => {
                 self.ensure_tool(message_id, call_id, *at, |tool| {
+                    tool.retain_failure();
                     tool.status = if *success {
                         ToolStatus::Success
                     } else {
@@ -686,9 +832,22 @@ impl Transcript {
                 exit_code,
                 ..
             } => {
-                let message = Message::text(id.clone(), Role::Shell, 0, String::new());
-                let mut message = message;
-                message.parts.clear();
+                let command = self
+                    .index
+                    .get(id)
+                    .and_then(|index| self.messages.get(*index))
+                    .and_then(|message| message.parts.first())
+                    .and_then(|part| match &part.kind {
+                        PartKind::Text { text, .. } => Some(text.clone()),
+                        _ => None,
+                    })
+                    .unwrap_or_default();
+                let input = if command.is_empty() {
+                    String::new()
+                } else {
+                    serde_json::json!({ "command": command }).to_string()
+                };
+                let mut message = Message::new(id.clone(), Role::Shell, 0);
                 message.parts.push(Part {
                     id: format!("{id}:shell"),
                     ordinal: 0,
@@ -701,10 +860,12 @@ impl Transcript {
                         } else {
                             ToolStatus::Failed
                         },
-                        input: String::new(),
+                        input,
                         output: output.clone(),
-                        detail: String::new(),
+                        progress: String::new(),
+                        detail: "shell".into(),
                         error: None,
+                        failure_history: Vec::new(),
                         started_at: None,
                         finished_at: Some(0),
                         child_session_id: None,
@@ -739,6 +900,8 @@ impl Transcript {
                     return false;
                 }
                 let assistant = self.ensure_message(message_id, Role::Assistant, *at);
+                assistant.retain_failure_details();
+                push_failure(&mut assistant.failure_history, message);
                 assistant.retry = Some(RetryState {
                     attempt: *attempt,
                     message: message.clone(),
@@ -840,6 +1003,7 @@ impl Transcript {
                     .find(|message| message.role == Role::Assistant)
                 {
                     if *phase == SessionPhase::Retry {
+                        assistant.retain_failure_details();
                         assistant.retry = Some(RetryState {
                             attempt: *attempt,
                             next: *next,
@@ -847,8 +1011,11 @@ impl Transcript {
                                 .clone()
                                 .unwrap_or_else(|| "[VELA_RETRY_SCHEDULED] Retrying".into()),
                         });
+                        assistant.retain_failure_details();
                         self.needs_assemble = true;
-                    } else if assistant.retry.take().is_some() {
+                    } else if assistant.retry.is_some() {
+                        assistant.retain_failure_details();
+                        assistant.retry = None;
                         self.needs_assemble = true;
                     }
                 }
@@ -940,7 +1107,9 @@ impl Transcript {
             message.error = Some(error.to_owned());
             self.needs_assemble = true;
         }
-        if message.retry.take().is_some() {
+        if message.retry.is_some() {
+            message.retain_failure_details();
+            message.retry = None;
             self.needs_assemble = true;
         }
         let id = message.id.clone();
@@ -1166,7 +1335,10 @@ impl Transcript {
         self.dirty_parts.insert(part_id);
     }
 
-    fn upsert_message(&mut self, message: Message) {
+    fn upsert_message(&mut self, mut message: Message) {
+        if let Some(previous) = self.message(&message.id) {
+            merge_message_history(&mut message, previous);
+        }
         let new_part_ids: Vec<String> = message.parts.iter().map(|part| part.id.clone()).collect();
         if message.role == Role::User && !message.id.starts_with("local:") {
             let text = message
@@ -1208,7 +1380,7 @@ impl Transcript {
     }
 
     fn upsert_part(&mut self, message_id: &str, mut part: Part, at: i64) {
-        let part_id = part.id.clone();
+        let mut part_id = part.id.clone();
         let message = self.ensure_message(message_id, Role::Assistant, at);
         let old_id = if let Some(existing) = message.parts.iter_mut().find(|existing| {
             existing.id == part_id
@@ -1217,6 +1389,11 @@ impl Transcript {
         }) {
             let old_id = existing.id.clone();
             part.ordinal = existing.ordinal;
+            if let (PartKind::Tool(next), PartKind::Tool(previous)) = (&mut part.kind, &existing.kind) {
+                merge_tool_history(next, previous);
+                part.id = existing.id.clone();
+                part_id = part.id.clone();
+            }
             *existing = part;
             Some(old_id)
         } else {
@@ -1377,10 +1554,13 @@ impl Transcript {
                     files: Vec::new(),
                     sub_calls: Vec::new(),
                     attachments: Vec::new(),
+                    progress: Arc::from(""),
+                    interrupted: message.interrupted,
                 });
                 start += 1;
             }
             if message.role == Role::Assistant
+                && message.retry.is_none()
                 && let Some(error) = &message.error
             {
                 blocks.push(Block {
@@ -1401,28 +1581,41 @@ impl Transcript {
                     files: Vec::new(),
                     sub_calls: Vec::new(),
                     attachments: Vec::new(),
+                    progress: Arc::from(""),
+                    interrupted: message.interrupted,
                 });
                 start += 1;
             }
-            if let Some(retry) = &message.retry {
+            if message.retry.is_some() || (!message.failure_history.is_empty() && message.error.is_none()) {
+                let (text, detail, status, completed_at) = if let Some(retry) = &message.retry {
+                    (retry.message.clone(), format!("attempt {}", retry.attempt), ToolStatus::None, retry.next)
+                } else if message.completed_at.is_none() {
+                    ("Retrying".into(), String::new(), ToolStatus::Running, None)
+                } else if matches!(message.finish.as_deref(), Some("stop" | "length")) {
+                    ("Recovered after retry".into(), String::new(), ToolStatus::Success, message.completed_at)
+                } else {
+                    ("Retry details".into(), String::new(), ToolStatus::None, message.completed_at)
+                };
                 blocks.push(Block {
                     id: Arc::from(format!("{}:retry", message.id)),
                     message_id: Arc::from(message.id.as_str()),
                     part_id: Arc::from(format!("{}:retry", message.id)),
                     kind: BlockKind::Retry,
-                    text: Arc::from(retry.message.as_str()),
-                    detail: Arc::from(format!("attempt {}", retry.attempt)),
-                    output: Arc::from(""),
-                    status: ToolStatus::None,
+                    text: Arc::from(text),
+                    detail: Arc::from(detail),
+                    output: Arc::from(message.failure_history.join("\n\n")),
+                    status,
                     streaming: false,
                     agent: None,
                     model: None,
                     created_at: message.created_at,
-                    completed_at: retry.next,
+                    completed_at,
                     child_session_id: None,
                     files: Vec::new(),
                     sub_calls: Vec::new(),
                     attachments: Vec::new(),
+                    progress: Arc::from(""),
+                    interrupted: message.interrupted,
                 });
                 start += 1;
             }
@@ -1440,6 +1633,7 @@ impl Transcript {
         for block in &mut result.blocks {
             block.agent = message.agent.as_deref().map(Arc::from);
             block.model = message.model.as_deref().map(Arc::from);
+            block.interrupted = message.interrupted;
         }
         result
     }
@@ -1470,6 +1664,8 @@ impl Transcript {
                         files: Vec::new(),
                         sub_calls: Vec::new(),
                         attachments: message.attachments.iter().cloned().map(Arc::from).collect(),
+                        progress: Arc::from(""),
+                        interrupted: false,
                     };
                     return PartBlocks {
                         ranges: std::iter::once(0..text.len()).collect(),
@@ -1503,6 +1699,8 @@ impl Transcript {
                         files: Vec::new(),
                         sub_calls: Vec::new(),
                         attachments: Vec::new(),
+                        progress: Arc::from(""),
+                        interrupted: false,
                     };
                     return PartBlocks {
                         ranges: std::iter::once(0..text.len()).collect(),
@@ -1530,6 +1728,8 @@ impl Transcript {
                         files: Vec::new(),
                         sub_calls: Vec::new(),
                         attachments: Vec::new(),
+                        progress: Arc::from(""),
+                        interrupted: false,
                     };
                     return PartBlocks {
                         ranges: std::iter::once(0..text.len()).collect(),
@@ -1567,6 +1767,8 @@ impl Transcript {
                         files: Vec::new(),
                         sub_calls: Vec::new(),
                         attachments: Vec::new(),
+                        progress: Arc::from(""),
+                        interrupted: false,
                     }]
                 };
                 PartBlocks {
@@ -1581,10 +1783,10 @@ impl Transcript {
                     Role::Shell => BlockKind::Shell,
                     _ => BlockKind::Tool,
                 };
-                let detail = if !tool.title.is_empty() {
-                    tool.title.clone()
-                } else if !tool.name.is_empty() {
+                let detail = if !tool.name.is_empty() {
                     tool.name.clone()
+                } else if !tool.title.is_empty() {
+                    tool.title.clone()
                 } else {
                     tool.call_id.clone()
                 };
@@ -1595,6 +1797,13 @@ impl Transcript {
                 } else {
                     tool.detail.clone()
                 };
+                let output = if tool.failure_history.is_empty() {
+                    output
+                } else if output.is_empty() {
+                    format!("Previous failures\n{}", tool.failure_history.join("\n\n"))
+                } else {
+                    format!("Previous failures\n{}\n\n{output}", tool.failure_history.join("\n\n"))
+                };
                 let blocks = vec![Block {
                     id: Arc::from(part.id.as_str()),
                     message_id: Arc::from(message.id.as_str()),
@@ -1603,6 +1812,8 @@ impl Transcript {
                     text: Arc::from(tool.input.as_str()),
                     detail: Arc::from(detail),
                     output: Arc::from(output),
+                    progress: Arc::from(tool.progress.as_str()),
+                    interrupted: false,
                     status: tool.status,
                     streaming: matches!(tool.status, ToolStatus::Streaming | ToolStatus::Running),
                     agent: None,
@@ -1735,6 +1946,8 @@ fn build_text_blocks(
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         });
     }
 
@@ -1782,16 +1995,53 @@ pub fn part_from_json(value: &Value, message_id: &str) -> Option<Part> {
                 streaming: false,
             },
         }),
-        "tool" => tool_from_json(value).map(|tool| Part {
-            id,
-            ordinal: 0,
-            kind: PartKind::Tool(Box::new(tool)),
+        "tool" => tool_from_json(value).map(|mut tool| {
+            // Source's live projection also carries `state.progress`; replay
+            // cards omit it, so only part updates set it here.
+            if let Some(progress) = value
+                .get("state")
+                .and_then(|state| state.get("progress"))
+                .filter(|progress| !progress.is_null())
+            {
+                tool.progress = match progress {
+                    Value::String(text) => text.clone(),
+                    value => serde_json::to_string_pretty(value).unwrap_or_default(),
+                };
+            }
+            Part {
+                id,
+                ordinal: 0,
+                kind: PartKind::Tool(Box::new(tool)),
+            }
         }),
         _ => {
             let _ = message_id;
             None
         }
     }
+}
+
+/// Source's `messagePresentation.interrupted`: aborted/interrupted failures.
+fn failure_is_interrupted(error: &Value) -> bool {
+    let text = ["name", "type", "code", "message"]
+        .iter()
+        .filter_map(|key| error.get(*key).and_then(Value::as_str))
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_ascii_lowercase();
+    text.contains("abort") || text.contains("interrupt")
+}
+
+/// Source's `messagePresentation` resolves a model id from `model.id`, the
+/// legacy `model.modelID` and the flat `modelID` field, in that order.
+fn presentation_model_id(value: &Value) -> Option<String> {
+    value
+        .pointer("/model/id")
+        .or_else(|| value.pointer("/model/modelID"))
+        .or_else(|| value.get("modelID"))
+        .and_then(Value::as_str)
+        .filter(|id| !id.is_empty())
+        .map(str::to_string)
 }
 
 /// Convert a persisted OpenCode message into the domain model.
@@ -1811,6 +2061,7 @@ pub fn message_from_json(raw: &Value) -> Option<Message> {
     let created = value
         .pointer("/time/created")
         .and_then(Value::as_i64)
+        .or_else(|| value.get("createdAt").and_then(Value::as_i64))
         .unwrap_or(0);
     match kind {
         "user" => {
@@ -1828,6 +2079,14 @@ pub fn message_from_json(raw: &Value) -> Option<Message> {
                         .join("\n")
                 });
             let mut message = Message::text(id, Role::User, created, text);
+            // Source's `messagePresentation` keeps a row's own agent/model even
+            // when replay also carries switch state forward.
+            message.agent = value
+                .get("agent")
+                .and_then(Value::as_str)
+                .filter(|agent| !agent.is_empty())
+                .map(str::to_string);
+            message.model = presentation_model_id(value);
             message.attachments = content
                 .into_iter()
                 .flatten()
@@ -1856,21 +2115,26 @@ pub fn message_from_json(raw: &Value) -> Option<Message> {
                 .get("agent")
                 .and_then(Value::as_str)
                 .map(str::to_string);
-            message.model = value
-                .pointer("/model/id")
-                .and_then(Value::as_str)
-                .map(str::to_string);
+            message.model = presentation_model_id(value);
             message.completed_at = value.pointer("/time/completed").and_then(Value::as_i64);
             message.finish = value
                 .get("finish")
                 .and_then(Value::as_str)
                 .map(str::to_string);
             if let Some(error) = value.get("error") {
+                message.interrupted = failure_is_interrupted(error);
                 message.error = Some(crate::event::failure_text(
                     Some(error),
                     "VELA_ASSISTANT_FAILED",
                     "Assistant failed",
                 ));
+            }
+            if value
+                .get("interrupted")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+            {
+                message.interrupted = true;
             }
             if let Some(retry) = value.get("retry").filter(|value| value.is_object()) {
                 message.retry = Some(RetryState {
@@ -1941,9 +2205,10 @@ pub fn message_from_json(raw: &Value) -> Option<Message> {
                             let Some(mut tool) = tool_from_json(&tool_value) else {
                                 continue;
                             };
-                            // Reference replay -> viewPart -> partFromProjection drops
-                            // state.error, then displays the default failure. Retain the
-                            // original structured error here while matching that UI text.
+                            // Captured Source replay shows failed tools with the
+                            // generic `[VELA_TOOL_FAILED] Tool failed` output even
+                            // when the stored state carries a richer error message;
+                            // retain the structured error separately.
                             if tool.status == ToolStatus::Failed {
                                 tool.output = "[VELA_TOOL_FAILED] Tool failed".into();
                             }
@@ -1979,7 +2244,51 @@ pub fn message_from_json(raw: &Value) -> Option<Message> {
                 .and_then(Value::as_str)
                 .or_else(|| value.get("text").and_then(Value::as_str))
                 .unwrap_or_default();
-            Some(Message::text(id, Role::Shell, created, command))
+            let exit = value.get("exit").and_then(Value::as_i64);
+            let status = match value.get("status").and_then(Value::as_str) {
+                Some("running") => ToolStatus::Running,
+                Some("exited") if exit == Some(0) => ToolStatus::Success,
+                Some("exited" | "timeout" | "killed") => ToolStatus::Failed,
+                _ => ToolStatus::Running,
+            };
+            let output = value
+                .get("output")
+                .and_then(|output| {
+                    output
+                        .get("output")
+                        .and_then(Value::as_str)
+                        .or_else(|| output.as_str())
+                })
+                .unwrap_or_default()
+                .to_string();
+            let input = if command.is_empty() {
+                String::new()
+            } else {
+                serde_json::json!({ "command": command }).to_string()
+            };
+            let mut message = Message::new(id.clone(), Role::Shell, created);
+            message.parts.push(Part {
+                id: format!("{id}:shell"),
+                ordinal: 0,
+                kind: PartKind::Tool(Box::new(ToolPart {
+                    call_id: id,
+                    name: "shell".into(),
+                    title: "shell".into(),
+                    status,
+                    input,
+                    output,
+                    progress: String::new(),
+                    detail: "shell".into(),
+                    error: None,
+                    failure_history: Vec::new(),
+                    started_at: Some(created),
+                    finished_at: (status != ToolStatus::Running).then_some(created),
+                    child_session_id: None,
+                    files: Vec::new(),
+                    sub_calls: Vec::new(),
+                })),
+            });
+            Some(message)
         }
         "synthetic" | "system" => {
             let text = value
@@ -2275,8 +2584,10 @@ fn tool_from_json(value: &Value) -> Option<ToolPart> {
         status,
         input,
         output,
+        progress: String::new(),
         detail,
         error,
+        failure_history: Vec::new(),
         started_at: time
             .and_then(|time| time.get("created"))
             .and_then(Value::as_i64),
@@ -2322,6 +2633,113 @@ pub fn structured_error(value: &Value) -> String {
         .unwrap_or_else(|| value.to_string())
 }
 
+fn replay_text(message: &Message) -> String {
+    message
+        .parts
+        .iter()
+        .filter_map(|part| match &part.kind {
+            PartKind::Text { text, .. } => Some(text.clone()),
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Replay carries the selected agent/model forward across canonical messages
+/// and annotates user rows the same way Source's `replayTranscript` does.
+fn replay_messages_json(items: &[Value]) -> Vec<Message> {
+    let mut out = Vec::new();
+    let mut agent: Option<String> = None;
+    let mut model: Option<String> = None;
+    let mut parent_user: Option<usize> = None;
+    for raw in items {
+        let info = raw.get("info").unwrap_or(raw);
+        let kind = info
+            .get("type")
+            .or_else(|| info.get("role"))
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        match kind {
+            "agent-switched" => {
+                agent = info
+                    .get("agent")
+                    .and_then(Value::as_str)
+                    .filter(|value| !value.is_empty())
+                    .map(str::to_string);
+                continue;
+            }
+            "model-switched" => {
+                model = info
+                    .pointer("/model/id")
+                    .or_else(|| info.get("model"))
+                    .and_then(Value::as_str)
+                    .filter(|value| !value.is_empty())
+                    .map(str::to_string);
+                continue;
+            }
+            _ => {}
+        }
+        let Some(mut message) = message_from_json(raw) else {
+            continue;
+        };
+        match message.role {
+            Role::User => {
+                if replay_text(&message).trim().is_empty() {
+                    // Source skips empty user messages, including file-only rows.
+                    parent_user = None;
+                    continue;
+                }
+                if message.agent.is_none() {
+                    message.agent = agent.clone();
+                }
+                if message.model.is_none() {
+                    message.model = model.clone();
+                }
+                parent_user = Some(out.len());
+                out.push(message);
+            }
+            Role::Assistant => {
+                if message.agent.is_some() {
+                    agent = message.agent.clone();
+                }
+                if message.model.is_some() {
+                    model = message.model.clone();
+                }
+                // Source backfills the assistant's `parentID` target when it names
+                // an earlier user row, falling back to the carried parent id.
+                let parent_index = info
+                    .get("parentID")
+                    .and_then(Value::as_str)
+                    .and_then(|parent| {
+                        out.iter()
+                            .rposition(|item: &Message| item.id == parent && item.role == Role::User)
+                    })
+                    .or(parent_user);
+                if let Some(index) = parent_index
+                    && let Some(parent) = out.get_mut(index)
+                    && parent.role == Role::User
+                {
+                    if message.agent.is_some() {
+                        parent.agent = message.agent.clone();
+                    }
+                    if message.model.is_some() {
+                        parent.model = message.model.clone();
+                    }
+                }
+                // Source omits a settled assistant that contributed no timeline
+                // parts; retrying or errored messages stay visible.
+                let settled = message.completed_at.is_some() || message.finish.is_some();
+                if message.parts.is_empty() && settled && message.retry.is_none() && message.error.is_none() {
+                    continue;
+                }
+                out.push(message);
+            }
+            _ => out.push(message),
+        }
+    }
+    out
+}
+
 impl Transcript {
     pub fn from_messages_json(value: &Value) -> Self {
         let messages = value
@@ -2329,12 +2747,100 @@ impl Transcript {
             .or_else(|| value.get("messages"))
             .and_then(Value::as_array)
             .or_else(|| value.as_array())
-            .map(|items| items.iter().filter_map(message_from_json).collect())
+            .map(|items| replay_messages_json(items))
             .unwrap_or_default();
         let mut transcript = Self::new();
         transcript.hydrate(messages);
         transcript
     }
+}
+
+/// Replay the session's todo list from the latest non-empty `todowrite` tool
+/// result, mirroring Source's `replayTodos`/`normalizeTodos`.
+pub fn replay_todos_json(value: &Value) -> Vec<TodoItem> {
+    let Some(items) = value
+        .get("data")
+        .or_else(|| value.get("messages"))
+        .and_then(Value::as_array)
+        .or_else(|| value.as_array())
+    else {
+        return Vec::new();
+    };
+    let mut todos = Vec::new();
+    for raw in items {
+        let info = raw.get("info").unwrap_or(raw);
+        let parts = raw
+            .get("parts")
+            .and_then(Value::as_array)
+            .or_else(|| info.get("content").and_then(Value::as_array));
+        let Some(parts) = parts else { continue };
+        for part in parts {
+            if part.get("type").and_then(Value::as_str) != Some("tool") {
+                continue;
+            }
+            let name = part
+                .get("tool")
+                .or_else(|| part.get("name"))
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_ascii_lowercase()
+                .chars()
+                .filter(char::is_ascii_alphabetic)
+                .collect::<String>();
+            if name != "todowrite" {
+                continue;
+            }
+            let state = part.get("state").unwrap_or(&Value::Null);
+            let raw_todos = state
+                .pointer("/metadata/todos")
+                .filter(|todos| !todos.is_null())
+                .or_else(|| state.pointer("/input/todos"));
+            let next = normalize_todos(raw_todos);
+            if !next.is_empty() {
+                todos = next;
+            }
+        }
+    }
+    todos
+}
+
+fn normalize_todos(value: Option<&Value>) -> Vec<TodoItem> {
+    let Some(items) = value.and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    let mut todos = Vec::new();
+    for (index, item) in items.iter().enumerate() {
+        let Some(item) = item.as_object() else {
+            continue;
+        };
+        let content = item
+            .get("content")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        if content.is_empty() {
+            continue;
+        }
+        let status = match item.get("status").and_then(Value::as_str).unwrap_or("pending") {
+            status @ ("pending" | "in_progress" | "completed" | "cancelled") => status,
+            _ => "pending",
+        };
+        todos.push(TodoItem {
+            id: item
+                .get("id")
+                .and_then(Value::as_str)
+                .filter(|id| !id.is_empty())
+                .map(str::to_string)
+                .unwrap_or_else(|| format!("todo-{index}")),
+            content: content.to_string(),
+            status: status.to_string(),
+            priority: item
+                .get("priority")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string(),
+        });
+    }
+    todos
 }
 
 #[cfg(test)]
@@ -2540,7 +3046,7 @@ mod tests {
     }
 
     #[test]
-    fn v2_retry_keeps_deadline_and_replay_state_then_clears_on_restart_or_interrupt() {
+    fn v2_retry_clears_active_attempt_but_retains_details_after_restart_or_interrupt() {
         let mut transcript = Transcript::new();
         let event = |kind: &str, data: Value| {
             crate::event::parse_event(&serde_json::json!({
@@ -2574,10 +3080,10 @@ mod tests {
         ));
         assert!(transcript.message("retry").unwrap().retry.is_none());
         assert!(
-            !transcript
+            transcript
                 .blocks()
                 .iter()
-                .any(|block| block.kind == BlockKind::Retry)
+                .any(|block| block.kind == BlockKind::Retry && !block.output.is_empty())
         );
         let replay = serde_json::json!({"id":"replay", "type":"assistant", "time":{"created":1,"completed":2},
             "retry":{"attempt":2,"message":"Wait","next":40},"content":[]});
@@ -2590,10 +3096,10 @@ mod tests {
         assert!(transcript.message("replay").unwrap().retry.is_none());
         assert_eq!(transcript.message("replay").unwrap().completed_at, Some(2));
         assert!(
-            !transcript
+            transcript
                 .blocks()
                 .iter()
-                .any(|block| block.kind == BlockKind::Retry)
+                .any(|block| block.kind == BlockKind::Retry && !block.output.is_empty())
         );
     }
 
@@ -2625,10 +3131,10 @@ mod tests {
         assert_eq!(ended.message("retry").unwrap().completed_at, Some(10));
         assert_eq!(ended.phase(), SessionPhase::Idle);
         assert!(
-            !ended
+            ended
                 .blocks()
                 .iter()
-                .any(|block| block.kind == BlockKind::Retry)
+                .any(|block| block.kind == BlockKind::Retry && block.status == ToolStatus::Success)
         );
 
         let mut status = Transcript::new();
@@ -2641,10 +3147,10 @@ mod tests {
         assert!(status.message("retry").unwrap().retry.is_none());
         assert_eq!(status.phase(), SessionPhase::Busy);
         assert!(
-            !status
+            status
                 .blocks()
                 .iter()
-                .any(|block| block.kind == BlockKind::Retry)
+                .any(|block| block.kind == BlockKind::Retry && block.status == ToolStatus::Running)
         );
     }
 
@@ -2967,6 +3473,85 @@ mod tests {
     }
 
     #[test]
+    fn replay_carries_agent_model_switches_and_backfills_user_metadata() {
+        let value = serde_json::json!({"data":[
+            {"id":"u1","type":"user","time":{"created":1},"text":"first"},
+            {"id":"s1","type":"agent-switched","agent":"plan","time":{"created":2}},
+            {"id":"s2","type":"model-switched","model":{"id":"m1","providerID":"p"},"time":{"created":3}},
+            {"id":"u2","type":"user","time":{"created":4},"text":"second"},
+            {"id":"a1","type":"assistant","time":{"created":5,"completed":6},
+             "agent":"build","model":{"id":"m2"},"finish":"stop",
+             "content":[{"type":"text","text":"ok"}]},
+            {"id":"u3","type":"user","time":{"created":7},"text":"   "},
+            {"id":"s3","type":"agent-switched","agent":"plan","time":{"created":8}},
+            {"id":"u4","type":"user","time":{"created":9},"text":"third"}
+        ]});
+        let transcript = Transcript::from_messages_json(&value);
+        let messages = transcript.messages();
+        assert_eq!(
+            messages.iter().map(|message| message.id.as_str()).collect::<Vec<_>>(),
+            vec!["u1", "u2", "a1", "u4"],
+            "selection records annotate later rows but never become transcript rows"
+        );
+        assert_eq!(messages[0].agent, None);
+        assert_eq!(messages[0].model, None);
+        assert_eq!(
+            messages[1].agent.as_deref(),
+            Some("build"),
+            "the preceding assistant backfills its user row"
+        );
+        assert_eq!(messages[1].model.as_deref(), Some("m2"));
+        assert_eq!(messages[2].agent.as_deref(), Some("build"));
+        assert_eq!(messages[2].model.as_deref(), Some("m2"));
+        assert_eq!(
+            messages[3].agent.as_deref(),
+            Some("plan"),
+            "the latest agent switch annotates the next user row"
+        );
+        assert_eq!(
+            messages[3].model.as_deref(),
+            Some("m2"),
+            "the latest model switch still applies"
+        );
+    }
+
+    #[test]
+    fn replay_and_live_shell_cards_keep_command_output_and_exit_status() {
+        let mut replay = Transcript::from_messages_json(&serde_json::json!({"data":[{
+            "id":"sh1","type":"shell","command":"pnpm test","status":"exited","exit":1,
+            "output":{"output":"1 failed"}
+        }]}));
+        let blocks = replay.blocks();
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].kind, BlockKind::Shell);
+        assert_eq!(blocks[0].status, ToolStatus::Failed);
+        assert_eq!(blocks[0].output.as_ref(), "1 failed");
+        let input: serde_json::Value = serde_json::from_str(&blocks[0].text).unwrap();
+        assert_eq!(input["command"], "pnpm test");
+
+        let mut live = Transcript::new();
+        live.apply(&crate::event::AgentEvent::ShellStarted {
+            session_id: "s".into(),
+            command: "cargo test".into(),
+            at: 1,
+        });
+        let id = live.messages()[0].id.clone();
+        live.apply(&crate::event::AgentEvent::ShellEnded {
+            session_id: "s".into(),
+            id,
+            output: "ok".into(),
+            exit_code: 0,
+        });
+        let blocks = live.blocks();
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].kind, BlockKind::Shell);
+        assert_eq!(blocks[0].status, ToolStatus::Success);
+        assert_eq!(blocks[0].output.as_ref(), "ok");
+        let input: serde_json::Value = serde_json::from_str(&blocks[0].text).unwrap();
+        assert_eq!(input["command"], "cargo test");
+    }
+
+    #[test]
     fn canonical_replay_preserves_roles_part_ids_completion_and_retry_contract() {
         let value = serde_json::json!({"data":[
             {"info":{"id":"u","role":"user","time":{"created":1}},
@@ -3223,7 +3808,7 @@ mod tests {
     }
 
     #[test]
-    fn restored_failed_tool_matches_reference_hydration_and_retains_original_error() {
+    fn restored_failed_tool_matches_captured_source_generic_output() {
         let raw = serde_json::json!({"info":{"id":"a","role":"assistant","time":{"created":1}},
             "parts":[{"id":"p","callID":"c","type":"tool","name":"bash", "time":{"created":10,"ran":12,"completed":20},
                 "state":{"status":"error","input":{},"error":{"code":"fixture.tool","message":"Saved failure"}}}]});
@@ -3231,6 +3816,8 @@ mod tests {
         let PartKind::Tool(tool) = &message.parts[0].kind else {
             panic!("tool")
         };
+        // The captured Source transcript shows the generic placeholder for a
+        // replayed failure while the structured error remains available.
         assert_eq!(tool.output, "[VELA_TOOL_FAILED] Tool failed");
         assert_eq!(tool.error.as_deref(), Some("[FIXTURE.TOOL] Saved failure"));
         assert_eq!(tool.finished_at, Some(18));
@@ -3238,8 +3825,256 @@ mod tests {
         let PartKind::Tool(tool) = live.kind else {
             panic!("tool")
         };
+        // Live projections come from `partFromProjection`, which formats the
+        // error instead of using the placeholder.
         assert_eq!(tool.output, "[FIXTURE.TOOL] Saved failure");
         assert_eq!(tool.finished_at, Some(20));
+    }
+
+    #[test]
+    fn replayed_failed_tool_output_is_generic_while_live_projection_keeps_content() {
+        let raw = serde_json::json!({"info":{"id":"a","role":"assistant","time":{"created":1}},
+            "parts":[{"id":"p","callID":"c","type":"tool","tool":"bash",
+                "state":{"status":"failed","input":{"command":"ls"},
+                    "error":{"message":"exit 1"},
+                    "content":[{"type":"text","text":"real output"}],
+                    "output":"ignored"}}]});
+        let replayed = message_from_json(&raw).unwrap();
+        let PartKind::Tool(tool) = &replayed.parts[0].kind else {
+            panic!("tool")
+        };
+        assert_eq!(
+            tool.output, "[VELA_TOOL_FAILED] Tool failed",
+            "captured Source replay uses the placeholder even with content"
+        );
+        let live = part_from_json(&raw["parts"][0], "a").unwrap();
+        let PartKind::Tool(tool) = live.kind else {
+            panic!("tool")
+        };
+        assert_eq!(
+            tool.output, "real output",
+            "live projection keeps text content on failures"
+        );
+
+        let without_content = serde_json::json!({"info":{"id":"a","role":"assistant","time":{"created":1}},
+            "parts":[{"id":"p","callID":"c","type":"tool","tool":"bash",
+                "state":{"status":"failed","input":{"command":"ls"},"output":"raw output"}}]});
+        let replayed = message_from_json(&without_content).unwrap();
+        let PartKind::Tool(tool) = &replayed.parts[0].kind else {
+            panic!("tool")
+        };
+        assert_eq!(tool.output, "[VELA_TOOL_FAILED] Tool failed");
+        assert!(tool.error.is_none());
+    }
+
+    #[test]
+    fn replay_reads_legacy_user_presentation_and_model_id_fallbacks() {
+        let mut transcript = Transcript::from_messages_json(&serde_json::json!({"data":[{
+            "info":{
+                "id":"u","role":"user","agent":"build",
+                "model":{"modelID":"legacy-model","providerID":"p"},
+                "createdAt":77
+            },
+            "parts":[{"id":"t","type":"text","text":"hello"}]
+        }]}));
+        let message = transcript.message("u").unwrap();
+        assert_eq!(message.agent.as_deref(), Some("build"));
+        assert_eq!(message.model.as_deref(), Some("legacy-model"));
+        assert_eq!(message.created_at, 77);
+        let block = &transcript.blocks()[0];
+        assert_eq!(block.agent.as_deref(), Some("build"));
+        assert_eq!(block.model.as_deref(), Some("legacy-model"));
+        assert_eq!(block.created_at, 77);
+    }
+
+    #[test]
+    fn replay_backfills_the_assistant_named_parent_and_drops_settled_empty_assistants() {
+        let transcript = Transcript::from_messages_json(&serde_json::json!({"data":[
+            {"info":{"id":"u1","role":"user","time":{"created":1}},
+             "parts":[{"id":"u1-t","type":"text","text":"first"}]},
+            {"info":{"id":"u2","role":"user","time":{"created":2}},
+             "parts":[{"id":"u2-t","type":"text","text":"second"}]},
+            {"info":{"id":"empty","role":"assistant","time":{"created":3,"completed":4},
+                     "agent":"plan","model":{"id":"m","providerID":"p"}},"parts":[]},
+            {"info":{"id":"a","role":"assistant","time":{"created":5,"completed":6},
+                     "parentID":"u1","agent":"build","model":{"id":"m2","providerID":"p"}},
+             "parts":[{"id":"a-t","type":"text","text":"answer to first"}]}
+        ]}));
+        assert!(transcript.message("empty").is_none());
+        let first = transcript.message("u1").unwrap();
+        assert_eq!(first.agent.as_deref(), Some("build"));
+        assert_eq!(first.model.as_deref(), Some("m2"));
+        // The carried selection and backfill target only the named parent.
+        let second = transcript.message("u2").unwrap();
+        assert_eq!(second.agent.as_deref(), Some("plan"));
+        assert_eq!(second.model.as_deref(), Some("m"));
+    }
+
+    #[test]
+    fn replay_todos_follow_the_latest_non_empty_todowrite_result() {
+        let history = serde_json::json!({"data":[
+            {"info":{"id":"u","role":"user","time":{"created":1}},
+             "parts":[{"type":"text","text":"plan"}]},
+            {"info":{"id":"a1","role":"assistant","time":{"created":2}},
+             "parts":[{"type":"tool","tool":"TodoWrite","state":{
+                 "status":"completed",
+                 "metadata":{"todos":[
+                     {"id":"one","content":"First","status":"completed","priority":"high"},
+                     {"content":"Second","status":"bogus"},
+                     {"content":"","status":"pending"}
+                 ]}}}]},
+            {"info":{"id":"a2","role":"assistant","time":{"created":3}},
+             "parts":[
+                 {"type":"tool","name":"todo_write","state":{
+                     "status":"completed",
+                     "metadata":{"todos":[]},
+                     "input":{"todos":[{"id":"ignored","content":"Never used","status":"pending"}]}}},
+                 {"type":"tool","tool":"todo_write","state":{
+                     "status":"completed",
+                     "input":{"todos":[
+                         {"content":"Third","status":"in_progress","priority":"low"},
+                         {"content":"Fourth"}
+                     ]}}}
+             ]}
+        ]});
+        let todos = replay_todos_json(&history);
+        assert_eq!(
+            todos
+                .iter()
+                .map(|todo| (todo.id.as_str(), todo.content.as_str(), todo.status.as_str()))
+                .collect::<Vec<_>>(),
+            vec![
+                ("todo-0", "Third", "in_progress"),
+                ("todo-1", "Fourth", "pending"),
+            ]
+        );
+        assert_eq!(todos[0].priority, "low");
+        assert_eq!(todos[1].priority, "");
+        assert!(replay_todos_json(&serde_json::json!({"data":[]})).is_empty());
+        assert!(replay_todos_json(&serde_json::json!({})).is_empty());
+    }
+
+    #[test]
+    fn replay_marks_aborted_messages_interrupted_while_retaining_the_error() {
+        let mut transcript = Transcript::from_messages_json(&serde_json::json!({"data":[{
+            "id":"a","type":"assistant","time":{"created":1,"completed":2},
+            "error":{"name":"MessageAbortedError","data":{"message":"Stopped"}},
+            "content":[{"type":"text","text":"Partial"}]
+        }]}));
+        let message = transcript.message("a").unwrap();
+        assert!(message.interrupted);
+        assert_eq!(
+            message.error.as_deref(),
+            Some("[VELA_ASSISTANT_FAILED] Stopped")
+        );
+        let blocks = transcript.blocks();
+        assert!(
+            blocks
+                .iter()
+                .any(|block| block.kind == BlockKind::Assistant && block.interrupted),
+            "part blocks carry Source's interrupted flag"
+        );
+        assert!(
+            blocks
+                .iter()
+                .any(|block| block.kind == BlockKind::Error && block.interrupted)
+        );
+
+        let mut generic = Transcript::from_messages_json(&serde_json::json!({"data":[{
+            "id":"b","type":"assistant","time":{"created":1,"completed":2},
+            "error":{"message":"provider failed"}
+        }]}));
+        assert!(!generic.message("b").unwrap().interrupted);
+        assert!(generic
+            .blocks()
+            .iter()
+            .all(|block| !block.interrupted));
+
+        let explicit = Transcript::from_messages_json(&serde_json::json!({"data":[{
+            "id":"c","type":"assistant","time":{"created":1,"completed":2},
+            "interrupted":true,"content":[{"type":"text","text":"Partial"}]
+        }]}));
+        assert!(explicit.message("c").unwrap().interrupted);
+    }
+
+    #[test]
+    fn replay_keeps_empty_running_retrying_and_failed_assistants() {        let transcript = Transcript::from_messages_json(&serde_json::json!({"data":[
+            {"info":{"id":"running","role":"assistant","time":{"created":1}},"parts":[]},
+            {"info":{"id":"retry","role":"assistant","time":{"created":2,"completed":3},
+                     "retry":{"attempt":1,"at":9,"error":{"message":"busy"}}},"parts":[]},
+            {"info":{"id":"failed","role":"assistant","time":{"created":4,"completed":5},
+                     "error":{"message":"boom"}},"parts":[]}
+        ]}));
+        assert_eq!(transcript.messages().len(), 3);
+        assert!(transcript.message("running").is_some());
+        assert!(transcript.message("retry").is_some());
+        assert!(transcript.message("failed").is_some());
+    }
+
+    #[test]
+    fn live_tool_progress_keeps_text_and_metadata_linking_without_leaking_into_output() {
+        let mut transcript = Transcript::new();
+        let parse = |value: Value| crate::event::parse_event(&value).unwrap();
+        transcript.apply(&parse(serde_json::json!({
+            "type":"session.tool.input.started","created":1,
+            "data":{"sessionID":"s","assistantMessageID":"m","callID":"c","name":"bash"}
+        })));
+        transcript.apply(&parse(serde_json::json!({
+            "type":"session.tool.called","created":2,
+            "data":{"sessionID":"s","assistantMessageID":"m","callID":"c","input":{"command":"ls"}}
+        })));
+        transcript.apply(&parse(serde_json::json!({
+            "type":"session.tool.progress","created":3,
+            "data":{"sessionID":"s","assistantMessageID":"m","callID":"c",
+                "progress":"Running tests",
+                "metadata":{"sessionId":"child-1",
+                    "deepseek":{"subCalls":[{"id":"sub-1","title":"Nested","status":"running"}]}}}
+        })));
+        let blocks = transcript.blocks();
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].kind, BlockKind::Tool);
+        assert_eq!(blocks[0].progress.as_ref(), "Running tests");
+        assert!(
+            blocks[0].output.is_empty(),
+            "progress metadata must not become tool output"
+        );
+        assert_eq!(blocks[0].detail.as_ref(), "bash");
+        assert_eq!(blocks[0].child_session_id.as_deref(), Some("child-1"));
+        assert_eq!(blocks[0].sub_calls.len(), 1);
+        assert_eq!(blocks[0].sub_calls[0].title, "Nested");
+
+        // Without an explicit `progress` field Source falls back to the
+        // metadata payload, which the UI then reduces to a display label.
+        transcript.apply(&parse(serde_json::json!({
+            "type":"session.tool.progress","created":4,
+            "data":{"sessionID":"s","assistantMessageID":"m","callID":"c",
+                "metadata":{"message":"Compiling"}}
+        })));
+        let blocks = transcript.blocks();
+        assert_eq!(blocks[0].progress.as_ref(), "{\n  \"message\": \"Compiling\"\n}");
+        assert!(blocks[0].output.is_empty());
+    }
+
+    #[test]
+    fn live_part_updates_carry_state_progress_but_replay_cards_do_not() {
+        let part = serde_json::json!({
+            "id":"p","callID":"c","type":"tool","tool":"bash",
+            "state":{"status":"running","input":{"command":"ls"},"progress":"Fetching"}
+        });
+        let live = part_from_json(&part, "m").unwrap();
+        let PartKind::Tool(tool) = &live.kind else {
+            panic!("tool")
+        };
+        assert_eq!(tool.progress, "Fetching");
+        let replay = message_from_json(&serde_json::json!({
+            "info":{"id":"m","role":"assistant","time":{"created":1}},
+            "parts":[part]
+        }))
+        .unwrap();
+        let PartKind::Tool(tool) = &replay.parts[0].kind else {
+            panic!("tool")
+        };
+        assert!(tool.progress.is_empty());
     }
 
     #[test]
@@ -3290,18 +4125,23 @@ mod tests {
         assert_eq!(transcript.message("a").unwrap().parts.len(), 1);
         let blocks = transcript.blocks();
         assert_eq!(blocks.len(), 1);
-        assert_eq!(blocks[0].id.as_ref(), "prt_tool");
+        // A call first seen live keeps its original leaf ID when its
+        // authoritative part ID arrives; the replay-first path above retains
+        // the part ID it originally exposed.
+        assert_eq!(blocks[0].id.as_ref(), "call_tool");
     }
 
     #[test]
     fn local_user_prompt_attachments_survive_block_assembly() {
         let mut transcript = Transcript::new();
+        let revision = transcript.revision();
         transcript.upsert_local_user(
             "local:1".into(),
             "Review these".into(),
             1,
             vec!["main.rs".into(), "notes.md".into()],
         );
+        assert_eq!(transcript.revision(), revision + 1);
         let user = transcript
             .blocks()
             .iter()
@@ -3377,3 +4217,7 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "transcript_retry_tests.rs"]
+mod retry_history_tests;

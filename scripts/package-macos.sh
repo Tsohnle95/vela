@@ -3,12 +3,14 @@
 # address the native app without confusing it with the original Vela process.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=scripts/build-env.sh
+source scripts/build-env.sh
 profile="${1:-release}"
 case "$profile" in debug|release) ;; *) echo "usage: $0 [debug|release] [--comparison]" >&2; exit 2 ;; esac
 name="Vela Native"
 identifier="dev.vela.native"
 if [[ "${2:-}" == --comparison ]]; then name="Vela Native QA"; identifier="dev.vela.native.parity"; fi
-bundle="target/$profile/$name.app"
+bundle="$VELA_TARGET_DIR/$profile/$name.app"
 python3 - "$name" <<'PY'
 import subprocess,sys
 from pathlib import Path
@@ -17,23 +19,24 @@ processes=subprocess.run(['ps','-axo','comm='],check=True,capture_output=True,te
 if any(Path(line.strip()).name==name for line in processes.splitlines()):
  raise SystemExit(f'Close {name} before replacing its app bundle.')
 PY
-if [[ ! -x .tools/preview/node/bin/node || ! -f tools/preview/node_modules/vite/bin/vite.js ]]; then
+if [[ ! -x "$VELA_PREVIEW_ROOT/toolchain/node/bin/node" || ! -f "$VELA_PREVIEW_ROOT/deps/node_modules/vite/bin/vite.js" ]]; then
   echo 'Preview tools are missing. Run bash scripts/setup-preview-toolchain.sh first.' >&2
   exit 1
 fi
 mkdir -p "$bundle/Contents/MacOS"
-cp "target/$profile/vela" "$bundle/Contents/MacOS/.$name.$$"
+cp "$VELA_TARGET_DIR/$profile/vela" "$bundle/Contents/MacOS/.$name.$$"
 mv "$bundle/Contents/MacOS/.$name.$$" "$bundle/Contents/MacOS/$name"
 python3 - "$bundle" <<'PY'
 import hashlib,os,shutil,sys,tempfile
 from pathlib import Path
 bundle=Path(sys.argv[1]);resources=bundle/'Contents/Resources';resources.mkdir(exist_ok=True)
-destination=resources/'preview';node=Path('.tools/preview/node');packages=Path('tools/preview')
+preview=Path(os.environ['VELA_PREVIEW_ROOT'])
+destination=resources/'preview';node=preview/'toolchain/node';deps=preview/'deps';packages=Path('tools/preview')
 digest=hashlib.sha256()
 inputs=[node/'bin/node',node/'LICENSE',packages/'package.json',packages/'package-lock.json']
 helpers=['sass-plan.mjs','sass-compile.mjs']
 inputs += [packages/name for name in helpers]
-inputs+=sorted((packages/'node_modules').rglob('*'))
+inputs+=sorted((deps/'node_modules').rglob('*'))
 for path in inputs:
  if path.is_symlink():content=b'link:'+os.readlink(path).encode()
  elif path.is_file():content=path.read_bytes()
@@ -50,7 +53,7 @@ try:
  (stage/'node/bin').mkdir(parents=True)
  shutil.copy2(node/'bin/node',stage/'node/bin/node')
  shutil.copy2(node/'LICENSE',stage/'node/LICENSE')
- shutil.copytree(packages/'node_modules',stage/'node_modules',symlinks=True)
+ shutil.copytree(deps/'node_modules',stage/'node_modules')
  for name in ('package.json','package-lock.json',*helpers):shutil.copy2(packages/name,stage/name)
  (stage/'.vela-preview-stamp').write_text(stamp+'\n')
  backup=resources/('.preview-previous-'+str(os.getpid()))

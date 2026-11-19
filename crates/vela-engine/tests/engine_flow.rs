@@ -11,6 +11,7 @@ use axum::{Json, Router};
 use serde_json::{Value, json};
 use tokio::sync::broadcast;
 
+use vela_core::transcript::BlockKind;
 use vela_engine::{Engine, EngineConfig, EngineUpdate, Settings};
 
 #[derive(Clone)]
@@ -271,11 +272,14 @@ struct TestState {
     replies: Arc<Mutex<Vec<Value>>>,
     message_requests: Arc<AtomicUsize>,
     block_next_history: Arc<AtomicBool>,
+    history_with_live_prefix: Arc<AtomicBool>,
+    fail_blocked_history: Arc<AtomicBool>,
     history_release: Arc<tokio::sync::Notify>,
     session_deletes: Arc<Mutex<Vec<String>>>,
     deletes_to_fail: Arc<AtomicUsize>,
     switches: Arc<Mutex<Vec<(String, Value)>>>,
     inbox_actions: Arc<Mutex<Vec<(String, Value)>>>,
+    steer_to_fail: Arc<AtomicBool>,
     provider_keys: Arc<Mutex<Vec<Value>>>,
     provider_removals: Arc<Mutex<Vec<String>>>,
     created_workspaces: Arc<Mutex<Vec<String>>>,
@@ -302,11 +306,14 @@ async fn end_to_end_replay_stream_prompt_and_permission() {
         replies: Arc::default(),
         message_requests: Arc::default(),
         block_next_history: Arc::default(),
+        history_with_live_prefix: Arc::default(),
+        fail_blocked_history: Arc::default(),
         history_release: Arc::default(),
         session_deletes: Arc::default(),
         deletes_to_fail: Arc::new(AtomicUsize::new(1)),
         switches: Arc::default(),
         inbox_actions: Arc::default(),
+        steer_to_fail: Arc::default(),
         provider_keys: Arc::default(),
         provider_removals: Arc::default(),
         created_workspaces: Arc::default(),
@@ -450,6 +457,17 @@ async fn end_to_end_replay_stream_prompt_and_permission() {
     let blocks = view.blocks();
     assert_eq!(blocks[0].text.as_ref(), "hello from replay");
     assert_eq!(blocks[1].text.as_ref(), "assistant replay");
+    // The reopened transcript also seeds Source's replayed todo list.
+    let todos = engine.todos("ses_test");
+    assert_eq!(
+        todos
+            .iter()
+            .map(|todo| (todo.content.as_str(), todo.status.as_str()))
+            .collect::<Vec<_>>(),
+        vec![("Replay todos", "completed"), ("Show dock", "in_progress")]
+    );
+    assert_eq!(todos[0].id, "t1");
+    assert_eq!(todos[0].priority, "high");
 
     // Standalone external documents read outside the workspace root without
     // creating workspace recovery beside the file.
@@ -1649,6 +1667,18 @@ async fn end_to_end_replay_stream_prompt_and_permission() {
             .any(|(kind, value)| kind == "steer" && value["delivery"] == "steer")
     })
     .await;
+    state.steer_to_fail.store(true, Ordering::SeqCst);
+    engine.steer_inbox("ses_test", "inbox-1");
+    wait_for(Duration::from_secs(5), || {
+        engine.view("ses_test").is_some_and(|view| {
+            view.blocks().iter().any(|block| {
+                block.kind == BlockKind::System
+                    && block.text.contains("Queued prompt could not be sent")
+            })
+        })
+    })
+    .await;
+    state.steer_to_fail.store(false, Ordering::SeqCst);
     engine.cancel_inbox("ses_test", "inbox-1");
     wait_for(Duration::from_secs(5), || {
         state
@@ -2431,6 +2461,78 @@ async fn end_to_end_replay_stream_prompt_and_permission() {
         assert_eq!(engine.active_session().as_deref(), Some(id.as_str()));
         assert_eq!(engine.view(&id).unwrap().summary().directory, directory);
     }
+    // A live event that arrives while the authoritative replay request is in
+    // flight must be replayed after hydration. Otherwise the older HTTP
+    // snapshot replaces newer source and the stream silently truncates.
+    let previous_active = engine.active_session().unwrap();
+    engine.open_session("ses_test");
+    wait_for(Duration::from_secs(3), || engine.view("ses_test").is_some()).await;
+    engine.close_session("ses_test");
+    wait_for(Duration::from_secs(3), || engine.view("ses_test").is_none()).await;
+    state.history_with_live_prefix.store(true, Ordering::SeqCst);
+    state.block_next_history.store(true, Ordering::SeqCst);
+    let pending_history = state.message_requests.load(Ordering::SeqCst);
+    engine.open_session("ses_test");
+    wait_for(Duration::from_secs(3), || {
+        state.message_requests.load(Ordering::SeqCst) > pending_history
+    })
+    .await;
+    state
+        .events
+        .send(json!({"type":"session.text.delta", "data":{
+            "sessionID":"ses_test","assistantMessageID":"hydrate-live",
+            "partID":"hydrate-live-text","ordinal":0,"delta":"live during load"
+        }}))
+        .unwrap();
+    let published_live = || {
+        engine.view("ses_test").is_some_and(|view| {
+            view.presentation().blocks.iter().any(|block| {
+                block.text.as_ref() == "live during load"
+            })
+        })
+    };
+    wait_for(Duration::from_secs(5), published_live).await;
+    let live_revision = engine.view("ses_test").unwrap().presentation().revision;
+    state.history_release.notify_one();
+    wait_for(Duration::from_secs(5), || {
+        engine.view("ses_test").unwrap().presentation().revision > live_revision
+    })
+    .await;
+    assert!(published_live(), "history overlap duplicated or truncated live text");
+
+    engine.close_session("ses_test");
+    wait_for(Duration::from_secs(3), || engine.view("ses_test").is_none()).await;
+    state.fail_blocked_history.store(true, Ordering::SeqCst);
+    state.block_next_history.store(true, Ordering::SeqCst);
+    let failed_history = state.message_requests.load(Ordering::SeqCst);
+    engine.open_session("ses_test");
+    wait_for(Duration::from_secs(3), || {
+        state.message_requests.load(Ordering::SeqCst) > failed_history
+    })
+    .await;
+    state.events.send(json!({"type":"session.text.delta", "data":{
+        "sessionID":"ses_test","assistantMessageID":"hydrate-live",
+        "partID":"hydrate-live-text","ordinal":0,"delta":" survives failure"
+    }})).unwrap();
+    let published_after_failure = || {
+        engine.view("ses_test").is_some_and(|view| view.presentation().blocks.iter()
+            .any(|block| block.text.as_ref() == "live during load survives failure"))
+    };
+    wait_for(Duration::from_secs(5), published_after_failure).await;
+    state.history_release.notify_one();
+    wait_for(Duration::from_secs(5), || {
+        engine.view("ses_test").is_some_and(|view| view.presentation().blocks.iter()
+            .any(|block| block.text.contains("Could not load conversation")))
+    })
+    .await;
+    assert!(published_after_failure(), "failed history discarded published text");
+    // Restore the navigation target the deletion checks below expect.
+    engine.open_session(previous_active.clone());
+    wait_for(Duration::from_secs(3), || {
+        engine.active_session().as_deref() == Some(previous_active.as_str())
+    })
+    .await;
+
     let deleted_active = engine.active_session().unwrap();
     let mut delete_updates = engine.subscribe();
     engine.delete_session(9000, "ses_test");
@@ -2762,30 +2864,58 @@ async fn steer_inbox(
     State(state): State<TestState>,
     Path((_id, iid)): Path<(String, String)>,
     Json(body): Json<Value>,
-) -> impl IntoResponse {
+) -> axum::response::Response {
     state
         .inbox_actions
         .lock()
         .unwrap()
         .push(("steer".into(), body));
-    Json(json!({ "id": iid }))
+    if state.steer_to_fail.load(Ordering::SeqCst) {
+        return (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": "steer failed" })),
+        )
+            .into_response();
+    }
+    Json(json!({ "id": iid })).into_response()
 }
 
-async fn messages(State(state): State<TestState>) -> Json<Value> {
+async fn messages(State(state): State<TestState>) -> impl IntoResponse {
     let blocked = state.block_next_history.swap(false, Ordering::SeqCst);
+    let with_live_prefix = blocked && state.history_with_live_prefix.swap(false, Ordering::SeqCst);
+    let fail = blocked && state.fail_blocked_history.swap(false, Ordering::SeqCst);
     state.message_requests.fetch_add(1, Ordering::SeqCst);
     if blocked {
         state.history_release.notified().await;
     }
-    Json(json!({
+    if fail {
+        return (axum::http::StatusCode::SERVICE_UNAVAILABLE, Json(json!({
+            "message": "Disposable history failure"
+        })));
+    }
+    let mut response = json!({
         "data": [
             { "id": "msg_u", "type": "user", "time": { "created": 1 }, "text": "hello from replay" },
             { "id": "msg_a", "type": "assistant", "agent": "build", "model": { "id": "demo" },
               "time": { "created": 2, "completed": 3 }, "finish": "stop",
-              "content": [ { "type": "text", "text": "assistant replay" } ] }
+              "content": [
+                  { "type": "text", "text": "assistant replay" },
+                  { "type": "tool", "id": "prt_todo", "callID": "call_todo", "tool": "todowrite",
+                    "state": { "status": "completed", "metadata": { "todos": [
+                        { "id": "t1", "content": "Replay todos", "status": "completed", "priority": "high" },
+                        { "id": "t2", "content": "Show dock", "status": "in_progress" }
+                    ] } } }
+              ] }
         ],
         "cursor": {}
-    }))
+    });
+    if with_live_prefix {
+        response["data"].as_array_mut().unwrap().push(json!({
+            "id": "hydrate-live", "type": "assistant", "time": { "created": 4 },
+            "content": [{ "type": "text", "id": "hydrate-live-text", "text": "live during" }]
+        }));
+    }
+    (axum::http::StatusCode::OK, Json(response))
 }
 
 async fn prompt(

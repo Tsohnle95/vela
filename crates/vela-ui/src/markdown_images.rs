@@ -66,6 +66,57 @@ pub(super) fn resolve(
         ImageSource::Custom(load) => load(window, cx).map(|image| image.map_err(|_| ())),
     }
 }
+/// The encoded image bytes a selection should place on the clipboard. Data
+/// images are already encoded; file-backed images are read from disk.
+pub(super) fn clipboard_image(uri: &str) -> Option<Arc<Image>> {
+    match source(uri).ok()? {
+        ImageSource::Image(image) => Some(image),
+        ImageSource::Resource(gpui::Resource::Path(path)) => {
+            let bytes = std::fs::read(&path).ok()?;
+            let format = format_for_path(&path, &bytes)?;
+            Some(Arc::new(Image::from_bytes(format, bytes)))
+        }
+        _ => None,
+    }
+}
+
+fn format_for_path(path: &std::path::Path, bytes: &[u8]) -> Option<ImageFormat> {
+    if let Some(extension) = path.extension().and_then(|extension| extension.to_str()) {
+        let format = match extension.to_ascii_lowercase().as_str() {
+            "png" => Some(ImageFormat::Png),
+            "jpg" | "jpeg" => Some(ImageFormat::Jpeg),
+            "gif" => Some(ImageFormat::Gif),
+            "webp" => Some(ImageFormat::Webp),
+            "svg" => Some(ImageFormat::Svg),
+            "bmp" => Some(ImageFormat::Bmp),
+            "tif" | "tiff" => Some(ImageFormat::Tiff),
+            "ico" => Some(ImageFormat::Ico),
+            "pnm" => Some(ImageFormat::Pnm),
+            _ => None,
+        };
+        if format.is_some() {
+            return format;
+        }
+    }
+    if bytes.starts_with(b"\x89PNG") {
+        Some(ImageFormat::Png)
+    } else if bytes.starts_with(&[0xff, 0xd8]) {
+        Some(ImageFormat::Jpeg)
+    } else if bytes.starts_with(b"GIF8") {
+        Some(ImageFormat::Gif)
+    } else if bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP" {
+        Some(ImageFormat::Webp)
+    } else if bytes.starts_with(b"BM") {
+        Some(ImageFormat::Bmp)
+    } else if bytes.starts_with(b"II*\0") || bytes.starts_with(b"MM\0*") {
+        Some(ImageFormat::Tiff)
+    } else if bytes.starts_with(b"<svg") || bytes.starts_with(b"<?xml") {
+        Some(ImageFormat::Svg)
+    } else {
+        None
+    }
+}
+
 pub(super) fn fit(width: f32, height: f32) -> gpui::Size<gpui::Pixels> {
     if width <= 0. || height <= 0. {
         return gpui::size(gpui::px(0.), gpui::px(0.));
@@ -135,5 +186,25 @@ mod tests {
         }
         assert!(source("javascript:alert(1)").is_err());
         assert!(source("data:image/png;base64,not-base64").is_err());
+    }
+
+    #[test]
+    fn clipboard_images_keep_encoded_bytes_for_data_and_file_sources() {
+        let png = b"\x89PNG\r\n\x1a\npayload".to_vec();
+        let data = format!("data:image/png;base64,{}", STANDARD.encode(&png));
+        let image = clipboard_image(&data).unwrap();
+        assert_eq!(image.format, ImageFormat::Png);
+        assert_eq!(image.bytes, png);
+
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("pixel.jpg");
+        let jpeg = vec![0xff, 0xd8, 0xff, 0xd9];
+        std::fs::write(&path, &jpeg).unwrap();
+        let image = clipboard_image(&format!("file://{}", path.display())).unwrap();
+        assert_eq!(image.format, ImageFormat::Jpeg);
+        assert_eq!(image.bytes, jpeg);
+
+        assert!(clipboard_image("https://example.com/a.png").is_none());
+        assert!(clipboard_image("data:image/png;base64,not-base64").is_none());
     }
 }

@@ -1,0 +1,11 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.67s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running unittests src/lib.rs (/Users/tdawg/code-repositories/build-junk/vela-target/debug/deps/vela_ui-ac8ab619b9b6d4b1)
+
+running 2 tests
+test app::selection_clipboard::tests::macos_pasteboard_keeps_image_only_payloads ... ok
+test app::selection_clipboard::tests::macos_pasteboard_keeps_text_and_png_entries_together ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 711 filtered out; finished in 0.27s
+

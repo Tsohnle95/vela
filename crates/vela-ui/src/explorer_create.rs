@@ -291,9 +291,12 @@ pub(super) fn create_action(
     parent: String,
     is_dir: bool,
     owner: gpui::WeakEntity<VelaApp>,
+    group: &str,
+    right: f32,
 ) -> AnyElement {
     let theme = Theme::default();
-    div()
+    let hover_group = group.to_owned();
+    let button = div()
         .id(SharedString::from(format!(
             "create-{}-{parent}",
             if is_dir { "folder" } else { "file" }
@@ -314,6 +317,16 @@ pub(super) fn create_action(
                 app.start_create_entry(workspace.clone(), parent.clone(), is_dir, window, cx)
             });
         })
-        .child(icon(if is_dir { "ea80" } else { "ea7f" }))
+        .child(icon(if is_dir { "ea80" } else { "ea7f" }));
+    div()
+        .absolute()
+        .right(px(right))
+        .top(px(1.))
+        .bottom(px(1.))
+        .flex()
+        .items_center()
+        .opacity(0.)
+        .group_hover(hover_group, |style| style.opacity(1.))
+        .child(button)
         .into_any_element()
 }

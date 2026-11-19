@@ -5,7 +5,8 @@ platform-native web views. It is the native successor to the original Electron
 app, which is archived under `archive/vela-electron/`.
 
 The original Electron implementation is preserved for reference. The native app
-reads Vela-owned data and writes only to its own profile.
+keeps its own preferences in its own profile; it also reads and writes user
+workspaces, Sass output, downloads, and explicitly opened external files.
 
 The Codex interface is the default shell. Classic remains selectable in
 **Settings → Appearance**, together with all 15 source appearance palettes.
@@ -34,20 +35,17 @@ lossless capture manifests and outstanding validation are under `docs/parity/`.
 
 ## Status
 
-The native foundation includes OpenCode V2 streaming/replay, virtualized
-transcripts, warm sessions, basic permissions/todos/queue/catalogs, a terminal
-dock, Git status/diffs and Sass output. Native browser tabs retain views and
-history and share a nonpersistent macOS partition.
+The native app includes OpenCode V2 streaming/replay, virtualized transcripts,
+warm sessions, simultaneous agent panels, permissions/todos/queue/catalogs,
+native terminal and browser surfaces, a source editor and explorer, Git
+status/diffs, provider/settings surfaces, and Sass output. Activation-scoped
+documents retain text and undo across navigation; native observation reloads
+clean buffers and preserves dirty conflicts.
 
-Workspace-owned documents retain text and undo across navigation. The source
-editor has native Unicode input, selection, clipboard, wrapped/virtualized
-lines, preview/pinned tabs and recoverable snapshot saves with conflict controls.
-Native file observation reloads clean buffers and preserves dirty conflicts,
-renamed-buffer ownership and undo. Source/language tooling, split editors,
-complete Changes/recovery flows, remaining OS quit validation, multi-panel sessions, forms,
-attachments, settings operations, terminal
-and Git operations, mobile, packaging and complete visual parity remain
-unfinished. `docs/migration/feature-parity-matrix.md` records the current gaps.
+The migration is incomplete. No page has passed final visual acceptance, and
+live IME, VoiceOver, provider, browser-isolation, PTY/TUI, packaging, mobile, and
+cross-platform validation remain open. `docs/migration/feature-parity-matrix.md`
+is the authoritative feature record; do not infer completion from this summary.
 
 The repository is published at
 [github.com/Tsohnle95/vela](https://github.com/Tsohnle95/vela).
@@ -57,14 +55,18 @@ transcripts are stored in this implementation.
 ## Run
 
 ```sh
+bash scripts/verify.sh
 cargo run -p vela -- --workspace /path/to/repository
-cargo test --workspace
 ./scripts/bench-core.sh
 ```
 
-OpenCode V2 must be on `PATH`. The app discovers the shared service or starts
-`opencode serve --service`.
+OpenCode V2 must be on `PATH` or supplied with `VELA_OPENCODE_BINARY`. The app
+discovers the shared service or starts `opencode serve --service`.
+
+Build output defaults to the sibling `build-junk/vela-target` directory via
+`.cargo/config.toml`; it is disposable and not part of the repository.
 
 See `docs/architecture.md` for module boundaries, `docs/development.md` for
 setup and isolated-service testing, and `docs/performance/native-results.md`
-for measured results.
+for measured results. Contributors and coding agents start at `AGENTS.md` and
+`docs/agent-execution.md`.

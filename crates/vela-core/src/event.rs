@@ -20,6 +20,12 @@ pub struct EventEnvelope {
 
 impl EventEnvelope {
     pub fn parse(value: &Value) -> Option<Self> {
+        Self::parse_at(value, now_millis())
+    }
+
+    /// Normalize with a caller-supplied receipt time so recording/replay never
+    /// obtains a fresh timestamp for an event that omitted one.
+    pub fn parse_at(value: &Value, received_at: i64) -> Option<Self> {
         let payload = value
             .get("payload")
             .filter(|payload| payload.get("type").is_some())
@@ -50,7 +56,7 @@ impl EventEnvelope {
             .get("created")
             .and_then(Value::as_i64)
             .or_else(|| payload.get("created").and_then(Value::as_i64))
-            .unwrap_or_else(now_millis);
+            .unwrap_or(received_at);
         Some(Self {
             event_type,
             data,
@@ -101,7 +107,7 @@ pub struct TodoItem {
     pub priority: String,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ExecutionOutcome {
     Started,
     Succeeded,
@@ -109,7 +115,7 @@ pub enum ExecutionOutcome {
     Interrupted,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum AgentEvent {
     SessionCreated {
         session: SessionSummary,
@@ -279,7 +285,11 @@ pub enum AgentEvent {
         session_id: String,
         message_id: String,
         call_id: String,
+        /// Live progress text Source keeps in `state.progress`.
+        progress: String,
+        /// Raw progress metadata used for subcall/child-session linking.
         detail: String,
+        at: i64,
     },
     ToolFinished {
         session_id: String,
@@ -712,10 +722,21 @@ pub fn parse_envelope(envelope: &EventEnvelope) -> AgentEvent {
             session_id: session_id.clone().unwrap_or_default(),
             message_id: string_at(data, &["assistantMessageID", "messageID"]).unwrap_or_default(),
             call_id: string_at(data, &["id", "callID"]).unwrap_or_default(),
+            // Source stores `data.progress ?? data.metadata` as the running
+            // progress; strings stay verbatim and objects become JSON text.
+            progress: data
+                .get("progress")
+                .or_else(|| data.get("metadata"))
+                .map(|value| match value {
+                    Value::String(text) => text.clone(),
+                    value => serde_json::to_string_pretty(value).unwrap_or_default(),
+                })
+                .unwrap_or_default(),
             detail: data
                 .get("metadata")
                 .map(|value| serde_json::to_string_pretty(value).unwrap_or_default())
                 .unwrap_or_default(),
+            at,
         },
         "session.tool.success" => AgentEvent::ToolFinished {
             session_id: session_id.clone().unwrap_or_default(),

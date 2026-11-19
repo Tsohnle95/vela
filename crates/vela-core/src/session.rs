@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 /// adapters can be added without leaking runtime details into the transcript.
 pub const OPENCODE_RUNTIME_ID: &str = "opencode";
 
+/// Live view capacity shared by the desktop panel grid and engine retention.
+pub const MAX_SIMULTANEOUS_PANELS: usize = 8;
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SessionSummary {
     pub id: String,
@@ -27,7 +30,7 @@ impl SessionSummary {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SessionPhase {
     #[default]
     Idle,

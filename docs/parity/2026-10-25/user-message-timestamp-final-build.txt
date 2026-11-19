@@ -1,0 +1,28 @@
+   Compiling tempfile v3.27.0
+   Compiling collections v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling tracing v0.1.44
+   Compiling http_client v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling rustix v1.1.5
+   Compiling tracing-log v0.2.0
+   Compiling perf v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling hyper-util v0.1.21
+   Compiling tracing-subscriber v0.3.23
+   Compiling cbindgen v0.28.0
+   Compiling util_macros v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling rustix-openpty v0.2.0
+   Compiling polling v3.11.0
+   Compiling alacritty_terminal v0.26.0
+   Compiling vela-opencode v0.1.0 (/Users/tdawg/code-repositories/vela/crates/vela-opencode)
+   Compiling gpui v0.2.2 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling vela-terminal v0.1.0 (/Users/tdawg/code-repositories/vela/crates/vela-terminal)
+   Compiling vela-engine v0.1.0 (/Users/tdawg/code-repositories/vela/crates/vela-engine)
+   Compiling vela-browser v0.1.0 (/Users/tdawg/code-repositories/vela/crates/vela-browser)
+   Compiling gpui_macos v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling gpui_platform v0.1.0 (https://github.com/zeronsh/zui?rev=361ff20b919fdfb80199ee6d9aed725300cb7d54#361ff20b)
+   Compiling vela-ui v0.1.0 (/Users/tdawg/code-repositories/vela/crates/vela-ui)
+   Compiling vela v0.1.0 (/Users/tdawg/code-repositories/vela/apps/vela)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 22.27s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`

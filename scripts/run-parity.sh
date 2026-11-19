@@ -3,6 +3,9 @@
 # Build/package first: cargo build -p vela && bash scripts/package-macos.sh debug
 set -euo pipefail
 cd "$(dirname "$0")/.."
+repo_root="$(pwd -P)"
+# shellcheck source=scripts/build-env.sh
+source scripts/build-env.sh
 reference=false
 reference_comparison=false
 while [[ "${1:-}" == --* ]]; do
@@ -41,14 +44,20 @@ if "$reference"; then
   if [ -n "${VELA_OPENCODE_BINARY:-}" ]; then
     export PATH="$(dirname "$VELA_OPENCODE_BINARY"):$PATH"
   fi
-  reference_binary="../vela/dev/Vela.app/Contents/MacOS/Electron"
+  reference_root="${VELA_REFERENCE_ROOT:-$repo_root/archive/vela-electron}"
+  reference_binary="$reference_root/dev/Vela.app/Contents/MacOS/Electron"
   if "$reference_comparison"; then
-    reference_binary="target/parity/Vela Reference QA.app/Contents/MacOS/Vela Reference QA"
+    reference_binary="$VELA_TARGET_DIR/parity/Vela Reference QA.app/Contents/MacOS/Vela Reference QA"
   fi
-  exec "$reference_binary" ../vela \
+  if [ ! -x "$reference_binary" ]; then
+    echo "Reference Electron binary not found: $reference_binary" >&2
+    echo "Restore it from a backup or use a separate writable pre-merge checkout via VELA_REFERENCE_ROOT; do not build inside archive/vela-electron." >&2
+    exit 1
+  fi
+  exec "$reference_binary" "$reference_root" \
     "--user-data-dir=${VELA_PARITY_PROFILE:-/private/tmp/vela-parity-original}"
 fi
 if [ -n "${1:-}" ]; then export VELA_UI_ACTION="$1"; else unset VELA_UI_ACTION; fi
 native_bundle="Vela Native"
 if [[ "${VELA_PARITY_COMPARISON:-}" == 1 ]]; then native_bundle="Vela Native QA"; fi
-exec "target/debug/$native_bundle.app/Contents/MacOS/$native_bundle" --workspace "${VELA_PARITY_WORKSPACE:-/private/tmp/vela-test-workspace}"
+exec "$VELA_TARGET_DIR/debug/$native_bundle.app/Contents/MacOS/$native_bundle" --workspace "${VELA_PARITY_WORKSPACE:-/private/tmp/vela-test-workspace}"

@@ -31,6 +31,48 @@ fn favorite_models(models: &[ModelInfo], settings: &Settings, query: &str) -> Ve
 }
 
 impl VelaApp {
+    /// Source resets the model menu to its list view every time it opens and
+    /// requests the catalog when the cached list is still empty.
+    pub(super) fn open_model_picker(&mut self, cx: &mut Context<Self>) {
+        self.picker = Some(PickerKind::Model);
+        self.picker_anchors.pending = Some(PickerKind::Model);
+        self.model_menu_settings = false;
+        self.model_picker_scroll
+            .native_handle()
+            .set_offset(point(px(0.), px(0.)));
+        if self.models.is_empty()
+            && let Some(session) = self.active_id.clone()
+        {
+            self.engine.load_catalog(session);
+        }
+        cx.notify();
+    }
+
+    pub(super) fn toggle_model_picker(&mut self, cx: &mut Context<Self>) {
+        if self.picker == Some(PickerKind::Model) {
+            self.picker = None;
+            cx.notify();
+        } else {
+            self.open_model_picker(cx);
+        }
+    }
+
+    /// Source refreshes the agent catalog when its menu opens empty.
+    pub(super) fn toggle_agent_picker(&mut self, cx: &mut Context<Self>) {
+        if self.picker == Some(PickerKind::Agent) {
+            self.picker = None;
+            cx.notify();
+            return;
+        }
+        self.picker = Some(PickerKind::Agent);
+        if self.agents.is_empty()
+            && let Some(session) = self.active_id.clone()
+        {
+            self.engine.load_catalog(session);
+        }
+        cx.notify();
+    }
+
     pub(super) fn cycle_favorite_model(&mut self, cx: &mut Context<Self>) {
         let favorites = favorite_models(
             &self.models,
@@ -213,6 +255,7 @@ impl VelaApp {
             provider.clone()
         };
         let group = provider.clone();
+        let collapse_selector = format!("collapse-models-{provider}");
         let visibility_selector = format!("visibility-provider-{provider}");
         let visibility_provider = provider.clone();
         div()
@@ -227,6 +270,7 @@ impl VelaApp {
             .child(
                 div()
                     .id(SharedString::from(format!("collapse-models-{provider}")))
+                    .debug_selector(move || collapse_selector.clone())
                     .role(gpui::Role::Button)
                     .aria_label(SharedString::from(format!(
                         "{} {label}",
@@ -368,6 +412,14 @@ impl VelaApp {
             .flex()
             .flex_col()
             .overflow_y_scroll()
+            .on_key_down(cx.listener(|app, event: &KeyDownEvent, _, cx| {
+                if event.keystroke.key == "escape" {
+                    app.picker = None;
+                    app.picker_anchors.pending = Some(PickerKind::Model);
+                    cx.stop_propagation();
+                    cx.notify();
+                }
+            }))
             .on_mouse_down_out(
                 cx.listener(|app, event: &gpui::MouseDownEvent, window, cx| {
                     if !app
@@ -467,6 +519,7 @@ impl VelaApp {
                     root.child(
                         div()
                             .id("model-menu-strength")
+                            .debug_selector(|| "model-menu-strength".into())
                             .role(gpui::Role::Button)
                             .aria_label("Change response strength")
                             .focusable()

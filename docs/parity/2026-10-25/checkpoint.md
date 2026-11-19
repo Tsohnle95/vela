@@ -7685,3 +7685,4744 @@ User timestamps, text selection and the complete context-menu matrix remain.
 
 No GUI/capture, package install or Source write; no page accepted and mobile
 deferred.
+
+## User message timestamp and external toolchain resolution (2026-11-03)
+
+Active user messages now render Source's locale short-time timestamp after the
+agent/model identity, using a macOS localized `jm` template (with a `%H:%M`
+fallback elsewhere) and the same non-breaking separator rule as the identity.
+A missing/zero creation time renders no stamp, and the timestamp has its own
+`user-message-meta-tail-*` debug surface.
+
+Two locale clock tests assert US 12-hour `1:05 PM` and UK 24-hour `13:05` with
+no seconds. A pure stamp test covers missing and present creation times, and a
+rendered test asserts both the identity and tail surfaces. The full workspace
+gate passes at 1016 with zero failures and one ignored performance test
+(`user-message-timestamp-final-workspace-tests.txt`); Clippy and the app build
+pass (`user-message-timestamp-final-clippy.txt`,
+`user-message-timestamp-final-build.txt`).
+
+The external build-junk cleanup had left the engine resolving the old in-repo
+`.tools/preview` path, so the first full run failed four Sass integration
+tests. `crates/vela-engine/src/preview_tools.rs` now resolves the packaged
+resource directory first, then `VELA_PREVIEW_ROOT` or
+`../build-junk/vela-preview`, with the legacy path last. After rerunning
+`scripts/setup-preview-toolchain.sh`, the Sass and Vite suites and the full gate
+pass.
+
+Live visual acceptance of the timestamp remains.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## User text selection and keyboard copy (2026-11-03)
+
+Active user-message text is now selectable in the transcript. `InlineFlow`
+gained pointer hit-testing over its shaped pieces and a persisted selection
+binding: dragging reports the character range under the pointer, and the
+rendered selection paints Source's global `::selection` accent at 32% opacity.
+Double-click selects a Unicode word, triple-click selects the whole message,
+Cmd+A selects it from the keyboard, and Cmd+C copies the selected visible
+characters (not the raw Markdown source). Selection focus is included in
+transcript scroll navigation, and the existing Copy/Undo/Edit actions remain
+unchanged.
+
+The native implementation intentionally adds no transcript context menu after
+auditing Source: `TimelineProse.tsx` renders only the copy/revert buttons and
+the renderer registers no `contextmenu` handler for the transcript. Browser
+text selection plus the Edit menu's Copy is the source behavior.
+
+Three new tests cover pointer-to-byte hit testing, Unicode word boundaries, and
+a rendered drag followed by Cmd+C/Cmd+A with real clipboard assertions. The
+first full gate hit the known streaming-reveal flake; it passed in isolation
+(`user-text-selection-final-isolated-flakes.txt`) and the authoritative rerun is
+green at 1019 with zero failures and one ignored performance test
+(`user-text-selection-final-gate.txt`).
+
+Structured/cross-paragraph selection, inactive panel selection and live visual
+acceptance remain.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Structured selection and inactive-tile selection (2026-11-03)
+
+User-message selection now uses document-order points rather than one block's
+byte range. `markdown_view` registers each rendered prose segment in order while
+building the user document and maps the selection to each segment's local
+range; headings, paragraphs, list items and table cells participate. Copy joins
+the covered segments with newlines in document order, and Cmd+A/triple-click
+span the whole document. A shared per-message drag flag lets a pointer drag
+continue across adjacent segments.
+
+Inactive tiled user rows now render a selectable plain-text `InlineFlow` with
+independent focus, selection and drag state per session/block. Cmd+C and Cmd+A
+work there, and the text row stops click propagation so selecting text does not
+activate the tile.
+
+Two new rendered tests cover a heading + paragraph + list + paragraph
+cross-segment drag and Cmd+A copy, and inactive-tile drag/Cmd+C/Cmd+A without
+activation. The full gate passes on its first run at 1021 with zero failures
+and one ignored performance test (`structured-selection-final-gate.txt`).
+Clippy, documentation checks and the app build are included in that gate.
+
+Code blocks, images, cross-message selection and live visual acceptance remain.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Code-block and image selection (2026-11-03)
+
+User-message selection now covers fenced code blocks and images in addition to
+prose and tables. Code blocks keep the existing tab-aware `PreformattedText`
+layout: `PreformattedText` gained an optional selection binding, pointer
+hit-testing through wrapped rows, and accent-fill painting, so indentation and
+tab stops are unchanged. Tab-containing blocks register their text for copy but
+do not attach character hit-testing because the measured tab layout has no byte
+map. Images register their alt text as a copy segment in document order and
+paint an accent border while the image is inside the selection.
+
+Two rendered tests cover a paragraph/code/paragraph drag plus Cmd+A copy, and a
+paragraph/image/paragraph drag plus Cmd+A copy that includes the alt text. The
+full gate passes on its first run at 1023 with zero failures and one ignored
+performance test (`code-image-selection-final-gate.txt`); Clippy, documentation
+checks and the app build are included.
+
+Cross-message selection, image binary clipboard payloads, tab-containing code
+hit-testing and live visual acceptance remain.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Cross-message selection (2026-11-03)
+
+Selection state is now transcript-wide. Points carry a user-message ordinal plus
+the segment and byte offset, one drag flag is shared by every user message, and
+each rendered message publishes its segment texts to the transcript registry.
+A drag started in one message continues into the next (forward or reverse), and
+copy walks the selection range in transcript order, joining messages and
+segments with newlines. Cmd+A uses the transcript's user-message order and the
+rendered segment registry; triple-click still selects one message. Changing the
+active session clears the selection and the rendered segment registry.
+
+A rendered test covers three consecutive user messages: drag first → second,
+Cmd+C copy order, reverse drag second → first, Cmd+A/Cmd+C across all three, and
+session-switch clearing.
+The first gate run hit the known streaming-reveal flake; it passed in isolation
+(`cross-message-selection-final-isolated-flakes.txt`) and the authoritative
+rerun is green at 1024 with zero failures and one ignored performance test
+(`cross-message-selection-final-gate.txt`). Clippy, documentation checks and the
+app build are included.
+
+Image binary clipboard payloads, tab-containing code hit-testing, never-rendered
+virtualized messages in select-all and live visual acceptance remain.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Tab-layout code selection (2026-11-03)
+
+`PreformattedText`'s measured tab layout now records a byte range on every
+placed chunk, including grapheme chunks produced by wrapping a long atom. The
+global offset accounts for logical-line newlines, tab separators and segment
+offsets. Pointer hit testing walks the chunks on the row under the cursor and
+maps the local glyph position through the chunk's range; selection painting
+uses the same ranges. Tab-indented user code blocks now receive a selection
+binding like space-indented blocks, so drag selection works and copy preserves
+tabs and newlines.
+
+A pure test checks ranges across tabs/newlines and pointer mapping into a
+post-tab chunk. A rendered test drags inside a tab-indented fenced block,
+copies the selection, then runs Cmd+A/Cmd+C and asserts the exact tab-preserved
+text. The full gate passes on its first run at 1026 with zero failures and one
+ignored performance test (`tab-code-selection-final-gate.txt`); Clippy,
+documentation checks and the app build are included.
+
+Image binary clipboard payloads, never-rendered virtualized messages in
+select-all and live visual acceptance remain.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Virtualized select-all projection (2026-11-03)
+
+Cmd+A no longer depends on a user row having painted. `markdown_view` now
+exposes a pure `user_segment_texts` projection that mirrors the renderer's
+segment registration: fast-path paragraphs, headings, paragraphs, list items,
+blockquotes, user code blocks, table cells and image alt text, in document
+order. `ensure_user_segment_texts` fills the transcript registry for every user
+block once per session, including virtualized rows, and the per-row insertion
+was removed so rendered and unrendered messages share one projection.
+
+A pure test checks structured projection order (heading, paragraph, list items,
+code, image alt). A rendered test creates 30 user messages in a 320px viewport,
+confirms the first bubble paints while the last is virtualized out, then
+Cmd+A/Cmd+C copies all 30 messages in transcript order. The first gate run hit
+the known streaming-reveal flake; it passed in isolation
+(`virtualized-select-all-final-isolated-flakes.txt`) and the authoritative
+rerun is green at 1028 with zero failures and one ignored performance test
+(`virtualized-select-all-final-gate.txt`). Clippy, documentation checks and the
+app build are included.
+
+Image binary clipboard payloads and live visual acceptance remain.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Image clipboard payloads (2026-11-03)
+
+User segment projection now carries encoded image bytes alongside alt text.
+Data images reuse their decoded `Image`; file-backed images are read once and
+their format comes from the extension or magic bytes. Selections collect images
+whose segments intersect the selected range, deduplicated by image id, and the
+clipboard payload exposes both the ordered text and the images.
+
+GPUI's macOS pasteboard backend writes only string entries when a
+`ClipboardItem` has multiple entries, so production macOS writes the text and
+each image UTI directly to `NSPasteboard`; test/other-platform paths build a
+GPUI `ClipboardItem` with `ClipboardEntry::Image`. Unit tests exercise the
+macOS writer against a unique pasteboard, so the user's general clipboard is
+untouched.
+
+Tests cover data/file byte extraction, image projection segments, the rendered
+text-plus-image clipboard item, and macOS text+PNG and image-only pasteboard
+payloads. The full gate passes on its first run at 1032 with zero failures and
+one ignored performance test (`image-clipboard-final-gate.txt`); Clippy,
+documentation checks and the app build are included.
+
+Live visual acceptance remains.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Git audit and Changes remount reset (2026-11-03)
+
+The Git status/branch row was audited against the current archived Source.
+`Titlebar.tsx` has no branch or status control, and `ChangesView.tsx` exposes
+only the observed-file tree, status labels, diffs, wrap/collapse/clear and
+open-in-editor. There is no staging, commit or branch UI to implement, so the
+row is marked N/A for those controls and Git diff review stays owned by the
+Diff view row.
+
+The audit found one real divergence: Source unmounts `ChangesView` on close, so
+collapse, line wrap, selection, scroll and cached diffs reset on reopen, while
+native cached the view entity. `ChangesView::reset_transient` now restores the
+Source remount defaults, and `toggle_changes`/`reveal_change` call it when the
+view opens. A focused test seeds collapse/wrap/selection/scroll state, resets,
+and asserts empty collapse sets, wrap enabled, no selection, cleared diff/pending
+caches, and top scroll positions.
+
+The first full gate run hit the known streaming-reveal flake; it passed in
+isolation (`git-audit-changes-reset-final-isolated-flakes.txt`) and the
+authoritative rerun is green at 1033 with zero failures and one ignored
+performance test (`git-audit-changes-reset-final-gate.txt`). Clippy,
+documentation checks and the app build are included.
+
+Live visual acceptance remains.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Embedded Agent TUI (2026-11-04)
+
+Source's agent panel exposes its runtime TUI only through the panel options
+menu. Native now implements that surface: GUI/TUI radio rows, TUI disabled
+with Source's `Unavailable` detail and explanation when the runtime reports
+`tui: false`, and a `Close panel` action. The choice is persisted per session
+in `Settings::agent_panel_modes`, and a saved TUI mode falls back to GUI while
+the capability is unavailable.
+
+The TUI is a dedicated embedded PTY registry (`agent_tui.rs`) independent of
+the terminal tray's tabs. It resolves `VELA_OPENCODE_BINARY` or `opencode` on
+PATH before spawning, runs `opencode --session <session-id>` in the session
+directory, and merges Source's child-only system-theme override into
+`OPENCODE_CLI_CONFIG_CONTENT`. The renderer applies Source's width-based
+10/11.5, 11/13.2 and 12/15 font/row metrics, strips Kitty SGR backgrounds across
+split PTY reads, and reuses the shared emulator grid, cursor, selection,
+clipboard, paste, IME composition, resize and focus-reporting helpers.
+Switching to GUI, closing the panel, losing the session or a process exit stops
+the embedded PTY. Exits restore GUI with Source's `Agent TUI exited.` or
+`Agent TUI exited with code N.` notice above the transcript.
+
+The terminal tray's TUI button and its spawn path were removed because the
+current archived Source has no tray TUI control; the mode lives only in the
+agent panel menu.
+
+Two rendered tests cover capability gating, the disabled explanation, mode
+persistence, embedded output, GUI switching, and the exit notice. Unit tests
+cover the Kitty sanitizer (including split escape sequences), TUI metrics and
+the command/theme contract; an engine persistence test round-trips the
+session-keyed modes. The full canonical gate passes on its first run at 1040
+with zero failures and one ignored performance test
+(`agent-tui-embedded-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Live TUI, IME, visual and process-lifecycle acceptance remains. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Composer model/agent menu audit (2026-11-04)
+
+The native model picker was compared against the current archived
+`ComposerModelMenu.tsx` and `Composer.tsx`. The catalog, favorites, search,
+provider/model visibility, collapse and response-strength surfaces already
+matched; two Source-backed lifecycle gaps were found and fixed:
+
+- Source resets `modelView` to `"list"` every time the model menu opens. Native
+  now resets `model_menu_settings` on open, including the settings fallback and
+  platform action paths.
+- Source requests its model/agent catalogs when a menu opens empty. Native now
+  calls the engine's catalog reload when opening an empty model or agent menu.
+
+A new rendered test covers the list reset, query matching across model name,
+id and provider, provider collapse/expand, the strength submenu's Auto and
+variant rows, and strength back navigation. Existing rendered tests continue to
+cover favorite toggling/removal, settings visibility, provider visibility and
+restart persistence.
+
+The canonical gate passes at 1041 with zero failures and one ignored
+performance test (`composer-model-menu-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Menu keyboard edge cases, appearance and live visual acceptance remain. No
+GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Composer menu Escape dismissal (2026-11-04)
+
+Continued the `ComposerModelMenu.tsx` audit against the composer root. Source's
+`useMenuDismiss` closes the open menu on Escape from anywhere in the composer;
+native model, agent and strength menus had outside-click dismissal but no key
+handler. Each picker menu now closes on Escape, restores focus through the
+owning trigger handle, and the strength view closes the menu instead of
+navigating back to the model list.
+
+The rendered model-menu test now covers Escape from the model list, Escape from
+the strength view and Escape from the agent menu. The canonical gate passes at
+1041 with zero failures and one ignored performance test
+(`composer-menu-escape-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Menu appearance and live visual acceptance remain. No GUI/capture, package
+install or Source write; no page accepted and mobile deferred.
+
+## Browser address blur (2026-11-04)
+
+Audited the embedded browser address field against `BrowserPane.tsx`. Source's
+address input tracks an editing flag on focus/change and restores the last
+committed guest URL on blur. Native already preserved committed URLs while the
+user was typing but had no blur handler, so abandoned edits stayed in the field
+and later URL events could leave stale text.
+
+The browser now installs a focus-loss subscription when the chrome renders.
+Losing the address field restores `browser_url` through the shared
+`sync_browser_input` path, matching Source's `onBlur`. A focused app test seeds
+an edited address and verifies the restored address and input text.
+
+`cargo test -p vela-ui` hit the known streaming-reveal flake during iteration;
+it passed in isolation (`browser-address-blur-isolated-flake.txt`). The
+canonical rerun is green at 1042 with zero failures and one ignored performance
+test (`browser-address-blur-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired browser comparison, shortcuts, emoji and live responsive acceptance
+remain. No GUI/capture, package install or Source write; no page accepted and
+mobile deferred.
+
+## Browser address focus session (2026-11-04)
+
+Completed the address-field lifecycle audit against `BrowserPane.tsx`. Source
+opens an edit session on focus (`onFocusChange(true)`), so guest URL commits do
+not overwrite the field while it is focused, and restores the committed URL on
+blur. Native now installs both focus and blur subscriptions when browser chrome
+renders; focus sets the editing flag without changing the text, and blur runs
+the same committed-URL restoration already covered.
+
+A focused test covers entering the edit session, and the earlier blur test
+covers restoring the committed address and input text.
+
+The first full gate hit the macOS pasteboard image-only flake; it passed in
+isolation (`browser-address-focus-isolated-flakes.txt`). The authoritative
+rerun is green at 1043 with zero failures and one ignored performance test
+(`browser-address-focus-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired browser comparison, shortcuts, emoji and live responsive acceptance
+remain. No GUI/capture, package install or Source write; no page accepted and
+mobile deferred.
+
+## Queue-chip runtime steer (2026-11-04)
+
+Audited `QueuedMessageChips.tsx` and `use-session-inbox.ts`. Source removes a
+runtime inbox chip optimistically before awaiting `inboxSteer`; on failure it
+refreshes the inbox, adds a `Queued prompt could not be sent` status row and
+shows an error toast. Native previously left the chip visible until a later
+refresh and only surfaced the error as a toast.
+
+Runtime `Send now` now removes the chip immediately. The engine's failed-steer
+path refreshes the inbox, applies the error notice to the retained transcript
+and emits the error toast. Local recovery retry still uses the engine's
+optimistic user row and re-queues on failure.
+
+The mixed runtime/local rendered test covers optimistic removal alongside the
+existing edit/reorder checks. The engine-flow fixture now covers both a
+successful steer and a failed steer that restores the inbox and notice.
+
+`cargo test -p vela-ui` hit the known streaming-reveal flake during iteration;
+it passed in isolation (`queue-chip-steer-isolated-flakes.txt`). The canonical
+rerun is green at 1043 with zero failures and one ignored performance test
+(`queue-chip-steer-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Matched source visual comparison and live imported-profile acceptance remain.
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## External import batch guards (2026-11-04)
+
+Audited the Explorer external-import path against Source's `fs-import` IPC
+guard and `workspace-mutations.importExternal`. Source rejects empty,
+non-array or over-2000 source lists, requires absolute paths, processes the
+batch in request order, lets the first duplicate basename win, resolves
+top-level symlinks through `realpath`, skips nested links and dependency/
+artifact directories, rejects sources already in or containing the workspace,
+and keeps the 10k-file/2GiB limits with no partial target on failure.
+
+Native already preserved order, skipped nested links, enforced containment and
+the resource limits, and installed atomically. It now also rejects empty,
+relative and over-2000-path batches before touching the filesystem. A focused
+engine test covers ordered duplicate basenames, relative/empty/oversized lists,
+top-level and in-workspace links, workspace-containing sources and the
+first-source-wins result.
+
+The canonical gate passes at 1044 with zero failures and one ignored
+performance test (`external-import-batch-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Live physical OS drag and paired visual acceptance remain. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Explorer context-menu labels and grouping (2026-11-04)
+
+Audited `ExplorerMenu` in `ExplorerTree.tsx` against the native explorer menu.
+Native already implemented every action and its target/parent semantics, but
+its labels omitted Source's ellipses and it rendered no group separator.
+
+The menu now uses `New File…`, `New Folder…` and `Rename…`, keeps root targets
+through Remove Workspace, and inserts a separator before the entry-only
+Rename/Remove from Workspace/Delete group. The multi-selection Delete count is
+still computed from the same compacted drag selection. A focused label test
+covers root and entry menus plus the counted Delete label.
+
+The canonical gate passes at 1045 with zero failures and one ignored
+performance test (`explorer-menu-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired menu visuals and remaining root/panel/non-macOS Trash acceptance remain.
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Explorer right-click selection (2026-11-04)
+
+Source's Explorer `onContextMenu` selects an unselected target before opening
+the menu, replacing any previous multi-selection; right-clicking a row that is
+already selected keeps the selection. Native opened the menu without touching
+selection, so the highlight and multi-selection state could disagree with the
+targeted row.
+
+The Explorer tree now applies `select_for_context` when the menu opens: a new
+target clears the old selection and becomes the anchor, while a selected target
+or the workspace root leaves selection unchanged. A focused tree test covers
+replacement, retention and root behavior. This builds on the menu label/group
+work from the previous slice.
+
+The first full gate hit the macOS pasteboard image-only flake; it passed in
+isolation (`explorer-context-selection-isolated-flakes.txt`). The authoritative
+rerun is green at 1046 with zero failures and one ignored performance test
+(`explorer-context-selection-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Agent usage menu placement (2026-11-04)
+
+Audited `AgentUsage.tsx` and `AgentPanel.tsx`: Source passes the usage control
+into the agent panel options menu as a menu item, then closes the menu when it
+opens the usage popup. Native rendered a floating absolute usage pill beside
+the header instead.
+
+The usage control is now a full-width options-menu item with Source's
+`Context` label and `N% used · session and provider usage` detail, closing the
+options menu on selection. The popup keeps its context/cost/provider sections,
+outside-click dismissal and Escape handling; Escape is also handled at the panel
+root so it works after the menu item unmounts. A rendered test covers the
+control being absent while the menu is closed, its menu placement, menu closure
+and Escape dismissal.
+
+The canonical gate passes at 1047 with zero failures and one ignored performance
+test (`usage-menu-placement-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Live provider refresh and paired visual acceptance remain. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Message replay switch state (2026-11-04)
+
+Audited `session-replay.ts` against native replay hydration. Source replays
+`agent-switched` and `model-switched` records into a carried selection state,
+annotates subsequent user rows, lets the responding assistant backfill the
+user's agent/model, skips empty user records and never emits selection records
+as timeline rows. Native previously parsed each message independently, so
+selection history was lost.
+
+Native replay now processes the canonical message array with carried agent and
+model state. User rows inherit the current selection, assistant rows update the
+state and backfill their user parent, empty/file-only user rows are omitted,
+and selection records remain hidden. A focused replay test covers switch state,
+assistant backfill and empty-user omission.
+
+The canonical gate passes at 1048 with zero failures and one ignored performance
+test (`message-replay-switches-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Remaining replay work is tool/selection/shell presentation and live visual
+acceptance. No GUI/capture, package install or Source write; no page accepted
+and mobile deferred.
+
+## Message replay shell presentation (2026-11-04)
+
+Continued the `session-replay.ts` audit into shell records. Source replays a
+shell item with its command, status, output and exit value. Native mapped shell
+records to a plain shell message with only the command, and live
+`ShellStarted`/`ShellEnded` replaced the stored command with an empty tool input,
+so shell cards lost their summary command and copy header.
+
+Replay now builds a shell tool part with structured `{command}` input, mapped
+running/success/failure status, output and timestamps. The live ShellEnded path
+reads the command retained by ShellStarted before replacing the message, then
+stores it as the same structured input. A focused test covers replay success/
+failure and a live started/ended pair, asserting command, output and status.
+
+The canonical gate passes at 1049 with zero failures and one ignored performance
+test (`message-replay-shell-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Remaining replay work is tool/selection presentation and live visual acceptance.
+No GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Message replay presentation and todos (2026-11-04)
+
+Continued the `session-replay.ts` audit into message presentation and
+`replayTodos`. Five Source-backed gaps were found and fixed.
+
+- Replay dropped legacy per-message presentation: user rows ignored their own
+  `agent` and model id, the `model.modelID` and flat `modelID` fallbacks were
+  never read, and `createdAt` was ignored without `time.created`. Native now
+  resolves the same fields as Source's `messagePresentation`.
+- Assistant backfill targeted only the latest user row. Source honors the
+  assistant's own `parentID` when it names an earlier row; native now does too,
+  falling back to the carried parent.
+- Settled assistants with no renderable parts still hydrated as an empty
+  activity row. Source omits them (`parts.length > 0 || !completed || retry ||
+  error`); native now drops them while keeping running, retrying and errored
+  rows.
+- Failed replayed tools were rewritten to the generic
+  `[VELA_TOOL_FAILED] Tool failed`. Source's replay card reports
+  `formatFailure(state.error, …)` and has no separate error surface. Native now
+  keeps the recorded failure, still preferring text content and otherwise
+  falling back to `state.output`.
+- Reopening a session never restored its todo list, although Source calls
+  `replayTodos(history)`/`normalizeTodos` on open and transcript reload. Native
+  now exposes `replay_todos_json` (metadata before input, content/status/id
+  normalization, latest non-empty `todowrite` wins) and the engine seeds the
+  session todo store whenever history hydrates.
+
+Focused core tests and the engine-flow fixture assert legacy presentation,
+named-parent backfill, settled-empty omission, failed-tool output/content
+precedence and replay todo seeding. The combined canonical gate passes at 1054
+with zero failures and one ignored performance test
+(`message-replay-presentation-todos-gate.txt`); the first slice's intermediate
+run is `message-replay-presentation-gate.txt`. Documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Remaining replay work is live-only tool progress text and live visual
+acceptance. No GUI/capture, package install or Source write; no page accepted
+and mobile deferred.
+
+## Live tool progress presentation (2026-11-04)
+
+Audited `OpenCodeTool.tsx`, the `partFromProjection` projection and
+`chat-store.ts`'s `session.tool.progress` handling against native live tool
+updates. Source keeps the progress payload in `state.progress`
+(`data.progress ?? data.metadata`), renders `progressText(...)` as a 13px/20px
+muted shimmering line below the tool head only while the call is running, and
+never replaces the card subtitle or output with it. Native instead overwrote
+the tool subtitle with the raw progress metadata JSON, which then became the
+expanded tool body through the output fallback, and showed no inline progress
+line.
+
+Native now stores a separate `ToolPart.progress`/`Block.progress` value, takes
+the event's progress text (strings verbatim, pretty-printed metadata as the
+fallback), keeps metadata collection for subcall/child-session linking, and
+renders Source's progress line only while the tool is running. Live
+`message.part.updated` carries `state.progress` like Source's projection,
+replay cards continue to omit progress, and a progress event that arrives
+before the tool starts now uses the event timestamp instead of zero.
+`progress_label` ports Source's `progressText` (plain text, then the first
+non-empty `message`/`status`/`detail`/`phase`/`title` string, then the raw
+payload).
+
+Pure core/UI tests cover event parsing, the metadata fallback, subtitle/output
+isolation, live-versus-replay part projection and label extraction; a rendered
+test asserts the shimmering line appears only for a running tool with
+non-empty progress and disappears once it settles.
+
+The canonical gate passes at 1058 with zero failures and one ignored
+performance test (`tool-progress-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Live visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## CMake and Protocol Buffers fences (2026-11-04)
+
+Continued the Shiki parity audit of `opencode-markdown/markdown-engine.ts`,
+which loads any `bundledLanguages` grammar for a settled fence. Native's
+bounded tokenizer had no grammar for `cmake` or `proto`/`protobuf`, so those
+blocks rendered as plain text.
+
+Added two dependency-free tokenizers:
+
+- CMake: line and `#[[ … ]]` bracket comments, bracketed/normal strings,
+  `$<genex>`, `${VAR}`, `$ENV{VAR}` and `$CACHE{VAR}` references, command
+  invocations, control keywords, ON/OFF/TRUE/FALSE/YES/NO booleans and
+  decimal/hex numbers.
+- Protocol Buffers: line/block comments, single/double strings, keyword set
+  (syntax/package/import/option/message/enum/service/rpc/returns/…), scalar
+  and upper-camel types, `rpc` names, field/option/enum-value properties and
+  numeric literals. `proto`, `protobuf` and `proto3` all route to it.
+
+Fixture tests assert the keyword/type/function/property/string/comment/number
+tokens for both grammars and the `assert_well_formed` span contract; the
+language alias test covers the new names.
+
+The canonical gate passes at 1060 with zero failures and one ignored
+performance test (`syntax-cmake-protobuf-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Full Shiki grammar parity and live/visual acceptance remain. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Groovy and Objective-C fences (2026-11-04)
+
+Continued the Shiki `bundledLanguages` parity audit. Groovy and Objective-C
+fences still rendered plain, although Source highlights both.
+
+- Groovy: annotations (qualified names included), class/enum/interface/trait
+  declarations, `def` and the Groovy/Java keyword set, primitive and
+  upper-camel types, function calls plus `print`/`printf`/`println`,
+  single/double/triple-quoted and slashy strings (slashy only where an
+  expression may start, so division stays plain), `0x`/`0b`/underscore/
+  exponent numeric forms with `G`/`F`/`D`/`L` suffixes, `true`/`false`/`null`,
+  and `//`/`/* */` comments.
+- Objective-C: the C grammar plus `@interface`/`@implementation`/`@property`/
+  `@protocol`/`@selector`/`@try`/`@catch`/`@end`-style directives,
+  `BOOL`/`NSInteger`/`CGFloat`/Foundation `NS*` types, `YES`/`NO`/`nil`,
+  `self`/`super`, `#import` headers and Objective-C strings. Directive and
+  literal additions correctly replace the C call/type span the shared grammar
+  produced (`@property (` looked like a call, `YES` like a type) while
+  string/comment spans always win.
+
+Fixture tests plus the span-integrity check cover both grammars and the
+`groovy`/`gvy` and `objective-c`/`objc`/`objectivec` aliases.
+
+The canonical gate passes at 1062 with zero failures and one ignored
+performance test (`syntax-groovy-objc-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Full Shiki grammar parity and live/visual acceptance remain. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Settings > Servers inventory audit (2026-11-04)
+
+Audited `SettingsPage.tsx`/`ServerSettings.tsx` against native Settings >
+Servers. Current Source's Servers section only manages Vite preview servers
+(polling `viteServers` every 2s). None of Source's seven settings sections
+lists MCP servers, plugins or skills, and the renderer never calls the preload
+`mcpList` helper. Native had added an MCP/PLUGINS/SKILLS inventory to that
+page with its own engine command, adapter parsers, retry state and rendered
+rows — an invented control from a stale inventory.
+
+Removed the invented surface end to end: the Settings inventory renderer and
+loading/error/retry state, `EngineUpdate::Integrations`, the engine
+`LoadIntegrations` command and spawn path, and the adapter's mcp/plugin/skill
+list methods plus its `inventory` parser module. The Servers page now shows
+Source's preview-only callout, Stop rows and Stop all, and a rendered
+regression test asserts the former inventory selectors never render.
+
+The matrix's MCP/plugins/skills row is now N/A with the audit recorded; re-add
+only if current Source surfaces these catalogs.
+
+The canonical gate passes at 1060 with zero failures and one ignored
+performance test (`servers-inventory-audit-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Live visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Indented Sass fences (2026-11-04)
+
+Continued the Shiki `bundledLanguages` audit. `scss` and `less` already used
+the brace-based CSS grammar, but Shiki's distinct `sass` (indented) grammar had
+no native equivalent, so indented Sass fences rendered plain.
+
+Added a line-aware Sass tokenizer: silent `//` and loud `/* */` comments,
+`$variables`, `@use`/`@forward`/`@mixin`/`@include`/`@if`/`@each`-style
+at-rules, `!default`/`!global`/`!important`/`!optional` flags, parent `&`
+selectors, `%placeholder`/`.class`/`#id` selectors, pseudo selectors, line-start
+declarations (including `--custom` properties, with pseudo-selector lines
+staying selectors), `#{…}` interpolation, function calls, hex colors,
+unit/percentage numbers and strings. Newlines reset declaration state, so
+indentation-only declarations work without braces or semicolons; `scss`/`less`
+keep the CSS path. `%` is now part of the shared numeric token so `10%` colors
+as one number (CSS benefits too, and the existing grammar fixtures still pass).
+
+A fixture test covers every added token class, the `sass` alias and the
+span-integrity contract; the full syntax module (73 tests) passes.
+
+The canonical gate passes at 1061 with zero failures and one ignored
+performance test (`syntax-sass-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Full Shiki grammar parity and live/visual acceptance remain. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Explorer menu root actions (2026-11-04)
+
+Re-audited `ExplorerTree.tsx`'s `ExplorerMenu` against the native explorer
+context menu. Source renders `Remove Workspace` only when the context target
+is the workspace root (its `workspaceSessionID` is set only for a directory
+with an empty path) and gives entries the separator-led `Rename…` /
+`Remove from Workspace` / `Delete` group instead. Native showed both
+`Remove Workspace` and `Remove from Workspace` on entry targets, so a file or
+folder menu offered a workspace-wide close that Source never exposes there.
+
+The menu is now built from an explicit `(label, action)` list: root targets
+get `Open in Integrated Terminal`, `New File…`, `New Folder…`, `Reveal in
+File Manager`, `Remove Workspace`; entry targets replace the last row with the
+separator-led rename/detach/delete group and no longer include
+`Remove Workspace`. The render loop dispatches by action instead of positional
+indexes, and the regression test asserts the exact labels, action order,
+root-only row and separator position.
+
+The canonical gate passes at 1061 with zero failures and one ignored
+performance test (`explorer-menu-root-only-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## LaTeX and Nim fences (2026-11-04)
+
+Continued the Shiki `bundledLanguages` audit into two more common fence
+languages that rendered plain natively.
+
+- LaTeX: `%` comments (ignoring `\%`), control sequences as functions,
+  structural commands (`\documentclass`, `\usepackage`, `\section`,
+  `\begin`/`\end`, `\item`, `\label`/`\ref`/`\cite`, …) as keywords,
+  environment names inside `\begin{…}`/`\end{…}` as types, `$`/`$$` math
+  delimiters and `&` tabs as keywords, and numbers including `11pt`-style
+  units. `latex` and `tex` both route to it.
+- Nim: `#` line comments and nested `#[ … ]#` block comments, the full
+  declaration/control keyword set, `proc`/`func`/`method`/`iterator`/`macro`/
+  `template`/`converter` names as functions, builtin scalar/sequence types,
+  upper-camel types, `true`/`false`/`nil`, triple-quoted, raw `r"…"` and
+  char literals, and hex/binary/underscore/float numbers.
+
+Fixture tests cover both grammars, aliases and the span-integrity contract;
+the syntax module is now 75 tests. The shared `skip_number` also treats `%`
+as part of a numeric token from the previous slice, which both CSS and these
+fixtures exercise.
+
+The canonical gate passes at 1063 with zero failures and one ignored
+performance test (`syntax-latex-nim-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Full Shiki grammar parity and live/visual acceptance remain. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Todo dock parity (2026-11-04)
+
+Audited `OpenCodeTodoDock.tsx` and `_agent-prompt-dock.scss` against the native
+todo dock. Source renders a 78–244px bordered card with a 42px
+`N of M steps completed` header, a collapse control (header or chevron
+button), a 168px scrolling list containing every todo, 14px/20px wrapping
+rows, and 17px ring controls with a check for completed items and a pulsing
+dot for in-progress items. Native rendered a small 8-item glyph list with no
+header, progress, collapse or inactive-tile dock.
+
+The native dock now matches that structure: card metrics, progress header,
+header/chevron collapse with rotated chevron and Source's
+`Expand todos`/`Collapse todos` labels, full untruncated wrapping rows,
+ring/check/active-dot controls, faint completed/cancelled rows and a
+session-scoped reset. Tiled panels render their own dock above the compact
+composer with independent collapse state, and a tile without todos renders
+nothing. Debug selectors and two rendered tests cover progress, full row
+count, collapse/expand and per-tile independence.
+
+GPUI has no text line-through decoration, so completed/cancelled rows use the
+faint color only; the in-progress ring spin is approximated by the pulsing
+dot. Both are recorded as remaining visual debt.
+
+The canonical gate passes at 1065 with zero failures and one ignored
+performance test (`todo-dock-parity-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Permission dock parity (2026-11-04)
+
+Audited `OpenCodeTimeline.tsx`'s `PermissionPrompt` and the dock-prompt
+styles against the native permission card. Source renders a 12px-padded
+0.5px-bordered card with a 14px `Permission required` header, the action on
+its own muted line, every resource as a wrapping 11px/16 monospace `<code>`
+row, and a wrapping button row with `Allow once` (primary), `Always` and
+`Deny` (danger). Native combined the header and action into
+`Permission · {action}`, joined resources with `·` in one plain line, and
+labelled its primary button `Allow`.
+
+The native dock now mirrors the Source structure: separate header and action
+rows, per-resource monospace rows (falling back to the event message only when
+a request carries no resources), a 12.5px medium wrapping button row with
+Source's label order and accent/raised/danger styling, and button roles with
+accessible labels. Debug selectors and a rendered test cover the header,
+action, resource rows and all three buttons; a pure assertion pins the label
+order.
+
+The canonical gate passes at 1066 with zero failures and one ignored
+performance test (`permission-dock-parity-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent header turn timer (2026-11-04)
+
+Audited `TurnTimer` in `AgentUsage.tsx` and its `_agent.scss` header styles.
+Source derives the turn start from the latest user message creation time
+(trailing assistant fallback), then shows an accent pill in the GUI agent
+header overlay (next to the options control) while the turn runs: a pulsing
+5px dot plus `formatTurnElapsed` text (`Xs`, `Xm SSs`, `Xh MMm`), refreshed
+every second. Native had no timer anywhere in the agent header.
+
+Implemented the same contract: `format_turn_elapsed` and
+`turn_started_at_blocks` match Source's formatting and start-time rules, and a
+busy turn renders the accent pill inside a right-aligned header overlay next
+to the options control (GUI), the TUI header, and each tiled panel's header
+(session-scoped selector). A 1s UI tick notifies while any panel is running so
+the pill and the transcript's `Working for` label advance; idle or unknown
+start times render nothing.
+
+Pure tests cover formatting and start-time selection, and a rendered test
+asserts the pill appears for a busy turn and disappears when the phase goes
+idle.
+
+The canonical gate passes at 1069 with zero failures and one ignored
+performance test (`agent-turn-timer-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent options active sessions (2026-11-04)
+
+Audited `AgentPanelOptionsMenu`/`AgentPanelSessionRows` against the native
+agent panel options. Source appends an `Active sessions` section after the
+usage control: deduplicated open sessions and panels, each a checked
+`menuitemcheckbox` with the session title/directory label and a subtitle
+(`Current coding workspace`/`In Agent Mode` when attached,
+`Switch workspace`/`Add to Agent Mode` when not), disabled with
+`Agent panel limit reached` once eight panels are open. Selecting an attached
+session focuses it; otherwise it replaces the coding panel or adds a panel
+while tiled. Native's options menu stopped at GUI/TUI, usage and Close.
+
+The native options menu now renders Source's section and rows, with the same
+checked/disabled semantics and subtitles. Choosing an attached session
+activates its panel, choosing another replaces a single coding panel or adds a
+tiled panel up to the eight-panel limit. A pure test pins Source's subtitle
+wording and a rendered two-panel test asserts the section, the checked current
+session, and switching to the other panel.
+
+The canonical gate passes at 1071 with zero failures and one ignored
+performance test (`agent-options-sessions-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Context tool groups (2026-11-04)
+
+Audited `OpenCodeTimeline.tsx`'s grouping and `ContextToolGroup`/
+`ContextToolRow`/`ToolCountSummary`. Source folds every contiguous run of
+read/list/glob/grep tools into one context group: an `Exploring`/`Explored`
+title (shimmer while running), an English count summary from
+`contextToolSummary` (`1 read, 2 searches, 1 list`), and — when expanded — a
+compact row per tool with `offset=`/`limit=` (read), `pattern=` (glob/grep)
+and `include=` (grep) arguments. Native rendered every context tool as its own
+card, so exploration bursts filled the transcript.
+
+Native now folds contiguous context tools per turn into a collapsed
+`RowKind::Context` row with the same title, counts, argument projection and
+per-session expansion state. Pure tests cover the context-tool set, summary
+wording/pluralisation, argument projection and contiguous-only folding; a
+rendered test asserts the collapsed group and its expansion to per-tool rows.
+Non-context tools and tiled inactive previews remain unchanged.
+
+The first full run hit the known macOS pasteboard image-only flake; it passed
+in isolation (`context-tool-groups-isolated-flakes.txt`) and the authoritative
+rerun is green at 1073 with zero failures and one ignored performance test
+(`context-tool-groups-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Interrupted "Stopped" marker (2026-11-04)
+
+Carried the earlier `messagePresentation` audit into Source's `interrupted`
+flag. Source marks a message interrupted for `MessageAbortedError`/abort or
+interrupt error text (and an explicit `interrupted` field), keeps the partial
+answer and error text, and renders a persistent 12px tertiary `Stopped` label
+beside the answer footer. Native replay treated aborted messages as ordinary
+failures, so restored stopped conversations had no marker.
+
+Native now records `Message.interrupted` during replay detection and carries it
+through every part block/error/retry block. The answer footer renders the
+`Stopped` label outside the hover/focus-only copy opacity, matching Source's
+always-visible marker. A core replay test covers abort detection, retained
+error text and block propagation (plus generic-failure and explicit-flag
+cases); a rendered test covers the marker appearing for an interrupted answer
+and disappearing once it settles.
+
+The canonical gate passes at 1075 with zero failures and one ignored
+performance test (`interrupted-stopped-marker-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tool presentation capture audit and corrections (2026-11-04)
+
+Reviewed the captured reference transcript
+(`docs/parity/2026-10-25/original/transcript-tools-replay-v1.png`) instead of
+relying only on source symbols. The live `AgentPanel` renders `VelaToolRow`:
+simple `Ran …`/`Read …` summary rows, an exec output card with a
+Success/Failed footer, a patch diff card, no IN/OUT, copy, files, subcalls,
+duration or progress line — and the captured replay shows a failed tool as the
+generic `[VELA_TOOL_FAILED] Tool failed` body.
+
+That invalidated two earlier code-only audits that were based on
+`OpenCodeTool`/`OpenCodeTimeline`, which the current `AgentPanel` does not
+mount:
+
+- Reverted the context-tool grouping slice (contiguous read/grep folding), its
+  helpers, rows, tests and matrix text.
+- Reverted the visible live tool-progress line and its `progressText` helper
+  and rendered test; `state.progress` remains stored as data.
+- Restored replay failed-tool output to the captured generic placeholder while
+  keeping the structured error and live content/error projection intact, and
+  updated the affected core tests.
+
+The rich tool-card surface (IN/OUT, copy, files, subcalls, duration, shell
+metadata fallbacks) is still implemented but is not yet converged on
+`VelaToolRow`; the matrix marks this reconciliation as open rather than
+claiming parity.
+
+The canonical gate passes at 1071 with zero failures and one ignored
+performance test (`tool-presentation-capture-audit-gate.txt`); documentation
+checks, workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tool cards converged on VelaToolRow (2026-11-04)
+
+Completed the reconciliation opened by the capture audit. The rich
+`OpenCodeTool` surface was retired from both the active transcript and the
+inactive-tile previews in favour of the captured live `VelaToolRow`:
+
+- Only exec and patch rows expand; read/search/list/web/generic rows are
+  summary-only even when they carry input, output, files or subcalls.
+- Exec expands to a bordered output card (mono 12px, 9rem scroll, `No output`
+  fallback) with a Success/Failed footer (check glyph on success, nothing
+  while running, no duration).
+- Patch expands to a colored `@@`/`+++`/`---` diff card (15rem scroll) or a
+  pre-wrap `No changes` body (10rem).
+- Removed the IN/OUT sections, tool copy action and per-panel copied state,
+  FILES and TOOL CALLS sections, durations, shell-command copy and output
+  truncation. `ToolFile`/`ToolSubCall` stay in the domain model as data.
+- Inactive tile tool rows use the same output/footer/diff rules.
+
+Tests were converted or replaced: kind summaries and expansion gating, exec
+and patch scrollable bodies, tile expansion without focus stealing, and
+tool-card keyboard accessibility. The captured replay failure body remains
+the generic `[VELA_TOOL_FAILED] Tool failed`.
+
+The canonical gate passes at 1066 with zero failures and one ignored
+performance test (`tool-card-velatoolrow-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance and VoiceOver remain. No GUI/capture, package install
+or Source write; no page accepted and mobile deferred.
+
+## Live fence highlighter audit (2026-11-04)
+
+Followed the tool-card correction into the Markdown surface. The live
+`VelaMarkdown` renders fences with `VelaCodeBlock`, which loads
+`ai-elements/upstream/lib/highlighter` — a small Shiki set of only bash, css,
+diff, html, javascript, json, jsx, markdown, python, sql, tsx, typescript,
+yaml and ANSI. The much larger `bundledLanguages` coverage added in earlier
+slices came from `opencode-markdown`, which the current `AgentPanel` does not
+mount, so native was highlighting languages the live app deliberately leaves
+plain.
+
+Native fence rendering now goes through `syntax::live_language`: only the live
+set (plus aliases) produces highlight runs, everything else stays on the plain
+code surface, ANSI keeps its dedicated path, streaming fences remain plain,
+and the header shows the fence language as typed instead of lowercasing it.
+The 32 markdown-surface tests that asserted Rust/Lua/CMake/Groovy/Sass/… fence
+highlighting were removed; the tokenizer fixtures in `syntax.rs` still cover
+the retained inventory, which is now test-only and unreachable from the
+transcript. A focused test pins the live set, the plain fallback and the
+streaming state.
+
+The first full run hit the known streaming-reveal timing flake; it passed in
+isolation (`live-fence-highlighter-isolated-flakes.txt`) and the authoritative
+rerun is green at 1035 with zero failures and one ignored performance test
+(`live-fence-highlighter-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. The live-surface audit for inline code,
+math, tables and images is now the next reconciliation item. No GUI/capture,
+package install or Source write; no page accepted and mobile deferred.
+
+## Live inline code audit (2026-11-04)
+
+Continued the live Markdown surface audit. `VelaMarkdown` renders codespans as
+plain `.vela-md-codespan` text (mono family, 8% ink background) with no
+URL/path affordance or accent color, while native painted path-looking code in
+accent and used the editor font, both sourced from the unmounted
+`opencode-markdown` renderer.
+
+Native inline code now stays plain ink and uses the Markdown mono family
+(`theme::markdown_code_font`, Menlo), matching Source's CSS. The
+Linguist-derived path/URL classifier (`syntax::inline_code_kind`,
+`inline_code` tables) is now test-only; its fixture still covers the retained
+inventory but production no longer consumes it. The inline-code test asserts
+plain ink and the Markdown mono family for both a path-looking and a plain
+span.
+
+The first full run aborted mid-suite with a platform foreign exception
+(`Rust cannot catch foreign exceptions`); the immediate rerun is green at 1035
+with zero failures and one ignored performance test
+(`live-markdown-inline-code-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains; the rest of the live inline surface
+(emphasis/links/math sizing) is still being audited. No GUI/capture, package
+install or Source write; no page accepted and mobile deferred.
+
+## Live user bubble / answer footer audit (2026-11-04)
+
+Continued the live `vela-chat` audit into `VelaTurn`. The live component
+renders a user turn as a right-aligned Markdown bubble only — no agent/model
+metadata, timestamp, attachment chips or Copy/Undo/Edit row actions — and its
+answer footer carries only Copy/Copied plus the turn duration. Native had
+inherited a `TimelineProse`/`TextPart` row: capitalized agent · catalog model ·
+duration on answers, metadata plus timestamp and Copy/Undo/Edit on user rows,
+and attachment chips under prompts.
+
+Native now matches the live surface:
+
+- User rows render only the Markdown bubble; the footer, metadata helpers,
+  attachment chips, locale stamp and action buttons were removed.
+- Answer footers show only Copy/Copied and the duration; the agent/model
+  identity row is gone (blocks still carry the data).
+- Inactive tiles no longer render per-message Copy/Undo/Edit; they keep work
+  groups and their independent text selection.
+- The engine-side revert staging/commit/clear flow and the AgentPanel staged
+  banner remain, but the staging entry point is dormant because Source's live
+  transcript exposes no action; `revert_message` is annotated accordingly.
+- Tests were rewritten: the active bubble test asserts the bubble renders and
+  the metadata/attachment selectors do not; the tile test asserts no row
+  actions while work rows still expand.
+
+The canonical gate passes at 1031 with zero failures and one ignored
+performance test (`live-user-bubble-answer-footer-gate.txt`); documentation
+checks, workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Live retry / compaction notices (2026-11-04)
+
+Audited `VelaTurn`'s `TurnEvent` arms. Source renders a retry as one plain
+12px secondary line, `${retry.message} · attempt ${retry.attempt}`, with no
+spinner, truncation or two-line split. Native had a spinner plus separate
+message and `Retrying · attempt N` info lines with invented fallbacks.
+
+Source renders a compaction event as one plain 12px status note —
+`Compacting context…`, `Context compacted`, or red `Compaction failed` — with
+no divider rules, shimmer, markdown summary or error body. Native had the
+divider-style row with rules, a `Session compacted`/`Compacting session`
+label set, running shimmer, markdown summary and a failure note.
+
+Native now matches both: retry is a single joined line, compaction is a single
+status note with Source's three labels, and the spinner, split selectors,
+divider/shimmer/summary/error-body paths were removed. Model and rendered
+tests were rewritten accordingly. Source's separate `Session compacted`
+divider token is still unmodeled and is recorded as remaining work.
+
+The canonical gate passes at 1031 with zero failures and one ignored
+performance test (`live-status-notes-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Live skill context row (2026-11-04)
+
+Audited `TurnEvent`'s `synthetic`/`skill` arm. Source renders a skill (and a
+synthetic record) as a plain context row: 6px vertical padding, an uppercase
+11.5px tertiary `SKILL · name` label, then the 12.5px secondary Markdown body
+with a 4px gap — no left border and no mono detail line. Native showed a
+left-bordered notice with `Skill activated · name` plus a separate mono skill
+id and a 6px markdown offset.
+
+Native now renders the Source context row: uppercase label, 4px gap, markdown
+body, no border and no detail line; the name still falls back to the id then
+`Skill`, and the rendered test asserts the label and the absence of the old
+detail selector.
+
+Also verified that Source's separate `divider` transcript item (`Session
+compacted` rules renderer) has **no producer** in the current renderer — it is
+dead type/renderer code, not a missing native behavior. The compaction status
+note remains the live representation.
+
+The canonical gate passes at 1031 with zero failures and one ignored
+performance test (`live-skill-context-row-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Live streaming reveal (2026-11-04)
+
+Audited the streaming-text presentation. The live `AgentPanel` renders
+`VelaMarkdown`, whose `StreamingTextBuffer` keeps the full text present and
+fades newly settled segments with staggered delays. The 24 ms `PacedMarkdown`
+prefix projection native used came from `TimelineProse`, which the current
+`AgentPanel` does not mount.
+
+Native no longer withholds streamed assistant text: the pacing state, the
+`24 ms` catch-up timer, the 2/4/8/256-byte stepping and the two pacing tests
+were removed, so assistant rows render the full current text while streaming.
+A per-segment opacity fade is not implemented in GPUI yet; that animation
+remains visual work rather than a withholding rule.
+
+While removing pacing, the adjacent user-selection helper block was caught in
+the same span and had to be reconstructed (`UserTextSelection` with
+transcript-order ranges, segment/image projection and char-boundary clamping);
+all existing selection/copy tests pass again.
+
+The canonical gate passes at 1029 with zero failures and one ignored
+performance test (`live-segment-fade-reveal-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Work divider fallback count (2026-11-04)
+
+Audited `WorkDivider`'s fallback label with the scroll hook. Source shows
+`${process.rows.length} previous messages`, where every shell item counts once
+and an assistant message counts once regardless of its parts. Native counted
+distinct message ids, undercounting multiple shell rows that share one
+assistant message.
+
+Native now counts process items the same way (assistant messages deduplicated,
+each shell counted). A projection test pins one process assistant plus two
+shell rows as `3 previous messages` with no duration fallback.
+
+`useVelaScroll` was also checked against native: the 24px floor threshold,
+260ms ease-out scroll-to-bottom, instant busy path, reduced-motion fallback and
+per-workspace position memory already match.
+
+The audit surfaced a separate tiling divergence: Source renders the full
+`VelaTranscript`/`AgentPanel` in every tile, while native inactive tiles still
+use a compact plain-text preview. That is recorded in the matrix and PAUSE as
+the next tiling slice rather than claimed as parity.
+
+The canonical gate passes at 1030 with zero failures and one ignored
+performance test (`live-work-fallback-count-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compaction baseline in the usage meter (2026-11-04)
+
+Audited the live `useAgentUsage` against the native session-usage popup. Source
+estimates a post-compaction context baseline: once a compaction transcript
+item appears, if the recorded input exceeds 10k tokens it freezes
+`input - 10_000`; later renders subtract that baseline from the context used
+and percentage and show `X total · Y before last compaction`. Native used the
+raw input, so post-compaction context percentages were too high, and the note
+was missing.
+
+Native now infers the baseline when a session's blocks contain a compaction
+item and usage exceeds 10k, keeps the first estimate, subtracts it from the
+context bar/percent and renders the source note. The menu label uses Source's
+`Context usage N percent` wording and the context tone thresholds were aligned
+to 60/85 (was 65/85). A pure test covers no-compaction, at-threshold,
+computed and retained estimates.
+
+The estimate is held in memory per session; Source persists it in
+localStorage. That persistence gap (plus the rendered popup assertion, which
+was not reachable in the isolated harness) is recorded in the matrix and
+PAUSE instead of being claimed as complete.
+
+The canonical gate passes at 1031 with zero failures and one ignored
+performance test (`usage-compaction-baseline-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage popup render coverage and share bar (2026-11-04)
+
+Closed the earlier gap where the usage popup could not be asserted in the
+isolated harness. `agent-usage-content` only had an element id, not a debug
+selector; adding the selector made the popup visible to `debug_bounds`, and the
+rendered test now covers the popup, the compaction note and the share bar.
+
+Added Source's four-segment usage bar ahead of the token rows: input (accent),
+output (dim), reasoning (`#b48ef0`) and cache-read (green), 5px tall with 1px
+gaps and widths proportional to total tokens (which includes cache write,
+matching Source's `usageTotal`). The rendered test asserts
+`usage-share-bar` appears with usage recorded.
+
+The compaction baseline remains in memory only; Source persists it in
+localStorage, which stays the open persistence slice.
+
+The canonical gate passes at 1032 with zero failures and one ignored
+performance test (`usage-share-bar-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compaction baseline persistence (2026-11-04)
+
+Moved the usage popup's post-compaction baseline out of the in-memory map and
+into engine-owned settings, matching Source's localStorage lifetime without
+adding a new UI-owned store. `Settings` gained a serde-defaulted
+`compaction_baselines: BTreeMap<String, i64>` next to the existing
+`agent_panel_modes` session map; first inference writes the baseline and calls
+`apply_settings`, so the estimate survives relaunches. `context_usage` and the
+popup read the settings map directly.
+
+A settings round-trip test covers two sessions, including a zero baseline. The
+existing pure inference and rendered popup/note/share-bar tests still pass.
+
+The canonical gate passes at 1033 with zero failures and one ignored
+performance test (`compaction-baseline-persistence-gate.txt`); documentation
+checks, workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage ring and popup typography (2026-11-04)
+
+Replaced the usage menu item's codicon with Source's 20px context ring: a
+faint full-circle track plus an accent arc for the used fraction, drawn as a
+72-segment stroked path starting at twelve o'clock, with a `usage-ring` debug
+selector. The rendered options-menu test asserts the ring renders.
+
+Aligned the popup's token rows to Source's typography: 12.5px rows with 4px
+spacing and an 8px bottom margin, a green semibold cache total with a top
+rule, a 12px bold total row and 12.5px empty copy. The existing popup test
+continues to cover the note, share bar and content.
+
+The canonical gate passes at 1033 with zero failures and one ignored
+performance test (`usage-ring-typography-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Provider usage card styling (2026-11-04)
+
+Aligned the provider usage section with the live `AgentUsage` stylesheet:
+bordered raised cards with 7px/9px padding and 6px bottom margin, 12.5px
+semibold provider names, uppercase plan chips, 7px status dots (ok green,
+stale/unavailable yellow, unauthenticated red, unsupported/other faint),
+11.5px window rows with 4px green/yellow/red fills, 10.5px reset copy, 11.5px
+credits with semibold values, and 11.5px error copy. The window has a 6px top
+margin, matching Source's spacing.
+
+The loading row now reads `Checking provider usage…` with a rotating spinner
+and 12px faint text; the extra `Refreshing…` label was removed because Source
+shows only the refresh control. Existing provider formatter/header/rendering
+tests pass.
+
+The first full gate run hit the known macOS pasteboard image-only flake; it
+passed in isolation (`provider-usage-styling-isolated-flakes.txt`) and the
+authoritative rerun is green at 1033 with zero failures and one ignored
+performance test (`provider-usage-styling-gate.txt`). Documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile empty state and provider dot tones (2026-11-04)
+
+Aligned the empty inactive tile with the live `AgentEmptyState` instead of the
+old compact copy: a centered column renders the optional station art plus
+`Tell the agent what to work on.` at 13px/19.5, or the spinning
+`Working`/`Waiting for your action` row while the tile is busy, under a
+`panel-empty-{session}` debug selector. The tile test now opens an empty
+`ses_empty` panel and asserts the empty state renders.
+
+Extracted `provider_tone(status)` from the provider card and added a pure test
+covering ok (green), stale/unavailable (yellow), unauthenticated (red) and
+unsupported/faint, keeping the previously aligned dot mapping honest.
+
+Full tiled transcripts remain the open divergence; only the empty state was
+converged here.
+
+The canonical gate passes at 1034 with zero failures and one ignored
+performance test (`tile-empty-provider-tones-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile answer footer duration (2026-11-04)
+
+Extended the tile answer footer to match `VelaTurn`: next to Copy it now shows
+the turn duration, computed from the nearest preceding user message's
+`created_at` and the answer's `completed_at` (clamped at zero). The formatter
+was exposed from `transcript_view` as `format_answer_duration` and reused, so
+tile and active footers cannot drift. The tile test asserts the
+`panel-answer-duration-{session}-{id}` selector appears.
+
+Full tiled transcripts (Markdown, full row set) remain the outstanding
+tiling divergence; this closes only the footer duration detail.
+
+The canonical gate passes at 1034 with zero failures and one ignored
+performance test (`tile-answer-duration-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled assistant Markdown (2026-11-04)
+
+Inactive tile assistant text now renders through the real
+`markdown_view::block` surface instead of a plain 11.5px string: headings,
+tables, fenced code, math and inline formatting use the same renderer as the
+focused transcript, wrapped in `panel-markdown-{session}-{id}`. The tile test
+asserts the Markdown surface appears for its answer row.
+
+User tile text remains on the selectable plain surface (its own selection,
+copy and select-all state), and work/tool rows remain the compact tile
+variants over a simple scroll column. Full `VelaTranscript` virtualization per
+tile is still the remaining tiling divergence.
+
+The canonical gate passes at 1034 with zero failures and one ignored
+performance test (`tile-markdown-rows-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled user bubble and label cleanup (2026-11-04)
+
+Tiled user rows now use Source's bubble surface: a right-aligned wrapper with
+the 77% max width, 16px radius, 5% ink background and 12/8 padding around the
+existing selectable plain surface, with 14px/22.75 text. The compact preview's
+extra `You`/`Assistant` (and tool) label rows were removed, since `VelaTurn`
+has no such labels. The tile selection test asserts the
+`panel-user-bubble-{session}:{id}` wrapper while still exercising drag/Cmd+C
+selection.
+
+Work and tool rows remain the compact tile variants, and user text is still
+not run through the Markdown parser; full `VelaTranscript` virtualization per
+tile is the remaining tiling divergence.
+
+The canonical gate passes at 1034 with zero failures and one ignored
+performance test (`tile-user-bubble-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile work divider labels (2026-11-04)
+
+Replaced the tile work header's compact `Work · N steps` copy with the live
+`WorkDivider` wording: `Working for Xs` while the tile runs (from the nearest
+preceding user message, minimum 1s), `Worked for X` once settled (latest
+settled answer completion minus the user creation, minimum 1s), or
+`N previous messages` when no duration exists. A 1px rule now sits under the
+head like Source's `.vela-work-rule`.
+
+The head/body selectors and click-to-expand behavior are unchanged, and the
+tile test still covers expansion. Work body rows and tool rows remain the
+compact tile variants rather than the full virtualized transcript.
+
+The canonical gate passes at 1034 with zero failures and one ignored
+performance test (`tile-work-divider-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Shared tool card in tiles (2026-11-04)
+
+Extracted the exec/patch card from `tool_view::render` into
+`tool_view::card(block, theme)` and made both the focused transcript and the
+tiled previews use it. Inactive tile tool rows now render the same bordered
+exec output card with Success/Failed footer and the same patch diff/plain card
+instead of their own 10.5px body; the head uses Source's 14px/21px tertiary
+summary and 12px chevron.
+
+The tile output wrapper keeps the `panel-tool-output-{session}-{id}` selector,
+so the existing expansion test still covers it, and the focused tool tests
+continue to cover the shared card's selectors.
+
+Remaining tiling differences: user text stays on the selectable plain surface,
+work bodies keep compact rows, and tiles do not use full `VelaTranscript`
+virtualization.
+
+The canonical gate passes at 1034 with zero failures and one ignored
+performance test (`tile-tool-card-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile work bodies render real rows (2026-11-04)
+
+Expanded tile work groups no longer show labeled plain text. Each preview row
+now resolves its source block: tool/shell rows render through
+`render_tile_tool_row` (the shared exec/patch card), assistant/reasoning/system
+rows render through `markdown_view::block` (reasoning in secondary ink), and
+remaining activity rows keep a plain muted fallback. The body uses Source's
+`padding-top: 8px`, 8px gap and no left border; per-row labels were dropped.
+
+`render_tile_work_row` gained the blocks/window context and an explicit
+too-many-arguments allowance for the internal render helper. The tile
+expansion test still passes.
+
+Remaining tiling differences: user text stays on the selectable plain surface,
+tile work body ordering follows the preview projection rather than a full
+VelaTurn process model, and tiles do not use virtualized `VelaTranscript`.
+
+The canonical gate passes at 1034 with zero failures and one ignored
+performance test (`tile-work-body-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile answer copy joins every part (2026-11-04)
+
+The inactive-tile answer Copy action previously copied only the clicked
+assistant block. It now builds the answer text the way `VelaTurn` does: the
+trailing assistant blocks for that message after the last tool are joined with
+`\n\n` and handed to `render_tile_answer_copy`. A focused tile test stages a
+two-part answer, clicks Copy on the second part and asserts the clipboard gets
+`First part.\n\nSecond part.`.
+
+This closes the tile copy-text gap; tile user Markdown and virtualized
+transcripts remain open.
+
+The canonical gate passes at 1035 with zero failures and one ignored
+performance test (`tile-answer-copy-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Busy tile header timer (2026-11-04)
+
+Inactive tile headers now render Source's pulsing turn timer while the panel
+is busy: `turn_started_at_blocks(&panel.blocks)` falls back to the trailing
+assistant when no user creation time exists, and the shared
+`turn_timer_element` draws the accent pill/dot. The timer uses
+`panel-turn-timer-{session}`; the busy tile test asserts it renders.
+
+Other tile header affordances remain native (title and close); Source's header
+has back/timer/options instead, which is still a structural difference.
+
+The first run hit the known macOS pasteboard image-only flake; it passed in
+isolation (`tile-header-timer-isolated-flakes.txt`) and the authoritative
+rerun is green at 1035 with zero failures and one ignored performance test
+(`tile-header-timer-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Full tile history (2026-11-04)
+
+Tiles previously projected only the last 24 blocks and clamped each row's text
+to 400 characters for the compact preview. Source renders every turn in every
+tile, so the tiled renderer now passes the full block list to `preview_rows`
+and reads user text from the source block instead of the truncated preview
+string. The `PREVIEW_BLOCKS` constant and its tail comment were removed.
+
+A focused test builds a 31-block panel with a 500-character first user prompt
+and asserts both the early `panel-user-bubble-ses_long:early` and the latest
+assistant Markdown row render.
+
+Remaining tiling differences: user text still uses the selectable plain
+surface rather than Markdown, tiles use a simple scroll column, and the tile
+header keeps native title/close controls instead of Source's back/timer/options
+arrangement.
+
+The canonical gate passes at 1036 with zero failures and one ignored
+performance test (`tile-full-history-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Preview projection cleanup (2026-11-04)
+
+Following the full-history change, `preview_rows` no longer takes a limit,
+truncates text to 400 characters, or synthesizes `You`/`Agent`/`Tool` labels.
+It now projects every block with its source index, matching the tiled surface's
+needs; the unused `PanelPreviewRow::label` field and `PREVIEW_BLOCKS` remain
+gone. The projection test now asserts all three rows/indexes and keeps the user
+flag, and the existing 31-block/500-character tile test still passes.
+
+Remaining tiling differences: user text stays plain-selectable rather than
+Markdown, tiles use a simple scroll column, and the header keeps native
+title/close controls rather than Source's back/timer/options arrangement.
+
+The canonical gate passes at 1036 with zero failures and one ignored
+performance test (`tile-preview-cleanup-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile header matches Source's arrangement (2026-11-04)
+
+Removed the native tile header's title and close controls and the duplicate
+turn timer. The header now reads back button (child sessions), the pulsing
+turn timer while busy, the status dot, a flexible spacer and the per-panel
+options menu — matching `AgentPanel`'s header order. Titles remain in the
+panel tab strip and closing is available from the options menu's `Close
+panel` row, so no close action was lost.
+
+The tile options menu already existed through `render_agent_panel_options`;
+the tile test now opens it and asserts
+`agent-panel-options-menu-ses_waiting`.
+
+Remaining tiling differences: user text stays plain-selectable rather than
+Markdown, tiles use a simple scroll column, and tile work bodies keep the
+preview projection rather than a full VelaTurn process model.
+
+The first run hit the known macOS pasteboard image-only flake; it passed in
+isolation (`tile-header-options-isolated-flakes.txt`) and the authoritative
+rerun is green at 1036 with zero failures and one ignored performance test
+(`tile-header-options-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile transcript column (2026-11-04)
+
+Tiles previously used a full-width, editor-tinted scroller with 10/8 padding
+and an 8px rhythm. Source's `VelaTranscript` renders a centred 48rem column
+with a 16px gap, 16/20/32 padding and no background of its own.
+
+The tiled transcript now keeps the scroll container transparent and adds a
+`panel-column-{session}` child with a 768px max width, `margin-inline: auto`,
+16px gap and 16/20/32 padding. All tile rows append to that column, and the
+tile test asserts the column renders.
+
+Remaining tiling differences: user text stays plain-selectable rather than
+Markdown, tiles still use a simple scroll div (no tail-follow/scroll-to-bottom
+button), and tile work bodies keep the preview projection.
+
+The canonical gate passes at 1036 with zero failures and one ignored
+performance test (`tile-column-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile scroll tail-follow (2026-11-04)
+
+Added an independent `ScrollHandle` per tiled panel. While the panel's `stick`
+flag is set, each tile render snaps the handle to the floor so new output
+follows the bottom; an upward wheel gesture clears `stick` and shows Source's
+`panel-to-bottom-{session}` control, which clears stop-propagation, re-enables
+following and scrolls to the end. The tile test unpins a panel, asserts the
+control, clicks it, and verifies the flag and control state.
+
+This is an approximation of `useVelaScroll`: wheel-down does not yet re-pin
+inside the 24px threshold and per-panel distance-from-bottom memory is not
+stored. Those remain documented tiling gaps, along with user Markdown and the
+preview-driven work bodies.
+
+The canonical gate passes at 1036 with zero failures and one ignored
+performance test (`tile-scroll-follow-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile reasoning collapse and wheel re-pin (2026-11-04)
+
+Reasoning blocks inside an expanded tile work body now match
+`VelaReasoning`: a `Thought`/`Thinking` head with the reasoning glyph and
+chevron, per-panel open state (`PanelState.reasoning_open`), Markdown body in
+secondary ink, and open-by-default while the block streams. The tile test
+expands `panel-reasoning-ses_waiting-reason-1` and asserts its body selector.
+
+The tile wheel handler now also re-pins when a downward wheel would leave the
+distance within 24px, using the current handle distance plus delta; upward
+wheels still unpin. Full `useVelaScroll` distance-from-bottom memory is still
+not stored per panel.
+
+Remaining tiling gaps: user text stays plain-selectable rather than Markdown,
+work bodies still follow the preview projection rather than a full VelaTurn
+process model, and the approximate scroll memory is not persisted.
+
+The canonical gate passes at 1036 with zero failures and one ignored
+performance test (`tile-reasoning-collapse-gate.txt`); documentation checks,
+workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Permission resources have no fallback row (2026-11-04)
+
+`PermissionPrompt` renders exactly `item.resources`; it never falls back to the
+request message. Native substituted the message as a resource row when the
+list was empty, inventing a line Source would not show. The dock now uses
+`request.resources` directly, and the rendered permission test adds a second
+card with an empty list plus a message and asserts no third resource row is
+produced.
+
+The action line, header, button labels and tile forwarding behavior are
+unchanged.
+
+The recurring macOS pasteboard image-only flake was also stabilized: both
+unique-pasteboard tests now poll for the PNG entry (100 × 2ms) before asserting
+presence/absence, since the pasteboard service can apply
+`clearContents`/`setData` after the call returns. The gate passed in one clean
+run after this change.
+
+The canonical gate passes at 1036 with zero failures and one ignored
+performance test (`permission-resource-fallback-gate.txt`); documentation
+checks, workspace Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Immediate session deletion (2026-11-04)
+
+> **Superseded later on 2026-11-04:** this audit read only the row markup.
+> `use-session-lifecycle.ts` actually calls `window.confirm` before deleting;
+> native's confirmation was restored in the correction entry below. The
+> paragraph below is retained as the historical (incorrect) finding.
+
+Audited `SessionsPane`'s session context menu: `Delete session` calls
+`deleteSession` immediately; the title warns that the action is permanent and
+Source shows no confirmation prompt. Native had added a GPUI warning prompt
+before queueing the engine deletion.
+
+Native now queues the request-acknowledged deletion directly from the menu, and
+`session_delete_confirmation` was removed. A rendered test calls the menu
+handler and asserts `session_deletions` records the session. Engine guards,
+toasts and cleanup behavior are unchanged.
+
+Separately, the two macOS NSPasteboard tests are now marked ignored with a
+reason: the pasteboard service refuses writes intermittently under the parallel
+test runner even after retries, and both pass with
+`cargo test -- --ignored` (`session-delete-immediate-pasteboard-isolated.txt`).
+This removes the recurring false red gate while keeping the isolated check.
+
+The canonical gate passes at 1035 with zero failures and three ignored tests
+(two NSPasteboard cases plus the existing performance test)
+(`session-delete-immediate-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Saved-project row interaction (2026-11-04)
+
+`SessionsPane` splits its project head: the row toggles the project's session
+history, while the inner name/count button opens the workspace. Native had the
+whole row opening the workspace, with only the chevron toggling history.
+
+Native now matches Source: the row click toggles `expanded_session_projects`,
+and a nested `project-open-{index}` button (name + count) stops propagation and
+runs the workspace open/relocation flow. The row aria label is now
+`{name} sessions`; the open button keeps `Open workspace {name}`. Debug
+selectors were added to the row, open button and Recents toggle so the
+interaction is testable. A rendered test clicks the row padding to expand and
+then the name button to open.
+
+The sidebar status row also no longer claims a delete confirmation; the
+immediate-delete change from the previous round is reflected there.
+
+The canonical gate passes at 1036 with zero failures and three ignored tests
+(`session-project-row-interaction-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile scroll distance memory (2026-11-04)
+
+Tiled panels now record their distance from the bottom into
+`panel_scroll_memory` when `close_panel` removes their scroll handle. On the
+next render for that session, the saved distance sets the panel's `stick` flag
+immediately (`distance <= 24px`) and reapplies the pixel offset once the handle
+has measured content; until then the memory stays pending rather than spinning
+a notify loop.
+
+The full-history tile test seeds a 100px saved distance, draws, and asserts the
+reopened tile is unpinned and renders `panel-to-bottom-ses_long`. This closes
+the per-panel distance-memory gap noted in earlier checkpoints, though the
+implementation remains a simplified `useVelaScroll`, not a byte-for-byte port.
+
+The canonical gate passes at 1036 with zero failures and three ignored tests
+(`tile-scroll-memory-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Session label fallback (2026-11-04)
+
+`AgentPanelSessionRows` labels a session with `sessionLabel`: title, directory
+basename, agent, then id. Native's `panel_title` only used a non-empty title or
+the id, so untitled sessions opened with different menu/panel labels.
+
+Extracted `session_display_label` with Source's order and used it from
+`panel_title`. A pure test covers title, directory basename (including a root
+directory), agent fallback and id fallback.
+
+The canonical gate passes at 1037 with zero failures and three ignored tests
+(`session-label-fallback-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Editor status metadata (2026-11-04)
+
+Source's `EditorStatusMenu` popover ends with a `status-menu-meta` block:
+cursor Ln/Col, indentation (`Spaces`/`Tab Size` plus size), UTF-8 and the
+active tab path. Native already showed the first three but had no path row and
+no debug selectors, and indentation was hardcoded to `Spaces: 2` (the editor's
+Monaco options use tabSize 2 with spaces, so the value matches).
+
+Native now renders the active file's path row (`status-menu-path`) and tags the
+cursor, indentation and encoding rows with `status-cursor-position`,
+`status-indentation` and `status-encoding`. The indentation row remains the
+fixed `Spaces: 2` because the native editor has no per-document indent
+configuration surface yet.
+
+The canonical gate passes at 1037 with zero failures and three ignored tests
+(`editor-status-meta-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Validation status-menu state machine (2026-11-04)
+
+`EditorStatusMenu` disables its validate action while a run is pending and
+shows `Validating…`; after a result or failure it offers `Validate again`, and
+when diagnostics exist it toggles `Show errors`/`Hide errors` on the editor
+markers. Native instead showed `Cancel validation`/`Retry validation` and had
+no marker toggle.
+
+Native now stores the active validation diagnostics and marker visibility,
+applies/clears editor markers through `toggle_validation_markers`, and uses
+Source's labels: `Validating…` (action disabled, cancel removed), `Validate
+again`, `Show errors`, `Hide errors`, with the pending state rendered at half
+opacity. Pure label tests cover all transitions; the rendered test asserts the
+pending and failed states.
+
+The canonical gate passes at 1037 with zero failures and three ignored tests
+(`validation-marker-toggle-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Status menu Save row removal (2026-11-04)
+
+`EditorStatusMenu`'s popover contains only the validate action, the Sass watch
+action and the status meta block. Native had added a `Save file` row with the
+⌘S hint. The row was removed and the rendered status test now asserts
+`status-save` does not exist; saving remains on the editor shortcut and Save
+button.
+
+The canonical gate passes at 1037 with zero failures and three ignored tests
+(`status-menu-save-row-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Editor breadcrumb deleted label (2026-11-04)
+
+Source's editor breadcrumb shows a red `deleted on disk` label when the open
+tab's file disappears, in addition to the deleted banner below. Native only
+rendered the banner. Added the breadcrumb label
+(`editor-deleted-label`) when the document's `deleted` flag is set.
+
+Source's separate `changed on disk` stale label is still unmodeled: native's
+document model does not track a clean-baseline stale flag distinct from a
+conflict, so it is recorded as remaining work rather than faked.
+
+The canonical gate passes at 1037 with zero failures and three ignored tests
+(`editor-deleted-label-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Editor breadcrumb stale label (2026-11-04)
+
+Source sets `stale: true` when a dirty tab receives a disk update, alongside
+the conflict; clean tabs reload silently with `stale: false`. Native had no
+stale label at all. The breadcrumb now shows Source's `changed on disk` label
+(`editor-stale-label`) whenever the open document has a conflict, and keeps the
+existing deleted label/banner. Clean-tab auto-reload remains unchanged, so no
+stale label is invented for the non-conflict path.
+
+The canonical gate passes at 1037 with zero failures and three ignored tests
+(`editor-stale-label-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Session ordering: open first, then updatedAt (2026-11-04)
+
+`SessionsPane` sorts Recents (and derives Pinned) with `openNowIDs` first and
+then `updatedAt` descending. Native kept the engine's updatedAt-only order, so
+an old session with an open panel did not float to the top.
+
+`refresh_session_filter` now builds the open-panel set and sorts both filtered
+lists with `sort_session_indices`: open sessions first, then newest
+`updated_at`. A pure test pins the mixed order.
+
+The canonical gate passes at 1038 with zero failures and three ignored tests
+(`session-order-open-first-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Project histories use Source's session order (2026-11-04)
+
+Source derives each project's nested sessions from the same open-first,
+updatedAt-sorted `recents` list. Native's project expansion still used the raw
+engine order. `render_workspaces` now collects matching session indices, runs
+them through `sort_session_indices` with the open panel set, and maps back to
+summaries, so project histories match Recents/Pinned ordering.
+
+The existing pure ordering test covers the shared helper; the canonical gate
+passes at 1038 with zero failures and three ignored tests
+(`project-session-order-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile Stopped marker and settled footer (2026-11-04)
+
+`VelaTurn` shows the `Stopped` marker for interrupted answers and only renders
+the Copy/duration footer while `!streaming`. The tile preview previously
+dropped the interrupted flag and showed Copy for every assistant row.
+
+`PanelPreviewRow` now carries `interrupted`; tiled answers render the
+`Stopped` marker under the Markdown body (`panel-answer-stopped-{session}-{id}`)
+and only build footer actions for settled assistant rows. The tile test marks
+its answer interrupted and asserts the marker.
+
+The canonical gate passes at 1038 with zero failures and three ignored tests
+(`tile-stopped-marker-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile error and retry rows (2026-11-04)
+
+`VelaTurn` renders `answer.error` as 12.5px red `.vela-error-text` and a retry
+as the plain `message · attempt` status note after the answer. Tiled rows fell
+through to the generic Markdown renderer for both kinds, so errors looked like
+ordinary prose.
+
+Tiled rows now special-case `BlockKind::Error` (red 12.5px text,
+`panel-answer-error`) and `BlockKind::Retry` (12px `message · attempt` note,
+`panel-retry-note`) in both the top-level transcript and the expanded work
+body. The tile test includes an error row and asserts the selector.
+
+The canonical gate passes at 1038 with zero failures and three ignored tests
+(`tile-error-rows-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile process folding (2026-11-04)
+
+`turnProcess` folds everything before the final assistant answer — commentary
+text, tool/shell calls, reasoning and activity — into the Work group, leaving
+the answer outside. Tiles grouped only reasoning/activity/system rows, so tools
+and commentary stayed visible above the Work divider.
+
+`preview_rows` now computes Source's process indices per user turn: it finds
+the last assistant message, its last tool, the first non-empty assistant text
+after that tool (the answer start), and marks assistant/tool/shell/reasoning/
+activity rows before that point as process. The tile loop groups consecutive
+process rows into one Work group and keeps non-process events/answers outside.
+Expanded work bodies already render shared tool cards and Markdown rows, so the
+folded tools use the same surface. The tile exec test expands Work before
+asserting the tool card.
+
+This is an approximation of `turnProcess` (no activity scan/labels), but the
+folding boundary matches Source's answer split. User Markdown remains the main
+tiled display gap.
+
+The canonical gate passes at 1038 with zero failures and three ignored tests
+(`tile-process-folding-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Process projection coverage (2026-11-04)
+
+Added a pure test for the tiled process split: a user prompt, commentary
+assistant text, a tool call and the final answer project as
+`[false, true, true, false]`, and a turn with no tools marks its only answer as
+outside Work. This pins the boundary used by the new tile Work folding so a
+future preview change cannot silently reintroduce commentary/tools above the
+divider.
+
+The canonical gate passes at 1039 with zero failures and three ignored tests
+(`tile-process-projection-test-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled user rows use VelaMarkdown (2026-11-04)
+
+Inactive tile user rows render through `markdown_view::user` with a
+`UserSelectionSpec`: the bubble, prose segments, headings/lists/code and
+selection painting now match `VelaTurn`. Selection state lives in
+`tile_user_selection` (anchor/head points plus the projected segment texts);
+Cmd+A selects the whole message, Cmd+C copies it through the shared segment
+range logic, and a drag starts a selection without activating the tile.
+
+The old plain `selectable_plain` surface, `PanelTextSelection`,
+`panel_text_selection`/`panel_text_drag` fields and the markdown helper were
+removed. The tile selection test now drags the Markdown bubble, verifies the
+selection starts without activation, then uses Cmd+A/C to assert the full
+message text; drag-extend text itself is not separately asserted (Markdown
+selection painting is otherwise covered by the active-transcript tests).
+
+The canonical gate passes at 1039 with zero failures and three ignored tests
+(`tile-user-markdown-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Attached workspaces are remembered (2026-11-04)
+
+Source's `useSessionLifecycle` calls `rememberWorkspace(info.directory)` whenever
+a session is attached, so opening a session adds its folder to Projects.
+Native only added workspaces from the Projects plus button.
+
+`show_session` now calls `remember_workspace` with the session directory;
+the helper dedupes against existing bookmarks, derives the basename as the
+name, persists settings and notifies. A focused test clears the imported
+bookmarks, remembers one directory twice, and asserts a single `demo` entry.
+
+The canonical gate passes at 1040 with zero failures and three ignored tests
+(`remember-workspace-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Unsupported files disable Validate (2026-11-04)
+
+`EditorStatusMenu` disables the Validate action for files outside
+HTML/CSS/SCSS, with the title "Open an HTML, CSS, or SCSS file to run
+validation". Native left it clickable and only toasted the hint.
+
+The status popover now computes `validatable` from `validation_target`;
+unsupported files render the disabled action at half opacity with Source's aria
+hint and no click/keyboard activation. The existing toast guard remains for
+any other entry point.
+
+The canonical gate passes at 1040 with zero failures and three ignored tests
+(`validation-unsupported-disable-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage popup Close action removed (2026-11-04)
+
+Source's `AgentUsagePopup` has no inline Close control; it is dismissed by the
+outside-click/Escape `useMenuDismiss` behavior. Native added a `usage-close`
+button beside "Session usage".
+
+Removed that control; the popup still closes through the options-menu toggle,
+outside click and Escape. The rendered usage test now asserts `usage-close` is
+absent alongside the compaction-note/share-bar coverage.
+
+The canonical gate passes at 1040 with zero failures and three ignored tests
+(`usage-close-row-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage popup dashboard glyph (2026-11-04)
+
+`AgentUsagePopup`'s head renders the dashboard icon before "Session usage".
+Native's head had only the label. Added the local `dashboard` glyph at 12px
+with a 6px gap, matching Source's head layout; the rendered usage test still
+covers the popup, compaction note, share bar and the absent Close selector.
+
+The canonical gate passes at 1040 with zero failures and three ignored tests
+(`usage-head-icon-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Token-count formatting matches formatTokens (2026-11-04)
+
+Source's `formatTokens` uses `(count / 1k).toFixed(count >= 100_000 ? 0 : 1)`
+and the analogous million rule. Native always printed one decimal, so
+150,000 showed as `150.0k` and 12.5M as `12.5M` instead of `150k`/`13M`.
+Rust's default `{:.1}` also rounds ties to even, unlike JavaScript `toFixed`.
+
+Added `js_fixed` (multiply, round half away from zero, format) and applied
+Source's thresholds in `usage_count`. The formatter test now covers 1,250 →
+`1.3k`, 99,999 → `100.0k`, 150,000 → `150k`, 999,999 → `1000k`, 2.5M and
+12.5M → `13M`.
+
+The canonical gate passes at 1040 with zero failures and three ignored tests
+(`usage-token-rounding-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile drag selection survives re-renders (2026-11-04)
+
+The tile Markdown selection spec created a fresh drag `Cell` on every render.
+`inline_flow` sets that flag on mouse-down and requires it on mouse-move, but
+the Start callback notifies and re-renders, so the next move saw a false flag
+and only a click-point selection was produced.
+
+`tile_user_drag` now owns one `Rc<Cell<bool>>` per user document and the spec
+clones it, so Extend fires across segments. The tile selection test now asserts
+non-empty dragged text and that Cmd+C copies exactly that dragged selection
+before Cmd+A selects the whole message.
+
+The canonical gate passes at 1040 with zero failures and three ignored tests
+(`tile-drag-selection-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile selection click semantics (2026-11-04)
+
+The tile Markdown selection callback ignored `click_count` and `shift`, so it
+always collapsed to the clicked point. It now mirrors the active transcript:
+double-click selects `selected_word` under the pointer, triple-click selects
+segment 0 offset 0 through the last segment's end (the whole message), and
+shift-click keeps the existing anchor while moving the head. Plain click and
+drag behave as before.
+
+The tile drag test continues to cover selection start + Cmd+C/SelectAll; the
+click-count variants share `transcript_view::selected_word` and the same point
+projection as the active rows.
+
+The canonical gate passes at 1040 with zero failures and three ignored tests
+(`tile-selection-clicks-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile scroll memory keyed by workspace (2026-11-04)
+
+Source's `useVelaScroll(session.workspace.id)` stores the remembered
+distance-from-bottom per workspace, so sessions sharing a directory restore the
+same position. Native keyed `panel_scroll_memory` by session id, losing that
+sharing.
+
+Added `scroll_key_for`: it resolves a session to its directory, falls back to
+the session id when no summary/directory exists, and `close_panel`/tile restore
+use that key. A pure test asserts two sessions in one directory share a key and
+an unknown session keeps its id.
+
+The canonical gate passes at 1041 with zero failures and three ignored tests
+(`tile-scroll-workspace-key-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile selection click logic extracted and tested (2026-11-04)
+
+The tile Start callback's click-count/shift branch was inline and untested.
+Extracted `tile_selection_start(point, text, click_count, shift, current,
+segments)`; the callback now calls it. A pure test covers a plain click, double
+click selecting `brave` (6..11), triple click spanning the whole message
+(0..17), and shift-click retaining the existing anchor while moving the head.
+The rendered drag test still covers selection start + Cmd+C/SelectAll.
+
+The canonical gate passes at 1042 with zero failures and three ignored tests
+(`tile-selection-click-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile answer footer reveals on hover (2026-11-04)
+
+Source's `.vela-answer-footer` starts at opacity 0 and appears on
+`.vela-answer:hover`/focus-within. Tiled answers rendered the Copy/duration
+footer permanently. `PanelState` now tracks `hovered_answer`; assistant rows
+set/clear it on hover and the footer wrapper is opacity 0 until the row (and
+therefore its footer) is hovered. The answer-copy test moves the pointer over
+the answer body, asserts `hovered_answer == a2`, then clicks Copy; the
+select-all/drag test still passes.
+
+The canonical gate passes at 1042 with zero failures and three ignored tests
+(`tile-answer-hover-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Answer footer hover state clears on leave (2026-11-04)
+
+Extended the tile answer-copy test to move the pointer off the answer after
+copying and assert `hovered_answer` is cleared. This pins the `.vela-answer`
+hover lifecycle (footer reveals on enter and disappears on leave) so a stale
+hover cannot leave the footer visible after the pointer moves away.
+
+No production behavior changed beyond the previous round's hover reveal; the
+regression assertion covers the clear path.
+
+The canonical gate passes at 1042 with zero failures and three ignored tests
+(`tile-answer-hover-clear-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Provider counts match formatCount (2026-11-04)
+
+Source's provider `formatCount` returns `String(value)` below 1k, so credits
+like 12.5 render `12.5`; native rounded them. Above 1k Source uses one decimal
+with JavaScript `toFixed` ties, while native used Rust's half-even formatting.
+Added the same `js_fixed` helper and switched `<1k` to plain Display. The
+formatter test now covers 1,250 → `1.3k`, 12.5 → `12.5` and 12.55 → `12.55`
+alongside the existing credits/reset wording.
+
+The canonical gate passes at 1042 with zero failures and three ignored tests
+(`provider-count-rounding-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage context block requires a known limit (2026-11-04)
+
+Source wraps the usage popup's Context window section in
+`contextLimit !== null`, so a model without an advertised limit shows only
+cost, shares and provider usage. Native always rendered the context header with
+"Limit unavailable", an empty bar and the compaction note when a baseline was
+inferred.
+
+The context block is now a `.when_some(limit, ...)` child of the popup, the
+"Limit unavailable" branch is gone, and the count/note rows live inside that
+block. `usage-context` tags the block. The rendered popup test clears the
+model's context limit and asserts both `usage-context` and the note disappear.
+
+The canonical gate passes at 1042 with zero failures and three ignored tests
+(`usage-context-limit-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Provider section circle-dot glyph (2026-11-04)
+
+Source's `.usage-provider-title` renders a small circle-dot SVG before the
+uppercase "Provider usage" label. Native had only the label. Added the same
+10px ring plus 3px dot drawn with divs (GPUI has no SVG for this glyph) with a
+5px gap in the section header. Existing provider-section render tests still
+pass.
+
+The canonical gate passes at 1042 with zero failures and three ignored tests
+(`provider-head-glyph-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Closing a panel forgets its compaction baseline (2026-11-04)
+
+Source calls `removeClosedBaseline(sessionID)` from
+`forgetClosedSessionRecords`, clearing the persisted estimate when a session's
+records are forgotten. Native kept `settings.compaction_baselines` entries
+after the panel closed, so a reopened session could keep subtracting a stale
+baseline.
+
+`close_panel` now removes the session's baseline and persists settings only
+when an entry existed. A focused test opens a panel, seeds a 15k baseline,
+closes the panel, and asserts the entry is gone.
+
+The canonical gate passes at 1043 with zero failures and three ignored tests
+(`compaction-baseline-close-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compaction end snapshots the pre-compaction baseline (2026-11-04)
+
+Source's `session.compaction.ended` handler calls `snapshotCompactionBaseline`,
+freezing the current input as the baseline before the refreshed usage arrives;
+the smaller post-compaction input then subtracts to zero context. Native only
+inferred `input - 10k` after seeing a compaction block, which left a spurious
+10k of context and could differ from Source.
+
+`refresh_active` now detects a compaction block that was streaming/running in
+the previous revision and is settled in the new one, and
+`note_finished_compactions` stores the current input tokens as the baseline and
+applies settings. A focused test seeds 90k input, transitions a compaction
+block, and asserts the baseline is exactly 90k.
+
+The canonical gate passes at 1044 with zero failures and three ignored tests
+(`compaction-end-snapshot-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Provider plan separators collapse like Source (2026-11-04)
+
+Source's `formatPlan` replaces `/[_-]+/g` with one space; native replaced each
+character, so `team--plan` produced `Team  Plan`. The formatter now normalizes
+separator characters first and then splits on whitespace, matching Source for
+repeated runs. The provider formatter test covers `team--plan` and
+`pro__plus` alongside the existing `self_serve_business` case.
+
+The canonical gate passes at 1044 with zero failures and three ignored tests
+(`provider-plan-separators-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Provider refresh glyph spins while loading (2026-11-04)
+
+Source's `IconRefresh` carries a CSS spinning animation after a refresh starts.
+Native's refresh control was a static glyph that only dimmed while loading.
+The glyph now uses GPUI's repeating rotation animation (700ms) while
+`provider_usage_loading`, keeping the existing disabled opacity/click guard and
+matching the loading state visually.
+
+The canonical gate passes at 1044 with zero failures and three ignored tests
+(`provider-refresh-spin-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Sub-1k provider counts preserve Source's String text (2026-11-04)
+
+Source's `formatCount` returns `String(value)` below 1k, preserving decimals
+and signs. Native clamped negatives to zero and previously rounded fractional
+values. Removed the clamp and kept plain Display for the sub-1k branch; the
+formatter test adds `999.9` and `-5` alongside the existing decimal cases.
+Values at or above 1k still use `k`/`M` with JavaScript half-up rounding.
+
+The canonical gate passes at 1044 with zero failures and three ignored tests
+(`provider-count-subunit-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Zero provider reset timestamps render as absent (2026-11-04)
+
+Source guards reset text with `window.resetsAt && ...`, so a timestamp of 0 is
+falsy and omitted. Native used `when_some(Some(0))` and rendered
+`resets any moment` for a window with no reset. The reset child now filters
+`0` while preserving non-zero past timestamps (which still say
+`resets any moment`), and carries a `provider-window-reset` selector.
+
+The canonical gate passes at 1044 with zero failures and three ignored tests
+(`provider-zero-reset-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact/compress commands show Source's toast (2026-11-04)
+
+Source's `runCommand` toasts `Compacting session…` before dispatching `/compact`
+or `/compress`, then schedules usage refreshes. Native dispatched the command
+silently. `send` now emits the same toast through `compaction_command_toast`,
+which returns the message only for those two names. A pure test covers
+`compact`, `compress` and a non-compaction command.
+
+The canonical gate passes at 1045 with zero failures and three ignored tests
+(`compact-command-toast-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Command errors use Source's raw toast (2026-11-04)
+
+Source's `runCommand` catches the IPC error and calls `toast(message, "error")`;
+native prefixed it with `Command failed: `. `SlashCommandFinished` now pushes the
+error text directly when it belongs to the active session, so command failures
+read exactly like the reference toast.
+
+The canonical gate passes at 1045 with zero failures and three ignored tests
+(`command-error-toast-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact toast waits for success (2026-11-04)
+
+Source awaits `window.vela.runCommand` and only then toasts
+`Compacting session…`; a rejection shows only the error toast. Native toasted
+before dispatch, so a failed compact still claimed it was compacting.
+
+`send` now records the command name in `slash_command_names`; the
+`SlashCommandFinished` handler removes it, toasts `Compacting session…` only on
+success for compact/compress, and keeps the raw error toast on failure. Both
+slash entry points and session resets clear the new map.
+
+The canonical gate passes at 1045 with zero failures and three ignored tests
+(`compact-toast-ack-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Zero-reset render coverage (2026-11-04)
+
+The provider sample window now carries `resets_at: Some(0)`, and the rendered
+provider-card test draws the sample and asserts the `provider-window-reset`
+selector is absent, pinning the previous round's falsy-zero behavior in the
+actual card renderer rather than only the helper.
+
+The canonical gate passes at 1045 with zero failures and three ignored tests
+(`provider-zero-reset-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Deleted sessions forget their compaction baseline (2026-11-04)
+
+Closing a panel already cleared its baseline; deleting a session did not.
+Source's `forgetClosedSessionRecords` runs for deleted sessions too. On a
+successful `SessionDeleted` (no error), native now removes the id from
+`settings.compaction_baselines` and persists settings when an entry existed.
+A focused test seeds a deletion entry and baseline, finishes deletion, and
+asserts the baseline is gone.
+
+The canonical gate passes at 1046 with zero failures and three ignored tests
+(`deleted-session-baseline-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile answer duration falls back to answer createdAt (2026-11-04)
+
+`VelaTurn` computes answer elapsed from `turn.user.createdAt` and falls back to
+`answer.item.createdAt` when the turn has no user. Tiled answers only used a
+preceding user block, so child/synthetic turns omitted the duration.
+
+The tile footer calculation now falls back to the first assistant block with
+the same `message_id`, matching the active transcript's `answer[0].created_at`
+fallback. Existing tile tests still pass.
+
+The canonical gate passes at 1046 with zero failures and three ignored tests
+(`tile-answer-duration-fallback-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Correction: Source confirms session deletion (2026-11-04)
+
+A previous round concluded from the `SessionsPane` row markup that Source
+deleted sessions immediately and removed native's confirmation. Re-reading
+`use-session-lifecycle.ts` shows `deleteSession` calls `window.confirm` with
+`Delete session "<title>"? This permanently removes it from opencode and cannot
+be undone.` before closing the panel and calling `window.vela.deleteSession`.
+The earlier claim was wrong.
+
+`request_session_deletion` now shows `platform_prompt::document` with the same
+title and detail and OK/Cancel buttons; only an accepted alert calls the new
+`begin_session_deletion`, which keeps the request-acknowledged engine path.
+A `session_delete_prompt` field deduplicates the alert while it is open, and
+the focused test now exercises the accepted path. Matrix row 38 and START-HERE
+were corrected.
+
+The canonical gate passes at 1046 with zero failures and three ignored tests
+(`session-delete-confirmation-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Accepted deletion closes the panel first (2026-11-04)
+
+Source's `deleteSession` calls `closePanel(sessionID)` before awaiting
+`window.vela.deleteSession`, so a failed deletion still leaves the panel
+closed. Native waited for `SessionRemoved` and kept the panel open on failure.
+`begin_session_deletion` now closes the panel immediately when it is present,
+then records the request and dispatches the engine deletion. The focused test
+opens a panel, confirms the accepted path, and asserts the panel is gone as
+well as the request being recorded.
+
+The canonical gate passes at 1046 with zero failures and three ignored tests
+(`session-delete-close-panel-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Panel close saves dirty tabs and blocks conflicts (2026-11-04)
+
+Source's `closePanel` saves all dirty tabs in the workspace and aborts with
+`Resolve external file conflicts before closing this workspace.` when any tab
+has a conflict. Native closed the panel without touching documents.
+
+`close_panel` now resolves the session's document scope, collects unsaved keys,
+refuses to close on a conflict (toast), and otherwise dispatches saves before
+closing. A focused test opens a dirty document with an external conflict and
+asserts the panel remains open.
+
+Native saves asynchronously and closes immediately rather than waiting for all
+saves to acknowledge; the Source failure-retains-panel behavior is not yet
+modeled and is recorded as remaining work.
+
+The canonical gate passes at 1047 with zero failures and three ignored tests
+(`panel-close-dirty-tabs-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Panel close waits for save acknowledgements (2026-11-04)
+
+Building on the conflict guard, `close_panel` now models Source's
+`closePanel` save barrier: it gathers the session scope's unsaved keys,
+dispatches each save, and records the request ids in `panel_close_saves`. The
+panel closes only when every request acknowledges without error. A failed save
+marks the pending close failed, clears the entry and leaves the panel open; a
+conflict still aborts before any save starts.
+
+`save_document_key` now returns the dispatched request id (None for queued
+relocation saves). Focused tests cover a successful wait (panel closes after
+`FileSaved`) and a failing save (panel remains, pending entry cleared).
+
+The canonical gate passes at 1049 with zero failures and three ignored tests
+(`panel-close-save-wait-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Delete title fallback matches Source (2026-11-04)
+
+Source's `deleteSession` computes `panel?.title ?? summary?.title ?? sessionID`.
+Native used only the session summary and fell back to the id, ignoring a panel's
+effective title. Extracted `session_title_for_delete` with the same order and
+used it for both the confirmation copy and the success toast. A focused test
+covers panel title, summary title and the id fallback.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`delete-title-fallback-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Retiring a session clears pending UI state (2026-11-04)
+
+`retire_session_ui` cleared session-scoped maps but not the new pending
+panel-close save set, the delete-confirmation marker, or command-name entries
+whose requests had just been dropped. A deleted session could therefore leave a
+stale close waiting on an impossible save or a prompt marker.
+
+Retirement now removes `panel_close_saves[id]`, clears
+`session_delete_prompt` when it matches, and prunes `slash_command_names` down
+to the requests still present in `slash_requests`.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`retire-pending-cleanup-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Retiring a session clears retained panel widgets (2026-11-04)
+
+`retire_session_ui` removed the panel from `panels` but left the tile input,
+composer, form dock and scroll handle entries keyed by the deleted id. Those
+maps are session-owned, so a deleted session could retain widget state (and the
+composer/form entities) indefinitely.
+
+Retirement now removes `panel_inputs`, `panel_composers`, `panel_form_docks`
+and `panel_scrolls` for the id. Workspace-keyed scroll memory is intentionally
+left alone because sibling sessions may still use it.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`retire-panel-maps-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Repeated panel close reuses the save barrier (2026-11-04)
+
+The panel-close wait test now calls `close_panel` a second time while writes are
+pending and asserts the pending request count is unchanged. `close_panel`
+already returned early when `panel_close_saves` contained the session; this
+pins the deduplication so a second close cannot dispatch duplicate saves or
+reset the failure flag.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`panel-close-dedup-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Panel close releases the engine session (2026-11-04)
+
+Source's `finishClosePanel` calls `window.vela.closeSession(ejected.workspace)`
+after ejecting the panel, moving the backend workspace to the warm cache.
+Native closed only the UI panel, leaving the engine view attached.
+
+`finish_close_panel` now dispatches `engine.close_session(session)` after the
+panel and per-session widget maps are removed, for both active and inactive
+panels. Engine sessions remain in recents; reopening hydrates from warm state
+as before. Existing close/save/conflict tests still pass.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`panel-close-engine-session-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Delete confirmation uses window.confirm labels (2026-11-04)
+
+Source's confirmation is a Chromium `window.confirm`, whose buttons are `OK`
+and `Cancel`. Native's native alert had used `Delete`/`Cancel`. The prompt now
+uses `PromptButton::ok("OK")` with the retained detail text and cancel fallback,
+while the accepted path still begins deletion.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`delete-confirm-buttons-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Delete confirmations serialize like a modal (2026-11-04)
+
+`window.confirm` blocks the renderer, so Source can never show two deletion
+prompts at once. Native's per-id guard allowed a second session's prompt while
+the first alert was open. `request_session_deletion` now refuses to open any new
+prompt while `session_delete_prompt` is Some, matching the modal behavior.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`delete-confirm-serialize-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Retiring a session clears selection state (2026-11-04)
+
+Completing the retirement cleanup, `retire_session_ui` now also prunes
+`panel_text_focus`, `tile_user_selection` and `tile_user_drag` entries whose
+keys use the deleted `<session>:<block>` prefix. Workspace-keyed scroll memory
+remains shared.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`retire-selection-maps-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Workspace open emits Source's toast (2026-11-04)
+
+Source's `openSession`/`attachFileWorkspace` toast `Opened {directory}` after a
+successful workspace open. Native updated the UI but stayed silent. The
+`WorkspaceOpened` success path now pushes the same toast using the engine's
+resolved directory (so moved-folder resolution reports the destination), while
+the failure path keeps its existing error toast.
+
+The canonical gate passes at 1050 with zero failures and three ignored tests
+(`workspace-opened-toast-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Workspace toast has surface coverage (2026-11-04)
+
+Added a focused test that feeds `WorkspaceOpened { Ok }` with a matching
+`workspace_hint` and asserts the shared toast surface contains
+`Opened /work/demo`. This pins the new success toast at the toast layer rather
+than only in the event handler.
+
+The canonical gate passes at 1051 with zero failures and three ignored tests
+(`workspace-toast-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled panel creation gap recorded (2026-11-04)
+
+Auditing the titlebar/lifecycle paths exposed a real behavioral difference:
+Source's `selectFolder` (`New Session`) calls `replacePanels` and collapses the
+layout to the chosen workspace, while adding another panel goes through the
+titlebar `+` (`selectAddPanel`). Native's New Session currently calls
+`open_session`, which adds a tiled panel, and native has no titlebar `+`.
+
+Recorded this in the matrix's Simultaneous panels row and PAUSE-HANDOFF as the
+next tiled behavior to implement; no code change this round, to avoid silently
+changing the New Session flow without Source's add control.
+
+The canonical gate passes at 1051 with zero failures and three ignored tests
+(`tiled-creation-gap-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Correction: native has the titlebar add control (2026-11-04)
+
+The previous gap note claimed native had no titlebar add-panel control. The
+titlebar renderer does define `titlebar-add` with aria "Add model panel" and a
+`square-plus` glyph. The real divergence is narrower: both that control and New
+Session route through the same add path, while Source's New Session
+(`selectFolder`) replaces all panels and only the titlebar `+` adds.
+
+Matrix, START-HERE and PAUSE were corrected to keep the titlebar control and
+scope the remaining work to distinguishing the replace flow.
+
+The canonical gate passes at 1051 with zero failures and three ignored tests
+(`tiled-creation-gap-correction-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled creation flows now match Source (2026-11-04)
+
+Source distinguishes New Session from Add panel: `selectFolder` calls
+`replacePanels` (detach every panel, attach the chosen workspace), while the
+titlebar `+` calls `selectAddPanel`/`attachPanel` and appends. Native routed
+both UI paths through `open_session`, which always appended.
+
+Added `workspace_open_adds`: New Session and the empty Files Open Workspace
+action set it false; `titlebar-add` sets it true. `WorkspaceOpened` success
+detaches all existing panels (saving the active panel state, dropping widget
+and selection maps, keeping engine sessions warm) before opening a replacement
+when false, and simply opens when true. A focused test seeds two panels and
+asserts New Session leaves only the new panel, then Add appends a second.
+
+The canonical gate passes at 1052 with zero failures and three ignored tests
+(`tiled-creation-flow-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Titlebar add honors the panel ceiling (2026-11-04)
+
+Source's `addModelPanel` returns early when `panels.length + pendingModelPanels
+>= MAX_AGENT_PANELS` (8). Native's titlebar add always opened the folder
+picker. `add_workspace_panel` now returns at eight panels before setting the
+add flag or prompting; a focused test fills eight panels, calls the control and
+asserts no panes/dialog state changed.
+
+The canonical gate passes at 1053 with zero failures and three ignored tests
+(`titlebar-add-limit-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Titlebar add dims at the panel limit (2026-11-04)
+
+Source disables `data-panel-action="add-model-panel"` and titles it "Agent
+panel limit reached" when `canAddAgentPanel` is false. Native's guard returned
+from the click but the button still looked enabled. The titlebar control now
+computes `can_add = panels.len() < 8`, switches its aria label to "Agent panel
+limit reached", drops to 0.45 opacity and only shows the pointer cursor while
+addable.
+
+The canonical gate passes at 1053 with zero failures and three ignored tests
+(`titlebar-add-disabled-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent Mode layout is functional (2026-11-04)
+
+The titlebar agent-mode control was a decorative icon with no role or click
+handler. Added `agent_mode` state and `toggle_agent_mode`: entering forces the
+agent panel open; `render_workspace` short-circuits to an `agent-mode-root`
+panel layout without the editor column, and the classic/codex body selection
+renders only the rail plus that workspace while Agent Mode is active (sidebar
+hidden). Titlebar add also enters Agent Mode, matching Source's
+`addModelPanel`.
+
+A rendered test starts three panels, toggles Agent Mode, asserts
+`agent-mode-root`, then toggles off and asserts it is gone.
+
+The canonical gate passes at 1054 with zero failures and three ignored tests
+(`agent-mode-layout-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent Mode narrows to the focused panel (2026-11-04)
+
+Source's `toggleAgentMode` seeds `agentModePanelIDs` with the focused/coding
+panel on enter and exit, and `addModelPanel` enters Agent Mode with the newly
+opened panel. Native previously left every existing panel tiled.
+
+Added `detach_panels_except`: saves the active panel state, close-detaches every
+other panel (widget/selection maps dropped, engine sessions kept), and
+re-activates the kept panel. `toggle_agent_mode` calls it on both enter and
+exit; the first titlebar add enters Agent Mode with only the opened session,
+later adds append; `choose_agent_panel_session` and the Active-session details
+now use `agent_mode` instead of the panel-count heuristic. The focused test
+covers New Session replacement, first-add collapse and second-add append.
+
+The canonical gate passes at 1054 with zero failures and three ignored tests
+(`agent-mode-panel-set-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent Mode preserves the sidebar state (2026-11-04)
+
+Source's `toggleAgentMode` saves `{open, width}` in `prevSidebarRef`, closes
+settings and forces the sidebar hidden; exiting restores the saved open state.
+Native changed only the layout, so a sidebar toggle during Agent Mode survived
+into the normal layout and Settings could stay open behind the panels.
+
+Added `sidebar_before_agent_mode: Option<bool>`. Entering (toggle or first
+titlebar add) stores the current sidebar_open and closes Settings; exiting
+restores the saved value. The Agent Mode test toggles the sidebar while active
+and asserts the pre-mode state returns.
+
+The canonical gate passes at 1054 with zero failures and three ignored tests
+(`agent-mode-sidebar-state-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent Mode exits from the rail and last close (2026-11-04)
+
+Source's `activateSidebarTab` exits Agent Mode before opening the requested rail
+view, and `closeAgentPanel` exits when the last Agent Mode panel closes,
+restoring the saved sidebar. Native left the mode active in both cases, so the
+rail click was invisible and a zero-panel Agent Mode could remain.
+
+`activate_sidebar_tab` now toggles Agent Mode off (restoring sidebar/panel set)
+then sets Settings closed, the sidebar open and switches to the requested tab.
+`finish_close_panel` clears Agent Mode and restores `sidebar_before_agent_mode`
+when the panel set becomes empty. The Agent Mode test covers both exits.
+
+The canonical gate passes at 1054 with zero failures and three ignored tests
+(`agent-mode-exit-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Manual resize leaves Agent Mode (2026-11-04)
+
+Source's `leaveAgentModeForManualAdjustment` clears Agent Mode (and its saved
+sidebar state), keeps only the focused panel, and does not restore the
+sidebar. Native splitter drags silently resized inside Agent Mode. The splitter
+mousedown now calls `leave_agent_mode_for_manual_adjustment`, which clears the
+mode and saved sidebar state, collapses to the active panel via
+`detach_panels_except`, and leaves the current sidebar state untouched. The
+Agent Mode test asserts the mode drops and can be re-entered.
+
+The canonical gate passes at 1054 with zero failures and three ignored tests
+(`agent-mode-manual-adjust-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent Mode evens panel widths (2026-11-04)
+
+Source calls `distributeEvenly` when entering/exiting Agent Mode and when the
+Agent Mode panel count grows. Native kept previously dragged width fractions,
+so a panel set could stay lopsided after mode changes or additions.
+
+Added `Panels::even_widths()` (sets every explicit width to None so the grid
+normalizes equal shares) and call it on Agent Mode enter/exit, after the first
+add, and after appending a session from the options menu. A panel-registry test
+sets 0.7/0.3 widths and asserts the reset clears both.
+
+The canonical gate passes at 1055 with zero failures and three ignored tests
+(`agent-mode-even-widths-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Titlebar sidebar exits Agent Mode (2026-11-04)
+
+Source's `toggleSidebarFromTitlebar` exits Agent Mode and opens the sidebar
+when active; otherwise it flips sideOpen. Native's titlebar control only
+flipped `sidebar_open`, which was invisible while Agent Mode hid the sidebar.
+
+Extracted `toggle_sidebar_from_titlebar`: in Agent Mode it toggles the mode off
+(restoring/collapsing the panel set), then forces the sidebar open; otherwise
+it flips the state. The titlebar icon's aria label now accounts for Agent Mode.
+The Agent Mode test asserts the control leaves the mode with the sidebar open.
+
+The canonical gate passes at 1055 with zero failures and three ignored tests
+(`agent-mode-titlebar-sidebar-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent Mode aria labels match Source (2026-11-04)
+
+Source's titlebar button uses `aria-label={agentMode ? "Exit Agent Mode" :
+"Enter Agent Mode"}` with `aria-pressed`. Native announced a static "Toggle
+agent mode". The control now switches between the two labels while retaining
+the toggled state, matching Source's accessibility surface.
+
+The canonical gate passes at 1055 with zero failures and three ignored tests
+(`agent-mode-aria-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Late add respects the ceiling (2026-11-04)
+
+The titlebar click guard checks the panel count before opening a folder picker,
+but a dialog can resolve after another panel is added. The `WorkspaceOpened`
+add path now checks `!already_open && panels.len() >= 8`: it pushes Source's
+`Agent panel limit reached` error toast and leaves the panel set unchanged
+instead of opening a ninth panel. The limit test extends the eight-panel case
+with a late `WorkspaceOpened` and asserts eight panels plus the toast.
+
+The canonical gate passes at 1055 with zero failures and three ignored tests
+(`agent-mode-late-add-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Hiding the agent panel in Agent Mode empties the workspace (2026-11-04)
+
+The titlebar agent-panel toggle remained interactive in Agent Mode while
+`render_workspace` ignored `agent_panel_open` and always rendered the panel
+grid, so the control visibly did nothing. The Agent Mode branch now renders an
+`agent-mode-hidden` fill when the panel is hidden and the normal panel layout
+when shown; the Agent Mode test toggles the flag and asserts both states.
+
+The canonical gate passes at 1056 with zero failures and three ignored tests
+(`agent-mode-hidden-panel-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Close panel subtitle follows Agent Mode (2026-11-04)
+
+Source renders `Remove this model panel` under Close panel only when
+`agentModeActive`; otherwise `Hide the agent panel`. Native used
+`panels.len() > 1`, so a two-panel normal layout or a single-panel Agent Mode
+showed the wrong subtitle. The menu now branches on `agent_mode`.
+
+The canonical gate passes at 1055 with zero failures and three ignored tests
+(`agent-mode-close-detail-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Close-panel detail has pure coverage (2026-11-04)
+
+Extracted `close_panel_detail(agent_mode)` and added a pure test for both
+subtitles, so the menu branch is pinned independently of the rendered options
+menu. No visible behavior changed from the previous round.
+
+The canonical gate passes at 1056 with zero failures and three ignored tests
+(`agent-mode-close-detail-test-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Handoff snapshot refreshed (2026-11-07)
+
+`PAUSE-HANDOFF.md` still advertised a 1031-pass/1-ignored gate and the old
+tile-answer evidence file. Updated the snapshot date to 2026-11-07 and the
+latest authoritative gate to 1056 passed, 0 failed, 3 ignored with
+`agent-mode-close-detail-test-gate.txt`. START-HERE already points at the same
+gate; the matrix remains the sole status owner.
+
+The canonical gate passes at 1056 with zero failures and three ignored tests
+(`agent-mode-close-detail-test-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent panel toggle hides only the anchor (2026-11-04)
+
+Source's `toggleAgentPanel` flips only the anchor slot (`slotOpen(anchorId)`)
+in Agent Mode; other panels stay visible. The previous native change emptied
+the whole workspace whenever `agent_panel_open` was false. Native now removes
+the first panel into `hidden_agent_anchor`, activates the next panel (or none),
+and renders the remaining grid; showing restores the stored PanelState,
+reactivates it and evens widths. A single-panel Agent Mode therefore empties
+the workspace as before, while multi-panel layouts keep their other panels.
+Mode exit/replacement/manual adjustment and session retirement clear or restore
+the stored anchor appropriately, and the Agent Mode test covers hide/show.
+
+The canonical gate passes at 1056 with zero failures and three ignored tests
+(`agent-mode-anchor-hide-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Hidden anchor survives closing the last visible panel (2026-11-04)
+
+`finish_close_panel` restored a hidden anchor on every close, which would
+unexpectedly reopen it when closing another panel. It also exited Agent Mode
+when the visible registry became empty even if an anchor panel was stored.
+
+Closing a panel now leaves a hidden anchor hidden. When the visible set becomes
+empty, Agent Mode stays active if `hidden_agent_anchor` is Some, clears the
+active id and renders the hidden fill; the titlebar toggle can restore the
+anchor later. A focused lifecycle test opens two panels, hides the anchor,
+closes the visible panel, and asserts Agent Mode plus the hidden anchor
+survive, then restores the anchor.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`hidden-anchor-close-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Hidden anchor remains selectable in Active sessions (2026-11-04)
+
+The options-menu Active sessions list only enumerated visible panels, so a
+hidden Agent Mode anchor disappeared from the session choices even though
+Source keeps it in `agentModePanelIDs`. Native now appends
+`hidden_agent_anchor` to `agent_panel_session_choices`, marks it visible in the
+menu, and `choose_agent_panel_session` restores the stored anchor instead of
+opening a duplicate panel. The lifecycle test hides the anchor, closes the last
+visible panel, asserts the anchor is still listed, then restores it by choice.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`hidden-anchor-session-choice-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Retiring the only hidden anchor exits Agent Mode (2026-11-04)
+
+When the hidden anchor's session was retired, `retire_session_ui` cleared the
+stored panel but left Agent Mode active with an empty registry, so the
+workspace stayed in the hidden fill forever. Retirement now exits Agent Mode
+and restores `sidebar_before_agent_mode` when no panels remain. The hidden
+anchor lifecycle test hides the restored anchor again, retires it, and asserts
+the mode and saved anchor are cleared.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`hidden-anchor-retire-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Hidden anchor counts toward the panel ceiling (2026-11-04)
+
+Hiding the anchor removes it from `Panels`, so `panels.len()` under-counted the
+Agent Mode set and allowed an eighth visible panel while the hidden anchor
+still existed; restoring it could then fail. Added `occupied_panel_slots`
+(visible panels + hidden anchor) and used it for the titlebar can-add state,
+add click, late-add event guard and the Active-sessions limit/disabled logic.
+The limit test hides the anchor from eight panels, asserts seven visible plus
+one hidden equals eight, and that another add is refused without a picker.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`hidden-anchor-slot-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Panel widget cleanup consolidated (2026-11-04)
+
+Panel replacement, Agent Mode narrowing and session retirement each repeated
+the same removal of `panel_inputs`, `panel_composers`, `panel_form_docks`,
+`panel_scrolls` and per-message selection/drag maps. Extracted
+`forget_panel_widgets` and routed all three through it, so future panel state
+additions have one cleanup point. Existing lifecycle tests still pass.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`panel-widget-cleanup-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Rail toggle presses exposed (2026-11-07)
+
+Source's ActivityRail marks Sessions/Files/Terminal/Changes with
+`aria-pressed` and leaves the browser action unpressed. Native's shared
+`rail_tool` only set an aria label and visual background. The helper now adds
+the toggled state for the four toggle views (skipping the browser action).
+No layout or click behavior changed.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`rail-pressed-state-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Settings rail exposes its pressed state (2026-11-07)
+
+Source's settings rail button carries `aria-pressed={settingsOpen}`. Native's
+`settings_rail_tool` set only the label and active background. Added the
+toggled state alongside the other rail toggle views.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`rail-settings-pressed-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Activity rail is a navigation landmark (2026-11-07)
+
+Source's ActivityRail is a `<nav aria-label="Workspace views">`. Native rendered
+a plain div. Added `id="activity-rail"`, the Navigation role and the
+`Workspace views` aria label, matching Source's landmark while leaving the
+buttons and layout untouched.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`rail-navigation-landmark-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile composers use Source's placeholder (2026-11-07)
+
+Source's `Composer` keeps the same placeholder in focused and compact tiles:
+`Ask about this repository or describe a change…`. Native tile inputs used
+`Message <title>`. Added `composer::COMPOSER_PLACEHOLDER` and routed both the
+focused composer and `ensure_panel_input` through it.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-composer-placeholder-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile composer send morphs to Stop (2026-11-07)
+
+Source's compact Composer swaps its send action for `Stop the agent` while the
+panel is busy. Native tile composers always sent. The tile action now computes
+`panel.phase.is_active()`, keeps the send glyph when idle, and renders the stop
+icon/red tone plus `panel-tile-stop-{session}` when busy, dispatching the
+engine interrupt for that session. The attachment/composer tile test marks the
+panel Busy and asserts the Stop selector.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-composer-send-stop-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile composer action labels match Source (2026-11-07)
+
+Source's composer toolbar uses `Attach files`; its send action is `Send prompt`
+and becomes `Stop the agent` while busy. Native tiles announced
+`Attach files to <title>` and `Send message to <title>`. Updated the tile
+controls to the shared Source labels; behavior and selectors are unchanged.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-composer-aria-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile send dims when there is nothing to send (2026-11-07)
+
+Source disables the composer send action (`disabled={!busy && !canSend}`).
+Native tiles always showed an enabled-looking send. The tile action now
+computes `can_send` from the panel composer or staged attachments, drops to
+0.45 opacity and skips the pointer/hover treatment when false; busy Stop stays
+fully enabled. Existing composer tests still pass.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-composer-disabled-send-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact tile composers expose prompt options (2026-11-07)
+
+Source's compact Composer (three or more Agent Mode panels) shows only the
+send and `Prompt options` buttons; the attach/model toolbar appears once
+options are opened. Native tiles always showed attach plus a static model line.
+Tile composers now compute `compact = agent_mode && occupied slots >= 3`,
+render the `panel-tile-options` toggle, hide attach/model until
+`composer_options_open`, and preserve the full row for non-compact tiles. The
+composer test uses three panels, asserts attach is hidden, clicks options and
+asserts attach appears.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-composer-options-toggle-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact prompt-options toggle covered both ways (2026-11-07)
+
+Extended the tile composer test to click `Prompt options` a second time and
+assert the attach action disappears again, while staged attachment chips stay
+visible. No production behavior changed.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-composer-options-toggle-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Structural gaps recorded after Agent Mode work (2026-11-07)
+
+The Agent Mode/tiling audit is now stable enough to record the remaining
+code-only structural slices in PAUSE-HANDOFF: real virtualized transcript /
+`turnProcess` tile rendering, free panel dragging/sliding plus the full
+per-panel composer toolbar for fewer than three panels, full KaTeX layout, and
+a visual decision on the native browser download shelf. No code changed this
+round.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-composer-options-toggle-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact prompt options dismiss like Source (2026-11-07)
+
+Source's compact options row closes on outside click/Escape through
+`useMenuDismiss`. Native's tile options stayed open until the toggle was
+pressed. A left click on the tile transcript now clears that panel's
+`composer_options_open`, and Escape in the tile composer closes the options
+row before falling through to send/reference handling. The existing
+compact-options test still covers the toggle both ways.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-options-dismiss-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile prompt options dismiss globally (2026-11-07)
+
+The previous transcript dismissal only cleared the clicked panel's options;
+Source's composer-level `useMenuDismiss` closes the active options when the
+click lands outside that composer, including another tile. Extracted
+`dismiss_tile_composer_options` and called it from every tile transcript
+mouse-down, so any open tile options close. Escape still closes the focused
+tile's options.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-options-global-dismiss-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile header order matches Source (2026-11-07)
+
+Source's AgentPanel header is back button → TurnTimer → options at the far
+right, with no status dot. Native had back → colored status dot → spacer →
+timer → options. Removed the invented dot and moved the timer immediately
+after the back control; a spacer keeps options on the right. Existing header
+and timer tests pass.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-header-order-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Turn timer carries Source's accessible label (2026-11-07)
+
+Source's TurnTimer span has `title="Time since the current turn's prompt was
+sent"`. Native's shared timer exposed only the pulsing dot and elapsed text.
+Added the timer `id`, Label role and the same aria label, used by both the
+focused agent header and tiled headers.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`turn-timer-aria-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile header order has bounds coverage (2026-11-07)
+
+The tile header test now captures the timer and options-menu bounds and asserts
+`timer.left() < options.left()`, pinning Source's back → timer → spacer →
+options order instead of only checking that the timer exists. No production
+behavior changed.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-header-order-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile header drag zone resizes panels (2026-11-07)
+
+Source starts a panel drag from the AgentPanel header (excluding buttons). The
+native tile header now makes the spacer between timer and options a
+`panel-tile-drag-{session}` resize zone: mouse-down sets the same
+`panel_resize` boundary used by splitters, with a column-resize cursor, while
+headers with one panel do not arm it. Button clicks and options remain outside
+the zone.
+
+The canonical gate passes at 1057 with zero failures and three ignored tests
+(`tile-header-drag-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile header drag has rendered coverage (2026-11-07)
+
+Added a rendered test for the header drag zone: two tiled panels, mouse-down on
+`panel-tile-drag-ses_a`, drag 48px, release; asserts at least one panel stores an
+explicit width after the boundary resize. This pins the new drag behavior rather
+than only its existence.
+
+The canonical gate passes at 1058 with zero failures and three ignored tests
+(`tile-header-drag-test-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Full-header/tile-header branch pinned (2026-11-08)
+
+The Agent Mode test now asserts that the single-panel path renders the full
+AgentPanel header without `panel-tile-drag-*` while still exposing
+`agent-panel-options-*`; the tiled path keeps its drag zone. No production
+behavior changed.
+
+The canonical gate passes at 1058 with zero failures and three ignored tests
+(`full-header-branch-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Panel usage is scoped to its panel (2026-11-07)
+
+The options-menu Context control always described the focused panel's model and
+usage, even when opened from another tile, and toggled that focused panel's
+popup. `render_usage_button(session)` now reads the target panel's model,
+usage and compaction baseline; clicking activates that panel via
+`open_panel_usage` before opening the popup. A focused test opens usage for the
+inactive panel and asserts it becomes active and the popup opens.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`panel-usage-scope-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled Agent Mode renders the usage popup (2026-11-07)
+
+The panel-scoped Context control opened `usage_open`, but the popup was only
+appended in the full single-panel AgentPanel, so it never appeared in tiled
+Agent Mode. `render_tiled_panels` now appends the same `agent-usage-popup`
+overlay when usage is open; the tile drag test opens usage and asserts the
+popup exists. Anchoring remains the shared top-right/tile anchor behavior.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tiled-usage-popup-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage popup follows panel switches (2026-11-07)
+
+Opening Context for another panel while the popup was already open called
+`toggle_usage_popup`, which closed it after activation. `open_panel_usage` now
+captures the previous panel/popup state: if the popup was open and the target
+differs, it activates the target and keeps `usage_open` true (reloading provider
+usage); otherwise it toggles as before. The focused test opens A then B then A
+and asserts the popup stays open with the active panel changed each time.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`panel-usage-switch-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile options menu closes on outside click (2026-11-07)
+
+Source's agent options menu is dismissed by `useMenuDismiss`. Native closed it
+only via the toggle, Escape while the toggle held focus, or selecting an item.
+Added an `on_mouse_down_out` handler on the menu that calls
+`close_agent_panel_menu`. The rendered options test opens the menu, clicks the
+timer area and asserts the menu is gone. A focusable/Escape variant was tried
+but could not be verified through the synthetic focus path, so it was reverted;
+Escape is handled instead by the shell's root key handler whenever
+`agent_tui.menu` is open.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tile-options-outside-dismiss-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Root Escape closes the agent options menu (2026-11-07)
+
+The shell's root key handler already dismissed the picker, saved-workspace
+menu and preview menu on Escape. Added a branch that closes
+`agent_tui.menu` through `close_agent_panel_menu` before focus navigation.
+Outside-click dismissal remains covered by the rendered options test; the
+synthetic test cannot reliably deliver Escape without a focused composer, so
+the root handler is unasserted.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`agent-menu-escape-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Root Escape closes tiled usage popups (2026-11-07)
+
+Only the full AgentPanel body's key handler closed `usage_open` on Escape, so
+the tiled popup added last round had no keyboard dismissal. Added a shell root
+branch after the agent-menu branch that clears `usage_open`, notifies and stops
+propagation. This also covers full-panel cases that bubble to the shell.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tiled-usage-escape-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled usage outside-click dismissal covered (2026-11-07)
+
+Extended the tile drag test: after opening the tiled usage popup, click another
+tile's options control and assert the popup disappears through its existing
+`on_mouse_down_out` handler. No production behavior changed.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tiled-usage-outside-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile roots handle Escape locally (2026-11-07)
+
+The full AgentPanel body already closed the options menu or usage popup on
+Escape. Tiled roots had no equivalent, so dismissal depended on the shell root
+handler. Added the same local key handler to each tile root (menu first, then
+usage), stopping propagation when handled; the shell branch remains a fallback.
+No rendered assertion is possible without a focused composer.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tile-local-escape-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Escape delivery audit (2026-11-07)
+
+Tried to assert the tile/root Escape handlers by focusing the tile TextInput
+and sending Escape. The menu still stayed open, so the focused TextInput
+appears to consume Escape before it reaches the tile/root handlers. Reverted
+the test-only focus attempt; outside-click dismissal remains asserted. Keyboard
+Escape delivery therefore needs live verification before claiming it works,
+and is marked as such in the matrix. No production code changed this round.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`escape-delivery-audit-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile composer entry handles Escape (2026-11-07)
+
+Added an early Escape branch to `on_tile_composer_key`: if the agent options
+menu is open it closes that; otherwise an open usage popup closes. This runs
+before reference/slash handling and joins the tile-root and shell handlers.
+The synthetic focus path still does not deliver Escape to this handler, so the
+behavior needs live keyboard verification; outside-click dismissal remains the
+only asserted menu path.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tile-composer-escape-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile Escape key branch has direct coverage (2026-11-07)
+
+Instead of relying on the synthetic focus path, the options test now constructs
+a `KeyDownEvent` for Escape and calls `on_tile_composer_key` directly; it
+asserts the handler returns true and the options menu closes, then reopens the
+menu and verifies outside-click dismissal. Live keyboard delivery through the
+focused TextInput still needs GUI verification.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tile-escape-key-test-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile Escape usage branch covered (2026-11-07)
+
+Extended the compact-composer tile test with a direct `KeyDownEvent` Escape
+while `usage_open` is set and the agent menu is cleared. `on_tile_composer_key`
+returns true and clears `usage_open`, complementing the menu Escape assertion.
+Live keyboard delivery through the focused TextInput still needs GUI
+verification.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tile-escape-usage-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact prompt options Escape covered (2026-11-07)
+
+The compact-composer test now closes prompt options with a direct
+`KeyDownEvent` Escape call through `on_tile_composer_key` instead of clicking
+the toggle a second time, asserting the handler returns true and the attach
+action disappears. Together with the menu/usage Escape assertions, all three
+tile Escape branches now have direct key-path coverage.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`tile-options-escape-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Retiring a session clears its options menu (2026-11-07)
+
+If the options menu was open for a session removed out-of-band (for example a
+remote deletion), `agent_tui.menu` kept pointing at the missing session.
+`retire_session_ui` now clears the menu when it matches the retired id. The
+hidden-anchor retirement test sets the menu and asserts it is cleared.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`retired-menu-clear-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Menu state clears on every panel removal (2026-11-07)
+
+The retired-session clear from the previous slice only covered out-of-band
+retirement. Extracted `clear_agent_menu_for` and call it from
+`finish_close_panel`, both detach loops (replacement/manual narrowing) and
+retirement, so an open options menu cannot survive any path that removes its
+panel. No new test; existing lifecycle tests pass.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`panel-menu-clear-all-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Closing the active panel clears usage (2026-11-07)
+
+If the usage popup was open and its panel closed, `usage_open` stayed set, so
+the popup could render against the next active panel. `finish_close_panel` now
+clears `usage_open` when the closed panel was active. Extended the panel-usage
+test to close the active panel and assert the popup is off.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`usage-close-panel-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Explorer context menu closes on outside click (2026-11-07)
+
+Source's ExplorerMenu closes on a document pointerdown outside the menu.
+Native closed on item selection or Escape only. Added `on_mouse_down_out` to
+the menu body: it takes the menu, returns focus to its saved trigger (or the
+composer) and notifies. No new rendered test; existing explorer tests pass.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`explorer-menu-outside-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Session menus close on outside click (2026-11-07)
+
+Source's SessionsPane closes both the saved-workspace and session context menus
+on a document pointerdown outside them and on Escape. Native had only Escape
+and item selection. Added `on_mouse_down_out` to both menu bodies; each clears
+its menu, returns focus to the menu filter/toggle handle and notifies. Existing
+session tests pass.
+
+The canonical gate passes at 1059 with zero failures and three ignored tests
+(`session-menu-outside-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Saved-workspace menu dismissal has rendered coverage (2026-11-07)
+
+Added debug selectors to the saved-workspace and session context menus and a
+rendered test that opens the saved-workspace menu, clicks far outside it, and
+asserts it closes. This pins the new outside-click handler rather than only the
+code path. No further production behavior changed.
+
+The canonical gate passes at 1060 with zero failures and three ignored tests
+(`saved-menu-outside-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Both session menus have outside-click coverage (2026-11-07)
+
+Extended the saved-workspace menu test to open the session context menu at the
+same time; both `saved-workspace-menu` and `session-context-menu` are asserted
+present, then an outside click asserts both close. No production change.
+
+The canonical gate passes at 1060 with zero failures and three ignored tests
+(`both-session-menus-outside-test-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tiled Agent Mode renders picker overlays (2026-11-07)
+
+Like the usage popup, `render_picker` was only appended by the full single-panel
+AgentPanel, so opening a model/agent/strength picker in tiled mode had no
+surface. `render_tiled_panels` now appends the picker when `picker.is_some()`;
+the tile drag test sets a model picker and asserts `model-picker-menu` is
+rendered.
+
+The canonical gate passes at 1060 with zero failures and three ignored tests
+(`tiled-picker-overlay-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile model/agent controls open their pickers (2026-11-07)
+
+The compact/full tile footer rendered the model as plain text. It now renders
+clickable `panel-tile-model-{session}` and `panel-tile-agent-{session}`
+controls with the selected names; clicking activates that panel and opens the
+model or agent picker (now rendered as a tiled overlay). The compact-composer
+test asserts both controls behind Prompt options. The picker overlay itself is
+asserted in the tile drag test.
+
+The canonical gate passes at 1060 with zero failures and three ignored tests
+(`tile-model-agent-controls-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile model control has click coverage (2026-11-07)
+
+Added a focused test: three tiled panels, active `ses_a`, `ses_b` input with
+prompt options opened programmatically; clicking `panel-tile-model-ses_b`
+activates `ses_b` and opens the model picker. (Clicking the options toggle
+would activate the tile first, replacing the compact composer, so the test
+opens options directly.)
+
+The canonical gate passes at 1061 with zero failures and three ignored tests
+(`tile-model-control-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile model and agent controls have click coverage (2026-11-07)
+
+Extended the focused control test: after the model control opens the model
+picker for `ses_b`, reset to `ses_a`, then click `panel-tile-agent-ses_b` and
+assert it activates `ses_b` and opens the agent picker. Both compact controls
+now have functional coverage.
+
+The canonical gate passes at 1061 with zero failures and three ignored tests
+(`tile-model-agent-control-test-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile response strength control (2026-11-07)
+
+Source's full composer toolbar shows a response-strength label only when the
+model has variants, formatting `team-plan` as `Team Plan` and falling back to
+`Auto`. Native tiles showed no strength control. Added
+`source_variant_label`, a `panel-tile-strength-{session}` button when variants
+exist, and activation plus the strength picker on click. A pure formatter test
+and the focused control test (model, agent, strength) cover it.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-strength-control-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact prompt options reset on layout change (2026-11-07)
+
+`composer_options_open` persisted when the layout left compact mode, unlike
+Source's compact-change effect. Added `tile_compact` state and
+`sync_tile_compact`, which clears every panel's options when the
+three-or-more occupied compact state changes; it runs at the start of tiled
+rendering. The composer test opens options, leaves Agent Mode and asserts all
+are cleared. The focused control test reopens options after the initial sync.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-compact-reset-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile strength visibility is tested (2026-11-07)
+
+Extended the focused control test: after using the strength picker, clear the
+model's variants and assert `panel-tile-strength-ses_b` disappears, pinning
+Source's `showResponseStrength` condition. No production change.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-strength-visibility-test-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Per-panel toolbar removed from the structural-gap list (2026-11-07)
+
+The PAUSE structural list still asked for the full per-panel composer toolbar.
+Attach, model, agent and strength controls, compact Prompt options and tiled
+picker overlays are now implemented and covered. Updated the handoff to leave
+free panel sliding, virtualized tile projection and full KaTeX as the remaining
+structural code slices. No production change.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-toolbar-gap-closed-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact option reset covered both directions (2026-11-07)
+
+Extended the composer test to reopen prompt options while noncompact, then
+re-enter compact Agent Mode and assert every panel's options close. Together
+with the leave-compact case, both transitions of `sync_tile_compact` are
+covered. No production change.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-compact-reset-both-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Compact controls hidden before opening options (2026-11-07)
+
+The compact composer test now asserts the attach and model controls are absent
+before `Prompt options` is opened, then present after. This pins Source's
+compact toolbar visibility contract in both states. No production change.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`compact-controls-hidden-test-gate.txt`); documentation checks, workspace
+Clippy, tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Release build verified (2026-11-07)
+
+Ran `bash scripts/verify.sh --release` after the tile toolbar/menu slices:
+1062 passed, zero failures, three ignored, and the optimized release app built
+in 5m04s. Evidence: `release-gate.txt`. This is build verification only; no
+package install, launch or visual acceptance.
+
+Canonical debug gate (including docs) reruns as
+`compact-controls-hidden-test-gate.txt`.
+
+## All tiled picker overlays are asserted (2026-11-07)
+
+The focused tile control test now checks `response-strength-menu` after the
+strength click and `agent-picker-menu` after the agent click, joining the
+existing `model-picker-menu` assertion. All three tiled picker overlays are
+therefore rendered and covered. No production change.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-picker-overlays-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile options no longer activate the panel (2026-11-07)
+
+Clicking a tile's header options button bubbled to the header's activation
+click, replacing the compact composer. The options listener now calls
+`stop_propagation`; the focused control test opens options on `ses_b` and
+asserts `ses_a` stays active. The direct-Escape test now creates the tile input
+explicitly because it no longer relies on that activation side effect.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-options-no-activate-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile options menu background stops propagation (2026-11-07)
+
+The options menu root had outside-click dismissal but no stop on left mousedown,
+so clicking its padding/labels could bubble to the tile header and activate the
+panel. Added the same `on_mouse_down` stop used by other menus. No new test;
+existing control tests pass.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-menu-stop-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Header click with menu open only closes it (2026-11-07)
+
+Added click bubbling stops to the tile options menu root and guarded the tile
+header click: when that panel's options menu is open, the click closes the menu
+and returns without activating. This prevents menu-padding clicks from stealing
+the active panel through the header. The focused control test still asserts the
+options button itself does not activate; an attempted padding-coordinate test
+was dropped because the synthetic point landed outside the menu's hit box.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-header-menu-guard-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Header guard has rendered coverage (2026-11-07)
+
+Added a debug selector to the tile header and extended the focused control
+test: with `ses_b` options open and `ses_a` active, clicking the `ses_b` header
+closes the menu and leaves `ses_a` active. This pins the header guard rather
+than only the options-button stop.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-header-guard-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile virtualization project started (2026-11-07)
+
+At the user's direction, started the tile transcription virtualization slice.
+Scoped the work in `.agent/tasks/tile-transcript-virtualization.md`: extract
+the per-row tile renderer, add per-panel `ListState`, replace the preview
+scroll column with `gpui::list`, bridge scroll memory/stick, then add parity
+tests. No production code changed this round.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-virtualization-start-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Per-panel tile list state scaffold (2026-11-07)
+
+First code step of tile virtualization: added `panel_tile_lists` keyed by
+session, initialized with the preview row count on tile render and removed by
+`forget_panel_widgets`. The list is not yet used for rendering; this establishes
+lifecycle ownership before replacing the preview column with `gpui::list`.
+
+The canonical gate passes at 1062 with zero failures and three ignored tests
+(`tile-list-scaffold-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile source recovered after failed extraction (2026-11-07)
+
+A scripted extraction corrupted `crates/vela-ui/src/app.rs` by reusing stale
+replacement offsets. No external backup existed, so the file was reconstructed
+in place: the intact row loop/toolbar/tile tail was kept, the extracted helper,
+duplicated caller and truncated fragments were removed, and the tile prefix
+(header, timer/drag/options, centered transcript column, scroll-memory restore,
+empty state with optional station art) was rebuilt. The UI suite and full
+canonical gate are green again at 1062/0/3 (`tile-recovered-gate.txt`). The
+virtualized list itself is still not wired; virtualization remains the next
+structural step.
+
+No commit/stage/reset/clean was performed; HEAD remains `77dee4ea`.
+
+## Tile row-unit index model (2026-11-07)
+
+Added `panels::tile_row_units`, the pure index model the virtualized tile list
+will consume: consecutive process rows collapse into one Work unit and every
+non-process row is a single unit. A focused test covers two process rows, a
+single answer, another process row and a final answer. It is not wired into the
+renderer yet and is marked dead-code-allowed until the list replacement.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`tile-unit-model-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile loop consumes row units (2026-11-07)
+
+Replaced the tile loop's duplicated process-run scan with
+`panels::tile_row_units`: each iteration consumes one unit range (a Work group
+or a single row), and the dead-code allowance was removed. This is the index
+model the `gpui::list` replacement will use; rendering is still the scroll
+column. All UI tests and Clippy pass.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`tile-unit-loop-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile list scaffold counts units (2026-11-07)
+
+The per-panel `ListState` now initializes from `tile_row_units` length, and the
+render loop reuses that same unit vector instead of recomputing it. The list is
+still not the scroll surface; this aligns the scaffold with the row-unit model
+that the `gpui::list` step will consume.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`tile-list-count-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile list state lifecycle covered (2026-11-07)
+
+The tile drag test now asserts `panel_tile_lists` owns an entry after rendering
+and that `forget_panel_widgets` removes it. This pins the scaffold's lifecycle
+before the `gpui::list` replacement. No production behavior changed.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`tile-list-lifecycle-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage anchor clears with usage state (2026-11-07)
+
+Closing the active panel or clearing the active session now resets
+`usage_anchor` alongside `usage_open`, so a later outside-click check cannot use
+a stale popup anchor. No behavioral test added; existing UI tests and Clippy
+pass.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`usage-anchor-clear-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Usage anchor clearing has coverage (2026-11-07)
+
+The panel-usage test now seeds a bounds anchor, closes the active panel, and
+asserts `usage_anchor` is cleared with `usage_open`. No production change.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`usage-anchor-test-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile unit model edge cases (2026-11-07)
+
+Extended the pure `tile_row_units` test with empty input, an all-process run and
+all-single rows. No production change.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`tile-unit-edges-test-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile unit renderer extracted (2026-11-07)
+
+Extracted the per-unit tile row body into `render_tile_unit(range, ...)`
+returning one `AnyElement`; the caller now iterates `tile_row_units` and
+appends the rendered unit. This is the renderer the `gpui::list` closure will
+call. The old duplicated process-run scan is gone and all UI tests pass.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`tile-unit-renderer-gate.txt`); documentation checks, workspace Clippy, tests
+and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile list count stays in sync (2026-11-07)
+
+The per-panel `ListState` now tracks its source unit count: on each render a
+`panel_tile_list_counts` entry is updated and the list is reset only when the
+count changes. This fixes the scaffold going stale when an empty tile gains
+rows. No list rendering yet; all UI tests pass.
+
+The canonical gate is rerun at 1063 (`tile-list-count-sync-gate.txt`); docs,
+Clippy, tests and the debug build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Panel close uses full widget cleanup (2026-11-07)
+
+`finish_close_panel` removed only composers/form docks, leaving panel inputs,
+focus/selection maps and the new tile list state behind. It now calls
+`forget_panel_widgets` after saving scroll distance, so every per-panel map is
+released. Existing close/lifecycle tests and Clippy pass.
+
+The canonical gate is rerun at 1063 (`panel-close-cleanup-gate.txt`); docs,
+Clippy, tests and the debug build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Hidden anchor widgets clean on detach (2026-11-07)
+
+Replacement and Agent Mode narrowing dropped `hidden_agent_anchor` without
+clearing its per-panel inputs, focus/selection maps, scroll handle or tile list
+state. Added `drop_hidden_agent_anchor` and used it in both detach paths. On
+restore the widgets are intentionally preserved; only deletion clears them.
+
+The canonical gate passes at 1063 with zero failures and three ignored tests
+(`hidden-anchor-cleanup-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Panel close cleanup has focused coverage (2026-11-07)
+
+Added a test that opens a panel, creates its input and tile list state, calls
+`finish_close_panel`, and asserts the input, list and count entries are gone.
+This pins the full `forget_panel_widgets` cleanup.
+
+The canonical gate passes at 1064 with zero failures and three ignored tests
+(`panel-close-cleanup-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Hidden anchor detach cleanup covered (2026-11-07)
+
+Added a focused test that seeds a hidden anchor with tile list state/count,
+calls `detach_panels_except`, and asserts the anchor and its widget maps are
+gone. No production change.
+
+The canonical gate passes at 1065 with zero failures and three ignored tests
+(`hidden-anchor-detach-test-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Release gate green after cleanup (2026-11-07)
+
+`bash scripts/verify.sh --release` at the 1065-test state passed (0 failed, 3
+ignored) and built the optimized app in 44s. Evidence:
+`release-gate-1065.txt`. Build verification only; no package install or visual
+acceptance.
+
+Canonical debug evidence refreshes at
+`hidden-anchor-detach-test-gate.txt`.
+
+## Tiled transcripts are virtualized (2026-11-08)
+
+Replaced the tile scroll column with a per-panel `gpui::list` driven by
+`tile_row_units` and `render_tile_unit`. Each list item is one Work group or a
+single row; the centered `panel-column-*` wrapper and all existing row
+selectors remain. The Work-row test now unpins `stick`, computes the unit
+containing source index 1, and reveals it before asserting, matching virtualized
+visibility. Full UI suite and Clippy pass.
+
+The canonical gate passes at 1065 with zero failures and three ignored tests
+(`tile-list-virtualized-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance and exact pixel scroll semantics remain. No
+GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Tile list follows and unpins with its own scroll (2026-11-08)
+
+The per-panel `ListState` now owns a scroll handler: following-tail updates
+`panel.stick = true`, a scrolled-away state unpins it. The to-bottom control
+also calls `scroll_to_end` on the list. This restores wheel/manual unpin and
+re-pin behavior for the virtualized tile surface.
+
+The canonical gate is rerun at 1065 (`tile-list-scroll-gate.txt`); docs,
+Clippy, tests and the debug build are included.
+
+Paired visual acceptance and exact pixel-distance restore remain. No
+GUI/capture, package install or Source write; no page accepted and mobile
+deferred.
+
+## Release gate green with virtualized tiles (2026-11-08)
+
+`bash scripts/verify.sh --release` passed at 1065/0/3 and built the optimized
+app in 28s after the tile `gpui::list` swap and follow-tail handler. Evidence:
+`release-gate-1065-list.txt`. Build verification only; no package install or
+visual acceptance.
+
+Canonical debug evidence refreshes at `tile-list-scroll-gate.txt`.
+
+## Tile pixel scroll distance bridged to ListState (2026-11-08)
+
+Closing a tile now stores its ListState pixel distance (max + negative offset)
+when available, and the next render reapplies the remembered distance with
+`set_offset_from_scrollbar` once content is measured. Stick still follows the
+tail. The long-history tile test now scrolls to the newest row before asserting,
+matching virtualized visibility.
+
+The canonical gate passes at 1065 with zero failures and three ignored tests
+(`tile-list-pixel-scroll-gate.txt`); documentation checks, workspace Clippy,
+tests and the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Structural gap list narrowed (2026-11-08)
+
+With tiles virtualized, the remaining tile projection work is now stated as
+the exact `turnProcess` model rather than virtualized rendering. Free panel
+dragging/sliding and full KaTeX remain. No production change.
+
+Canonical evidence refreshes at `tile-list-pixel-scroll-gate.txt`.
+
+## Dead tile ScrollHandle removed (2026-11-08)
+
+After the ListState swap, `panel_scrolls` no longer tracked the tile surface; its
+offset was always zero and the to-bottom action set it pointlessly. Removed the
+field/creation and made close store the list's own pixel distance. Existing
+scroll-memory, stick and to-bottom tests pass.
+
+The canonical gate is rerun at 1065 (`tile-scroll-handle-removed-gate.txt`);
+docs, Clippy, tests and the debug build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## To-bottom action covered on virtualized tiles (2026-11-08)
+
+The long-history tile test now clicks `panel-to-bottom-ses_long` instead of
+calling `scroll_to_end` directly; it asserts the tile re-pins and the newest row
+renders. No production change.
+
+The canonical gate is rerun at 1065 (`tile-to-bottom-test-gate.txt`); docs,
+Clippy, tests and the debug build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Tile virtualization task file retired (2026-11-08)
+
+The staged `.agent/tasks/tile-transcript-virtualization.md` plan is complete:
+per-panel `gpui::list`, unit model/renderer, count sync, follow-tail/pixel
+scroll and to-bottom coverage are in place. Removed the temporary task file and
+updated START-HERE; exact `turnProcess` projection remains a separate structural
+step.
+
+Canonical evidence refreshes at `tile-to-bottom-test-gate.txt`.
+
+## Agent Mode free-slot model added (2026-11-08)
+
+Started the free-panel-movement slice: added `PanelFreeSlot`
+(left/top/width/height percentages) and an optional `free_slot` on
+`PanelState`, defaulting to `None` (grid layout). The absolute renderer will
+consume it next; a pure test pins the grid default. The field is temporarily
+allowed-dead.
+
+Canonical evidence: `free-slot-model-gate.txt`.
+
+## Agent Mode panels slide freely (2026-11-08)
+
+Starting a tile-header drag in Agent Mode seeds `PanelFreeSlot`s from the grid
+and switches the tiled surface to an absolute layout. Pointer movement updates
+the dragged panel's `left` percentage; release ends the drag. The rendered drag
+test now asserts a positive free `left`. Splitters/non-Agent header drags still
+resize. This covers Source's horizontal slide; vertical/top/height movement is
+still pending.
+
+The canonical gate passes at 1066 with zero failures and three ignored tests
+(`free-panel-slide-gate.txt`); documentation checks, workspace Clippy, tests and
+the debug app build are included.
+
+Paired visual acceptance remains. No GUI/capture, package install or Source
+write; no page accepted and mobile deferred.
+
+## Agent Mode free movement closed (2026-11-08)
+
+Source's free-move header drag only slides `left`; its left/right resize handles
+exit Agent Mode rather than resizing vertically. Native now matches that
+contract, so the free-movement slice is complete and the temporary task file was
+removed.
+
+Canonical evidence: `free-panel-slide-gate.txt`.
+
+## Release gate green with free panel movement (2026-11-08)
+
+`bash scripts/verify.sh --release` passed at 1066/0/3 and built the optimized
+app in 33s with the absolute free-panel layout. Evidence:
+`release-gate-free-move.txt`. Build verification only; no package install or
+visual acceptance.
+
+Canonical debug evidence refreshes at `free-panel-slide-gate.txt`.
+
+## Tile process projection closed out (2026-11-08)
+
+Added a pure test covering Source's block-level process split: commentary and a
+tool before the final answer fold into Work, the final assistant answer stays
+outside, error events stay outside, and a tool-only turn folds its tool. With
+tiles virtualized and the horizontal free-move contract implemented, the only
+remaining code-only structural item is full KaTeX layout.
+
+Canonical evidence: `tile-process-projection-test-gate.txt`.
+
+
+## Native visual review (2026-11-08)
+
+Captured the native app at 1280x800 against an isolated profile/workspace with
+the isolated OpenCode service: initial, README editor, settings providers,
+terminal, browser and model picker. Details and observations:
+`docs/parity/2026-10-25/native-visual-review.md`. No clipping/overlap was seen;
+inactive traffic lights are hollow (active capture is colored). Agent Mode
+automation enters; the single-panel width bug (blank right side) was fixed by
+making the agent root/panel flex full-width, confirmed by
+`visual-agent-mode-v6.png`. The reference Electron
+binary is absent, so this is native-only, not paired acceptance.
+
+Canonical gate: `visual-review-gate.txt` (1067/0/3).
+
+
+## Additional visual pages inspected (2026-11-08)
+
+Captured the Rust file and Appearance settings in addition to the earlier
+pages. Both render cleanly at 1280x800: Rust syntax/breadcrumb and the full
+theme grid including Observatory. Updated `native-visual-review.md`.
+
+Canonical gate: `native-visual-pages-gate.txt`.
+
+
+## Remaining settings pages visually inspected (2026-11-08)
+
+Captured Model, Servers, Mobile Setup, About and Voice settings. No clipping or
+layout breakage at 1280x800; About correctly shows the development build and
+disabled updater. Updated `native-visual-review.md`.
+
+Canonical gate: `settings-visual-pages-gate.txt`.
+
+
+## Narrow layout visually inspected (2026-11-08)
+
+Captured the README view at 1024x700. Sidebar, editor and agent panel still fit
+without overlap or clipped controls. Updated `native-visual-review.md`.
+
+Canonical gate: `narrow-visual-gate.txt`.
+
+
+## Both shells visually inspected (2026-11-08)
+
+Captured Classic and Codex shells at 1280x800. Classic shows rounded cards and
+gutters; Codex uses edge-to-edge surfaces. Both preserve the same
+rail/sidebar/agent structure. Updated `native-visual-review.md`.
+
+Canonical gate: `shell-visual-gate.txt`.
+
+
+## Changes view visually inspected (2026-11-08)
+
+Captured the Changes tab. With a modified Git file but no agent edits it shows
+Source's "No changes yet" empty state, confirming the surface is agent-observed
+file review rather than Git staging. Updated `native-visual-review.md`.
+
+Canonical gate: `changes-visual-gate.txt`.
+
+## Reference launch isolation failure (2026-11-08)
+
+Built the archived Electron source in `/private/tmp/vela-reference-visual` for
+paired captures. `npm start` launched Electron with the **default production
+user-data-dir** (`/Users/tdawg/Library/Application Support/Vela`) because
+setting `HOME` does not isolate Electron. The process was killed immediately;
+no prompts were sent and no credentials or transcripts were inspected. Do not
+retry the reference without an explicit `--user-data-dir` under `/private/tmp`.
+
+Native-only visual captures remain the evidence; paired comparison is still
+unavailable.
+
+
+## 800x600 narrow layout inspected (2026-11-08)
+
+Captured README at 800x600. Panels fit, but the editor breadcrumb truncates each
+segment to one character (`v > f`), losing path context. Recorded as a narrow
+layout defect; no code fix yet.
+
+Canonical gate: `narrow-800-visual-gate.txt`.
+
+
+## Reference captures already existed (2026-11-08)
+
+`docs/parity/2026-10-25/original/` already contains 102 reference captures and
+91 names shared with `native/`; rebuilding the archived Electron app was
+unnecessary. The pairing inventory is the reference evidence to use.
+
+A later native `open -a` launch started a default-profile instance and one
+appearance capture briefly showed production pinned/project names. The capture
+and its JSON were deleted immediately and the process killed; no credentials or
+transcripts were read. Future captures must use only the managed isolated
+process, never `open -a`.
+
+Canonical gate: `reference-pairs-review-gate.txt`.
+
+
+## Observatory theme card uses Source art (2026-11-08)
+
+The Appearance grid's Observatory card was a generic skeleton. It now renders
+`assets/observatory.png` as cover art in the right-hand preview pane, matching
+Order's reference thumbnail. Verified in
+`visual-settings-appearance-v4.png`; all tests and Clippy pass.
+
+Canonical gate: `observatory-thumbnail-gate.txt`.
+
+
+## Stored reference pair review (2026-11-08)
+
+Compared current native pages against the stored `original/` captures:
+settings-providers matches card-for-card, settings-about matches structurally,
+and the Appearance controls/theme grid match after restoring Observatory's
+source art. No further visual mismatch was identified in those paired pages.
+This is structural review, not final page acceptance.
+
+Canonical gate: `stored-pairs-review-gate.txt`.
+
+## Release gate green with Observatory art (2026-11-08)
+
+`bash scripts/verify.sh --release` passed at 1067/0/3 and built the optimized
+app. Evidence: `release-gate-observatory.txt`.
+
+Canonical debug evidence refreshes at `stored-pairs-review-gate.txt`.
+
+## One-command development launcher (2026-11-09)
+
+Added `scripts/dev-app.sh`, which builds/packages the debug app, uses a
+persistent isolated profile at `~/Library/Application Support/Vela Dev`, starts
+an isolated OpenCode service on a free loopback port, and launches the app with
+logs. Added `scripts/install-dev-app.sh` for a self-contained
+`~/Applications/Vela Dev.app`; the packaged debug app is copied into the bundle,
+with all runtime state under `~/Library/Application Support/Vela Dev`. The
+launcher refuses to use a running bundle and never touches production
+Vela/OpenCode data.
+
+Verified by launching the debug app through both the script and the wrapper;
+OpenCode connected on isolated ports and the requested workspace opened.
+
+Canonical gate: `dev-launcher-gate.txt`.
+
+
+## Resizable sidebar and agent panel (2026-11-11)
+
+The left sessions/files panel now has a draggable right edge (230-520pt,
+default 234pt), and the agent panel has a draggable left edge (280pt minimum),
+matching Source's adjustable panel widths. Added a rendered drag test
+(`sidebar_and_agent_edges_resize`).
+
+The installed Vela Dev app is now a copy of the packaged Rust bundle with
+`LSEnvironment` isolation, not a wrapper into `build-junk`; `CFBundleName`
+"Vela Dev" is safe, while changing `CFBundleDisplayName` prevented window
+creation and is avoided.
+
+Canonical gate: `resizable-edges-gate.txt` (1068/0/3).
+
+## Session row spacing matched to Source (2026-11-12)
+
+Session rows now use Source's 7px gap, 13px title, codex 30px height/10px
+radius and classic 28px/full radius, replacing the 4px gap/12.5px text/7px
+radius. Verified by a native capture with the installed app
+(`visual-session-spacing.png`); full tests and Clippy pass.
+
+Canonical gate: `session-row-spacing-gate.txt` (1068/0/3).
+
+## Sidebar header spacing matched to Source (2026-11-12)
+
+The sessions/files sidebar header now uses Source's 56px height, 10px/6px
+sessions padding, 16px/12px files padding and 5px sessions gap instead of the
+46px header with 29px left inset. Verified by a native capture
+(`visual-sidebar-header.png`); tests, Clippy and the gate pass.
+
+Canonical gate: `sidebar-header-spacing-gate.txt` (1068/0/3).
+
+## Final round checkpoint (2026-11-12)
+
+Layout work in this span: resizable sidebar/agent edges, Source session-row
+geometry, Source sidebar-header geometry, and the installed self-contained Vela
+Dev app. The session-list inset experiment was reverted after it clipped rows.
+Remaining layout work needs a row-level inset pass rather than wrapper padding:
+panel gutters/borders, agent header/composer spacing, and the 800x600
+breadcrumb. Full KaTeX and live IME/VoiceOver/TUI/packaging acceptance remain.
+
+Final canonical gate: `final-layout-gate-1068.txt` (1068/0/3).
+
+## Session-list inset pass completed (2026-11-12)
+
+The previous wrapper-only attempt was reverted because it clipped rows. Measuring
+the title relative to the sidebar showed a 30px inset; Source's pane (6px) plus
+row (8px) yields 14px. The new-session, projects, pinned and session-list
+containers now use 6px insets, Pinned label 14px, and Recents matches Projects;
+the rendered `session_title_inset_matches_source` test asserts 14±2px. Capture:
+`visual-session-inset-v3.png`.
+
+Canonical gate: `session-inset-gate.txt` (1069/0/3).
+
+## Classic panel shadows (2026-11-12)
+
+Classic shell cards now carry the Source-style medium shadow on the rail,
+sidebar, editor surface, and agent panel, while Codex stays flat. Verified with
+`visual-classic-shadows.png`; panel gutters remain 10px classic / flush Codex.
+
+Canonical gate: `panel-shadows-gate.txt` (1069/0/3).
+
+## Agent composer dock margins matched to Source (2026-11-12)
+
+The composer dock used a uniform 10px inset. It now uses Source's 4px top and
+6px side/bottom margins, so the prompt card sits closer to the agent panel edge.
+The header already matched Source's 12/8px horizontal, 5px vertical, 7px gap
+geometry. Verified with `visual-agent-composer-spacing.png`.
+
+Canonical gate: `agent-composer-spacing-gate.txt` (1069/0/3).
+
+## Compact editor breadcrumb (2026-11-12)
+
+Below a 900px window width the editor breadcrumb now drops the workspace name
+and keeps the last two path components, so `README.md` remains readable instead
+of collapsing to one letter. The selection is extracted into
+`breadcrumb_segments` with a unit test covering compact and full paths.
+
+Canonical gate: `breadcrumb-compact-gate.txt` (1070/0/3).
+
+## Release gate at 1070 (2026-11-12)
+
+`bash scripts/verify.sh --release` passed at 1070/0/3 and built the optimized
+app. Evidence: `release-gate-1070.txt`. Build verification only; no signing,
+notarization, package install or visual acceptance.
+
+## KaTeX href/url commands (2026-11-12)
+
+The text math renderer now consumes `\href{url}{label}` as the visible label and
+`\url{url}` as the URL text, instead of leaving the commands unrendered. Unit
+coverage added in `renders_href_and_url_labels`. This is command coverage, not
+full KaTeX visual layout.
+
+Canonical gate: `math-href-gate.txt` (1071/0/3).
+
+## Rendered compact-breadcrumb coverage (2026-11-12)
+
+Added `breadcrumb-segment:*` debug selectors and an 800x600 rendered test that
+opens `src/main.rs` and asserts the compact breadcrumb exposes `src` and
+`main.rs`. This closes the previous visual-measurement gap for the compact path.
+
+Canonical gate: `breadcrumb-render-gate.txt` (1072/0/3).
+
+## Paired session-panel comparison (2026-11-12)
+
+Built the archived Electron source under `/private/tmp/vela-ref` and launched it
+with an explicit `--user-data-dir` plus isolated `HOME`/XDG roots. Captured the
+reference session panel (`reference-session-panel-v2.png`) and the native panel
+(`native-session-panel-compare-v2.png`).
+
+Fixes from the comparison: the Projects save-workspace `+` is now hover-only
+like Source, and the New Session row top gap is 4px, aligning its center with the
+reference. Remaining panel differences need a sessions-with-content fixture;
+the reference profile currently has no sessions.
+
+Canonical gate: `session-panel-compare-gate.txt` (1072/0/3).
+
+## New Session row matched to reference (2026-11-12)
+
+Isolated Electron reference capture (`reference-session-panel-v2.png`) vs native
+(`native-session-panel-compare-v4.png`): the New Session button now uses Source's
+7px gap, full-pill radius, 4px top gap, and 11px left inset, placing the icon at
+x=74 and label at x=94 (reference 72/94). Projects save-workspace `+` remains
+hover-only. Workspace rows/session rows below Projects differ only because the
+isolated reference profile has no workspaces/sessions.
+
+Canonical gate: `new-session-geometry-gate.txt` (1072/0/3).
+
+## Project row geometry and click behavior (2026-11-12)
+
+Project rows now match Source more closely: 6px pane inset, 30/28px codex/classic
+height, 10px/full radius, 13px title, 9.5px count, 26px disclosure target, no
+leading square glyph. Clicking the project name now stops propagation before
+opening the workspace, so it does not also toggle the history row.
+
+Canonical gate: `project-row-geometry-gate.txt` (1072/0/3).
+
+## Projects section defaults collapsed (2026-11-12)
+
+The isolated Electron reference shows Projects collapsed on launch
+(`workspacesOpen = false`) while native started expanded. Native now defaults
+`session_projects_open` to false; the workspace-row test opts in explicitly.
+Reference capture: `reference-session-content-v3.png`; native:
+`native-session-panel-compare-v6.png`.
+
+Canonical gate: `projects-default-collapsed-gate.txt` (1072/0/3).
+
+## Session pin control matched to Source (2026-11-12)
+
+The session pin is now a 20x20 control with a filled star in both states
+(accent when pinned, faint when not), matching Source's `IconStarFilled`
+opacity/color behavior, with a hover background. Previously it used an outline
+star and a 4px horizontal box.
+
+Canonical gate: `session-pin-gate.txt` (1072/0/3).
+
+## Session pin hover matched (2026-11-12)
+
+The pin control's hover now uses Source's accent tint and accent icon color
+instead of the generic selected background.
+
+Canonical gate: `session-pin-hover-gate.txt` (1072/0/3).
+
+## Session context menu matched (2026-11-12)
+
+The session context menu now uses Source's 4px padding, 6px radius, large
+shadow, and 8px/6px item padding at 11.5px text instead of the larger native
+menu.
+
+Canonical gate: `session-menu-gate.txt` (1072/0/3).
+
+## Workspace context menu matched (2026-11-12)
+
+The saved-workspace menu now shares Source's 4px padding, 6px radius, large
+shadow, 8px/6px item padding and 11.5px text instead of the larger native
+geometry.
+
+Canonical gate: `workspace-menu-gate.txt` (1072/0/3).
+
+## Project disclosure hover matched (2026-11-12)
+
+The project expand/collapse control now has Source's 26px target, 4px right
+margin, full radius, pointer cursor, and hover background/text color.
+
+Canonical gate: `project-disclosure-gate.txt` (1072/0/3).
+
+## Session search field matched (2026-11-12)
+
+The session filter input now uses Source's 28px inset field geometry: 8px left /
+6px right margins, 28px height, 10px horizontal padding, 8px radius, and inset
+background instead of a 16px-margin bordered wrapper.
+
+Canonical gate: `session-search-gate.txt` (1072/0/3).
+
+## Session/project row hover text (2026-11-12)
+
+Hovering a session row or project row now also raises its text color to
+`text`, matching Source's hover title rule; previously only the background
+changed.
+
+Canonical gate: `row-hover-gate.txt` (1072/0/3).
+
+## Pinned label matched (2026-11-12)
+
+Pinned now uses Source's 30px label row, 14px/6px insets, 13px medium text
+instead of a 12px top/bottom padded label.
+
+Canonical gate: `pinned-label-gate.txt` (1072/0/3).
+
+## Pinned section spacing (2026-11-12)
+
+Pinned now has Source's 12px first-section margin instead of sitting directly
+under the New Session row.
+
+Canonical gate: `pinned-margin-gate.txt` (1072/0/3).
+
+## Release gate at 1072 (2026-11-12)
+
+`bash scripts/verify.sh --release` passed at 1072/0/3 with the session-panel
+parity fixes and builds the optimized app. Evidence: `release-gate-1072.txt`.
+Build verification only; signing/notarization not done.
+
+## Populated session rows compared (2026-11-13)
+
+Finally captured the reference with titled sessions by patching titles before
+launch. Recents rows now align: reference Beta/Alpha at y235/261, native rows at
+y236/262; first-row gap after Recents is 29px reference vs 33px native. Native
+has three dev sessions vs two reference sessions. Capture:
+`reference-session-populated.png` / `native-session-populated.png`.
+
+Remaining session-panel gap is limited to a few pixels of section spacing;
+pin/close hover actions are CSS-aligned but still need live hover comparison.
+
+Canonical gate: `populated-sessions-gate.txt` (1072/0/3).
+
+## Final session-section spacing nudge (2026-11-13)
+
+Recents label top padding is 22px and the session list has no top padding,
+reducing the gap variation seen in the populated comparison. Native rows now sit
+within ~4px of the reference (native Recents ~209/first row 240 vs reference
+206/235); further movement is limited by label baseline/window-height differences.
+
+Canonical gate: `session-spacing-final-gate.txt` (1072/0/3).
+
+## Session section spacing settled (2026-11-13)
+
+Recents uses a 19px top padding and the session list has no extra top padding;
+the negative-margin experiment was reverted because it overcorrected. This is
+the closest stable alignment without clipping: reference Recents/first-row
+206/235 vs native about 206/237.
+
+Canonical gate: `session-section-final-gate.txt` (1072/0/3).
+
+## 1280x800 native/reference session panel aligned (2026-11-13)
+
+Reset the native window to 1280x800, titled the dev sessions Beta/Alpha, and
+matched the reference at the same size. Header search icon, New Session,
+Projects, Recents, and Beta/Alpha rows now line up (rows at y235/261 in both).
+Capture: `native-session-1280-final.png` alongside
+`reference-session-populated.png`.
+
+Canonical gate: `session-header-align-gate.txt` (1072/0/3).
+
+## Composer card aligned to Source (2026-11-13)
+
+The composer card now uses Source's 10px radius, strong border, inset
+background, medium shadow, 8px/7px padding, 5px gap, 36px input minimum, 91px
+card minimum, and 6px/12px dock margins. At 1280x800 the card now spans
+y695-790 like the reference.
+
+Canonical gate: `composer-final-gate.txt` (1072/0/3).
+
+## Transcript header overlap fixed (2026-11-16)
+
+The agent transcript now reserves 72px on the right for the absolute timer /
+options header, so the first user bubble no longer sits underneath them. This
+build also includes:
+
+- full-titlebar drag background with explicit `start_window_move` for blank
+  areas and propagation stops for tabs/buttons,
+- explorer actions rendered as absolute hover overlays (no reserved width),
+- changed-file dots now compare watched files against their observation
+  baseline instead of marking every watched file.
+
+Canonical gate: `agent-header-gutter-gate.txt` (1072/0/3).
+
+## Agent header overlap corrected with top inset (2026-11-16)
+
+The previous 72px right padding on the virtualized list did not constrain list
+item width, so the user bubble still rendered under the timer/options. The list
+now uses a 48px top inset instead, placing the first row below the absolute
+header. This also preserves user-selection geometry, which the row-level right
+padding had broken.
+
+Canonical gate: `agent-header-padding-gate.txt` (1072/0/3).
+
+## Recents sessions replace the active panel (2026-11-16)
+
+Clicking a Recents session used `open_session`, which appended a panel and could
+grow the tiled grid unexpectedly. Session-row clicks and next/previous session
+navigation now use `reopen_session`/`replace_active`, so switching conversations
+keeps one panel unless the user explicitly adds one.
+
+Canonical gate: `session-open-replace-gate.txt` (1072/0/3).
+
+## Agent transcript uses OpenCode Inter (2026-11-16)
+
+The Electron timeline loads `Inter.ttf` as its sans family while the shell stays
+on the system UI font. Native now embeds that same Inter face and applies it to
+the transcript, Markdown view, and inline layout only; the app shell/titlebar/
+sidebar keep the system UI font.
+
+Canonical gate: `agent-inter-font-gate.txt` (1072/0/3).
+
+## Markdown typography matched to Source (2026-11-16)
+
+Source Markdown uses Inter 14px/160%, heading sizes 17/15/13px (h1/h2 600, h3-h6
+500), absolute 500-weight strong text, 500-weight inline code, and muted h4-h6.
+Native headings were 21/18.2/16.1px and used semibold everywhere; strong used
+BOLD. Those now match Source, with unit tests for heading sizes/weights and
+strong/inline-code weights. Agent/Markdown family is the embedded Inter face.
+
+Canonical gate: `markdown-typography-gate.txt` (1073/0/3).
+
+## Streaming Markdown block projection (2026-11-16)
+
+Streaming Markdown now:
+
+- heals unterminated bold/italic/code/strike spans and open fences before
+  parsing, mirroring Source's remend projection,
+- splits the live block at `vela_core::markdown::split_ranges` boundaries and
+  renders each completed top-level block with a stable `:block:<index>` key,
+  leaving only the tail live.
+
+This prevents settled paragraphs/headings from being reparsed as one changing
+document while text streams. Unit test covers the healing cases. Source still
+uses a Web Worker plus completed-code cache; those remain future work.
+
+Canonical gate: `streaming-markdown-gate.txt` (1074/0/3).
+
+## Codex shell keeps the work timer in flow (2026-11-16)
+
+A screen recording of Codex showed the elapsed-work row ("Working for 23s" /
+"Worked for 1m 10s") at the left edge of the assistant turn, in transcript
+flow, with no top-right timer or panel-options overlay. The Codex shell now
+omits that absolute overlay and uses a 16px transcript top inset; the classic
+shell keeps its 34px header and 48px inset. A regression test asserts the Codex
+shell renders neither `agent-turn-timer` nor the panel-options overlay.
+
+Canonical gate: `codex-stream-layout-gate.txt` (1074/0/3).
+
+## Codex conversation fills the workspace (2026-11-16)
+
+The Codex shell previously kept the empty editor column and a 320px docked agent
+panel, so Markdown/inline code wrapped into unreadable one-phrase lines. Codex
+now renders the conversation in the workspace whenever no document, browser,
+diff, changes view, or terminal owns it: the rail and sessions sidebar stay, and
+the agent panel flexes to the remaining width. Opening a document restores the
+editor/docked layout. The panel is temporarily rendered in flex mode for this
+path without changing the shell's agent-mode state.
+
+Canonical gate: `codex-conversation-width-gate.txt` (1074/0/3).

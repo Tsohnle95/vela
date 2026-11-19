@@ -3,12 +3,17 @@
 # lets macOS resolve /Applications/Vela.app instead of the isolated dev process.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=scripts/build-env.sh
+source scripts/build-env.sh
 python3 - <<'PY'
-import hashlib, plistlib, shutil, subprocess
+import hashlib, os, plistlib, shutil, subprocess
 from pathlib import Path
 
-source = Path('../vela/dev/Vela.app').resolve()
-bundle = Path('target/parity/Vela Reference QA.app')
+reference_root = Path(os.environ.get('VELA_REFERENCE_ROOT', 'archive/vela-electron')).resolve()
+source = reference_root / 'dev/Vela.app'
+if not source.is_dir():
+    raise SystemExit(f'Reference app not found: {source}. Restore it from a backup or use a separate writable pre-merge checkout via VELA_REFERENCE_ROOT; do not build inside archive/vela-electron.')
+bundle = Path(os.environ['VELA_TARGET_DIR']) / 'parity/Vela Reference QA.app'
 name = 'Vela Reference QA'
 processes = subprocess.check_output(['ps', '-axo', 'comm='], text=True)
 if any(Path(line.strip()).name == name for line in processes.splitlines()):

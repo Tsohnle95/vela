@@ -61,6 +61,7 @@ fn estimate_bytes(session: &SessionSummary, transcript: &Transcript) -> usize {
     for message in transcript.messages() {
         bytes += 96 + message.id.len() + message.parts.len() * 40;
         bytes += message.error.as_ref().map_or(0, |error| error.len() * 2);
+        bytes += message.failure_history.iter().map(|detail| 24 + detail.len() * 2).sum::<usize>();
         bytes += message
             .retry
             .as_ref()
@@ -72,6 +73,7 @@ fn estimate_bytes(session: &SessionSummary, transcript: &Transcript) -> usize {
                 | crate::transcript::PartKind::Reasoning { text, .. } => bytes += text.len() * 2,
                 crate::transcript::PartKind::Tool(tool) => {
                     bytes += (tool.input.len() + tool.output.len() + tool.detail.len()) * 2;
+                    bytes += tool.failure_history.iter().map(|detail| 24 + detail.len() * 2).sum::<usize>();
                 }
             }
         }
@@ -229,6 +231,32 @@ impl WarmCache {
 mod tests {
     use super::*;
     use crate::transcript::{Message, Role, Transcript};
+
+    #[test]
+    fn retained_retry_details_participate_in_warm_eviction() {
+        for tool_history in [false, true] {
+            let mut retained = entry("retried", "done");
+            let mut messages = retained.transcript.messages().to_vec();
+            let detail = "Previous attempt output".repeat(1024);
+            if tool_history {
+                messages[0].parts.push(crate::transcript::Part {
+                    id: "call".into(), ordinal: 1,
+                    kind: crate::transcript::PartKind::Tool(Box::new(crate::transcript::ToolPart {
+                        call_id: "call".into(), failure_history: vec![detail], ..Default::default()
+                    })),
+                });
+            } else {
+                messages[0].failure_history.push(detail);
+            }
+            retained.transcript.hydrate(messages);
+            let retained = WarmEntry::new(retained.session, retained.transcript);
+            let mut cache = WarmCache::new(4, 4096);
+            cache.insert(entry("previous", "small"));
+            cache.insert(retained);
+            assert_eq!(cache.len(), 1, "large retained failures must evict older warmth");
+            assert!(cache.contains("retried"));
+        }
+    }
 
     fn entry(id: &str, text: &str) -> WarmEntry {
         let session = SessionSummary {

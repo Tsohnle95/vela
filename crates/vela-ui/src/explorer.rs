@@ -3,6 +3,30 @@ use super::*;
 use crate::scroll::{AutoScroll, AutoScrollHandle};
 use gpui::{AvailableSpace, Pixels, canvas};
 
+/// Observed files are watched files, not changed files. Compare each captured
+/// file with its baseline so the explorer only marks real external changes.
+fn observed_changes(files: &[vela_engine::observation::ObservedFile]) -> HashSet<String> {
+    files
+        .iter()
+        .filter(|file| {
+            if file.deleted || file.moved_from.is_some() {
+                return true;
+            }
+            match &file.baseline {
+                vela_engine::observation::Baseline::Known { content, existed } => {
+                    if *existed {
+                        file.content.as_deref() != Some(content.as_ref())
+                    } else {
+                        file.content.is_some()
+                    }
+                }
+                vela_engine::observation::Baseline::Unknown => false,
+            }
+        })
+        .map(|file| file.rel.clone())
+        .collect()
+}
+
 /// Ancestor selections subsume their children; a drop never moves an entry
 /// into itself or attempts a no-op in its current parent.
 pub(super) fn compact_paths(paths: &[String]) -> Vec<String> {
@@ -174,6 +198,18 @@ impl Default for Tree {
     }
 }
 impl Tree {
+    /// Source's row context menu selects an unselected target before opening
+    /// the menu, replacing any previous multi-selection.
+    pub(super) fn select_for_context(&mut self, rel: &str) -> bool {
+        if rel.is_empty() || self.selected.contains(rel) {
+            return false;
+        }
+        self.selected.clear();
+        self.selected.insert(rel.to_owned());
+        self.anchor = Some(rel.to_owned());
+        true
+    }
+
     pub(super) fn clear_selection(&mut self) {
         self.selected.clear();
         self.anchor = None;
@@ -320,11 +356,7 @@ impl VelaApp {
             .unsaved_keys()
             .into_iter()
             .any(|key| key.workspace == self.document_workspace() && key.rel == rel);
-        let changed = self
-            .engine
-            .observed_files(&directory)
-            .iter()
-            .any(|file| file.rel == rel);
+        let changed = observed_changes(&self.engine.observed_files(&directory)).contains(&rel);
         let click_rel = rel.clone();
         div()
             .id("file-explorer")
@@ -518,12 +550,7 @@ impl VelaApp {
         let open = tree.open;
         let selected = tree.selected.clone();
         let state = tree.scroll.clone();
-        let observed = self
-            .engine
-            .observed_files(&directory)
-            .iter()
-            .map(|file| file.rel.clone())
-            .collect::<HashSet<_>>();
+        let observed = observed_changes(&self.engine.observed_files(&directory));
         let dirty = self
             .documents
             .borrow()
@@ -571,6 +598,7 @@ impl VelaApp {
             let drop_workspace = directory.clone();
             let drop_parent = if is_dir { rel.clone() } else { String::new() };
             let selection = if active { 0.28 } else { 0.22 };
+            let actions_group = format!("explorer-row:{}", entry.rel);
             // Nested block rows collapse adjacent 1px vertical margins in the
             // reference; top-level workspace children are flex items (30px).
             let mut row = div()
@@ -592,6 +620,7 @@ impl VelaApp {
             row.child(
                 div()
                     .id(SharedString::from(format!("file-{}", entry.rel)))
+                    .group(actions_group.clone())
                     .role(gpui::Role::Button)
                     .aria_label(SharedString::from(entry.rel.clone()))
                     .when(is_dir, |row| row.aria_expanded(open))
@@ -751,12 +780,16 @@ impl VelaApp {
                             entry.rel.clone(),
                             false,
                             create_weak.clone(),
+                            &actions_group,
+                            54.,
                         ))
                         .child(super::explorer_create::create_action(
                             row_directory.clone(),
                             entry.rel.clone(),
                             true,
                             create_weak.clone(),
+                            &actions_group,
+                            30.,
                         ))
                     })
                     .child(super::explorer_rename::menu_action(
@@ -765,6 +798,8 @@ impl VelaApp {
                         is_dir,
                         action_focus[&entry.rel].clone(),
                         create_weak.clone(),
+                        &actions_group,
+                        6.,
                     ))
                     .when(unsaved, |row| {
                         row.child(
@@ -785,6 +820,7 @@ impl VelaApp {
         .flex_1()
         .min_h_0()
         .w_full();
+        let root_actions_group = format!("explorer-root-actions:{}", root_directory);
         div()
             .id("file-explorer")
             .role(Role::Group)
@@ -799,6 +835,7 @@ impl VelaApp {
             .child(
                 div()
                     .id("explorer-root")
+                    .group(root_actions_group.clone())
                     .map(|row| {
                         drop_target(
                             row,
@@ -863,12 +900,16 @@ impl VelaApp {
                         String::new(),
                         false,
                         root_weak.clone(),
+                        &root_actions_group,
+                        54.,
                     ))
                     .child(super::explorer_create::create_action(
                         root_directory.clone(),
                         String::new(),
                         true,
                         root_weak.clone(),
+                        &root_actions_group,
+                        30.,
                     ))
                     .child(super::explorer_rename::menu_action(
                         root_directory,
@@ -876,6 +917,8 @@ impl VelaApp {
                         true,
                         root_action_focus,
                         root_weak,
+                        &root_actions_group,
+                        6.,
                     )),
             )
             .when_some(self.render_create_name(cx), |root, input| root.child(input))
@@ -1015,6 +1058,32 @@ fn mix(ink: gpui::Rgba, paper: gpui::Rgba, amount: f32) -> gpui::Rgba {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn context_menu_selects_an_unselected_target_and_keeps_existing_selection() {
+        let mut tree = Tree::default();
+        tree.selected.insert("a.txt".into());
+        tree.selected.insert("b.txt".into());
+        tree.anchor = Some("a.txt".into());
+        assert!(tree.select_for_context("c.txt"));
+        assert_eq!(
+            tree.selected.iter().cloned().collect::<Vec<_>>(),
+            vec!["c.txt"]
+        );
+        assert_eq!(tree.anchor.as_deref(), Some("c.txt"));
+        assert!(
+            !tree.select_for_context("c.txt"),
+            "right-clicking a selected target keeps the existing selection"
+        );
+        assert_eq!(
+            tree.selected.iter().cloned().collect::<Vec<_>>(),
+            vec!["c.txt"]
+        );
+        assert!(
+            !tree.select_for_context(""),
+            "the workspace root does not become a selected row"
+        );
+    }
+
     #[test]
     fn move_selection_compacts_ancestors_and_skips_self_descendants_and_current_parent() {
         let paths = [

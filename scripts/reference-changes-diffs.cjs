@@ -2,7 +2,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createRequire } = require('node:module');
-const source = process.argv[2] || path.resolve(__dirname, '../../vela');
+const source = path.resolve(
+  process.argv[2] || process.env.VELA_REFERENCE_ROOT || path.resolve(__dirname, '../archive/vela-electron'),
+);
 const fromSource = createRequire(path.join(source, 'package.json'));
 const { diffLines } = fromSource('diff');
 const version = fromSource('diff/package.json').version;

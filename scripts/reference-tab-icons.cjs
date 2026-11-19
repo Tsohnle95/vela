@@ -3,7 +3,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createRequire } = require('node:module');
-const reference = path.resolve(process.argv[2]);
+const reference = path.resolve(
+  process.argv[2] || process.env.VELA_REFERENCE_ROOT || path.resolve(__dirname, '../archive/vela-electron'),
+);
 const local = createRequire(path.join(reference, 'package.json'));
 const ts = local('typescript');
 const React = local('react');

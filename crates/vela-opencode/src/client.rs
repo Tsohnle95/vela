@@ -565,40 +565,6 @@ impl Client {
         .await
     }
 
-    pub async fn list_mcp_servers(
-        &self,
-        directory: &str,
-    ) -> Result<Vec<crate::inventory::McpServerInfo>> {
-        let value = self
-            .get_json(
-                &["api", "mcp"],
-                &[("location[directory]", directory.to_owned())],
-            )
-            .await?;
-        Ok(crate::inventory::parse_mcp_servers(&value))
-    }
-
-    pub async fn list_plugins(
-        &self,
-        directory: &str,
-    ) -> Result<Vec<crate::inventory::PluginInfo>> {
-        let value = self
-            .get_json(
-                &["api", "plugin"],
-                &[("location[directory]", directory.to_owned())],
-            )
-            .await?;
-        Ok(crate::inventory::parse_plugins(&value))
-    }
-
-    pub async fn list_skill_inventory(
-        &self,
-        directory: &str,
-    ) -> Result<Vec<crate::inventory::SkillInfo>> {
-        let value = self.list_skills(directory).await?;
-        Ok(crate::inventory::parse_skills(&value))
-    }
-
     pub async fn command_catalog(
         &self,
         directory: &str,

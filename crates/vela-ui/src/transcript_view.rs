@@ -2,128 +2,270 @@
 //! A long answer remains a sequence of stable Markdown blocks; expanding a
 //! process group never turns the whole conversation into one layout element.
 use super::*;
+use std::{
+    borrow::Cow,
+    cell::{Cell, RefCell},
+    hash::{Hash, Hasher},
+    ops::Range,
+    rc::Rc,
+};
+use unicode_segmentation::UnicodeSegmentation;
 
-type SpacingCache = HashMap<Arc<str>, (Arc<str>, markdown_view::BlockSpacing)>;
+#[path = "work_summary_caption.rs"]
+mod work_summary_caption;
 
-const PACED_IMMEDIATE: usize = 512;
-const PACED_INTERVAL: Duration = Duration::from_millis(24);
+type SpacingCache = HashMap<Arc<str>, SpacingEntry>;
 
-/// Source's reveal step: tiny tails advance slowly, large streams catch up in
-/// larger chunks, and the end snaps forward to the next whitespace/punctuation.
-fn next_paced_end(text: &str, start: usize) -> usize {
-    let remaining = text.len().saturating_sub(start);
-    let step = if remaining <= 12 {
-        2
-    } else if remaining <= 48 {
-        4
-    } else if remaining <= 96 {
-        8
-    } else {
-        remaining.div_ceil(4).min(256)
-    };
-    let mut end = (start + step).min(text.len());
-    while end < text.len() && !text.is_char_boundary(end) {
-        end += 1;
-    }
-    let max = (end + 8).min(text.len());
-    let mut index = end;
-    while index < max {
-        let ch = text[index..].chars().next().unwrap();
-        if ch.is_whitespace() || matches!(ch, '.' | ',' | '!' | '?' | ';' | ':' | ')' | ']') {
-            return index + ch.len_utf8();
-        }
-        index += ch.len_utf8();
-    }
-    end
+struct SpacingEntry {
+    source: Arc<str>,
+    streaming: bool,
+    dependency: u64,
+    spacing: markdown_view::BlockSpacing,
 }
 
-fn paced_blocks(blocks: &[Block], ui: &TranscriptUi) -> Vec<Block> {
-    let pacing = ui.pacing.borrow();
-    if pacing.is_empty() {
-        return blocks.to_vec();
+fn cached_spacing(
+    cache: &mut SpacingCache,
+    block: &Block,
+    dependency: u64,
+    measure: impl Fn() -> markdown_view::BlockSpacing,
+) -> markdown_view::BlockSpacing {
+    let entry = || SpacingEntry {
+        source: block.text.clone(),
+        streaming: block.streaming,
+        dependency,
+        spacing: measure(),
+    };
+    let current = cache.entry(block.id.clone()).or_insert_with(entry);
+    if current.streaming != block.streaming
+        || current.dependency != dependency
+        || (!Arc::ptr_eq(&current.source, &block.text) && current.source != block.text)
+    {
+        *current = entry();
     }
-    blocks
-        .iter()
-        .map(|block| {
-            if block.kind == BlockKind::Assistant
-                && block.streaming
-                && let Some(shown) = pacing.get(&block.id)
-                && shown.len() < block.text.len()
-            {
-                let mut block = block.clone();
-                block.text = Arc::from(shown.as_str());
-                return block;
+    current.spacing
+}
+
+/// A transcript-order selection spanning one or more user messages. Points are
+/// `(message index, segment index, byte offset)` so virtualized rows never need
+/// to be painted to contribute text.
+pub(super) struct UserTextSelection {
+    pub(super) anchor: markdown_view::UserSelectionPoint,
+    pub(super) head: markdown_view::UserSelectionPoint,
+    order: Vec<Arc<str>>,
+}
+
+impl UserTextSelection {
+    fn ordered(
+        &self,
+    ) -> (
+        markdown_view::UserSelectionPoint,
+        markdown_view::UserSelectionPoint,
+    ) {
+        let a = (self.anchor.message, self.anchor.segment, self.anchor.offset);
+        let b = (self.head.message, self.head.segment, self.head.offset);
+        if a <= b {
+            (self.anchor, self.head)
+        } else {
+            (self.head, self.anchor)
+        }
+    }
+
+    fn includes(&self, message: usize, segment: usize) -> bool {
+        let (start, end) = self.ordered();
+        let key = (message, segment);
+        key >= (start.message, start.segment) && key <= (end.message, end.segment)
+    }
+
+    pub(super) fn selected_text(&self, segments: &HashMap<Arc<str>, Vec<SharedString>>) -> String {
+        let (start, end) = self.ordered();
+        let mut parts: Vec<String> = Vec::new();
+        for message in start.message..=end.message {
+            let Some(id) = self.order.get(message) else {
+                continue;
+            };
+            let Some(message_segments) = segments.get(id) else {
+                continue;
+            };
+            for (index, segment) in message_segments.iter().enumerate() {
+                if !self.includes(message, index) {
+                    continue;
+                }
+                let text: &str = segment;
+                let from = if (message, index) == (start.message, start.segment) {
+                    clamp_boundary(text, start.offset)
+                } else {
+                    0
+                };
+                let to = if (message, index) == (end.message, end.segment) {
+                    clamp_boundary(text, end.offset)
+                } else {
+                    text.len()
+                };
+                if from < to {
+                    parts.push(text[from..to].to_string());
+                }
             }
-            block.clone()
-        })
-        .collect()
+        }
+        parts.join("\n")
+    }
+
+    pub(super) fn selected_images(
+        &self,
+        segments: &HashMap<Arc<str>, Vec<SharedString>>,
+        images: &HashMap<Arc<str>, Vec<(usize, Arc<gpui::Image>)>>,
+    ) -> Vec<Arc<gpui::Image>> {
+        let (start, end) = self.ordered();
+        let mut selected = Vec::new();
+        for message in start.message..=end.message {
+            let Some(id) = self.order.get(message) else {
+                continue;
+            };
+            if segments.get(id).is_none() {
+                continue;
+            }
+            if let Some(entries) = images.get(id) {
+                for (segment, image) in entries {
+                    if self.includes(message, *segment) {
+                        selected.push(image.clone());
+                    }
+                }
+            }
+        }
+        selected
+    }
+}
+
+fn clamp_boundary(text: &str, offset: usize) -> usize {
+    let mut offset = offset.min(text.len());
+    while offset > 0 && !text.is_char_boundary(offset) {
+        offset -= 1;
+    }
+    offset
+}
+
+fn message_text_points(
+    ui: &TranscriptUi,
+    message: usize,
+) -> Option<(
+    markdown_view::UserSelectionPoint,
+    markdown_view::UserSelectionPoint,
+)> {
+    let block = ui.user_message_order.get(message)?;
+    let texts = ui.user_message_segments.get(block)?;
+    let last = texts.last()?;
+    Some((
+        markdown_view::UserSelectionPoint {
+            message,
+            segment: 0,
+            offset: 0,
+        },
+        markdown_view::UserSelectionPoint {
+            message,
+            segment: texts.len().saturating_sub(1),
+            offset: last.len(),
+        },
+    ))
+}
+
+/// The first and last selectable points across all rendered user messages.
+fn all_user_text_points(
+    ui: &TranscriptUi,
+) -> Option<(
+    markdown_view::UserSelectionPoint,
+    markdown_view::UserSelectionPoint,
+)> {
+    let order = &ui.user_message_order;
+    let segments = &ui.user_message_segments;
+    let first = order.iter().enumerate().find_map(|(index, block)| {
+        let texts = segments.get(block)?;
+        (!texts.is_empty()).then_some(index)
+    })?;
+    let (last, segment, offset) = order.iter().enumerate().rev().find_map(|(index, block)| {
+        let texts = segments.get(block)?;
+        texts
+            .last()
+            .map(|text| (index, texts.len().saturating_sub(1), text.len()))
+    })?;
+    Some((
+        markdown_view::UserSelectionPoint {
+            message: first,
+            segment: 0,
+            offset: 0,
+        },
+        markdown_view::UserSelectionPoint {
+            message: last,
+            segment,
+            offset,
+        },
+    ))
+}
+
+/// The word a double-click selects, using Unicode word boundaries. Whitespace
+/// and punctuation fall back to the grapheme under the pointer.
+pub(super) fn selected_word(text: &str, index: usize) -> Range<usize> {
+    let index = index.min(text.len());
+    for (start, word) in text.split_word_bound_indices() {
+        let end = start + word.len();
+        if index < end || (end == text.len() && index <= end) {
+            return start..end;
+        }
+    }
+    for (start, grapheme) in text.grapheme_indices(true) {
+        let end = start + grapheme.len();
+        if index < end || end == text.len() {
+            return start..end;
+        }
+    }
+    0..0
 }
 
 #[derive(Default)]
 pub(super) struct TranscriptUi {
     spacing: RefCell<SpacingCache>,
-    pub(super) work_open: HashSet<String>,
+    activity: RefCell<vela_core::activity::ActivityCache>,
     pub(super) tool_open: HashSet<String>,
+    tool_groups: HashMap<SharedString, bool>,
     reasoning_open: HashMap<String, bool>,
     hovered_answer: Option<Arc<str>>,
     copied_answer: Option<Arc<str>>,
-    pub(super) copied_tool: Option<Arc<str>>,
-    pacing: RefCell<HashMap<Arc<str>, String>>,
-    pacing_timer: bool,
-    pacing_last: Option<std::time::Instant>,
-    clock_running: bool,
-    clock_generation: u64,
+    answer_copy_generation: u64,
+    answer_copy_owner: Arc<()>,
     focus: HashMap<SharedString, gpui::FocusHandle>,
+    pub(super) user_text_selection: Option<UserTextSelection>,
+    pub(super) user_text_session: Option<String>,
+    user_text_drag: Rc<Cell<bool>>,
+    pub(super) user_message_order: Vec<Arc<str>>,
+    user_message_index: HashMap<Arc<str>, usize>,
+    user_message_sources: HashMap<Arc<str>, (Arc<str>, u64)>,
+    user_order_rows: std::sync::Weak<Vec<Row>>,
+    pub(super) user_message_segments: HashMap<Arc<str>, Vec<SharedString>>,
+    pub(super) user_message_images: HashMap<Arc<str>, Vec<(usize, Arc<gpui::Image>)>>,
+    user_text_focus: HashMap<Arc<str>, gpui::FocusHandle>,
     pub(super) markdown: markdown_view::MarkdownUi,
     viewport: crate::scroll::ListViewportHandle,
     pub(super) scroll_generation: u64,
     pub(super) scrolling_to_bottom: bool,
 }
 impl TranscriptUi {
-    /// Reveal newly appended assistant text at Source's pace. The first visible
-    /// snapshot is shown in full (matching Source's initial state); later large
-    /// deltas catch up over successive 24ms ticks.
-    fn advance_pacing(&mut self, blocks: &[Block]) -> bool {
-        let streaming = blocks
-            .iter()
-            .filter(|block| block.kind == BlockKind::Assistant && block.streaming)
-            .map(|block| block.id.clone())
-            .collect::<HashSet<_>>();
-        let mut pacing = self.pacing.borrow_mut();
-        pacing.retain(|id, _| streaming.contains(id));
-        let advance = self
-            .pacing_last
-            .is_none_or(|last| last.elapsed() >= PACED_INTERVAL);
-        let mut active = false;
-        for block in blocks
-            .iter()
-            .filter(|block| block.kind == BlockKind::Assistant && block.streaming)
-        {
-            let shown = pacing
-                .entry(block.id.clone())
-                .or_insert_with(|| block.text.to_string());
-            if !block.text.starts_with(shown.as_str()) {
-                *shown = block.text.to_string();
-            } else if block.text.len().saturating_sub(shown.len()) > PACED_IMMEDIATE {
-                if advance {
-                    let end = next_paced_end(&block.text, shown.len());
-                    if end > shown.len() {
-                        *shown = block.text[..end].to_string();
-                    }
-                }
-            } else if shown.len() < block.text.len() {
-                *shown = block.text.to_string();
-            }
-            if shown.len() < block.text.len() {
-                active = true;
-            }
+    pub(super) fn contains_focused(&self, window: &Window) -> bool {
+        self.markdown.contains_focused(window)
+            || self.focus.values().any(|focus| focus.is_focused(window))
+            || self.user_text_focus.values().any(|focus| focus.is_focused(window))
+    }
+
+    #[cfg(test)]
+    pub(super) fn register_focus_for_test(&mut self, focus: gpui::FocusHandle, user_text: bool) {
+        if user_text {
+            self.user_text_focus.insert("test-user".into(), focus);
+        } else {
+            self.focus.insert("test-control".into(), focus);
         }
-        if !active {
-            self.pacing_last = None;
-        } else if advance {
-            self.pacing_last = Some(std::time::Instant::now());
-        }
-        active
+    }
+
+    fn answer_copy_is_current(&self, owner: &Arc<()>, generation: u64, key: &str) -> bool {
+        Arc::ptr_eq(&self.answer_copy_owner, owner)
+            && self.answer_copy_generation == generation
+            && self.copied_answer.as_deref() == Some(key)
     }
 
     pub(super) fn answer_footer_visible(
@@ -136,28 +278,68 @@ impl TranscriptUi {
             || footer.is_focused(window)
             || self.markdown.answer_contains_focused(answer, window)
     }
+
+    fn user_text_focus(
+        &mut self,
+        session: &str,
+        id: &Arc<str>,
+        row: &Row,
+        window: &mut Window,
+        cx: &mut Context<VelaApp>,
+    ) -> gpui::FocusHandle {
+        if let Some(focus) = self.user_text_focus.get(id) {
+            return focus.clone();
+        }
+        let focus = cx.focus_handle();
+        let row_key = row.id.clone();
+        let session = session.to_owned();
+        let blur_session = session.clone();
+        cx.on_focus(&focus, window, move |app, _, cx| {
+            app.row_cache.invalidate_session(&session);
+            if let Some(index) = app
+                .rows_for(&session)
+                .iter()
+                .position(|row| row.id == row_key)
+                && let Some(list) = app.list_for(&session)
+            {
+                list.scroll_to_reveal_item(index);
+            }
+            cx.notify();
+        })
+        .detach();
+        cx.on_blur(&focus, window, move |app, _, cx| {
+            app.row_cache.invalidate_session(&blur_session);
+            cx.notify();
+        }).detach();
+        self.user_text_focus.insert(id.clone(), focus.clone());
+        focus
+    }
     pub(super) fn navigate(
         &mut self,
         event: &KeyDownEvent,
         list: &ListState,
         window: &Window,
     ) -> bool {
-        if !self.markdown.contains_focused(window)
-            && !self.focus.values().any(|focus| focus.is_focused(window))
-        {
+        if !self.contains_focused(window) {
             return false;
         }
         let key = &event.keystroke;
         if key.modifiers.alt || key.modifiers.control || key.modifiers.shift {
             return false;
         }
+        let viewport_height = list.viewport_bounds().size.height;
+        let page = if viewport_height > px(0.) { viewport_height } else { self.viewport.height() };
         match key.key.as_str() {
             "home" if !key.modifiers.platform => list.scroll_to(ListOffset::default()),
             "end" if !key.modifiers.platform => list.scroll_to_end(),
             "up" if key.modifiers.platform => list.scroll_to(ListOffset::default()),
             "down" if key.modifiers.platform => list.scroll_to_end(),
-            "pageup" if !key.modifiers.platform => list.scroll_by(-self.viewport.height() * 0.875),
-            "pagedown" if !key.modifiers.platform => list.scroll_by(self.viewport.height() * 0.875),
+            "pageup" if !key.modifiers.platform => {
+                list.scroll_by(-page * 0.875)
+            }
+            "pagedown" if !key.modifiers.platform => {
+                list.scroll_by(page * 0.875)
+            }
             "up" if !key.modifiers.platform => list.scroll_by(px(-40.)),
             "down" if !key.modifiers.platform => list.scroll_by(px(40.)),
             _ => return false,
@@ -170,47 +352,175 @@ impl TranscriptUi {
 
 #[derive(Clone)]
 pub(super) struct Row {
-    id: SharedString,
+    pub(super) id: SharedString,
     before: f32,
     after: f32,
+    presentation: u64,
+    /// Keep collapsed leaves in the same list/parent under their lifetime ID.
+    /// Collapsing never changes their identity or parent.
+    hidden: bool,
+    summary: Option<Arc<str>>,
     kind: RowKind,
 }
 
 #[derive(Clone)]
 enum RowKind {
     Content {
-        block: Block,
+        block: Arc<Block>,
         answer: Option<Arc<str>>,
         reasoning: bool,
     },
-    User(Block),
-    Work {
-        key: String,
-        running: bool,
-        open: bool,
-        started: Option<i64>,
-        duration: Option<i64>,
-        previous: usize,
-    },
+    User(Arc<Block>),
+    ScrollControl,
     Reasoning {
         key: String,
         running: bool,
+        open: bool,
+    },
+    ToolGroup {
+        title: Arc<str>,
+        count: usize,
+        running: usize,
+        failed: usize,
+        active: bool,
         open: bool,
     },
     Footer {
         key: Arc<str>,
         text: Arc<str>,
         duration: Option<i64>,
-        agent: Option<String>,
-        model: Option<String>,
+        interrupted: bool,
     },
-    Status(Block),
+    Status(Arc<Block>),
 }
 
 #[derive(Default)]
-struct Turn {
-    user: Option<Block>,
-    body: Vec<Block>,
+pub(super) struct PanelTranscript {
+    pub(super) ui: TranscriptUi,
+    pub(super) rows: Arc<Vec<Row>>,
+    pub(super) blocks: Arc<Vec<Block>>,
+    pub(super) phase: SessionPhase,
+    pub(super) viewport: crate::transcript_viewport::TranscriptViewport,
+    pub(super) dirty: bool,
+}
+
+/// Content identity for layout invalidation. `Block` owns immutable `Arc<str>`
+/// payloads, so their pointers change exactly when the content does; hashing
+/// pointers avoids re-reading a megabyte of tool output for every row on every
+/// streamed delta. Equal content in a new allocation merely remeasures.
+fn hash_block_revision(block: &Block, hash: &mut impl Hasher) {
+    fn ptr(value: &Arc<str>, hash: &mut impl Hasher) {
+        (Arc::as_ptr(value) as *const () as usize).hash(hash);
+    }
+    block.kind.hash(hash);
+    ptr(&block.text, hash);
+    ptr(&block.detail, hash);
+    ptr(&block.output, hash);
+    ptr(&block.progress, hash);
+    block.status.hash(hash);
+    block.streaming.hash(hash);
+    block.interrupted.hash(hash);
+    block.agent.as_deref().hash(hash);
+    block.model.as_deref().hash(hash);
+    block.created_at.hash(hash);
+    block.completed_at.hash(hash);
+    block.child_session_id.as_deref().hash(hash);
+    for file in &block.files { file.hash(hash); }
+    for call in &block.sub_calls { call.hash(hash); }
+    for attachment in &block.attachments { ptr(attachment, hash); }
+}
+
+impl Row {
+    pub(super) fn cacheable(&self) -> bool {
+        !self.hidden && match &self.kind {
+            RowKind::Content { block, .. } => !block.streaming || block.kind == BlockKind::Assistant
+                || (block.kind == BlockKind::Tool && crate::subagent::is_task_tool(&block.detail)),
+            RowKind::User(_) | RowKind::Footer { .. } | RowKind::ToolGroup { .. } => true,
+            RowKind::Status(block) => !block.streaming,
+            RowKind::Reasoning { running, .. } => !running,
+            RowKind::ScrollControl => false,
+        }
+    }
+
+    pub(super) fn revision(&self) -> crate::transcript_viewport::RowRevision {
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        self.before.to_bits().hash(&mut hash);
+        self.after.to_bits().hash(&mut hash);
+        self.presentation.hash(&mut hash);
+        match &self.kind {
+            RowKind::Content {
+                block,
+                answer,
+                reasoning,
+            } => {
+                hash_block_revision(block, &mut hash);
+                answer.hash(&mut hash);
+                reasoning.hash(&mut hash);
+            }
+            RowKind::User(block) | RowKind::Status(block) => {
+                hash_block_revision(block, &mut hash);
+            }
+            RowKind::ScrollControl => {}
+            RowKind::Reasoning { running, open, .. } => (running, open).hash(&mut hash),
+            RowKind::ToolGroup { title, count, running, failed, active, open } => {
+                (title, count, running, failed, active, open).hash(&mut hash);
+            }
+            RowKind::Footer {
+                key,
+                text,
+                duration,
+                interrupted,
+            } => {
+                (duration, interrupted).hash(&mut hash);
+                key.hash(&mut hash);
+                (Arc::as_ptr(text) as *const () as usize).hash(&mut hash);
+            }
+        }
+        self.hidden.hash(&mut hash);
+        self.summary.hash(&mut hash);
+        crate::transcript_viewport::RowRevision::new(self.id.clone(), hash.finish())
+    }
+}
+
+pub(super) fn configure_user_order(ui: &mut TranscriptUi, rows: &Arc<Vec<Row>>) {
+    if ui.user_order_rows.as_ptr() == Arc::as_ptr(rows) {
+        return;
+    }
+    ui.user_order_rows = Arc::downgrade(rows);
+    let users = rows.iter().filter_map(|row| match &row.kind {
+        RowKind::User(block) => Some((block, row.presentation)),
+        _ => None,
+    });
+    let mut previous = ui.user_message_order.iter();
+    if users.clone().all(|(block, stamp)| {
+        previous.next() == Some(&block.id)
+            && ui.user_message_sources.get(&block.id).is_some_and(|(text, old_stamp)| {
+                *old_stamp == stamp && (Arc::ptr_eq(text, &block.text) || *text == block.text)
+            })
+    }) && previous.next().is_none() {
+        return;
+    }
+    let mut order = Vec::new();
+    let mut sources = HashMap::new();
+    for (block, stamp) in users {
+        order.push(block.id.clone());
+        sources.insert(block.id.clone(), (block.text.clone(), stamp));
+    }
+    let unchanged = |id: &Arc<str>| {
+        ui.user_message_sources.get(id).zip(sources.get(id))
+            .is_some_and(|((old, old_stamp), (new, new_stamp))| {
+                old_stamp == new_stamp && (Arc::ptr_eq(old, new) || old == new)
+            })
+    };
+    ui.user_message_segments.retain(|id, _| unchanged(id));
+    ui.user_message_images.retain(|id, _| unchanged(id));
+    ui.user_message_sources = sources;
+    ui.user_message_index = order
+        .iter()
+        .enumerate()
+        .map(|(index, id)| (id.clone(), index))
+        .collect();
+    ui.user_message_order = order;
 }
 
 fn push(rows: &mut Vec<Row>, id: String, before: f32, kind: RowKind) {
@@ -218,22 +528,14 @@ fn push(rows: &mut Vec<Row>, id: String, before: f32, kind: RowKind) {
         id: id.into(),
         before,
         after: 0.,
+        presentation: 0,
+        hidden: false,
+        summary: None,
         kind,
     });
 }
 
-fn assistant(block: &Block) -> bool {
-    matches!(
-        block.kind,
-        BlockKind::Assistant
-            | BlockKind::Reasoning
-            | BlockKind::Tool
-            | BlockKind::Error
-            | BlockKind::Retry
-            | BlockKind::Activity
-    )
-}
-
+#[cfg(test)]
 fn text_rows(
     rows: &mut Vec<Row>,
     blocks: &[Block],
@@ -245,19 +547,9 @@ fn text_rows(
     let mut previous = markdown_view::BlockSpacing::default();
     let mut tail_margin = 0.;
     for (index, block) in blocks.iter().enumerate() {
-        let current = spacing.entry(block.id.clone()).or_insert_with(|| {
-            (
-                block.text.clone(),
-                markdown_view::block_spacing(&block.text),
-            )
+        let current = cached_spacing(spacing, block, 0, || {
+            markdown_view::block_spacing(&block.text)
         });
-        if !Arc::ptr_eq(&current.0, &block.text) && current.0 != block.text {
-            *current = (
-                block.text.clone(),
-                markdown_view::block_spacing(&block.text),
-            );
-        }
-        let current = current.1;
         push(
             rows,
             format!("text:{}", block.id),
@@ -267,7 +559,7 @@ fn text_rows(
                 previous.bottom.max(current.top_after(previous))
             },
             RowKind::Content {
-                block: block.clone(),
+                block: Arc::new(block.clone()),
                 answer: answer.clone(),
                 reasoning,
             },
@@ -281,11 +573,15 @@ fn text_rows(
     tail_margin
 }
 
-/// Vela keeps one delegated-agent card per dispatch. Repeated task-tool
-/// snapshots merge into the first row, a later `<subagent>` completion notice
-/// settles its status, and the synthetic row is suppressed once a task card
-/// represents that child or dispatch.
-fn collapse_subagent_tools(blocks: &[Block]) -> Vec<Block> {
+/// Vela keeps one delegated-agent row per call or explicitly identified child.
+/// Descriptions are correlation hints for unambiguous synthetic notices, never
+/// identities: two simultaneous dispatches can have identical descriptions.
+fn collapse_subagent_tools(blocks: &[Block]) -> Cow<'_, [Block]> {
+    if !blocks.iter().any(|block| {
+        block.kind == BlockKind::Tool && crate::subagent::is_task_tool(&block.detail)
+    }) {
+        return Cow::Borrowed(blocks);
+    }
     fn merge(existing: &mut Block, latest: &Block) {
         if !latest.text.is_empty() {
             existing.text = latest.text.clone();
@@ -298,7 +594,7 @@ fn collapse_subagent_tools(blocks: &[Block]) -> Vec<Block> {
         }
         existing.status = latest.status;
         existing.streaming = latest.streaming;
-        existing.created_at = latest.created_at;
+        existing.created_at = existing.created_at.min(latest.created_at);
         if latest.completed_at.is_some() {
             existing.completed_at = latest.completed_at;
         }
@@ -312,39 +608,39 @@ fn collapse_subagent_tools(blocks: &[Block]) -> Vec<Block> {
     let flush = |turn: &mut Vec<&Block>, visible: &mut Vec<Block>| {
         let mut canonical: Vec<(usize, Block)> = Vec::with_capacity(turn.len());
         let mut represented: HashMap<String, usize> = HashMap::new();
-        let mut synthetic = Vec::new();
+        let mut signatures: HashMap<String, Vec<usize>> = HashMap::new();
         for (index, block) in turn.iter().enumerate() {
             if block.kind == BlockKind::Tool && crate::subagent::is_task_tool(&block.detail) {
                 let signature =
                     crate::subagent::tool_dispatch_signature(&block.detail, &block.text);
                 let child = block.child_session_id.as_deref().unwrap_or("");
                 let child_key = (!child.is_empty()).then(|| format!("child:{child}"));
-                let signature_key = signature.as_ref().map(|value| format!("sig:{value}"));
-                let existing = child_key
-                    .as_ref()
-                    .and_then(|key| represented.get(key).copied())
-                    .or_else(|| {
-                        signature_key
-                            .as_ref()
-                            .and_then(|key| represented.get(key).copied())
-                    });
-                if let Some(position) = existing {
+                let call_key = format!("call:{}", block.id);
+                let existing = represented.get(&call_key).copied().or_else(|| {
+                    child_key.as_ref().and_then(|key| represented.get(key).copied())
+                });
+                let position = if let Some(position) = existing {
+                    let previous_child = canonical[position].1.child_session_id.clone();
                     merge(&mut canonical[position].1, block);
-                    if let Some(child) = block
-                        .child_session_id
-                        .as_deref()
-                        .filter(|child| !child.is_empty())
+                    if let Some(previous) = previous_child
+                        && !child.is_empty() && previous.as_ref() != child
                     {
-                        represented.insert(format!("child:{child}"), position);
+                        represented.remove(&format!("child:{previous}"));
                     }
+                    position
                 } else {
                     let position = canonical.len();
                     canonical.push((index, (*block).clone()));
-                    if let Some(key) = child_key {
-                        represented.insert(key, position);
-                    }
-                    if let Some(key) = signature_key {
-                        represented.insert(key, position);
+                    position
+                };
+                represented.insert(call_key, position);
+                if let Some(key) = child_key {
+                    represented.insert(key, position);
+                }
+                if let Some(signature) = signature {
+                    let candidates = signatures.entry(signature).or_default();
+                    if !candidates.contains(&position) {
+                        candidates.push(position);
                     }
                 }
                 continue;
@@ -352,39 +648,43 @@ fn collapse_subagent_tools(blocks: &[Block]) -> Vec<Block> {
             if block.kind == BlockKind::System
                 && let Some(reference) = crate::subagent::parse(&block.text)
             {
-                let position = if reference.id.is_empty() {
-                    crate::subagent::ref_dispatch_signature(&reference)
-                        .and_then(|signature| represented.get(&format!("sig:{signature}")).copied())
-                } else {
-                    represented
-                        .get(&format!("child:{}", reference.id))
-                        .copied()
-                        .or_else(|| {
-                            crate::subagent::ref_dispatch_signature(&reference).and_then(
-                                |signature| represented.get(&format!("sig:{signature}")).copied(),
-                            )
-                        })
-                };
+                let position = (!reference.id.is_empty())
+                    .then(|| represented.get(&format!("child:{}", reference.id)).copied())
+                    .flatten()
+                    .or_else(|| {
+                        let signature = crate::subagent::ref_dispatch_signature(&reference)?;
+                        let mut candidates = signatures.get(&signature)?.iter().copied()
+                            .filter(|position| {
+                                let child = canonical[*position].1.child_session_id.as_deref()
+                                    .unwrap_or_default();
+                                reference.id.is_empty() || child.is_empty() || child == reference.id
+                            });
+                        let first = candidates.next()?;
+                        candidates.next().is_none().then_some(first)
+                    });
                 if let Some(position) = position {
                     let card = &mut canonical[position].1;
+                    if !reference.id.is_empty() {
+                        card.child_session_id = Some(reference.id.clone().into());
+                        represented.insert(format!("child:{}", reference.id), position);
+                    }
                     if !reference.state.is_empty() {
                         card.status =
                             crate::subagent::settled_status(card.status, &reference.state);
                         if matches!(card.status, ToolStatus::Success | ToolStatus::Failed) {
                             card.streaming = false;
-                            card.completed_at = card.completed_at.or(Some(card.created_at));
+                            card.completed_at = card.completed_at.or(Some(
+                                block.completed_at.unwrap_or(block.created_at).max(card.created_at),
+                            ));
                         }
                     }
-                    synthetic.push(index);
                     continue;
                 }
             }
             canonical.push((index, (*block).clone()));
         }
-        for (index, block) in canonical {
-            if !synthetic.contains(&index) {
-                visible.push(block);
-            }
+        for (_, block) in canonical {
+            visible.push(block);
         }
         turn.clear();
     };
@@ -397,356 +697,293 @@ fn collapse_subagent_tools(blocks: &[Block]) -> Vec<Block> {
         }
     }
     flush(&mut turn, &mut visible);
-    visible
+    Cow::Owned(visible)
 }
 
+#[cfg(test)]
+#[path = "transcript_activity_identity_tests.rs"]
+mod activity_identity_tests;
+
 pub(super) fn project(blocks: &[Block], busy: bool, session: &str, ui: &TranscriptUi) -> Vec<Row> {
-    let blocks = paced_blocks(&collapse_subagent_tools(blocks), ui);
+    let blocks = collapse_subagent_tools(blocks);
+    let conversation = vela_core::conversation::project(&blocks);
+    let activity = ui.activity.borrow_mut().project(&conversation);
     let mut spacing = ui.spacing.borrow_mut();
-    // Revisions replace the same row entry; changing sessions cannot retain
-    // an unbounded collection of old message text in the presentation cache.
     if spacing.len() > blocks.len().saturating_mul(2).max(64) {
         spacing.clear();
     }
-    let mut turns: Vec<Turn> = Vec::new();
-    for block in &blocks {
-        if block.kind == BlockKind::User {
-            turns.push(Turn {
-                user: Some(block.clone()),
-                body: Vec::new(),
-            });
-        } else {
-            if turns.is_empty() {
-                turns.push(Turn::default());
-            }
-            turns.last_mut().unwrap().body.push(block.clone());
-        }
-    }
-    let mut rows = Vec::new();
-    for (turn_index, turn) in turns.iter().enumerate() {
-        let first = turn.user.as_ref().or_else(|| turn.body.first()).unwrap();
-        let key = format!("{session}:{}", first.message_id);
-        let mut gap = if rows.is_empty() { 0. } else { 16. };
-        if let Some(user) = &turn.user {
-            push(
-                &mut rows,
-                format!("user:{}", user.message_id),
-                gap,
-                RowKind::User(user.clone()),
-            );
-            gap = 16.;
-        }
-        let last = turn.body.iter().rev().find(|block| assistant(block));
-        let last_id = last.map(|block| block.message_id.clone());
-        let last_tool = turn.body.iter().rposition(|block| {
-            Some(&block.message_id) == last_id.as_ref() && block.kind == BlockKind::Tool
-        });
-        let answer_start = turn
-            .body
-            .iter()
-            .enumerate()
-            .find(|(index, block)| {
-                Some(&block.message_id) == last_id.as_ref()
-                    && block.kind == BlockKind::Assistant
-                    && !block.text.trim().is_empty()
-                    && last_tool.is_none_or(|tool| *index > tool)
-            })
-            .map(|(index, _)| index);
-        let answer = answer_start
-            .map(|start| {
-                turn.body[start..]
-                    .iter()
-                    .filter(|block| {
-                        Some(&block.message_id) == last_id.as_ref()
-                            && block.kind == BlockKind::Assistant
-                    })
-                    .cloned()
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
-        let process = turn
-            .body
-            .iter()
-            .enumerate()
-            .filter(|(index, block)| {
-                (assistant(block) || block.kind == BlockKind::Shell)
-                    && !matches!(block.kind, BlockKind::Error | BlockKind::Retry)
-                    && !(Some(&block.message_id) == last_id.as_ref()
-                        && answer_start.is_some_and(|start| *index >= start))
-            })
-            .map(|(_, block)| block.clone())
-            .collect::<Vec<_>>();
-        let events = turn.body.iter().filter(|block| {
-            matches!(
-                block.kind,
-                BlockKind::System | BlockKind::Compaction | BlockKind::Skill
-            ) && !(block.kind == BlockKind::System
-                && crate::subagent::is_internal_reminder(&block.text))
-        });
-        for event in events {
-            push(
-                &mut rows,
-                format!("event:{}", event.id),
-                gap,
-                RowKind::Status(event.clone()),
-            );
-            gap = 16.;
-        }
-        let running = process.iter().any(|block| {
-            matches!(block.kind, BlockKind::Tool | BlockKind::Shell)
-                && matches!(block.status, ToolStatus::Running | ToolStatus::Streaming)
-        }) || (busy && turn_index == turns.len() - 1 && answer.is_empty());
-        let has_process = process
-            .iter()
-            .any(|block| block.kind != BlockKind::Activity || !block.detail.is_empty());
-        if has_process || running {
-            let open = running || ui.work_open.contains(&key);
-            let duration = if busy {
-                None
-            } else {
-                turn.user.as_ref().zip(last).map(|(user, last)| {
-                    (last.completed_at.unwrap_or(last.created_at) - user.created_at).max(1000)
-                })
-            };
-            let previous = process
-                .iter()
-                .map(|block| block.message_id.clone())
-                .collect::<HashSet<_>>()
-                .len();
-            push(
-                &mut rows,
-                format!("work:{key}"),
-                gap,
-                RowKind::Work {
-                    key: key.clone(),
-                    running,
-                    open,
-                    started: turn
-                        .user
-                        .as_ref()
-                        .map(|user| user.created_at)
-                        .or_else(|| answer.first().map(|block| block.created_at)),
-                    duration,
-                    previous,
-                },
-            );
-            gap = 16.;
-            if open {
-                // Work flex gap (4px) plus process-body top padding (8px).
-                let mut process_gap = 12.;
-                let process_blocks = process
-                    .iter()
-                    .filter(|block| block.kind != BlockKind::Activity)
-                    .collect::<Vec<_>>();
-                for (index, block) in process_blocks.iter().enumerate() {
-                    if index > 0 && block.kind == BlockKind::Assistant {
-                        let previous = process_blocks[index - 1];
-                        if previous.kind == BlockKind::Assistant
-                            && previous.part_id == block.part_id
-                        {
-                            process_gap = 14.;
-                        }
-                    }
-                    if block.kind == BlockKind::Reasoning {
-                        let reasoning_key = format!("{session}:{}", block.part_id);
-                        let thinking = busy
-                            && turn_index == turns.len() - 1
-                            && Some(&block.message_id) == last_id.as_ref()
-                            && block.streaming;
-                        let open = ui
-                            .reasoning_open
-                            .get(&reasoning_key)
-                            .copied()
-                            .unwrap_or(thinking);
-                        push(
-                            &mut rows,
-                            format!("reasoning:{reasoning_key}"),
-                            process_gap,
-                            RowKind::Reasoning {
-                                key: reasoning_key,
-                                running: thinking,
-                                open,
-                            },
-                        );
-                        if open {
-                            let body = vela_core::markdown::split_ranges(&block.text)
-                                .into_iter()
-                                .enumerate()
-                                .map(|(index, range)| {
-                                    let mut paragraph = (*block).clone();
-                                    paragraph.id =
-                                        Arc::from(format!("{}:paragraph:{index}", block.id));
-                                    paragraph.kind = BlockKind::Assistant;
-                                    paragraph.text = Arc::from(&block.text[range]);
-                                    paragraph
-                                })
-                                .collect::<Vec<_>>();
-                            text_rows(&mut rows, &body, 4., None, true, &mut spacing);
-                        }
-                    } else {
-                        push(
-                            &mut rows,
-                            format!("process:{}", block.id),
-                            process_gap,
-                            RowKind::Content {
-                                block: (*block).clone(),
-                                answer: None,
-                                reasoning: false,
-                            },
-                        );
-                        if block.kind == BlockKind::Assistant
-                            && index + 1 < process_blocks.len()
-                            && (process_blocks[index + 1].kind != BlockKind::Assistant
-                                || process_blocks[index + 1].part_id != block.part_id)
-                            && index > 0
-                            && process_blocks[index - 1].kind == BlockKind::Assistant
-                            && process_blocks[index - 1].part_id == block.part_id
-                        {
-                            rows.last_mut().unwrap().after = 14.;
-                        }
-                    }
-                    process_gap = 8.;
-                }
-            }
-        }
-        if !answer.is_empty() {
-            let message = last_id.clone().unwrap();
-            let tail_margin = text_rows(
-                &mut rows,
-                &answer,
-                gap,
-                Some(message.clone()),
-                false,
-                &mut spacing,
-            );
-            let streaming = busy
-                && turn_index == turns.len() - 1
-                && answer
-                    .last()
-                    .is_some_and(|block| block.completed_at.is_none());
-            if !streaming {
-                let completed = answer.last().and_then(|block| block.completed_at);
-                let duration = completed.map(|completed| {
-                    (completed
-                        - turn
-                            .user
-                            .as_ref()
-                            .map(|user| user.created_at)
-                            .unwrap_or(answer[0].created_at))
-                    .max(0)
-                });
-                let text = answer
-                    .iter()
-                    .map(|block| block.text.as_ref())
-                    .collect::<Vec<_>>()
-                    .join("\n\n");
-                let last_answer = answer.last();
+    let mut rows = Vec::with_capacity(blocks.len());
+    let mut previous_text: Option<(&str, markdown_view::BlockSpacing)> = None;
+    let mut text_tail = 0.;
+    for (index, node) in conversation.nodes.iter().enumerate() {
+        let block = &node.block;
+        let turn = &conversation.turns[node.turn_index];
+        let mut gap: f32 = if rows.is_empty() { 0. } else { 12. };
+        match block.kind {
+            BlockKind::User => {
+                previous_text = None;
+                gap = if rows.is_empty() { 0. } else { 16. };
                 push(
                     &mut rows,
-                    format!("footer:{message}"),
-                    6. + tail_margin,
-                    RowKind::Footer {
-                        key: message,
-                        text: text.into(),
-                        duration,
-                        agent: last_answer
-                            .and_then(|block| block.agent.as_deref())
-                            .map(str::to_string),
-                        model: last_answer
-                            .and_then(|block| block.model.as_deref())
-                            .map(str::to_string),
+                    format!("user:{}", block.message_id),
+                    gap,
+                    RowKind::User(block.clone()),
+                );
+            }
+            BlockKind::Assistant => {
+                if block.text.trim().is_empty() {
+                    continue;
+                }
+                let dependency = ui.markdown.dependency_fingerprint(&block.id);
+                let current = cached_spacing(&mut spacing, block, dependency, || {
+                    markdown_view::block_spacing_cached(block, &ui.markdown)
+                });
+                if let Some((message, previous)) = previous_text
+                    && message == block.message_id.as_ref()
+                {
+                    gap = previous.bottom.max(current.top_after(previous));
+                }
+                text_tail = current.bottom_at_document_end(
+                    previous_text
+                        .filter(|(message, _)| *message == block.message_id.as_ref())
+                        .map(|(_, previous)| previous)
+                        .unwrap_or_default(),
+                );
+                push(
+                    &mut rows,
+                    format!("text:{}", block.id),
+                    gap,
+                    RowKind::Content {
+                        block: block.clone(),
+                        answer: Some(block.message_id.clone()),
+                        reasoning: false,
+                    },
+                );
+                previous_text = Some((&block.message_id, current));
+            }
+            BlockKind::Reasoning => {
+                previous_text = None;
+                let key = format!("{session}:{}", block.part_id);
+                let running = block.streaming;
+                let open = ui.reasoning_open.get(&key).copied().unwrap_or(false);
+                push(
+                    &mut rows,
+                    format!("reasoning:{key}"),
+                    gap.min(8.),
+                    RowKind::Reasoning { key, running, open },
+                );
+                if open && !block.text.trim().is_empty() {
+                    let mut body = (**block).clone();
+                    body.kind = BlockKind::Assistant;
+                    push(
+                        &mut rows,
+                        format!("reasoning-body:{}", block.id),
+                        4.,
+                        RowKind::Content {
+                            block: Arc::new(body),
+                            answer: None,
+                            reasoning: true,
+                        },
+                    );
+                }
+            }
+            BlockKind::Tool | BlockKind::Shell => {
+                previous_text = None;
+                push(
+                    &mut rows,
+                    format!("activity:{}", block.id),
+                    gap.min(8.),
+                    RowKind::Content {
+                        block: block.clone(),
+                        answer: None,
+                        reasoning: false,
                     },
                 );
             }
-            gap = 16.;
+            BlockKind::Activity => {
+                // Running tools/reasoning are the activity timeline. Empty
+                // synthetic activity rows must not appear and disappear on top.
+                previous_text = None;
+                if !block.detail.is_empty() && !block.text.trim().is_empty() {
+                    push(
+                        &mut rows,
+                        format!("event:{}", block.id),
+                        gap.min(8.),
+                        RowKind::Status(block.clone()),
+                    );
+                }
+            }
+            _ => {
+                previous_text = None;
+                if block.kind == BlockKind::System
+                    && crate::subagent::is_internal_reminder(&block.text)
+                {
+                    continue;
+                }
+                let prefix = if matches!(block.kind, BlockKind::Error | BlockKind::Retry) {
+                    "note"
+                } else {
+                    "event"
+                };
+                push(
+                    &mut rows,
+                    format!("{prefix}:{}", block.id),
+                    gap,
+                    RowKind::Status(block.clone()),
+                );
+            }
         }
-        for note in turn.body.iter().filter(|block| {
-            Some(&block.message_id) == last_id.as_ref()
-                && matches!(block.kind, BlockKind::Error | BlockKind::Retry)
-        }) {
+        if let Some(message) = turn.message(&block.message_id)
+            && message.last_node == index
+            && !message.text_blocks.is_empty()
+            && !message.streaming
+            && (message.completed_at.is_some() || !busy)
+        {
+            let tail = if previous_text.is_some() {
+                text_tail
+            } else {
+                0.
+            };
             push(
                 &mut rows,
-                format!("note:{}", note.id),
-                gap,
-                RowKind::Status(note.clone()),
+                format!("footer:{}", message.id),
+                6. + tail,
+                RowKind::Footer {
+                    key: message.id.clone(),
+                    text: match message.text_blocks.as_slice() {
+                        [part] => part.text.clone(),
+                        _ => message.text().into(),
+                    },
+                    duration: message.duration_since(turn.started_at),
+                    interrupted: message.interrupted,
+                },
             );
-            gap = 16.;
+            previous_text = None;
         }
     }
-    rows
+    for row in &mut rows {
+        if let RowKind::Content { block, .. } | RowKind::User(block) | RowKind::Status(block) =
+            &row.kind
+        {
+            let dependency = ui.markdown.dependency_fingerprint(&block.id);
+            row.presentation = dependency;
+            if matches!(block.kind, BlockKind::Tool | BlockKind::Shell | BlockKind::Retry) {
+                let mut hash = std::collections::hash_map::DefaultHasher::new();
+                dependency.hash(&mut hash);
+                ui.tool_open
+                    .contains(&format!("{session}:{}", block.id))
+                    .hash(&mut hash);
+                row.presentation = hash.finish();
+            }
+        }
+    }
+    project_activity_rows(rows, &activity, session, ui, busy)
+}
+
+fn tool_row(row: &Row) -> bool {
+    matches!(&row.kind, RowKind::Content { block, .. }
+        if matches!(block.kind, BlockKind::Tool | BlockKind::Shell))
+}
+
+fn work_row(row: &Row) -> bool {
+    tool_row(row) || matches!(&row.kind,
+        RowKind::Reasoning { .. } | RowKind::Content { reasoning: true, .. })
+}
+
+fn project_activity_rows(
+    rows: Vec<Row>,
+    activity: &vela_core::activity::ActivityProjection,
+    session: &str,
+    ui: &TranscriptUi,
+    busy: bool,
+) -> Vec<Row> {
+    let tools = activity.tools.iter().map(|tool| (tool.id.as_ref(), tool)).collect::<HashMap<_, _>>();
+    let mut compact = Vec::with_capacity(rows.len());
+    let mut pending = rows.into_iter().peekable();
+    while let Some(first) = pending.next() {
+        if !work_row(&first) { compact.push(first); continue; }
+        // Reasoning and tool phases share a single work sequence. Only actual
+        // conversation content interrupts it; internal steps never add headings.
+        let group_id = SharedString::from(format!("trace-line:{}", first.id));
+        let open = ui.tool_groups.get(&group_id).copied().unwrap_or(false);
+        let before = first.before;
+        let mut members = vec![first];
+        while let Some(row) = pending.next_if(|row| {
+            work_row(row) || matches!(row.kind, RowKind::Footer { interrupted: false, .. })
+        }) {
+            members.push(row);
+        }
+        let has_tools = members.iter().any(tool_row);
+        let mut categories = Vec::new();
+        let mut count = 0;
+        let mut running = 0;
+        let mut failed = 0;
+        let mut reasoning_running = false;
+        for row in &mut members {
+            match &row.kind {
+                // A message's copy/timing footer can follow its tools. It is
+                // internal to this work sequence, not another explanation.
+                RowKind::Footer { .. } => row.hidden = true,
+                RowKind::Reasoning { running, open: inspected, .. } => {
+                    reasoning_running |= *running;
+                    row.hidden = !*inspected && (!open || has_tools);
+                }
+                RowKind::Content { reasoning: true, .. } => {
+                    // A body only exists after explicit reasoning disclosure.
+                    row.hidden = false;
+                }
+                RowKind::Content { block, .. } => {
+                    let Some(tool) = tools.get(block.id.as_ref()) else { continue; };
+                    count += 1;
+                    if !categories.contains(&tool.category) { categories.push(tool.category); }
+                    running += usize::from(tool.running);
+                    failed += usize::from(tool.failed);
+                    row.hidden = !open && !tool.mandatory
+                        && !ui.tool_open.contains(&format!("{session}:{}", block.id));
+                    // Commands are details, not the default conversation text.
+                    row.summary = (!open).then(|| tool.summary.clone());
+                }
+                _ => {}
+            }
+            row.before = if row.hidden { 0. } else { 4. };
+        }
+        let active = running > 0 || reasoning_running || (busy && pending.peek().is_none());
+        let mut labels = categories.iter().map(|category| match category {
+            vela_core::activity::Category::Exploring => if active { "Reading files" } else { "Read files" },
+            vela_core::activity::Category::Changes => if active { "Editing files" } else { "Edited files" },
+            vela_core::activity::Category::Verifying => if active { "Running checks" } else { "Ran checks" },
+            vela_core::activity::Category::Browser => "Browser activity",
+            vela_core::activity::Category::Other => if active { "Running commands" } else { "Ran commands" },
+        }.to_owned()).collect::<Vec<_>>();
+        for label in labels.iter_mut().skip(1) { label.make_ascii_lowercase(); }
+        let title = if labels.is_empty() {
+            if active { "Thinking" } else { "Thought" }.to_owned()
+        } else { labels.join(", ") };
+        let hidden = !open && !members.iter().any(|row| row.hidden && !matches!(row.kind, RowKind::Footer { .. }));
+        compact.push(Row {
+            id: group_id, before: if hidden { 0. } else { before }, after: 0.,
+            presentation: 0, hidden, summary: None,
+            kind: RowKind::ToolGroup { title: title.into(), count, running, failed, active, open },
+        });
+        if hidden && let Some(first) = members.iter_mut().find(|row| !row.hidden) { first.before = before; }
+        compact.extend(members);
+    }
+    compact
 }
 
 fn retry_text(block: &Block) -> (String, String) {
-    let message = if block.text.trim().is_empty() {
-        "Retrying".into()
-    } else {
-        block.text.chars().take(80).collect::<String>()
-    };
-    let info = if block.detail.trim().is_empty() {
-        "Retrying".into()
-    } else {
-        format!("Retrying · {}", block.detail)
-    };
-    (message, info)
+    (block.text.to_string(), block.detail.to_string())
 }
 
 fn compaction_label(status: ToolStatus) -> &'static str {
     match status {
-        ToolStatus::Running | ToolStatus::Streaming => "Compacting session",
+        ToolStatus::Running | ToolStatus::Streaming => "Compacting context…",
         ToolStatus::Failed => "Compaction failed",
-        _ => "Session compacted",
+        _ => "Context compacted",
     }
 }
 
-fn meta_identity(
-    agent: Option<&str>,
-    model: Option<&str>,
-    models: &[vela_opencode::ModelInfo],
-) -> Vec<String> {
-    let agent = agent.filter(|agent| !agent.trim().is_empty()).map(|agent| {
-        let mut chars = agent.chars();
-        match chars.next() {
-            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            None => String::new(),
-        }
-    });
-    let model = model.filter(|model| !model.trim().is_empty()).map(|id| {
-        models
-            .iter()
-            .find(|candidate| candidate.id == id)
-            .map(|candidate| candidate.name.clone())
-            .filter(|name| !name.trim().is_empty())
-            .unwrap_or_else(|| id.to_string())
-    });
-    [agent, model]
-        .into_iter()
-        .flatten()
-        .filter(|part| !part.trim().is_empty())
-        .collect()
-}
-
-fn answer_meta(
-    agent: Option<&str>,
-    model: Option<&str>,
-    models: &[vela_opencode::ModelInfo],
-    duration_ms: Option<i64>,
-) -> Option<String> {
-    let mut parts = meta_identity(agent, model, models);
-    if let Some(duration) = duration_ms.map(duration) {
-        parts.push(duration);
-    }
-    (!parts.is_empty()).then(|| parts.join(" · "))
-}
-
-fn user_message_meta(
-    block: &Block,
-    models: &[vela_opencode::ModelInfo],
-) -> Option<String> {
-    let parts = meta_identity(block.agent.as_deref(), block.model.as_deref(), models);
-    (!parts.is_empty()).then(|| parts.join("\u{00A0}·\u{00A0}"))
-}
-
-fn duration(ms: i64) -> String {
+pub(super) fn format_answer_duration(ms: i64) -> String {
     let seconds = ms.max(0) / 1000;
     if seconds < 60 {
         format!("{seconds}s")
@@ -755,21 +992,10 @@ fn duration(ms: i64) -> String {
     }
 }
 
-fn now_ms() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|time| time.as_millis().min(i64::MAX as u128) as i64)
-        .unwrap_or(0)
-}
-
 fn answer_text(message: &vela_core::transcript::Message) -> String {
     use vela_core::transcript::PartKind;
-    let start = message
+    message
         .parts
-        .iter()
-        .rposition(|part| matches!(part.kind, PartKind::Tool(_)))
-        .map_or(0, |index| index + 1);
-    message.parts[start..]
         .iter()
         .filter_map(|part| match &part.kind {
             PartKind::Text { text, .. } if !text.trim().is_empty() => Some(text.as_str()),
@@ -779,103 +1005,293 @@ fn answer_text(message: &vela_core::transcript::Message) -> String {
         .join("\n\n")
 }
 
-/// Source renders attached prompt files under the user text as a right-aligned
-/// wrapping row of file chips. The chip is static: it shows the generic file
-/// glyph and the attachment name, truncated to the 220px card width.
-fn user_attachments(names: &[Arc<str>], key: &str, theme: &Theme) -> AnyElement {
-    let key = key.to_string();
-    div()
-        .id(SharedString::from(format!("user-attachments:{key}")))
-        .debug_selector({
-            let key = key.clone();
-            move || format!("user-attachments:{key}")
-        })
-        .mt(px(8.))
-        .max_w(gpui::relative(0.82))
-        .flex()
-        .flex_wrap()
-        .justify_end()
-        .gap(px(8.))
-        .children(names.iter().enumerate().map(|(index, name)| {
-            let name = name.clone();
-            let selector = format!("{key}:{index}");
-            let label = format!("Attached file {name}");
-            div()
-                .id(SharedString::from(format!("user-attachment:{selector}")))
-                .debug_selector(move || format!("user-attachment:{selector}"))
-                .role(gpui::Role::Label)
-                .aria_label(SharedString::from(label))
-                .h(px(48.))
-                .w(px(220.))
-                .max_w_full()
-                .min_w_0()
-                .flex_shrink_0()
-                .px(px(10.))
-                .rounded(px(6.))
-                .border_1()
-                .border_color(theme.border)
-                .bg(theme.inset)
-                .flex()
-                .items_center()
-                .gap(px(8.))
-                .hover(|style| style.border_color(theme.border_strong))
-                .child(
-                    div()
-                        .flex_shrink_0()
-                        .font_family("codicon")
-                        .text_size(px(20.))
-                        .line_height(px(20.))
-                        .text_color(theme.faint)
-                        .child(icon("ea7b")),
-                )
-                .child(
-                    div()
-                        .min_w_0()
-                        .truncate()
-                        .text_size(px(12.))
-                        .line_height(px(18.))
-                        .text_color(theme.dim)
-                        .child(SharedString::from(name.to_string())),
-                )
-                .into_any_element()
-        }))
-        .into_any_element()
-}
-
 impl VelaApp {
-    fn rebuild_transcript_rows(&mut self, cx: &mut Context<Self>) {
-        let pacing = self.transcript_ui.advance_pacing(&self.blocks);
-        let old_count = self.transcript_rows.len();
+    /// Route transcript navigation to the focused visible GUI panel. The
+    /// active composer/session is independent from the panel being inspected.
+    pub(super) fn route_transcript_key(
+        &mut self,
+        event: &KeyDownEvent,
+        window: &Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let panels_visible = self.agent_panel_open || (self.agent_mode && !self.panels.is_empty());
+        if self.settings_open || !panels_visible {
+            return false;
+        }
+        let active = self.active_id.as_ref().filter(|session| {
+            self.agent_panel_mode(session) == AgentPanelMode::Gui
+                && self.transcript_ui.contains_focused(window)
+        }).cloned();
+        let owner = active.or_else(|| {
+            (self.panels.len() > 1).then(|| {
+                self.panels.entries().iter().find_map(|panel| {
+                    if self.active_id.as_deref() == Some(panel.session.as_str())
+                        || self.agent_panel_mode(&panel.session) != AgentPanelMode::Gui
+                    {
+                        return None;
+                    }
+                    self.panel_transcripts.get(&panel.session)
+                        .filter(|state| state.ui.contains_focused(window))
+                        .map(|_| panel.session.clone())
+                })
+            }).flatten()
+        });
+        let Some(owner) = owner else { return false; };
+        let Some(list) = self.list_for(&owner) else { return false; };
+        let handled = self.ui_for_mut(&owner)
+            .is_some_and(|ui| ui.navigate(event, &list, window));
+        if handled {
+            // Forward navigation can explicitly return to the live edge;
+            // backward navigation always releases follow immediately.
+            if matches!(event.keystroke.key.as_str(), "end" | "down" | "pagedown") {
+                self.observe_conversation_scroll(&owner);
+            } else {
+                self.stop_conversation_follow(&owner);
+            }
+            cx.notify();
+        }
+        handled
+    }
+
+    /// Project selectable text for every user message once, including rows the
+    /// virtualized transcript has not painted yet.
+    pub(super) fn ensure_user_segment_texts(&mut self) {
+        let theme = Theme::default();
+        for block in self
+            .blocks
+            .iter()
+            .filter(|block| block.kind == BlockKind::User)
+        {
+            if !self
+                .transcript_ui
+                .user_message_segments
+                .contains_key(&block.id)
+            {
+                let projection = markdown_view::user_segment_texts_block_cached(
+                    block,
+                    theme.text,
+                    &theme,
+                    &self.transcript_ui.markdown,
+                );
+                self.transcript_ui
+                    .user_message_segments
+                    .insert(block.id.clone(), projection.texts);
+                self.transcript_ui
+                    .user_message_images
+                    .insert(block.id.clone(), projection.images);
+            }
+        }
+    }
+
+    pub(super) fn ui_for_mut(&mut self, session: &str) -> Option<&mut TranscriptUi> {
+        self.row_cache.invalidate_session(session);
+        if self.active_id.as_deref() == Some(session) {
+            Some(&mut self.transcript_ui)
+        } else {
+            self.panel_transcripts
+                .get_mut(session)
+                .map(|panel| &mut panel.ui)
+        }
+    }
+
+    pub(super) fn list_for(&self, session: &str) -> Option<ListState> {
+        if self.active_id.as_deref() == Some(session) {
+            Some(self.transcript_list.clone())
+        } else {
+            self.panel_tile_lists.get(session).cloned()
+        }
+    }
+
+    pub(super) fn rows_for(&self, session: &str) -> Arc<Vec<Row>> {
+        if self.active_id.as_deref() == Some(session) {
+            self.transcript_rows.clone()
+        } else {
+            self.panel_transcripts
+                .get(session)
+                .map(|panel| panel.rows.clone())
+                .unwrap_or_default()
+        }
+    }
+
+    pub(super) fn remeasure_conversation_row(&mut self, session: &str, row_key: &str) -> bool {
+        self.row_cache.invalidate_session(session);
+        let Some(list) = self.list_for(session) else { return false; };
+        let rows = self.rows_for(session);
+        let Some(index) = rows.iter().position(|row| row.id.as_ref() == row_key) else { return false; };
+        if index >= list.item_count() {
+            return false;
+        }
+        list.remeasure_items(index..index + 1);
+        true
+    }
+
+    pub(super) fn rebuild_conversation_rows(&mut self, session: &str, cx: &mut Context<Self>) {
+        if self.active_id.as_deref() != Some(session) {
+            if let Some(panel) = self.panel_transcripts.get_mut(session) {
+                panel.dirty = true;
+            }
+            cx.notify();
+            return;
+        }
         self.transcript_rows = Arc::new(project(
             &self.blocks,
             self.phase.is_active(),
-            self.active_id.as_deref().unwrap_or(""),
+            session,
             &self.transcript_ui,
         ));
-        let count = self.transcript_rows.len();
-        if count > old_count {
-            self.transcript_list
-                .splice(old_count..old_count, count - old_count);
+        configure_user_order(&mut self.transcript_ui, &self.transcript_rows);
+        self.transcript_viewport.sync(
+            &self.transcript_list,
+            self.transcript_rows
+                .iter()
+                .map(Row::revision)
+                .collect(),
+            self.stick,
+        );
+        cx.notify();
+    }
+
+    fn ui_for(&self, session: &str) -> Option<&TranscriptUi> {
+        if self.active_id.as_deref() == Some(session) {
+            Some(&self.transcript_ui)
+        } else {
+            self.panel_transcripts.get(session).map(|panel| &panel.ui)
         }
-        if count < old_count {
-            self.transcript_list.splice(count..old_count, 0);
+    }
+
+    #[cfg(test)]
+    pub(super) fn hovered_answer_for(&self, session: &str) -> Option<Arc<str>> {
+        self.ui_for(session)
+            .and_then(|ui| ui.hovered_answer.clone())
+    }
+
+    pub(super) fn user_clipboard_payload_for(
+        &self,
+        session: &str,
+    ) -> Option<(String, Vec<Arc<gpui::Image>>)> {
+        let ui = self.ui_for(session)?;
+        let selection = ui.user_text_selection.as_ref()?;
+        let text = selection.selected_text(&ui.user_message_segments);
+        let images = selection.selected_images(&ui.user_message_segments, &ui.user_message_images);
+        (!text.is_empty() || !images.is_empty()).then_some((text, images))
+    }
+
+    #[cfg(test)]
+    pub(super) fn user_selection_text_for(&self, session: &str) -> String {
+        self.user_clipboard_payload_for(session)
+            .map(|(text, _)| text)
+            .unwrap_or_default()
+    }
+
+    #[cfg(test)]
+    pub(super) fn user_clipboard_payload(&self) -> Option<(String, Vec<Arc<gpui::Image>>)> {
+        self.user_clipboard_payload_for(self.active_id.as_deref()?)
+    }
+
+    fn copy_user_text_selection_for(&mut self, session: &str, cx: &mut Context<Self>) {
+        let Some((text, images)) = self.user_clipboard_payload_for(session) else {
+            return;
+        };
+        super::selection_clipboard::write(cx, &text, &images);
+        cx.notify();
+    }
+
+    fn select_all_user_text_for(&mut self, session: &str, cx: &mut Context<Self>) {
+        let blocks = if self.active_id.as_deref() == Some(session) {
+            self.blocks.clone()
+        } else {
+            self.panel_transcripts
+                .get(session)
+                .map(|panel| panel.blocks.clone())
+                .unwrap_or_default()
+        };
+        self.stop_conversation_follow(session);
+        let Some(ui) = self.ui_for_mut(session) else {
+            return;
+        };
+        let theme = Theme::default();
+        for block in blocks.iter().filter(|block| block.kind == BlockKind::User) {
+            if !ui.user_message_segments.contains_key(&block.id) {
+                let projection = markdown_view::user_segment_texts_block_cached(
+                    block,
+                    theme.text,
+                    &theme,
+                    &ui.markdown,
+                );
+                ui.user_message_segments
+                    .insert(block.id.clone(), projection.texts);
+                ui.user_message_images
+                    .insert(block.id.clone(), projection.images);
+            }
         }
-        self.transcript_list.remeasure();
-        if pacing && !self.transcript_ui.pacing_timer {
-            self.transcript_ui.pacing_timer = true;
-            let session = self.active_id.clone();
-            cx.spawn(async move |this, cx| {
-                cx.background_executor().timer(PACED_INTERVAL).await;
-                let _ = this.update(cx, |app, cx| {
-                    app.transcript_ui.pacing_timer = false;
-                    if app.active_id == session {
-                        app.rebuild_transcript_rows(cx);
+        let Some((anchor, head)) = all_user_text_points(ui) else {
+            return;
+        };
+        ui.user_text_selection = Some(UserTextSelection {
+            anchor,
+            head,
+            order: ui.user_message_order.clone(),
+        });
+        cx.notify();
+    }
+
+    pub(super) fn stop_conversation_follow(&mut self, session: &str) {
+        self.cancel_conversation_scroll_restore(session);
+        self.turn_anchors.cancel(session);
+        if self.active_id.as_deref() == Some(session) {
+            self.stick = false;
+        } else {
+            self.panels.update(session, |panel| panel.stick = false);
+        }
+        if let Some(list) = self.list_for(session) {
+            list.set_follow_mode(gpui::FollowMode::Normal);
+        }
+        if let Some(ui) = self.ui_for_mut(session) {
+            ui.scroll_generation += 1;
+            ui.scrolling_to_bottom = false;
+        }
+    }
+
+    /// Apply manual scroll intent after GPUI has updated its native geometry.
+    /// Only this input path (or explicit latest navigation) can re-arm follow;
+    /// growing Markdown, images and completed tools cannot do so.
+    pub(super) fn observe_conversation_scroll(&mut self, session: &str) {
+        let Some(list) = self.list_for(session) else { return; };
+        let padding = if self.active_id.as_deref() == Some(session) {
+            px(if self.is_codex() { 48. } else { 80. })
+        } else {
+            px(0.)
+        };
+        let at_edge = crate::scroll::list_at_live_edge(&list, padding);
+        self.stop_conversation_follow(session);
+        if at_edge {
+            if self.active_id.as_deref() == Some(session) {
+                self.stick = true;
+            } else {
+                self.panels.update(session, |panel| panel.stick = true);
+            }
+            list.set_follow_mode(gpui::FollowMode::Tail);
+        }
+    }
+
+    pub(super) fn observe_conversation_wheel(
+        list: &ListState,
+        session: String,
+        cx: &mut Context<Self>,
+    ) {
+        let owner = cx.weak_entity();
+        list.set_scroll_handler(move |event, _, cx| {
+            let owner = owner.clone();
+            let session = session.clone();
+            crate::scroll::observe_list_scroll(event, cx, move |_, cx| {
+                let _ = owner.update(cx, |app, cx| {
+                    if app.list_for(&session).is_some() {
+                        app.observe_conversation_scroll(&session);
+                        cx.notify();
                     }
                 });
-            })
-            .detach();
-        }
-        cx.notify();
+            });
+        });
     }
 
     pub(super) fn render_native_transcript(
@@ -883,86 +1299,71 @@ impl VelaApp {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        self.transcript_ui.markdown.keyboard = self.picker_anchors.keyboard.clone();
-        let running = self
-            .transcript_rows
-            .iter()
-            .any(|row| matches!(row.kind, RowKind::Work { running: true, .. }));
-        if running != self.transcript_ui.clock_running {
-            self.transcript_ui.clock_running = running;
-            self.transcript_ui.clock_generation += 1;
-            if running {
-                let generation = self.transcript_ui.clock_generation;
-                cx.spawn(async move |this, cx| {
-                    loop {
-                        cx.background_executor().timer(Duration::from_secs(1)).await;
-                        let keep = this
-                            .update(cx, |app, cx| {
-                                if app.transcript_ui.clock_generation != generation
-                                    || !app.transcript_ui.clock_running
-                                {
-                                    return false;
-                                }
-                                if app.settings_open
-                                    || !app.agent_panel_open
-                                    || app.active_id.is_none()
-                                    || !app.transcript_rows.iter().any(|row| {
-                                        matches!(row.kind, RowKind::Work { running: true, .. })
-                                    })
-                                {
-                                    app.transcript_ui.clock_running = false;
-                                    return false;
-                                }
-                                app.transcript_list.remeasure();
-                                cx.notify();
-                                true
-                            })
-                            .unwrap_or(false);
-                        if !keep {
-                            break;
-                        }
-                    }
-                })
-                .detach();
-            }
+        if self.transcript_ui.user_text_session.as_deref() != self.active_id.as_deref() {
+            self.transcript_ui.user_text_selection = None;
+            self.transcript_ui.user_message_segments.clear();
+            self.transcript_ui.user_message_images.clear();
+            self.transcript_ui.user_text_session = self.active_id.clone();
         }
+        self.transcript_ui.markdown.keyboard = self.picker_anchors.keyboard.clone();
+        configure_user_order(&mut self.transcript_ui, &self.transcript_rows);
         let rows = self.transcript_rows.clone();
+        let codex_layout = self.is_codex();
         let owner = cx.weak_entity();
         let scroll_owner = cx.weak_entity();
+        let natural_tail = self.transcript_viewport.requires_natural_tail();
+        let scroll_session = self.active_id.clone();
         let list_state = self.transcript_list.clone();
+        self.transcript_ui.markdown.set_viewport_width(list_state.viewport_bounds().size.width);
+        if let Some(session) = scroll_session.clone() {
+            self.restore_measured_conversation_scroll(&session, &list_state);
+            self.row_cache.capture_measurements(&session, &list_state, &self.transcript_rows, window, natural_tail);
+            Self::observe_conversation_wheel(&list_state, session, cx);
+        }
+        let bottom_padding = px(32.);
+        self.transcript_viewport.set_bottom_padding(&list_state, bottom_padding);
         let viewport = crate::scroll::ListViewport::new(
             self.transcript_ui.viewport.clone(),
             list_state.clone(),
             move |gutter| {
                 div()
                     .size_full()
-                    .pr(gutter)
+                    // Center the transcript on the same axis as the composer.
+                    .px(gutter)
                     .child(
                         list(list_state, move |index, window, cx| {
                             let Some(row) = rows.get(index) else {
                                 return div().into_any_element();
                             };
                             owner
-                                .update(cx, |app, cx| app.render_transcript_row(row, window, cx))
+                                .update(cx, |app, cx| {
+                                    if row.cacheable() {
+                                        let session = app.active_id.clone().unwrap_or_default();
+                                        app.row_cache.element(cx.weak_entity(), &session, row,
+                                            natural_tail && index + 1 == rows.len(), cx)
+                                    } else {
+                                        app.render_transcript_row(row, window, cx)
+                                    }
+                                })
                                 .unwrap_or_else(|_| div().into_any_element())
                         })
                         .size_full()
                         .w_full()
-                        // Reference .vela-column uses 16px at its top edge.
-                        .pt(px(16.))
-                        .pb(px(32.))
+                        // The Codex shell puts the work row in flow; only the
+                        // classic shell reserves room for its absolute header.
+                        .pt(px(if codex_layout { 16. } else { 48. }))
+                        .pb(bottom_padding)
                         .into_any_element(),
                     )
                     .into_any_element()
             },
         );
-        let viewport = viewport.on_scroll(move |list, _, cx| {
-            let following = crate::scroll::list_distance_from_bottom(list) <= px(24.);
+        let viewport = viewport.on_scroll(move |_, _, cx| {
             let _ = scroll_owner.update(cx, |app, cx| {
-                app.stick = following;
-                app.transcript_ui.scroll_generation += 1;
-                app.transcript_ui.scrolling_to_bottom = false;
-                cx.notify();
+                if let Some(session) = scroll_session.as_deref() && app.list_for(session).is_some() {
+                    app.observe_conversation_scroll(session);
+                    cx.notify();
+                }
             });
         });
         let show_bottom = !self.transcript_ui.scrolling_to_bottom
@@ -972,16 +1373,12 @@ impl VelaApp {
                 id: "scroll-to-bottom".into(),
                 before: 0.,
                 after: 0.,
-                kind: RowKind::Work {
-                    key: String::new(),
-                    running: false,
-                    open: false,
-                    started: None,
-                    duration: None,
-                    previous: 0,
-                },
+                presentation: 0,
+                hidden: false,
+                summary: None,
+                kind: RowKind::ScrollControl,
             };
-            let (button, _) = self.transcript_button(
+            let (button, _) = self.active_transcript_button(
                 &row,
                 "Scroll to bottom".into(),
                 "",
@@ -1024,12 +1421,18 @@ impl VelaApp {
             .flex_1()
             .w_full()
             .min_h_0()
+            .font(crate::theme::agent_font())
             .child(viewport)
             .children(button)
             .into_any_element()
     }
 
-    fn scroll_transcript_to_bottom(&mut self, cx: &mut Context<Self>) {
+    pub(super) fn scroll_transcript_to_bottom(&mut self, cx: &mut Context<Self>) {
+        if let Some(session) = self.active_id.clone() {
+            self.cancel_conversation_scroll_restore(&session);
+            self.turn_anchors.cancel(&session);
+        }
+        self.transcript_viewport.release_turn_anchor(&self.transcript_list);
         self.stick = true;
         self.transcript_ui.scroll_generation += 1;
         let generation = self.transcript_ui.scroll_generation;
@@ -1078,8 +1481,28 @@ impl VelaApp {
         cx.notify();
     }
 
+    fn active_transcript_button(
+        &mut self,
+        row: &Row,
+        label: SharedString,
+        suffix: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+        action: impl Fn(&mut VelaApp, &mut Window, &mut Context<VelaApp>) + 'static,
+    ) -> (gpui::Stateful<gpui::Div>, gpui::FocusHandle) {
+        let session = self.active_id.clone().unwrap_or_default();
+        let mut ui = std::mem::take(&mut self.transcript_ui);
+        let button =
+            self.transcript_button(&session, &mut ui, row, label, suffix, window, cx, action);
+        self.transcript_ui = ui;
+        button
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn transcript_button(
         &mut self,
+        session: &str,
+        ui: &mut TranscriptUi,
         row: &Row,
         label: SharedString,
         suffix: &str,
@@ -1092,23 +1515,36 @@ impl VelaApp {
         } else {
             format!("{}:{suffix}", row.id).into()
         };
+        let key: SharedString = format!("{session}:{key}").into();
         let row_key = row.id.clone();
-        let focus = if let Some(focus) = self.transcript_ui.focus.get(&key) {
+        let target_session = session.to_owned();
+        let focus = if let Some(focus) = ui.focus.get(&key) {
             focus.clone()
         } else {
             let focus = cx.focus_handle().tab_stop(true);
             cx.on_focus(&focus, window, move |app, _, cx| {
-                if let Some(index) = app.transcript_rows.iter().position(|row| row.id == row_key) {
-                    app.transcript_list.scroll_to_reveal_item(index);
+                app.row_cache.invalidate_session(&target_session);
+                if let Some(index) = app
+                    .rows_for(&target_session)
+                    .iter()
+                    .position(|row| row.id == row_key)
+                    && let Some(list) = app.list_for(&target_session)
+                {
+                    list.scroll_to_reveal_item(index);
                 }
                 cx.notify();
             })
             .detach();
-            cx.on_blur(&focus, window, |_, _, cx| cx.notify()).detach();
-            self.transcript_ui.focus.insert(key.clone(), focus.clone());
+            let blur_session = session.to_owned();
+            cx.on_blur(&focus, window, move |app, _, cx| {
+                app.row_cache.invalidate_session(&blur_session);
+                cx.notify();
+            }).detach();
+            ui.focus.insert(key.clone(), focus.clone());
             focus
         };
         let clicked = action;
+        let clicked_session = session.to_owned();
         let mouse_focus = focus.clone();
         let click_focus = focus.clone();
         let control = div()
@@ -1121,6 +1557,8 @@ impl VelaApp {
                 cx.listener(move |_, _, window, cx| window.focus(&mouse_focus, cx)),
             )
             .on_click(cx.listener(move |app, _, window, cx| {
+                cx.stop_propagation();
+                app.stop_conversation_follow(&clicked_session);
                 window.focus(&click_focus, cx);
                 clicked(app, window, cx);
             }));
@@ -1132,13 +1570,16 @@ impl VelaApp {
             1.,
             0.,
             theme.accent.into(),
-            &self.transcript_ui.markdown.keyboard,
+            &ui.markdown.keyboard,
         );
         (control, focus)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_delegated_card(
         &mut self,
+        session: &str,
+        ui: &mut TranscriptUi,
         row: &Row,
         block_id: &str,
         card: crate::subagent::Card,
@@ -1153,75 +1594,38 @@ impl VelaApp {
         } else {
             tertiary
         };
-        let icon = if card.tone == crate::subagent::Tone::Working {
-            use gpui::AnimationExt;
-            glyph("working-spinner", 14., icon_color)
-                .with_animation(
-                    SharedString::from(format!("subagent-spin:{block_id}")),
-                    gpui::Animation::new(Duration::from_millis(700)).repeat(),
-                    |svg, progress| {
-                        svg.with_transformation(gpui::Transformation::rotate(gpui::percentage(
-                            progress,
-                        )))
-                    },
-                )
-                .into_any_element()
-        } else {
-            glyph("robot", 14., icon_color).into_any_element()
+        let status = match card.tone {
+            crate::subagent::Tone::Working => "working",
+            crate::subagent::Tone::Complete => "finished",
+            crate::subagent::Tone::Failed => "failed",
         };
+        let selector = format!("subagent-summary:{block_id}");
         let body = div()
-            .flex_1()
-            .min_w_0()
-            .flex()
-            .items_center()
-            .gap(px(10.))
-            .child(icon)
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .flex()
-                    .flex_col()
-                    .child(
-                        div()
-                            .text_size(px(13.))
-                            .line_height(px(17.))
-                            .text_color(if card.tone == crate::subagent::Tone::Failed {
-                                theme.red
-                            } else {
-                                theme.text
-                            })
-                            .truncate()
-                            .child(card.agent.clone()),
-                    )
-                    .when(!card.description.is_empty(), |body| {
-                        body.child(
-                            div()
-                                .text_size(px(12.))
-                                .line_height(px(16.))
-                                .text_color(secondary)
-                                .truncate()
-                                .child(card.description.clone()),
-                        )
-                    }),
-            );
+            .debug_selector(move || selector.clone())
+            .flex_1().min_w_0().flex().items_center().gap(px(8.))
+            .h(px(21.)).text_size(px(12.)).line_height(px(18.))
+            .text_color(secondary)
+            .child(glyph("robot", 13., icon_color))
+            .child(div().flex_shrink_0().child(format!("{} {status}", card.agent)))
+            .when(!card.description.is_empty(), |body| body.child(
+                div().flex_1().min_w_0().truncate().text_color(tertiary)
+                    .child(card.description.clone()),
+            ));
         if card.child_id.is_empty() {
             return div()
                 .debug_selector(|| "subagent-card".into())
                 .w_full()
                 .max_w(px(560.))
-                .px(px(10.))
-                .py(px(8.))
-                .rounded(px(10.))
-                .border_1()
-                .border_color(theme.border_soft)
-                .bg(theme.inset)
+                .px(px(6.))
+                .py(px(3.))
                 .child(body)
                 .into_any_element();
         }
         let open_id = card.child_id.clone();
         let label = format!("Open delegated agent session: {}", card.title);
         let (button, _) = self.transcript_button(
+            session,
+            ui,
             row,
             label.into(),
             "subagent",
@@ -1236,12 +1640,9 @@ impl VelaApp {
             .flex()
             .items_center()
             .gap(px(10.))
-            .px(px(10.))
-            .py(px(8.))
-            .rounded(px(10.))
-            .border_1()
-            .border_color(theme.border_soft)
-            .bg(theme.inset)
+            .px(px(6.))
+            .py(px(3.))
+            .rounded(px(6.))
             .cursor_pointer()
             .hover(|style| style.bg(theme.elevated))
             .child(body)
@@ -1255,9 +1656,57 @@ impl VelaApp {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
+        let session = self.active_id.clone().unwrap_or_default();
+        let list = self.transcript_list.clone();
+        let mut ui = std::mem::take(&mut self.transcript_ui);
+        let element = self.render_conversation_row(&session, row, list, &mut ui, window, cx);
+        self.transcript_ui = ui;
+        element
+    }
+
+    pub(super) fn render_panel_transcript_row(
+        &mut self,
+        session: &str,
+        row: &Row,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let Some(list) = self.list_for(session) else {
+            return div().into_any_element();
+        };
+        if self.active_id.as_deref() == Some(session) {
+            return self.render_transcript_row(row, window, cx);
+        }
+        let Some(panel) = self.panel_transcripts.get_mut(session) else {
+            return div().into_any_element();
+        };
+        let mut ui = std::mem::take(&mut panel.ui);
+        let element = self.render_conversation_row(session, row, list, &mut ui, window, cx);
+        if let Some(panel) = self.panel_transcripts.get_mut(session) {
+            panel.ui = ui;
+        }
+        element
+    }
+
+    fn render_conversation_row(
+        &mut self,
+        session: &str,
+        row: &Row,
+        list: ListState,
+        ui: &mut TranscriptUi,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        if row.hidden {
+            return div()
+                .id(SharedString::from(format!("{session}:row:{}", row.id)))
+                .w_full().h(px(0.)).overflow_hidden().into_any_element();
+        }
         let theme = Theme::default();
         let secondary = theme.text.opacity(0.62);
         let tertiary = theme.text.opacity(0.46);
+        ui.markdown.attach_row(row.id.clone());
+        ui.markdown.attach_session(session);
         let mut answer_hover = None;
         let content = match &row.kind {
             RowKind::Content {
@@ -1282,36 +1731,40 @@ impl VelaApp {
                                         block.status,
                                         &self.sessions,
                                         &self.agents,
-                                        self.active_id.as_deref().unwrap_or(""),
+                                        session,
                                     )
                                 })
                                 .flatten();
                             if let Some(card) = card {
-                                self.render_delegated_card(row, &block.id, card, window, cx)
+                                self.render_delegated_card(
+                                    session, ui, row, &block.id, card, window, cx,
+                                )
                             } else {
-                                let model = tool_view::presentation(&block);
+                                let root = self.sessions.iter()
+                                    .find(|entry| entry.id == session)
+                                    .map(|entry| entry.directory.as_str());
+                                let mut model = tool_view::presentation(&block, root);
+                                if let Some(summary) = &row.summary { model.summary = summary.to_string(); }
                                 let expandable = model.expandable();
-                                let key = format!(
-                                    "{}:{}",
-                                    self.active_id.as_deref().unwrap_or(""),
-                                    block.id
-                                );
-                                let open = self.transcript_ui.tool_open.contains(&key);
-                                let copied = self.transcript_ui.copied_tool.as_deref()
-                                    == Some(block.id.as_ref());
+                                let key = format!("{}:{}", session, block.id);
+                                let open = ui.tool_open.contains(&key);
+                                let target_session = session.to_owned();
                                 let (button, focus) = if expandable {
                                     let (button, focus) = self.transcript_button(
+                                        session,
+                                        ui,
                                         row,
                                         model.summary.clone().into(),
                                         "",
                                         window,
                                         cx,
                                         move |app, _, cx| {
-                                            if !app.transcript_ui.tool_open.remove(&key) {
-                                                app.transcript_ui.tool_open.insert(key.clone());
+                                            if let Some(ui) = app.ui_for_mut(&target_session)
+                                                && !ui.tool_open.remove(&key)
+                                            {
+                                                ui.tool_open.insert(key.clone());
                                             }
-                                            app.transcript_list.remeasure();
-                                            cx.notify();
+                                            app.rebuild_conversation_rows(&target_session, cx);
                                         },
                                     );
                                     (button, Some(focus))
@@ -1327,57 +1780,24 @@ impl VelaApp {
                                         None,
                                     )
                                 };
-                                let copy_value = tool_view::copy_text(&block);
-                                let copy_block = block.id.clone();
-                                let (copy, copy_focus) = self.transcript_button(
-                                    row,
-                                    if copied { "Copied" } else { "Copy" }.into(),
-                                    "copy-output",
-                                    window,
-                                    cx,
-                                    move |app, _, cx| {
-                                        if copy_value.is_empty() {
-                                            return;
-                                        }
-                                        cx.write_to_clipboard(gpui::ClipboardItem::new_string(
-                                            copy_value.clone(),
-                                        ));
-                                        app.transcript_ui.copied_tool = Some(copy_block.clone());
-                                        let copied_key = copy_block.clone();
-                                        cx.spawn(async move |this, cx| {
-                                            cx.background_executor()
-                                                .timer(Duration::from_secs(2))
-                                                .await;
-                                            let _ = this.update(cx, |app, cx| {
-                                                if app.transcript_ui.copied_tool.as_deref()
-                                                    == Some(copied_key.as_ref())
-                                                {
-                                                    app.transcript_ui.copied_tool = None;
-                                                    cx.notify();
-                                                }
-                                            });
-                                        })
-                                        .detach();
-                                        cx.notify();
-                                    },
-                                );
-                                tool_view::render(
+                                let tool = tool_view::render(
                                     &block,
                                     model,
                                     button,
-                                    copy,
                                     tool_view::RenderState {
                                         open,
                                         focused: focus
                                             .as_ref()
                                             .is_some_and(|focus| focus.is_focused(window)),
-                                        copied,
-                                        copy_focused: copy_focus.is_focused(window),
-                                        open_keys: &self.transcript_ui.tool_open,
                                     },
                                     &theme,
                                     cx,
-                                )
+                                );
+                                div()
+                                    .min_w_0()
+                                    .when(row.summary.is_none(), |row| row.pl(px(18.)))
+                                    .child(tool)
+                                    .into_any_element()
                             }
                         } else {
                             markdown_view::block(
@@ -1385,8 +1805,8 @@ impl VelaApp {
                                 if *reasoning { secondary } else { theme.text },
                                 &theme,
                                 markdown_view::BlockContext {
-                                    ui: &mut self.transcript_ui.markdown,
-                                    list: self.transcript_list.clone(),
+                                    ui: &mut ui.markdown,
+                                    list: list.clone(),
                                     answer: answer.clone(),
                                 },
                                 window,
@@ -1397,203 +1817,205 @@ impl VelaApp {
                     .into_any_element()
             }
             RowKind::User(block) => {
-                let message_id = block.message_id.to_string();
-                let prompt = block.text.to_string();
-                let attachments = block.attachments.clone();
-                let revert_id = message_id.clone();
-                let edit_id = message_id.clone();
-                let copy_text = prompt.clone();
-                let (copy, _) = self.transcript_button(
-                    row,
-                    "Copy message".into(),
-                    "copy",
-                    window,
-                    cx,
-                    move |_, _, cx| {
-                        cx.write_to_clipboard(gpui::ClipboardItem::new_string(copy_text.clone()));
-                        cx.notify();
+                if !ui.user_message_segments.contains_key(&block.id) {
+                    let projection = markdown_view::user_segment_texts_block_cached(
+                        block,
+                        theme.text,
+                        &theme,
+                        &ui.markdown,
+                    );
+                    ui.user_message_segments
+                        .insert(block.id.clone(), projection.texts);
+                    ui.user_message_images
+                        .insert(block.id.clone(), projection.images);
+                }
+                let segments: Rc<RefCell<Vec<SharedString>>> = Rc::new(RefCell::new(Vec::new()));
+                let drag = ui.user_text_drag.clone();
+                let message = ui.user_message_index.get(&block.id).copied().unwrap_or(0);
+                let selection_focus = ui.user_text_focus(session, &block.id, row, window, cx);
+                let current = ui
+                    .user_text_selection
+                    .as_ref()
+                    .map(|selection| (selection.anchor, selection.head));
+                let owner = cx.weak_entity();
+                let focus = selection_focus.clone();
+                let selection_session = session.to_owned();
+                let on_change: markdown_view::UserSelectionHandler =
+                    Rc::new(move |change, window, cx| match change {
+                        markdown_view::UserSelectionChange::Start {
+                            point,
+                            text,
+                            click_count,
+                            shift,
+                        } => {
+                            window.focus(&focus, cx);
+                            let _ = owner.update(cx, |app, cx| {
+                                app.stop_conversation_follow(&selection_session);
+                                let Some(ui) = app.ui_for_mut(&selection_session) else {
+                                    return;
+                                };
+                                let existing_anchor =
+                                    current.filter(|_| shift).map(|(anchor, _)| anchor);
+                                let (anchor, head) = if click_count >= 3 {
+                                    message_text_points(ui, point.message).unwrap_or((point, point))
+                                } else if click_count == 2 {
+                                    let word = selected_word(&text, point.offset);
+                                    let start = markdown_view::UserSelectionPoint {
+                                        message: point.message,
+                                        segment: point.segment,
+                                        offset: word.start,
+                                    };
+                                    let end = markdown_view::UserSelectionPoint {
+                                        message: point.message,
+                                        segment: point.segment,
+                                        offset: word.end,
+                                    };
+                                    (existing_anchor.unwrap_or(start), end)
+                                } else {
+                                    (existing_anchor.unwrap_or(point), point)
+                                };
+                                ui.user_text_selection = Some(UserTextSelection {
+                                    anchor,
+                                    head,
+                                    order: ui.user_message_order.clone(),
+                                });
+                                cx.notify();
+                            });
+                        }
+                        markdown_view::UserSelectionChange::Extend { point } => {
+                            let _ = owner.update(cx, |app, cx| {
+                                if let Some(selection) = app
+                                    .ui_for_mut(&selection_session)
+                                    .and_then(|ui| ui.user_text_selection.as_mut())
+                                {
+                                    selection.head = point;
+                                    cx.notify();
+                                }
+                            });
+                        }
+                        markdown_view::UserSelectionChange::End => {}
+                    });
+                let selection_spec = markdown_view::UserSelectionSpec {
+                    message,
+                    anchor: current.map(|(anchor, _)| anchor),
+                    head: current.map(|(_, head)| head),
+                    segments: segments.clone(),
+                    drag,
+                    fill: gpui::Rgba {
+                        a: 0.32,
+                        ..theme.accent
                     },
-                );
-                let (revert, _) = self.transcript_button(
-                    row,
-                    "Undo message".into(),
-                    "revert",
-                    window,
-                    cx,
-                    move |app, _, cx| {
-                        app.revert_message(revert_id.clone(), false, String::new(), cx)
-                    },
-                );
-                let (edit, _) = self.transcript_button(
-                    row,
-                    "Edit message".into(),
-                    "edit",
-                    window,
-                    cx,
-                    move |app, _, cx| app.revert_message(edit_id.clone(), true, prompt.clone(), cx),
-                );
-                let disabled = self.phase.is_active();
-                let mut footer = div()
-                    .mt(px(4.))
+                    on_change,
+                };
+                let text_row = div()
+                    .id(SharedString::from(format!(
+                        "{session}:user-text:{}",
+                        block.id
+                    )))
                     .w_full()
                     .flex()
-                    .items_center()
                     .justify_end()
-                    .gap(px(8.))
-                    .opacity(if disabled { 0.5 } else { 1.0 });
-                if let Some(meta) = user_message_meta(block, &self.models) {
-                    let selector = format!("user-message-meta-{}", block.id);
-                    footer = footer.child(
-                        div()
-                            .id(SharedString::from(selector.clone()))
-                            .debug_selector(move || selector.clone())
-                            .aria_label(meta.clone())
-                            .flex_1()
-                            .min_w_0()
-                            .truncate()
-                            .text_right()
-                            .text_size(px(11.))
-                            .line_height(px(15.))
-                            .text_color(secondary)
-                            .child(SharedString::from(meta)),
-                    );
-                }
-                footer = footer
-                    .child(
-                        copy.px(px(6.))
-                            .py(px(2.))
-                            .rounded(px(6.))
-                            .text_size(px(11.))
-                            .text_color(secondary)
-                            .cursor_pointer()
-                            .hover(|style| style.bg(theme.inset))
-                            .child("Copy"),
-                    )
-                    .child(
-                        revert
-                            .px(px(6.))
-                            .py(px(2.))
-                            .rounded(px(6.))
-                            .text_size(px(11.))
-                            .text_color(secondary)
-                            .cursor_pointer()
-                            .hover(|style| style.bg(theme.inset))
-                            .child("Undo"),
-                    )
-                    .child(
-                        edit.px(px(6.))
-                            .py(px(2.))
-                            .rounded(px(6.))
-                            .text_size(px(11.))
-                            .text_color(secondary)
-                            .cursor_pointer()
-                            .hover(|style| style.bg(theme.inset))
-                            .child("Edit"),
-                    );
-                div()
+                    .min_w_0()
+                    .track_focus(&selection_focus);
+                let user_content = markdown_view::user_block(
+                    block,
+                    &block.id,
+                    &theme,
+                    &mut ui.markdown,
+                    window,
+                    cx,
+                    Some(selection_spec),
+                );
+                let copy_session = session.to_owned();
+                let select_session = session.to_owned();
+                let row = div()
+                    .id(SharedString::from(format!("{session}:user-actions:{}", block.id)))
                     .w_full()
                     .flex()
                     .flex_col()
                     .items_end()
-                    .child(markdown_view::user(
-                        &block.text,
-                        &block.id,
-                        &theme,
-                        &mut self.transcript_ui.markdown,
-                        window,
-                        cx,
-                    ))
-                    .when(!attachments.is_empty(), |row| {
-                        row.child(user_attachments(&attachments, &message_id, &theme))
-                    })
-                    .child(footer)
-                    .into_any_element()
+                    .on_click(cx.listener(|_, _, _, cx| cx.stop_propagation()))
+                    .on_action(cx.listener(move |app, _: &crate::input::Copy, _, cx| {
+                        app.copy_user_text_selection_for(&copy_session, cx);
+                    }))
+                    .on_action(cx.listener(move |app, _: &crate::input::SelectAll, _, cx| {
+                        app.select_all_user_text_for(&select_session, cx);
+                    }));
+                row.child(text_row.child(user_content)).into_any_element()
             }
-            RowKind::Work {
-                key,
-                running,
-                open,
-                started,
-                duration: elapsed,
-                previous,
-            } => {
-                let label = if *running {
-                    format!(
-                        "Working for {}",
-                        duration(
-                            started
-                                .map(|start| now_ms() - start)
-                                .unwrap_or(1000)
-                                .max(1000)
-                        )
-                    )
+            RowKind::ScrollControl => div().into_any_element(),
+            RowKind::ToolGroup { title, count, running, failed, active, open } => {
+                let status = if *running > 0 {
+                    format!("{running} running")
+                } else if *failed > 0 {
+                    format!("{failed} failed")
+                } else if *active {
+                    "working".to_owned()
                 } else {
-                    elapsed
-                        .map(|ms| format!("Worked for {}", duration(ms)))
-                        .unwrap_or_else(|| format!("{previous} previous messages"))
+                    format!("{count} completed")
                 };
-                let target = key.clone();
-                let was_open = *open;
+                let session = session.to_owned();
+                let key = row.id.clone();
+                let expanded = *open;
                 let (button, _) = self.transcript_button(
+                    &session,
+                    ui,
                     row,
-                    label.clone().into(),
+                    format!("{title}, {status}").into(),
                     "",
                     window,
                     cx,
-                    move |app, _, cx| {
-                        if was_open {
-                            app.transcript_ui.work_open.remove(&target);
-                        } else {
-                            app.transcript_ui.work_open.insert(target.clone());
+                    {
+                        let session = session.clone();
+                        move |app, _, cx| {
+                            if let Some(ui) = app.ui_for_mut(&session) {
+                                ui.tool_groups.insert(key.clone(), !expanded);
+                            }
+                            app.rebuild_conversation_rows(&session, cx);
                         }
-                        app.rebuild_transcript_rows(cx);
                     },
                 );
-                div()
+                button
+                    .debug_selector(|| "tool-group-trigger".into())
+                    .aria_expanded(expanded)
                     .w_full()
-                    .pt(px(2.))
+                    .px(px(6.))
+                    .h(px(27.))
+                    .rounded(px(6.))
                     .flex()
-                    .flex_col()
-                    .child(
-                        button
-                            .aria_expanded(*open)
-                            .py(px(2.))
-                            .pr(px(6.))
-                            .rounded(px(6.))
-                            .flex()
-                            .flex_wrap()
-                            .items_center()
-                            .gap(px(6.))
-                            .text_size(px(14.))
-                            .line_height(px(17.))
-                            .text_color(tertiary)
-                            .hover(|style| style.bg(theme.text.opacity(0.05)))
-                            .child(label)
-                            .child(crate::icons::glyph(
-                                if *open {
-                                    "chevron-down"
-                                } else {
-                                    "chevron-right"
-                                },
-                                12.,
-                                secondary,
-                            )),
-                    )
-                    .child(div().mt(px(8.)).w_full().h(px(1.)).bg(theme.border_soft))
+                    .items_center()
+                    .gap(px(8.))
+                    .text_size(px(13.))
+                    .text_color(secondary)
+                    .hover(|style| style.bg(theme.text.opacity(0.05)))
+                    .cursor_pointer()
+                    .child(glyph(if expanded { "chevron-down" } else { "chevron-right" }, 12., secondary))
+                    .child(work_summary_caption::render(title, *active && !cx.reduce_motion()))
                     .into_any_element()
             }
             RowKind::Reasoning { key, running, open } => {
                 let target = key.clone();
                 let was_open = *open;
                 let label = if *running { "Thinking" } else { "Thought" };
-                let (button, _) =
-                    self.transcript_button(row, label.into(), "", window, cx, move |app, _, cx| {
-                        app.transcript_ui
-                            .reasoning_open
-                            .insert(target.clone(), !was_open);
-                        app.rebuild_transcript_rows(cx);
-                    });
+                let target_session = session.to_owned();
+                let (button, _) = self.transcript_button(
+                    session,
+                    ui,
+                    row,
+                    label.into(),
+                    "",
+                    window,
+                    cx,
+                    move |app, _, cx| {
+                        if let Some(ui) = app.ui_for_mut(&target_session) {
+                            ui.reasoning_open.insert(target.clone(), !was_open);
+                        }
+                        app.rebuild_conversation_rows(&target_session, cx);
+                    },
+                );
+                let reasoning_selector = format!("reasoning-trigger:{key}");
                 button
+                    .debug_selector(move || reasoning_selector.clone())
                     .aria_expanded(*open)
                     .w_full()
                     .px(px(6.))
@@ -1610,10 +2032,10 @@ impl VelaApp {
                     .cursor_pointer()
                     .child(glyph("reasoning", 14., secondary).opacity(0.7))
                     .child(div().text_color(theme.text).child(label))
-                    .when(*running, |button| {
+                    .when(*running && !cx.reduce_motion(), |button| {
                         use gpui::AnimationExt;
                         button.child(glyph("working-spinner", 11., secondary).with_animation(
-                            SharedString::from(format!("spin:{}", row.id)),
+                            SharedString::from(format!("{session}:spin:{}", row.id)),
                             gpui::Animation::new(Duration::from_millis(700)).repeat(),
                             |svg, progress| {
                                 svg.with_transformation(gpui::Transformation::rotate(
@@ -1640,20 +2062,26 @@ impl VelaApp {
                 key,
                 text,
                 duration: elapsed,
-                agent,
-                model,
+                interrupted,
             } => {
                 answer_hover = Some(key.clone());
-                let copied = self.transcript_ui.copied_answer.as_ref() == Some(key);
+                let copied = ui.copied_answer.as_ref() == Some(key);
                 let label = if copied { "Copied" } else { "Copy" };
                 let copy_key = key.clone();
                 let copy_text = text.clone();
-                let (button, focus) =
-                    self.transcript_button(row, label.into(), "", window, cx, move |app, _, cx| {
+                let copy_session = session.to_owned();
+                let (button, focus) = self.transcript_button(
+                    session,
+                    ui,
+                    row,
+                    label.into(),
+                    "",
+                    window,
+                    cx,
+                    move |app, _, cx| {
                         let text = app
-                            .active_id
-                            .as_ref()
-                            .and_then(|session| app.engine.view(session))
+                            .engine
+                            .view(&copy_session)
                             .and_then(|view| {
                                 view.with_transcript(|transcript| {
                                     transcript.message(&copy_key).map(answer_text)
@@ -1661,32 +2089,38 @@ impl VelaApp {
                             })
                             .unwrap_or_else(|| copy_text.to_string());
                         cx.write_to_clipboard(gpui::ClipboardItem::new_string(text));
-                        app.transcript_ui.copied_answer = Some(copy_key.clone());
+                        let Some(ui) = app.ui_for_mut(&copy_session) else { return; };
+                        ui.copied_answer = Some(copy_key.clone());
+                        ui.answer_copy_generation = ui.answer_copy_generation.wrapping_add(1);
+                        let generation = ui.answer_copy_generation;
+                        let copy_owner = ui.answer_copy_owner.clone();
                         let key = copy_key.clone();
+                        let timer_session = copy_session.clone();
                         cx.spawn(async move |this, cx| {
                             cx.background_executor().timer(Duration::from_secs(2)).await;
                             let _ = this.update(cx, |app, cx| {
-                                if app.transcript_ui.copied_answer.as_ref() == Some(&key) {
-                                    app.transcript_ui.copied_answer = None;
+                                if let Some(ui) = app.ui_for_mut(&timer_session)
+                                    && ui.answer_copy_is_current(&copy_owner, generation, &key)
+                                {
+                                    ui.copied_answer = None;
                                     cx.notify();
                                 }
                             });
                         })
                         .detach();
                         cx.notify();
-                    });
-                let visible = self
-                    .transcript_ui
-                    .answer_footer_visible(key, &focus, window);
-                div()
-                    .w_full()
-                    .min_h(px(20.))
+                    },
+                );
+                let visible = ui.answer_footer_visible(key, &focus, window);
+                let copy_selector = format!("answer-copy:{session}:{key}");
+                let controls = div()
                     .flex()
                     .items_center()
                     .gap(px(10.))
                     .opacity(if visible { 1. } else { 0. })
                     .child(
                         button
+                            .debug_selector(move || copy_selector.clone())
                             .px(px(6.))
                             .py(px(2.))
                             .rounded(px(6.))
@@ -1699,172 +2133,108 @@ impl VelaApp {
                             })
                             .child(label),
                     )
-                    .when_some(
-                        answer_meta(
-                            agent.as_deref(),
-                            model.as_deref(),
-                            &self.models,
-                            *elapsed,
-                        ),
-                        |footer, meta| {
-                            footer.child(
-                                div()
-                                    .id(SharedString::from(format!("answer-meta:{key}")))
-                                    .debug_selector(|| "answer-meta".into())
-                                    .role(gpui::Role::Label)
-                                    .text_size(px(12.))
-                                    .text_color(tertiary)
-                                    .child(SharedString::from(meta)),
-                            )
-                        },
-                    )
+                    .when_some(elapsed.map(format_answer_duration), |footer, meta| {
+                        footer.child(
+                            div()
+                                .id(SharedString::from(format!("{session}:answer-meta:{key}")))
+                                .debug_selector(|| "answer-meta".into())
+                                .role(gpui::Role::Label)
+                                .text_size(px(12.))
+                                .text_color(tertiary)
+                                .child(SharedString::from(meta)),
+                        )
+                    });
+                div()
+                    .w_full()
+                    .min_h(px(20.))
+                    .flex()
+                    .items_center()
+                    .gap(px(10.))
+                    .when(*interrupted, |footer| {
+                        footer.child(
+                            div()
+                                .debug_selector(|| "answer-stopped".into())
+                                .text_size(px(12.))
+                                .line_height(px(16.))
+                                .text_color(tertiary)
+                                .child("Stopped"),
+                        )
+                    })
+                    .child(controls)
                     .into_any_element()
             }
             RowKind::Status(block) => {
                 let card = if block.kind == BlockKind::System {
                     crate::subagent::parse(&block.text).and_then(|reference| {
-                        crate::subagent::card(
-                            &reference,
-                            &self.sessions,
-                            &self.agents,
-                            self.active_id.as_deref().unwrap_or(""),
-                        )
+                        crate::subagent::card(&reference, &self.sessions, &self.agents, session)
                     })
                 } else {
                     None
                 };
                 if let Some(card) = card {
-                    self.render_delegated_card(row, &block.id, card, window, cx)
+                    self.render_delegated_card(session, ui, row, &block.id, card, window, cx)
                 } else if block.kind == BlockKind::Retry {
                     let (message, info) = retry_text(block);
-                    use gpui::AnimationExt;
+                    let label = if info.is_empty() {
+                        message.clone()
+                    } else {
+                        format!("{message} · {info}")
+                    };
+                    if !block.output.is_empty() {
+                        let key = format!("{session}:{}", block.id);
+                        let expanded = ui.tool_open.contains(&key);
+                        let target_session = session.to_owned();
+                        let (button, _) = self.transcript_button(
+                            session, ui, row, label.clone().into(), "retry", window, cx,
+                            move |app, _, cx| {
+                                if let Some(ui) = app.ui_for_mut(&target_session)
+                                    && !ui.tool_open.remove(&key) { ui.tool_open.insert(key.clone()); }
+                                app.rebuild_conversation_rows(&target_session, cx);
+                            },
+                        );
+                        div().w_full().min_w_0().flex().flex_col()
+                            .child(button.debug_selector(|| "retry-notice".into())
+                                .aria_expanded(expanded).py(px(2.)).flex().items_center().gap(px(6.))
+                                .text_size(px(12.)).line_height(px(18.)).text_color(secondary)
+                                .cursor_pointer()
+                                .child(glyph(if expanded { "chevron-down" } else { "chevron-right" }, 12., secondary))
+                                .child(label))
+                            .when(expanded, |body| body.child(tool_view::card(block, &theme, false)))
+                            .into_any_element()
+                    } else {
                     div()
-                        .id(SharedString::from(format!("retry:{}", block.id)))
+                        .id(SharedString::from(format!("{session}:retry:{}", block.id)))
                         .debug_selector(|| "retry-notice".into())
                         .w_full()
                         .min_w_0()
-                        .flex()
-                        .items_start()
-                        .gap(px(8.))
                         .py(px(2.))
+                        .text_size(px(12.))
+                        .line_height(px(18.))
                         .text_color(secondary)
+                        .whitespace_normal()
                         .role(gpui::Role::Label)
-                        .aria_label(SharedString::from(format!("{message}. {info}")))
-                        .child(
-                            glyph("working-spinner", 11., secondary)
-                                .mt(px(2.))
-                                .with_animation(
-                                    SharedString::from(format!("retry-spin:{}", block.id)),
-                                    gpui::Animation::new(Duration::from_millis(700)).repeat(),
-                                    |svg, progress| {
-                                        svg.with_transformation(gpui::Transformation::rotate(
-                                            gpui::percentage(progress),
-                                        ))
-                                    },
-                                ),
-                        )
-                        .child(
-                            div()
-                                .flex_1()
-                                .min_w_0()
-                                .flex()
-                                .flex_col()
-                                .child(
-                                    div()
-                                        .debug_selector(|| "retry-message".into())
-                                        .text_size(px(12.))
-                                        .line_height(px(18.))
-                                        .text_color(secondary)
-                                        .whitespace_normal()
-                                        .child(message),
-                                )
-                                .child(
-                                    div()
-                                        .debug_selector(|| "retry-info".into())
-                                        .text_size(px(11.))
-                                        .line_height(px(16.))
-                                        .text_color(tertiary)
-                                        .child(info),
-                                ),
-                        )
+                        .aria_label(SharedString::from(label.clone()))
+                        .child(label)
                         .into_any_element()
+                    }
                 } else if block.kind == BlockKind::Compaction {
                     let failed = block.status == ToolStatus::Failed;
-                    let label = compaction_label(block.status);
-                    let label =
-                        if matches!(block.status, ToolStatus::Running | ToolStatus::Streaming) {
-                            shimmer::text(
-                                label.to_string(),
-                                true,
-                                secondary,
-                                theme.text,
-                                "compaction-shimmer",
-                                SharedString::from(format!("compaction-shimmer:{}", block.id)),
-                            )
-                        } else {
-                            div().child(label).into_any_element()
-                        };
-                    let mut notice = div()
-                        .id(SharedString::from(format!("compaction:{}", block.id)))
+                    div()
+                        .id(SharedString::from(format!(
+                            "{session}:compaction:{}",
+                            block.id
+                        )))
                         .debug_selector(|| "compaction-notice".into())
                         .w_full()
                         .min_w_0()
-                        .flex()
-                        .flex_col()
-                        .child(
-                            div()
-                                .w_full()
-                                .flex()
-                                .items_center()
-                                .gap(px(12.))
-                                .py(px(10.))
-                                .child(div().flex_1().h(px(1.)).bg(theme.border_soft))
-                                .child(
-                                    div()
-                                        .flex_none()
-                                        .text_size(px(13.))
-                                        .line_height(px(18.))
-                                        .text_color(if failed { theme.red } else { secondary })
-                                        .child(label),
-                                )
-                                .child(div().flex_1().h(px(1.)).bg(theme.border_soft)),
-                        );
-                    if !block.text.trim().is_empty() {
-                        notice = notice.child(div().mt(px(6.)).child(markdown_view::block(
-                            block,
-                            secondary,
-                            &theme,
-                            markdown_view::BlockContext {
-                                ui: &mut self.transcript_ui.markdown,
-                                list: self.transcript_list.clone(),
-                                answer: None,
-                            },
-                            window,
-                            cx,
-                        )));
-                    }
-                    if failed && !block.output.trim().is_empty() {
-                        notice = notice.child(
-                            div()
-                                .debug_selector(|| "compaction-error".into())
-                                .mt(px(6.))
-                                .flex()
-                                .items_start()
-                                .gap(px(7.))
-                                .text_size(px(12.))
-                                .line_height(px(18.))
-                                .text_color(theme.red)
-                                .child(glyph("close", 12., theme.red).mt(px(3.)))
-                                .child(
-                                    div()
-                                        .flex_1()
-                                        .min_w_0()
-                                        .whitespace_normal()
-                                        .child(block.output.to_string()),
-                                ),
-                        );
-                    }
-                    notice.into_any_element()
+                        .py(px(2.))
+                        .text_size(px(12.))
+                        .line_height(px(18.))
+                        .text_color(if failed { theme.red } else { secondary })
+                        .role(gpui::Role::Label)
+                        .aria_label(compaction_label(block.status))
+                        .child(compaction_label(block.status))
+                        .into_any_element()
                 } else if block.kind == BlockKind::Skill {
                     let name = if block.output.trim().is_empty() {
                         "Skill"
@@ -1872,48 +2242,41 @@ impl VelaApp {
                         block.output.as_ref()
                     };
                     let mut notice = div()
-                        .id(SharedString::from(format!("skill:{}", block.id)))
+                        .id(SharedString::from(format!("{session}:skill:{}", block.id)))
                         .debug_selector(|| "skill-notice".into())
                         .w_full()
                         .min_w_0()
-                        .pl(px(12.))
-                        .py(px(1.))
-                        .border_l_2()
-                        .border_color(theme.border_soft)
+                        .py(px(6.))
                         .flex()
                         .flex_col()
+                        .gap(px(4.))
                         .child(
                             div()
                                 .debug_selector(|| "skill-label".into())
-                                .text_size(px(11.))
+                                .text_size(px(11.5))
                                 .line_height(px(16.))
                                 .text_color(tertiary)
-                                .child(format!("Skill activated · {name}")),
+                                .child(format!("SKILL · {name}")),
                         );
-                    if !block.detail.trim().is_empty() {
+                    if !block.text.trim().is_empty() {
                         notice = notice.child(
                             div()
-                                .debug_selector(|| "skill-detail".into())
-                                .text_size(px(11.))
-                                .line_height(px(16.))
-                                .font_family(crate::theme::FONT_MONO)
-                                .text_color(tertiary)
-                                .child(block.detail.to_string()),
+                                .text_size(px(12.5))
+                                .line_height(px(18.))
+                                .text_color(secondary)
+                                .child(markdown_view::block(
+                                    block,
+                                    secondary,
+                                    &theme,
+                                    markdown_view::BlockContext {
+                                        ui: &mut ui.markdown,
+                                        list: list.clone(),
+                                        answer: None,
+                                    },
+                                    window,
+                                    cx,
+                                )),
                         );
-                    }
-                    if !block.text.trim().is_empty() {
-                        notice = notice.child(div().mt(px(6.)).child(markdown_view::block(
-                            block,
-                            secondary,
-                            &theme,
-                            markdown_view::BlockContext {
-                                ui: &mut self.transcript_ui.markdown,
-                                list: self.transcript_list.clone(),
-                                answer: None,
-                            },
-                            window,
-                            cx,
-                        )));
                     }
                     notice.into_any_element()
                 } else {
@@ -1921,7 +2284,10 @@ impl VelaApp {
                         block.kind == BlockKind::Error || block.status == ToolStatus::Failed;
                     let text = block.text.to_string();
                     div()
-                        .id(SharedString::from(format!("status-label:{}", block.id)))
+                        .id(SharedString::from(format!(
+                            "{session}:status-label:{}",
+                            block.id
+                        )))
                         .w_full()
                         .min_w_0()
                         .when(block.kind != BlockKind::Error, |note| note.py(px(2.)))
@@ -1940,20 +2306,26 @@ impl VelaApp {
                 }
             }
         };
+        let hover_session = session.to_owned();
+        let row_selector = format!("conversation-row:{session}:{}", row.id);
         div()
-            .id(SharedString::from(format!("row:{}", row.id)))
+            .debug_selector(move || row_selector.clone())
+            .id(SharedString::from(format!("{session}:row:{}", row.id)))
             .w_full()
             .flex()
             .justify_center()
             .when_some(answer_hover, |row, key| {
                 row.on_hover(cx.listener(move |app, hovered: &bool, _, cx| {
+                    let Some(ui) = app.ui_for_mut(&hover_session) else {
+                        return;
+                    };
                     if *hovered {
-                        if app.transcript_ui.hovered_answer.as_ref() != Some(&key) {
-                            app.transcript_ui.hovered_answer = Some(key.clone());
+                        if ui.hovered_answer.as_ref() != Some(&key) {
+                            ui.hovered_answer = Some(key.clone());
                             cx.notify();
                         }
-                    } else if app.transcript_ui.hovered_answer.as_ref() == Some(&key) {
-                        app.transcript_ui.hovered_answer = None;
+                    } else if ui.hovered_answer.as_ref() == Some(&key) {
+                        ui.hovered_answer = None;
                         cx.notify();
                     }
                 }))
@@ -1975,6 +2347,85 @@ impl VelaApp {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn repeated_reasoning_and_compound_read_steps_share_one_tool_disclosure() {
+        let commands = [
+            "ls -la back-end docs assets; cat package.json; cat .gitignore",
+            "find back-end/src docs/js -maxdepth 3 -type f | head -50; echo '---'; cat package.json",
+            "cat back-end/src/app.js; echo '--- routes'; cat back-end/src/routes/chatRoutes.js",
+            "find assets -maxdepth 3 | head -40; git log --oneline -15; git status --short | head",
+            "wc -l docs/js/main.js docs/index.html; head -40 docs/index.html",
+            "grep -rn 'fetch\\|/api/chat\\|EventSource' docs --include='*.js' | head",
+        ];
+        let mut blocks = vec![block("user", "user", BlockKind::User, "Inspect this project.")];
+        for (index, command) in commands.iter().enumerate() {
+            blocks.push(block(&format!("thought-{index}"), &format!("step-{index}"), BlockKind::Reasoning, "Inspect the next part of the project."));
+            let mut call = block(&format!("probe-{index}"), &format!("step-{index}"), BlockKind::Tool,
+                &serde_json::json!({"command":command}).to_string());
+            call.detail = "bash".into();
+            call.status = ToolStatus::Success;
+            blocks.push(call);
+        }
+        let mut ui = TranscriptUi::default();
+        let closed = project(&blocks, false, "session", &ui);
+        let visible = closed.iter().filter(|row| !row.hidden).collect::<Vec<_>>();
+        assert_eq!(visible.len(), 2, "only the user prompt and one compact work line are visible");
+        assert!(matches!(&visible[1].kind, RowKind::ToolGroup { title, count: 6, open: false, .. } if title.as_ref() == "Read files"));
+        assert!(!closed.iter().any(|row| !row.hidden && matches!(row.kind, RowKind::Reasoning { .. })));
+        assert!(!closed.iter().any(|row| !row.hidden && tool_row(row)));
+        let key = visible[1].id.clone();
+        let ids = closed.iter().map(|row| row.id.clone()).collect::<Vec<_>>();
+        ui.tool_groups.insert(key, true);
+        let opened = project(&blocks, false, "session", &ui);
+        assert_eq!(ids, opened.iter().map(|row| row.id.clone()).collect::<Vec<_>>());
+        assert_eq!(opened.iter().filter(|row| !row.hidden && tool_row(row)).count(), 6);
+        assert!(!opened.iter().any(|row| !row.hidden && matches!(row.kind, RowKind::Reasoning { .. })));
+        assert!(opened.iter().filter(|row| tool_row(row)).all(|row| row.summary.is_none()), "raw command summaries require explicit expansion");
+    }
+
+    #[test]
+    fn answer_copy_timers_cannot_clear_repeated_or_reopened_panel_copies() {
+        let mut old = TranscriptUi {
+            copied_answer: Some(Arc::from("answer")),
+            answer_copy_generation: 1,
+            ..Default::default()
+        };
+        let owner = old.answer_copy_owner.clone();
+        assert!(old.answer_copy_is_current(&owner, 1, "answer"));
+        old.answer_copy_generation = 2;
+        assert!(!old.answer_copy_is_current(&owner, 1, "answer"), "earlier copy timer cannot clear a newer click");
+        let replacement = TranscriptUi {
+            copied_answer: Some(Arc::from("answer")),
+            answer_copy_generation: 1,
+            ..Default::default()
+        };
+        assert!(!replacement.answer_copy_is_current(&owner, 1, "answer"), "reopened session has a distinct presentation owner");
+    }
+
+    fn block(id: &str, message: &str, kind: BlockKind, text: &str) -> Block {
+        Block {
+            id: Arc::from(id),
+            message_id: Arc::from(message),
+            part_id: Arc::from(id),
+            kind,
+            text: Arc::from(text),
+            detail: Arc::from(""),
+            output: Arc::from(""),
+            status: ToolStatus::None,
+            streaming: false,
+            agent: None,
+            model: None,
+            created_at: 1000,
+            completed_at: Some(3000),
+            child_session_id: None,
+            files: Vec::new(),
+            sub_calls: Vec::new(),
+            attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
+        }
+    }
     #[test]
     fn answer_footer_uses_the_final_markdown_margin_instead_of_the_block_count() {
         for (parts, expected) in [
@@ -2015,55 +2466,6 @@ mod tests {
         }
     }
     #[test]
-    fn paced_reveal_uses_source_steps_and_character_boundaries() {
-        assert_eq!(next_paced_end("abcdefghijklmnopqrstuvwxyz", 0), 4);
-        assert_eq!(next_paced_end("aaaa.bbbb", 0), 5);
-        assert_eq!(next_paced_end("a界界", 0), 4);
-        assert_eq!(next_paced_end("small", 5), 5);
-    }
-
-    #[test]
-    fn streaming_text_reveals_in_steps_and_snaps_on_completion() {
-        let mut ui = TranscriptUi::default();
-        let mut paced = block("paced", "answer", BlockKind::Assistant, &"a".repeat(500));
-        paced.streaming = true;
-        assert!(!ui.advance_pacing(&[paced.clone()]));
-        let full = format!("{}{}", "a".repeat(500), "b".repeat(1500));
-        paced.text = Arc::from(full.as_str());
-        assert!(ui.advance_pacing(&[paced.clone()]));
-        let visible = |ui: &TranscriptUi, block: &Block| {
-            project(std::slice::from_ref(block), true, "session", ui)
-                .iter()
-                .find_map(|row| match &row.kind {
-                    RowKind::Content { block, .. } if block.id.as_ref() == "paced" => {
-                        Some(block.text.clone())
-                    }
-                    _ => None,
-                })
-                .unwrap()
-        };
-        let shown = visible(&ui, &paced);
-        assert!(shown.len() > 500);
-        assert!(shown.len() < full.len());
-        let before = shown.len();
-        assert!(ui.advance_pacing(&[paced.clone()]));
-        assert_eq!(visible(&ui, &paced).len(), before);
-        std::thread::sleep(Duration::from_millis(25));
-        assert!(ui.advance_pacing(&[paced.clone()]));
-        assert!(visible(&ui, &paced).len() > before);
-        for _ in 0..1000 {
-            ui.pacing_last = None;
-            if !ui.advance_pacing(&[paced.clone()]) {
-                break;
-            }
-        }
-        assert_eq!(visible(&ui, &paced).as_ref(), full.as_str());
-        paced.streaming = false;
-        assert!(!ui.advance_pacing(&[paced.clone()]));
-        assert!(ui.pacing.borrow().is_empty());
-    }
-
-    #[test]
     fn skill_notice_projects_as_one_event_row() {
         let mut skill = block("skill", "assistant", BlockKind::Skill, "Checked");
         skill.detail = "review".into();
@@ -2082,9 +2484,9 @@ mod tests {
     #[test]
     fn compaction_notice_labels_and_projects() {
         for (status, label) in [
-            (ToolStatus::Running, "Compacting session"),
+            (ToolStatus::Running, "Compacting context…"),
             (ToolStatus::Failed, "Compaction failed"),
-            (ToolStatus::Success, "Session compacted"),
+            (ToolStatus::Success, "Context compacted"),
         ] {
             assert_eq!(compaction_label(status), label);
         }
@@ -2100,17 +2502,17 @@ mod tests {
     }
 
     #[test]
-    fn retry_notice_matches_source_two_line_text() {
+    fn retry_notice_matches_source_single_line_text() {
         let mut retry = block("retry", "assistant", BlockKind::Retry, &"x".repeat(100));
         retry.detail = "attempt 4".into();
         let (message, info) = retry_text(&retry);
-        assert_eq!(message.chars().count(), 80);
-        assert_eq!(info, "Retrying · attempt 4");
+        assert_eq!(message.chars().count(), 100);
+        assert_eq!(info, "attempt 4");
 
         retry.detail = "".into();
-        assert_eq!(retry_text(&retry).1, "Retrying");
+        assert_eq!(retry_text(&retry).1, "");
         retry.text = "".into();
-        assert_eq!(retry_text(&retry).0, "Retrying");
+        assert_eq!(retry_text(&retry).0, "");
     }
 
     #[test]
@@ -2180,7 +2582,7 @@ mod tests {
         );
         let rows = project(&[tool, other], true, "session", &TranscriptUi::default());
         assert!(
-            rows.iter().any(|row| row.id.as_ref() == "process:tool"),
+            rows.iter().any(|row| row.id.as_ref() == "activity:tool"),
             "a different dispatch keeps its tool row"
         );
         assert!(rows.iter().any(|row| row.id.as_ref() == "event:other"));
@@ -2198,7 +2600,7 @@ mod tests {
         first.status = ToolStatus::Running;
         first.streaming = true;
         let mut second = block(
-            "tool-second",
+            "tool-first",
             "assistant",
             BlockKind::Tool,
             r#"{"agent":"build","description":"Run the tests"}"#,
@@ -2226,6 +2628,67 @@ mod tests {
         assert_eq!(cards[0].child_session_id.as_deref(), Some("ses_child"));
         assert_eq!(cards[0].completed_at, expected_completion);
     }
+    #[test]
+    fn distinct_resolved_task_dispatches_keep_their_own_cards() {
+        let mut first = block(
+            "tool-first",
+            "assistant",
+            BlockKind::Tool,
+            r#"{"agent":"build","description":"Run the tests"}"#,
+        );
+        first.detail = "subagent".into();
+        first.status = ToolStatus::Running;
+        first.streaming = true;
+        first.child_session_id = Some("ses_first".into());
+        let mut second = block(
+            "tool-second",
+            "assistant",
+            BlockKind::Tool,
+            r#"{"agent":"build","description":"Run the tests"}"#,
+        );
+        second.detail = "subagent".into();
+        second.status = ToolStatus::Success;
+        second.completed_at = Some(first.created_at + 5);
+        second.child_session_id = Some("ses_second".into());
+        let before = block("before", "intro", BlockKind::Assistant, "Before the calls");
+        let after = block("after", "outro", BlockKind::Assistant, "After the calls");
+        let blocks = [before, first, second, after];
+        let mut ui = TranscriptUi::default();
+        let compact = project(&blocks, true, "session", &ui);
+        assert_eq!(compact.iter().filter(|row| tool_row(row) && !row.hidden).count(), 2,
+            "parallel delegated agents remain visible as compact stable rows");
+        let group = compact.iter().position(|row| matches!(&row.kind,
+            RowKind::ToolGroup { count: 2, running: 1, open: false, .. })).unwrap();
+        assert!(compact[..group].iter().any(|row| row.id.as_ref() == "text:before"));
+        assert!(compact[group + 1..].iter().any(|row| row.id.as_ref() == "text:after"));
+        let mut settled = blocks.clone();
+        settled[1].status = ToolStatus::Success;
+        settled[1].streaming = false;
+        let collapsed = project(&settled, false, "session", &ui);
+        assert!(collapsed.iter().any(|row| row.id == compact[group].id
+            && matches!(&row.kind, RowKind::ToolGroup { running: 0, open: false, .. })));
+        ui.tool_groups.insert(compact[group].id.clone(), true);
+        let rows = project(&blocks, true, "session", &ui);
+        let cards = rows
+            .iter()
+            .filter_map(|row| match &row.kind {
+                RowKind::Content { block, .. }
+                    if matches!(block.id.as_ref(), "tool-first" | "tool-second") =>
+                {
+                    Some(block)
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(cards.len(), 2, "a same-signature second dispatch is not the first one");
+        assert_eq!(cards[0].id.as_ref(), "tool-first");
+        assert_eq!(cards[0].status, ToolStatus::Running);
+        assert_eq!(cards[0].child_session_id.as_deref(), Some("ses_first"));
+        assert_eq!(cards[1].id.as_ref(), "tool-second");
+        assert_eq!(cards[1].status, ToolStatus::Success);
+        assert_eq!(cards[1].child_session_id.as_deref(), Some("ses_second"));
+    }
+
     #[test]
     fn internal_reminders_are_hidden_while_subagent_records_remain_events() {
         let blocks = vec![
@@ -2426,112 +2889,100 @@ mod tests {
             (before.item_ix, before.offset_in_item)
         );
     }
-    struct AttachmentChipsFixture(Vec<Arc<str>>);
-    impl Render for AttachmentChipsFixture {
-        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-            div()
-                .w(px(600.))
-                .flex()
-                .flex_col()
-                .items_end()
-                .child(user_attachments(&self.0, "test", &Theme::default()))
-        }
-    }
-    #[gpui::test]
-    fn user_attachment_chips_render_file_cards_right_aligned_and_wrap(
-        cx: &mut gpui::TestAppContext,
-    ) {
-        let names = vec![
-            Arc::from("main.rs"),
-            Arc::from("notes with spaces.md"),
-            Arc::from("third.txt"),
-        ];
-        let (view, cx) = cx.add_window_view(move |_, _| AttachmentChipsFixture(names));
-        cx.draw(point(px(0.), px(0.)), size(px(600.), px(300.)), |_, _| {
-            view.clone().into_any_element()
-        });
-        let first = cx
-            .debug_bounds("user-attachment:test:0")
-            .expect("first attachment chip");
-        let second = cx
-            .debug_bounds("user-attachment:test:1")
-            .expect("second attachment chip");
-        let third = cx
-            .debug_bounds("user-attachment:test:2")
-            .expect("third attachment chip");
-        assert_eq!(first.size, size(px(220.), px(48.)));
-        assert_eq!(second.size, size(px(220.), px(48.)));
-        assert_eq!(first.origin.y, second.origin.y);
-        assert!(
-            third.origin.y > first.origin.y + px(40.),
-            "third chip wraps onto a second row: {third:?}"
-        );
-        assert_eq!(
-            second.origin.x + second.size.width,
-            px(600.),
-            "chips stay right-aligned in the user column"
-        );
-        assert_eq!(
-            third.origin.x + third.size.width,
-            px(600.),
-            "wrapped chips stay right-aligned"
-        );
-    }
-    fn block(id: &str, message: &str, kind: BlockKind, text: &str) -> Block {
-        Block {
-            id: Arc::from(id),
-            message_id: Arc::from(message),
-            part_id: Arc::from(id),
-            kind,
-            text: Arc::from(text),
-            detail: Arc::from(""),
-            output: Arc::from(""),
-            status: ToolStatus::None,
-            streaming: false,
-            agent: None,
-            model: None,
-            created_at: 1000,
-            completed_at: Some(3000),
-            child_session_id: None,
-            files: Vec::new(),
-            sub_calls: Vec::new(),
-            attachments: Vec::new(),
-        }
-    }
     #[test]
-    fn final_text_survives_work_folding_and_footer_uses_turn_duration() {
-        let user = block("user", "user", BlockKind::User, "Prompt");
-        let reasoning = block("reason", "step", BlockKind::Reasoning, "Earlier reasoning");
-        let tool = block("tool", "step", BlockKind::Tool, "input");
-        let mut answer = block("answer", "step", BlockKind::Assistant, "Final answer");
-        answer.agent = Some("build".into());
-        answer.model = Some("claude".into());
-        let error = block("error", "step", BlockKind::Error, "Failure");
-        let blocks = vec![user, reasoning, tool, answer, error];
+    fn attachment_only_correction_remeasures_the_same_user_row() {
+        let mut user = block("user", "user-message", BlockKind::User, "Review the files");
+        let ui = TranscriptUi::default();
+        let before = project(std::slice::from_ref(&user), false, "session", &ui);
+        user.attachments.push(Arc::from("fixture.txt"));
+        let after = project(&[user], false, "session", &ui);
+        assert_eq!(before[0].id, after[0].id);
+        assert_ne!(before[0].revision(), after[0].revision());
+    }
+
+    #[test]
+    fn row_revision_uses_immutable_payload_identity() {
+        let mut block = block("prose", "a", BlockKind::Assistant, "Original");
+        let ui = TranscriptUi::default();
+        let baseline = project(std::slice::from_ref(&block), false, "session", &ui)
+            .remove(0);
+        let baseline = baseline.revision().layout;
+        let shared = block.clone();
+        let reused = project(&[shared], false, "session", &ui).remove(0);
+        assert_eq!(baseline, reused.revision().layout,
+            "cloning shares the immutable payload Arcs");
+        block.text = Arc::from("Original");
+        let replaced = project(&[block.clone()], false, "session", &ui).remove(0);
+        assert_ne!(baseline, replaced.revision().layout,
+            "a new payload allocation conservatively remeasures the row");
+        block.output = Arc::from("tool output");
+        let output = project(&[block], false, "session", &ui).remove(0);
+        assert_ne!(replaced.revision().layout, output.revision().layout);
+    }
+
+    #[test]
+    fn tool_transitions_do_not_move_or_hide_preceding_prose() {
+        let mut prose = block("prose", "a", BlockKind::Assistant, "Inspecting files.");
+        prose.streaming = true;
+        prose.completed_at = None;
+        let before = project(&[prose.clone()], true, "session", &TranscriptUi::default());
+        let mut tool = block("tool", "a", BlockKind::Tool, "{}");
+        tool.status = ToolStatus::Running;
+        tool.streaming = true;
+        let mut blocks = vec![prose.clone(), tool.clone()];
+        let during = project(&blocks, true, "session", &TranscriptUi::default());
+        assert_eq!(before[0].id, during[0].id);
+        assert_eq!(during[0].id.as_ref(), "text:prose");
+        assert_eq!(during[1].id.as_ref(), "trace-line:activity:tool");
+        assert_eq!(during[2].id.as_ref(), "activity:tool");
+        assert!(
+            matches!(&during[0].kind, RowKind::Content { block, .. } if block.text.as_ref() == "Inspecting files.")
+        );
+        blocks[0].streaming = false;
+        blocks[0].completed_at = Some(3000);
+        blocks[1].streaming = false;
+        blocks[1].status = ToolStatus::Success;
+        blocks.push(block("reply", "b", BlockKind::Assistant, "Found it."));
+        let after = project(&blocks, false, "session", &TranscriptUi::default());
+        assert_eq!(after[0].id, during[0].id);
+        assert_eq!(after[1].id, during[1].id);
+        assert!(after.iter().any(|row| row.id == during[2].id), "settling preserves the original leaf");
+        assert!(after.iter().any(|row| row.id.as_ref() == "text:reply"));
+    }
+
+    #[test]
+    fn reasoning_and_tools_remain_chronological_and_footer_uses_turn_duration() {
+        let blocks = vec![
+            block("user", "user", BlockKind::User, "Prompt"),
+            block("reason", "step", BlockKind::Reasoning, "Earlier reasoning"),
+            block("tool", "step", BlockKind::Tool, "input"),
+            block("answer", "step", BlockKind::Assistant, "Final answer"),
+            block("error", "step", BlockKind::Error, "Failure"),
+        ];
         let mut ui = TranscriptUi::default();
-        let closed = project(&blocks, false, "session", &ui);
+        let closed = project(&blocks, false, "session", &ui).into_iter()
+            .filter(|row| !matches!(row.kind, RowKind::ToolGroup { .. })).collect::<Vec<_>>();
         assert!(matches!(closed[0].kind, RowKind::User(_)));
-        assert!(
-            closed
-                .iter()
-                .any(|row| matches!(row.kind, RowKind::Work { open: false, .. }))
-        );
-        assert!(
-            !closed
-                .iter()
-                .any(|row| matches!(row.kind, RowKind::Reasoning { .. }))
-        );
-        assert!(closed.iter().any(|row|matches!(&row.kind,RowKind::Footer{text,duration:Some(2000),agent:Some(agent),model:Some(model),..} if text.as_ref()=="Final answer" && agent=="build" && model=="claude")));
-        assert!(matches!(closed.last().unwrap().kind, RowKind::Status(_)));
-        ui.work_open.insert("session:user".into());
-        let open = project(&blocks, false, "session", &ui);
-        assert!(
-            open.iter()
-                .any(|row| matches!(row.kind, RowKind::Reasoning { open: false, .. }))
-        );
-        assert!(open.iter().any(
-            |row| matches!(&row.kind,RowKind::Content{block,..} if block.kind==BlockKind::Tool)
+        assert!(matches!(
+            closed[1].kind,
+            RowKind::Reasoning { open: false, .. }
         ));
+        assert!(
+            matches!(&closed[2].kind, RowKind::Content { block, .. } if block.kind == BlockKind::Tool)
+        );
+        assert!(
+            matches!(&closed[3].kind, RowKind::Content { block, .. } if block.text.as_ref() == "Final answer")
+        );
+        assert!(closed.iter().any(|row|matches!(&row.kind,RowKind::Footer{text,duration:Some(2000),..} if text.as_ref()=="Final answer")));
+        ui.reasoning_open.insert("session:reason".into(), true);
+        let open = project(&blocks, false, "session", &ui);
+        assert!(open.iter().any(|row| matches!(
+            row.kind,
+            RowKind::Content {
+                reasoning: true,
+                ..
+            }
+        )));
         assert_eq!(
             open.iter()
                 .filter(|row| matches!(row.kind, RowKind::Footer { .. }))
@@ -2540,113 +2991,33 @@ mod tests {
         );
     }
     #[test]
-    fn answer_meta_joins_agent_model_and_duration_with_separators() {
-        let models = vec![vela_opencode::ModelInfo {
-            id: "claude".into(),
-            provider_id: "anthropic".into(),
-            name: "Claude Sonnet".into(),
-            context_limit: None,
-            variant: None,
-            variants: Vec::new(),
-        }];
-        assert_eq!(
-            answer_meta(
-                Some("build"),
-                Some("claude"),
-                &models,
-                Some(125_000)
-            )
-            .as_deref(),
-            Some("Build · Claude Sonnet · 2m 5s")
-        );
-        assert_eq!(
-            answer_meta(Some("plan"), None, &models, Some(1_000)).as_deref(),
-            Some("Plan · 1s")
-        );
-        assert_eq!(
-            answer_meta(None, Some("missing"), &models, None).as_deref(),
-            Some("missing")
-        );
-        assert_eq!(answer_meta(None, None, &models, None), None);
+    fn double_click_word_selection_handles_unicode_and_whitespace() {
+        let text = "fix the café bug";
+        assert_eq!(&text[selected_word(text, 0)], "fix");
+        assert_eq!(&text[selected_word(text, 9)], "café");
+        assert_eq!(&text[selected_word(text, 3)], " ");
+        assert_eq!(&text[selected_word(text, text.len())], "bug");
+        assert_eq!(selected_word("", 0), 0..0);
     }
 
     #[test]
-    fn user_message_meta_resolves_agent_and_catalog_model() {
-        let models = vec![vela_opencode::ModelInfo {
-            id: "claude".into(),
-            provider_id: "anthropic".into(),
-            name: "Claude Sonnet".into(),
-            context_limit: None,
-            variant: None,
-            variants: Vec::new(),
-        }];
-        let mut block = Block {
-            id: "user".into(),
-            message_id: "message".into(),
-            part_id: "user".into(),
-            kind: BlockKind::User,
-            text: "fix it".into(),
-            detail: String::new().into(),
-            output: String::new().into(),
-            status: ToolStatus::None,
-            streaming: false,
-            agent: Some("build".into()),
-            model: Some("claude".into()),
-            created_at: 0,
-            completed_at: None,
-            child_session_id: None,
-            files: Vec::new(),
-            sub_calls: Vec::new(),
-            attachments: Vec::new(),
-        };
-        assert_eq!(
-            user_message_meta(&block, &models).as_deref(),
-            Some("Build\u{00A0}·\u{00A0}Claude Sonnet")
-        );
-        block.agent = None;
-        block.model = None;
-        assert_eq!(user_message_meta(&block, &models), None);
-    }
-
-    #[test]
-    fn reasoning_defaults_open_while_streaming_and_manual_choice_is_retained() {
+    fn reasoning_defaults_collapsed_and_manual_choice_survives_completion() {
         let mut reasoning = block("reason", "step", BlockKind::Reasoning, "First\n\nSecond");
         reasoning.streaming = true;
         reasoning.completed_at = None;
         let mut ui = TranscriptUi::default();
+        let closed = project(&[reasoning.clone()], true, "session", &ui);
+        assert_eq!(closed.iter().filter(|row| !row.hidden).count(), 1);
+        assert!(matches!(&closed[0].kind, RowKind::ToolGroup { title, .. } if title.as_ref() == "Thinking"));
+        assert!(closed[1].hidden && matches!(closed[1].kind, RowKind::Reasoning { open: false, running: true, .. }));
+        ui.reasoning_open.insert("session:reason".into(), true);
         let open = project(&[reasoning.clone()], true, "session", &ui);
-        assert!(open.iter().any(|row| matches!(
-            row.kind,
-            RowKind::Reasoning {
-                open: true,
-                running: true,
-                ..
-            }
-        )));
-        assert_eq!(
-            open.iter()
-                .filter(|row| matches!(
-                    row.kind,
-                    RowKind::Content {
-                        reasoning: true,
-                        ..
-                    }
-                ))
-                .count(),
-            2
-        );
-        ui.reasoning_open.insert("session:reason".into(), false);
-        assert!(
-            !project(&[reasoning], true, "session", &ui)
-                .iter()
-                .any(|row| matches!(
-                    row.kind,
-                    RowKind::Content {
-                        reasoning: true,
-                        ..
-                    }
-                ))
-        );
+        assert_eq!(open.iter().filter(|row| !row.hidden).count(), 2);
+        reasoning.streaming = false;
+        reasoning.completed_at = Some(4000);
+        let settled = project(&[reasoning], false, "session", &ui);
+        assert!(matches!(settled[1].kind, RowKind::Reasoning { open: true, running: false, .. }));
+        assert_eq!(settled.iter().map(|row| &row.id).collect::<Vec<_>>(), open.iter().map(|row| &row.id).collect::<Vec<_>>());
     }
     #[test]
     fn copy_preserves_full_original_markdown_after_last_tool_and_long_answers_stay_rows() {
@@ -2666,7 +3037,7 @@ mod tests {
                 streaming: false,
             },
         });
-        assert_eq!(answer_text(&message), text);
+        assert_eq!(answer_text(&message), format!("Commentary\n\n{text}"));
         let blocks = (0..500)
             .map(|index| {
                 block(

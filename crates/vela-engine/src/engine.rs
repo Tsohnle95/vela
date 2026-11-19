@@ -9,7 +9,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};
 
 use vela_core::document::ExternalChange;
-use vela_core::event::{AgentEvent, PermissionRequest, TodoItem, parse_event};
+use vela_core::event::{AgentEvent, PermissionRequest, TodoItem};
 use vela_core::session::SessionSummary;
 use vela_core::transcript::Transcript;
 use vela_core::warm::WarmEntry;
@@ -195,14 +195,6 @@ pub enum EngineUpdate {
         default_model: Option<ModelInfo>,
         error: Option<String>,
     },
-    Integrations {
-        request_id: u64,
-        session_id: String,
-        mcp_servers: Vec<vela_opencode::inventory::McpServerInfo>,
-        plugins: Vec<vela_opencode::inventory::PluginInfo>,
-        skills: Vec<vela_opencode::inventory::SkillInfo>,
-        error: Option<String>,
-    },
     ProviderUsage {
         request_id: u64,
         results: Vec<crate::provider_usage::ProviderUsageResult>,
@@ -317,6 +309,111 @@ impl Default for EngineConfig {
     }
 }
 
+/// An open request whose authoritative HTTP snapshot is still in flight.
+/// Transcript events continue publishing while HTTP is pending. A bounded copy
+/// allows replay against an older successful response; on overflow keep the
+/// live transcript instead of installing an unreconcilable response.
+struct SessionLoad {
+    generation: uuid::Uuid,
+    events: Option<Vec<AgentEvent>>,
+    event_bytes: usize,
+}
+
+impl SessionLoad {
+    fn new(generation: uuid::Uuid) -> Self {
+        Self { generation, events: Some(Vec::new()), event_bytes: 0 }
+    }
+
+    fn record(&mut self, event: &AgentEvent, wire: &Value) {
+        fn bytes(value: &Value) -> usize {
+            std::mem::size_of::<Value>() + match value {
+                Value::String(text) => text.len(),
+                Value::Array(items) => items.iter().map(bytes).sum(),
+                Value::Object(items) => items.iter().map(|(key, value)| key.len() + bytes(value)).sum(),
+                _ => 0,
+            }
+        }
+        let Some(events) = &mut self.events else { return; };
+        self.event_bytes = self.event_bytes.saturating_add(bytes(wire));
+        if events.len() >= 4096 || self.event_bytes > 8 * 1024 * 1024 {
+            self.events = None;
+        } else {
+            events.push(event.clone());
+        }
+    }
+}
+
+fn history_already_settled(
+    event: &AgentEvent,
+    completed: &HashMap<&str, &vela_core::transcript::Message>,
+) -> bool {
+    match event {
+        AgentEvent::StepStarted { message_id, .. }
+        | AgentEvent::StepEnded { message_id, .. }
+        | AgentEvent::StepFailed { message_id, .. } => completed.contains_key(message_id.as_str()),
+        AgentEvent::TextStarted { message_id, part_id, .. }
+        | AgentEvent::TextDelta { message_id, part_id, .. }
+        | AgentEvent::TextEnded { message_id, part_id, .. }
+        | AgentEvent::ReasoningStarted { message_id, part_id, .. }
+        | AgentEvent::ReasoningDelta { message_id, part_id, .. }
+        | AgentEvent::ReasoningEnded { message_id, part_id, .. } => completed
+            .get(message_id.as_str())
+            .is_some_and(|message| message.part(part_id).is_some()),
+        // A tool can finish after its assistant prose is settled.
+        _ => false,
+    }
+}
+
+/// Match prefixes only for parts that changed by append during this load.
+/// The live value supplies the baseline without copying it on every delta.
+fn history_delta_overlap(
+    events: &[AgentEvent],
+    live: &Transcript,
+    history: &Transcript,
+) -> HashMap<(String, String), usize> {
+    let mut appends = HashMap::<(&str, &str), String>::new();
+    let mut replaced_messages = HashSet::new();
+    let mut replaced_parts = HashSet::new();
+    for event in events {
+        match event {
+            AgentEvent::TextDelta { message_id, part_id, delta, .. }
+            | AgentEvent::ReasoningDelta { message_id, part_id, delta, .. } => {
+                appends.entry((message_id, part_id)).or_default().push_str(delta);
+            }
+            AgentEvent::MessageUpsert { message, .. } => {
+                replaced_messages.insert(message.id.as_str());
+            }
+            AgentEvent::MessageRemoved { message_id, .. } => {
+                replaced_messages.insert(message_id.as_str());
+            }
+            AgentEvent::PartUpsert { message_id, part, .. } => {
+                replaced_parts.insert((message_id.as_str(), part.id.as_str()));
+            }
+            AgentEvent::TextEnded { message_id, part_id, .. }
+            | AgentEvent::ReasoningEnded { message_id, part_id, .. } => {
+                replaced_parts.insert((message_id.as_str(), part_id.as_str()));
+            }
+            _ => {}
+        }
+    }
+    appends
+        .into_iter()
+        .filter_map(|((message_id, part_id), appended)| {
+            if replaced_messages.contains(message_id)
+                || replaced_parts.contains(&(message_id, part_id))
+            {
+                return None;
+            }
+            let live_part = live.message(message_id)?.part(part_id)?;
+            let history_part = history.message(message_id)?.part(part_id)?;
+            let baseline = live_part.kind.text().strip_suffix(&appended)?;
+            let overlap = history_part.kind.text().strip_prefix(baseline)?;
+            (!overlap.is_empty() && appended.starts_with(overlap))
+                .then(|| ((message_id.to_owned(), part_id.to_owned()), overlap.len()))
+        })
+        .collect()
+}
+
 struct Inner {
     settings: RwLock<Settings>,
     message_queues: std::sync::Mutex<crate::message_queue::MessageQueues>,
@@ -332,7 +429,7 @@ struct Inner {
     terminals:
         std::sync::Mutex<std::collections::HashMap<String, Arc<vela_terminal::pty::PtySession>>>,
     sass_watches: std::sync::Mutex<crate::sass_state::Watches>,
-    session_loads: std::sync::Mutex<HashMap<String, uuid::Uuid>>,
+    session_loads: std::sync::Mutex<HashMap<String, SessionLoad>>,
     forms: std::sync::Mutex<HashMap<String, Vec<FormRequest>>>,
     validation_cancels: std::sync::Mutex<HashMap<u64, CancellationToken>>,
 }
@@ -557,10 +654,6 @@ enum Command {
     LoadCatalog {
         session_id: String,
     },
-    LoadIntegrations {
-        request_id: u64,
-        session_id: String,
-    },
     LoadProviderUsage {
         request_id: u64,
     },
@@ -618,6 +711,7 @@ enum Command {
         reply: Option<tokio::sync::oneshot::Sender<Result<crate::SassWatchState, String>>>,
     },
     Shutdown,
+    TranscriptEvent(AgentEvent),
 }
 
 impl Engine {
@@ -673,6 +767,12 @@ impl Engine {
 
     pub fn view(&self, id: &str) -> Option<Arc<SessionView>> {
         self.read(|store| store.view(id))
+    }
+
+    /// Authoritative tombstone for reconciliation after missed invalidations.
+    /// Absence from a paged session list alone never establishes deletion.
+    pub fn session_is_retired(&self, id: &str) -> bool {
+        self.read(|store| store.retired_sessions.contains(id))
     }
 
     pub fn active_view(&self) -> Option<Arc<SessionView>> {
@@ -1241,13 +1341,6 @@ impl Engine {
         self.send(Command::LoadProviderUsage { request_id });
     }
 
-    pub fn load_integrations(&self, request_id: u64, session_id: impl Into<String>) {
-        self.send(Command::LoadIntegrations {
-            request_id,
-            session_id: session_id.into(),
-        });
-    }
-
     pub fn load_providers(&self, request_id: u64, session_id: impl Into<String>) {
         self.send(Command::LoadProviders {
             request_id,
@@ -1477,7 +1570,13 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
     let mut oauth_flows: HashMap<u64, crate::provider_oauth::Lease> = HashMap::new();
     let mut events: Option<mpsc::Receiver<Value>> = None;
     let mut pending: Vec<Value> = Vec::new();
-    let mut flush = tokio::time::interval(Duration::from_millis(16));
+    let instance = uuid::Uuid::new_v4().to_string();
+    let mut stream_log = vela_core::run_log::EventLog::new(instance.clone());
+    let mut stream_journal = crate::stream_journal::StreamJournal::new(
+        inner.config.data_dir.clone().or_else(crate::persist::default_data_dir), instance,
+    );
+    let mut seeded_sessions = HashSet::new();
+    let mut flush = tokio::time::interval(Duration::from_millis(40));
     flush.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let mut settlement = tokio::time::interval(Duration::from_secs(1));
     settlement.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -1490,6 +1589,18 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
             command = commands.recv() => {
                 let Some(command) = command else { break };
                 match command {
+                    Command::TranscriptEvent(event) => {
+                        let Some(session) = event.session_id().map(str::to_owned) else { continue; };
+                        if inner.read(|store| store.retired_sessions.contains(&session)) || stream_journal.is_failed() { continue; }
+                        seed_stream_session(&inner, &session, &mut seeded_sessions, &mut stream_log);
+                        let raw = serde_json::json!({});
+                        let Some(accepted) = stream_log.append_normalized(&raw, event, now()) else { continue; };
+                        if !persist_stream_log(&inner, &mut stream_log, &mut stream_journal).await { continue; }
+                        if let Some(view) = inner.read_view(&session) {
+                            view.update_transcript(|transcript| transcript.apply(&accepted.event));
+                            inner.emit(EngineUpdate::Session(session));
+                        }
+                    }
                     Command::RetainEditorWorkspace {session_id,directory} => {
                         if inner.read_view(&session_id).is_some_and(|view|view.summary().directory==directory) {
                             if let Err(error)=inner.observations.retain_editor(&session_id,&directory) {set_error(&inner,&error);}
@@ -1932,7 +2043,23 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                             tokio::spawn(async move {
                                 match active.steer_inbox(&session_id, &inbox_id).await {
                                     Ok(()) => spawn_inbox_refresh(&inner, active, session_id),
-                                    Err(error) => set_error(&inner, &error.to_string()),
+                                    Err(error) => {
+                                        let message =
+                                            format!("Queued prompt could not be sent: {error}");
+                                        spawn_inbox_refresh(
+                                            &inner,
+                                            active,
+                                            session_id.clone(),
+                                        );
+                                        let _ = inner.commands.send(Command::TranscriptEvent(AgentEvent::Notice {
+                                                    session_id: session_id.clone(),
+                                                    text: message.clone(),
+                                                    error: true,
+                                                    at: now(),
+                                                }));
+                                        inner.emit(EngineUpdate::Session(session_id));
+                                        set_error(&inner, &message);
+                                    }
                                 }
                             });
                         }
@@ -1953,77 +2080,6 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                             inner.emit(EngineUpdate::ProviderUsage {
                                 request_id,
                                 results,
-                            });
-                        });
-                    }
-                    Command::LoadIntegrations {
-                        request_id,
-                        session_id,
-                    } => {
-                        let Some(directory) =
-                            session_directory(&inner, &session_id).and_then(|path| {
-                                path.to_str().map(str::to_owned)
-                            })
-                        else {
-                            inner.emit(EngineUpdate::Integrations {
-                                request_id,
-                                session_id,
-                                mcp_servers: Vec::new(),
-                                plugins: Vec::new(),
-                                skills: Vec::new(),
-                                error: Some(
-                                    "This session has no workspace directory".into(),
-                                ),
-                            });
-                            continue;
-                        };
-                        let Some(active) = client.clone() else {
-                            inner.emit(EngineUpdate::Integrations {
-                                request_id,
-                                session_id,
-                                mcp_servers: Vec::new(),
-                                plugins: Vec::new(),
-                                skills: Vec::new(),
-                                error: Some("OpenCode is not connected.".into()),
-                            });
-                            continue;
-                        };
-                        let inner = inner.clone();
-                        tokio::spawn(async move {
-                            let result = async {
-                                let mcp_servers = active
-                                    .list_mcp_servers(&directory)
-                                    .await
-                                    .map_err(|error| error.to_string())?;
-                                let plugins = active
-                                    .list_plugins(&directory)
-                                    .await
-                                    .map_err(|error| error.to_string())?;
-                                let skills = active
-                                    .list_skill_inventory(&directory)
-                                    .await
-                                    .map_err(|error| error.to_string())?;
-                                Ok::<_, String>((mcp_servers, plugins, skills))
-                            }
-                            .await;
-                            let (mcp_servers, plugins, skills, error) = match result {
-                                Ok((mcp_servers, plugins, skills)) => {
-                                    (mcp_servers, plugins, skills, None)
-                                }
-                                Err(error) => (
-                                    Vec::new(),
-                                    Vec::new(),
-                                    Vec::new(),
-                                    Some(error),
-                                ),
-                            };
-                            inner.emit(EngineUpdate::Integrations {
-                                request_id,
-                                session_id,
-                                mcp_servers,
-                                plugins,
-                                skills,
-                                error,
                             });
                         });
                     }
@@ -2303,14 +2359,13 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                             }
                             inner.emit(EngineUpdate::Session(id.clone()));
                         } else {
-                            let promoted = {
-                                let mut store = inner.store.write().expect("store lock");
-                                store.warm.remove(&id).map(|entry| {
-                                    let view = std::sync::Arc::new(SessionView::from_warm(entry));
-                                    store.insert_view(view.clone());
-                                    view
-                                })
-                            };
+                            let warmed = inner.store.write().expect("store lock").warm.remove(&id);
+                            let promoted = warmed.map(|entry| {
+                                // Deriving a warm Markdown snapshot must not hold the global store.
+                                let view = std::sync::Arc::new(SessionView::from_warm(entry));
+                                inner.store.write().expect("store lock").insert_view(view.clone());
+                                view
+                            });
                             if promoted.is_none() {
                                 let summary = inner.read(|store| {
                                     store.sessions.iter().find(|item| item.id == id).cloned()
@@ -2353,6 +2408,9 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                         session_deletions.remove(&session_id);
                         if error.is_none() {
                             retire_session(&inner, &session_id);
+                            if let Err(error) = stream_journal.remove_session(session_id.clone()).await { set_error(&inner, &error); }
+                            seeded_sessions.remove(&session_id);
+                            stream_log.retire_session(&session_id);
                             stream_activity.remove(&session_id);
                         }
                         inner.emit(EngineUpdate::SessionDeleteFinished { request_id, session_id, error });
@@ -2363,14 +2421,22 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                         }
                     }
                     Command::Loaded { session_id, generation, result } => {
-                        if inner.read(|store| store.retired_sessions.contains(&session_id)) { continue; }
-                        let current = {
+                        // Include wire events already received since the last
+                        // cadence tick before taking this load's journal.
+                        flush_pending(&inner, &mut pending, &mut client, &mut stream_activity, &mut stream_log, &mut stream_journal, &mut seeded_sessions).await;
+                        if inner.read(|store| store.retired_sessions.contains(&session_id)) {
+                            inner.session_loads.lock().expect("session loads lock").remove(&session_id);
+                            continue;
+                        }
+                        let pending_events = {
                             let mut loads = inner.session_loads.lock().expect("session loads lock");
-                            let current = loads.get(&session_id) == Some(&generation);
-                            if current { loads.remove(&session_id); }
-                            current
+                            match loads.get(&session_id) {
+                                Some(load) if load.generation == generation => {
+                                    loads.remove(&session_id).and_then(|load| load.events)
+                                }
+                                _ => continue,
+                            }
                         };
-                        if !current { continue; }
                         match result {
                             Ok((summary, messages)) => {
                                 {
@@ -2378,28 +2444,67 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                                     store.last_error = None;
                                 }
                                 let view = ensure_view(&inner, summary);
+                                let Some(pending_events) = pending_events else {
+                                    tracing::warn!(session = %session_id, "skipping history replacement after live replay limit");
+                                    inner.emit(EngineUpdate::Session(session_id));
+                                    continue;
+                                };
                                 let hydrated = Transcript::from_messages_json(&messages);
+                                let todos = vela_core::transcript::replay_todos_json(&messages);
                                 let count = hydrated.messages().len();
-                                stream_activity.remove(&session_id);
-                                view.update_transcript(|transcript| {
+                                let live_todos = pending_events.iter().any(|event| matches!(event, AgentEvent::TodoUpdated { .. }));
+                                let completed = hydrated.messages().iter().filter(|message| {
+                                    message.completed_at.is_some() || message.finish.is_some() || message.error.is_some()
+                                }).map(|message| (message.id.as_str(), message)).collect::<HashMap<_, _>>();
+                                let mut reconciled = view.transcript_clone();
+                                {
+                                    let transcript = &mut reconciled;
+                                    let mut overlap = history_delta_overlap(&pending_events, transcript, &hydrated);
                                     transcript.hydrate(hydrated.messages().to_vec());
-                                });
+                                    // Apply live events captured while this
+                                    // snapshot was in flight, preserving their
+                                    // order against the older replay.
+                                    for mut event in pending_events {
+                                        if history_already_settled(&event, &completed) {
+                                            continue;
+                                        }
+                                        if let AgentEvent::TextDelta { message_id, part_id, delta, .. }
+                                        | AgentEvent::ReasoningDelta { message_id, part_id, delta, .. } = &mut event
+                                            && let Some(remaining) = overlap.get_mut(&(message_id.clone(), part_id.clone()))
+                                        {
+                                            let covered = (*remaining).min(delta.len());
+                                            *remaining -= covered;
+                                            if covered == delta.len() {
+                                                continue;
+                                            }
+                                            delta.drain(..covered);
+                                        }
+                                        transcript.apply(&event);
+                                    }
+                                }
+                                stream_log.record_snapshot(&session_id, reconciled.messages().to_vec(), reconciled.phase());
+                                if !persist_stream_log(&inner, &mut stream_log, &mut stream_journal).await { continue; }
+                                seeded_sessions.insert(session_id.clone());
+                                view.update_transcript(|transcript| *transcript = reconciled);
+                                // Source replays the latest todowrite result with
+                                // the transcript, so a reopened session keeps its
+                                // todo dock without waiting for a new event.
+                                if !live_todos {
+                                    let mut store = inner.store.write().expect("store lock");
+                                    store.todos.insert(session_id.clone(), todos);
+                                }
                                 tracing::debug!(session = %session_id, messages = count, "hydrated session");
                                 evict_views(&inner);
                                 inner.emit(EngineUpdate::Session(session_id));
                             }
                             Err(error) => {
                                 set_error(&inner, &error);
-                                if let Some(view) = inner.read_view(&session_id) {
-                                    view.update_transcript(|transcript| {
-                                        transcript.apply(&AgentEvent::Notice {
+                                let _ = inner.commands.send(Command::TranscriptEvent(AgentEvent::Notice {
                                             session_id: session_id.clone(),
                                             text: format!("Could not load conversation: {error}"),
                                             error: true,
                                             at: now(),
-                                        });
-                                    });
-                                }
+                                        }));
                                 inner.emit(EngineUpdate::Session(session_id));
                             }
                         }
@@ -2436,6 +2541,7 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                         // either immediate or queued delivery. Canonical replay
                         // reconciles this optimistic user row by text.
                         if let Some(view) = inner.read_view(&session_id) {
+                            seed_stream_session(&inner, &session_id, &mut seeded_sessions, &mut stream_log);
                             let local_id = format!("local:{}", uuid::Uuid::new_v4());
                             let attachments = files
                                 .iter()
@@ -2447,14 +2553,9 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                                     })
                                 })
                                 .collect::<Vec<_>>();
-                            view.update_transcript(|transcript| {
-                                transcript.upsert_local_user(
-                                    local_id,
-                                    text.clone(),
-                                    now(),
-                                    attachments,
-                                );
-                            });
+                            let record = stream_log.record_local_user(&session_id, local_id, text.clone(), now(), attachments);
+                            if !persist_stream_log(&inner, &mut stream_log, &mut stream_journal).await { continue; }
+                            view.update_transcript(|transcript| record.apply_to(transcript));
                             inner.emit(EngineUpdate::Session(session_id.clone()));
                         }
                         {
@@ -2491,16 +2592,12 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                                             if let Err(error) = saved { set_error(&inner, &format!("Queued locally in memory, but could not save: {error}")); }
                                             inner.emit(EngineUpdate::LocalQueue(session_id.clone()));
                                         }
-                                        if let Some(view) = inner.read_view(&session_id) {
-                                            view.update_transcript(|transcript| {
-                                                transcript.apply(&AgentEvent::Notice {
+                                        let _ = inner.commands.send(Command::TranscriptEvent(AgentEvent::Notice {
                                                     session_id: session_id.clone(),
                                                     text: format!("Prompt failed: {error}"),
                                                     error: true,
                                                     at: now(),
-                                                });
-                                            });
-                                        }
+                                                }));
                                         inner.emit(EngineUpdate::Session(session_id.clone()));
                                         set_error(&inner, &error);
                                     }
@@ -2666,6 +2763,9 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                     inner.emit(EngineUpdate::Connection);
                 }
             }
+            _ = flush.tick(), if !pending.is_empty() => {
+                flush_pending(&inner, &mut pending, &mut client, &mut stream_activity, &mut stream_log, &mut stream_journal, &mut seeded_sessions).await;
+            }
             raw = next_event(&mut events) => {
                 if let Some(raw) = raw {
                     if raw
@@ -2688,26 +2788,24 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
                         }
                         continue;
                     }
-                    let critical = is_critical(&raw);
                     pending.push(raw);
-                    if critical {
-                        flush_pending(&inner, &mut pending, &mut client, &mut stream_activity);
-                    }
                 } else {
                     events = None;
                 }
-            }
-            _ = flush.tick(), if !pending.is_empty() => {
-                flush_pending(&inner, &mut pending, &mut client, &mut stream_activity);
             }
             _ = settlement.tick() => {
                 if let Some(id) = inner.read(|store| store.active_session.clone())
                     && let Some(view) = inner.read_view(&id)
                 {
                     let last = stream_activity.entry(id.clone()).or_insert_with(Instant::now);
-                    let result = view.update_transcript(|transcript| transcript.settle_quiet(
-                        last.elapsed().as_millis().min(u64::MAX as u128) as u64, now()));
+                    let quiet_ms = last.elapsed().as_millis().min(u64::MAX as u128) as u64;
+                    let at = now();
+                    let mut settled = view.transcript_clone();
+                    let result = settled.settle_quiet(quiet_ms, at);
                     if let Some(stalled) = result {
+                        stream_log.record_quiet_settlement(&id, quiet_ms, at);
+                        if !persist_stream_log(&inner, &mut stream_log, &mut stream_journal).await { continue; }
+                        view.update_transcript(|transcript| *transcript = settled);
                         inner.emit(EngineUpdate::SessionSettled { session_id: id, stalled });
                     }
                 }
@@ -2716,6 +2814,8 @@ async fn run(inner: Arc<Inner>, mut commands: mpsc::UnboundedReceiver<Command>) 
     }
     kill_all_terminals(&inner);
     previews.stop_all().await;
+    flush_pending(&inner, &mut pending, &mut client, &mut stream_activity, &mut stream_log, &mut stream_journal, &mut seeded_sessions).await;
+    if let Err(error) = stream_journal.sync().await { set_error(&inner, &error); }
     info!("engine stopped");
 }
 
@@ -2741,19 +2841,36 @@ async fn next_event(events: &mut Option<mpsc::Receiver<Value>>) -> Option<Value>
     }
 }
 
-fn flush_pending(
+async fn flush_pending(
     inner: &Arc<Inner>,
     pending: &mut Vec<Value>,
     client: &mut Option<Client>,
     stream_activity: &mut HashMap<String, Instant>,
+    stream_log: &mut vela_core::run_log::EventLog,
+    stream_journal: &mut crate::stream_journal::StreamJournal,
+    seeded_sessions: &mut HashSet<String>,
 ) {
     let batch = std::mem::take(pending);
+    if stream_journal.is_failed() { return; }
+    let mut normalized = Vec::with_capacity(batch.len());
+    for raw in batch {
+        let Some(envelope) = vela_core::event::EventEnvelope::parse_at(&raw, now()) else { continue; };
+        let event = vela_core::event::parse_envelope(&envelope);
+        let Some(session) = event.session_id().map(str::to_owned) else {
+            if let Some(event) = stream_log.append_normalized(&raw, event, envelope.created) { normalized.push((raw, event.event)); }
+            continue;
+        };
+        if inner.read(|store| store.retired_sessions.contains(&session)) { continue; }
+        seed_stream_session(inner, &session, seeded_sessions, stream_log);
+        if let Some(event) = stream_log.append_normalized(&raw, event, envelope.created) { normalized.push((raw, event.event)); }
+    }
+    if !persist_stream_log(inner, stream_log, stream_journal).await { return; }
     let mut touched = HashSet::new();
     let mut sessions_changed = false;
     let mut permissions_changed = false;
     let mut rematerialize = false;
     let mut inbox_refresh = HashSet::new();
-    for raw in batch {
+    for (raw, event) in normalized {
         if raw
             .get("type")
             .and_then(Value::as_str)
@@ -2762,9 +2879,6 @@ fn flush_pending(
         {
             inbox_refresh.insert(session_id.to_string());
         }
-        let Some(event) = parse_event(&raw) else {
-            continue;
-        };
         if event
             .session_id()
             .is_some_and(|id| inner.read(|store| store.retired_sessions.contains(id)))
@@ -2807,6 +2921,9 @@ fn flush_pending(
             }
             AgentEvent::SessionDeleted { id } => {
                 retire_session(inner, id);
+                if let Err(error) = stream_journal.remove_session(id.clone()).await { set_error(inner, &error); }
+                seeded_sessions.remove(id);
+                stream_log.retire_session(id);
                 stream_activity.remove(id);
                 touched.remove(id);
                 continue;
@@ -2859,6 +2976,12 @@ fn flush_pending(
                 AgentEvent::PermissionAsked { .. } | AgentEvent::PermissionReplied { .. }
             )
         {
+            {
+                let mut loads = inner.session_loads.lock().expect("session loads lock");
+                if let Some(load) = loads.get_mut(session_id) {
+                    load.record(&event, &raw);
+                }
+            }
             let summary = inner.read(|store| {
                 store
                     .sessions
@@ -2933,6 +3056,32 @@ fn flush_pending(
     }
 }
 
+async fn persist_stream_log(
+    inner: &Arc<Inner>,
+    log: &mut vela_core::run_log::EventLog,
+    journal: &mut crate::stream_journal::StreamJournal,
+) -> bool {
+    match journal.append(log.drain_records()).await {
+        Ok(()) => true,
+        Err(error) => { set_error(inner, &error); false }
+    }
+}
+
+fn seed_stream_session(
+    inner: &Arc<Inner>, session: &str, seeded: &mut HashSet<String>,
+    log: &mut vela_core::run_log::EventLog,
+) {
+    if !seeded.insert(session.to_owned()) { return; }
+    if let Some(view) = inner.read_view(session) {
+        view.with_transcript(|transcript| { log.record_snapshot(session, transcript.messages().to_vec(), transcript.phase()); });
+    } else {
+        let mut store = inner.store.write().expect("store lock");
+        if let Some(entry) = store.warm.get(session) {
+            log.record_snapshot(session, entry.transcript.messages().to_vec(), entry.transcript.phase());
+        }
+    }
+}
+
 impl Inner {
     fn read<R>(&self, read: impl FnOnce(&Store) -> R) -> R {
         let store = self.store.read().expect("store lock");
@@ -2949,6 +3098,15 @@ impl Inner {
     }
 
     fn emit(&self, update: EngineUpdate) {
+        // Prepare derived Markdown once per published batch, never in a UI getter.
+        let session = match &update {
+            EngineUpdate::Session(id) => Some(id.as_str()),
+            EngineUpdate::SessionSettled { session_id, .. } => Some(session_id.as_str()),
+            _ => None,
+        };
+        if let Some(view) = session.and_then(|id| self.read_view(id)) {
+            view.prepare_markdown();
+        }
         let _ = self.updates.send(update);
     }
 }
@@ -3065,14 +3223,27 @@ fn close_to_warm(inner: &Arc<Inner>, id: &str) {
         .expect("session loads lock")
         .remove(id);
     inner.observations.detach(id);
-    let mut store = inner.store.write().expect("store lock");
-    let Some(view) = store.views.remove(id) else {
+    // Remove the view under the lock, but clone its transcript outside it:
+    // a large close must not stall UI reads that take the global store lock.
+    let Some(view) = inner
+        .store
+        .write()
+        .expect("store lock")
+        .views
+        .remove(id)
+    else {
         return;
     };
     let transcript = view.transcript_clone();
     let entry = WarmEntry::new(view.summary(), transcript)
         .with_draft(view.draft())
         .with_scroll(view.scroll());
+    let mut store = inner.store.write().expect("store lock");
+    // A reopen that won the race owns the live view and its active ownership;
+    // do not shadow it in warm or clear the new activation.
+    if store.views.contains_key(id) {
+        return;
+    }
     store.warm.insert(entry);
     if store.active_session.as_deref() == Some(id) {
         store.active_session = None;
@@ -3098,11 +3269,14 @@ fn retire_session(inner: &Arc<Inner>, id: &str) {
 }
 
 fn evict_views(inner: &Arc<Inner>) {
-    let limit = inner.config.warm_sessions;
+    // The closed-session cache setting must never evict a visible panel.
+    // Keep the historical navigation allowance above the live UI capacity.
+    let limit = inner.config.warm_sessions.saturating_add(1)
+        .max(vela_core::session::MAX_SIMULTANEOUS_PANELS);
     loop {
         let victim = {
             let store = inner.store.read().expect("store lock");
-            if store.views.len() <= limit.saturating_add(1) {
+            if store.views.len() <= limit {
                 None
             } else {
                 store
@@ -3124,7 +3298,7 @@ fn spawn_open(inner: &Arc<Inner>, client: Client, session_id: String) {
         .session_loads
         .lock()
         .expect("session loads lock")
-        .insert(session_id.clone(), generation);
+        .insert(session_id.clone(), SessionLoad::new(generation));
     if let Some(view) = inner.read_view(&session_id) {
         view.touch();
     }
@@ -3162,7 +3336,7 @@ fn spawn_open_directory(inner: &Arc<Inner>, client: Client, directory: String) {
                     .session_loads
                     .lock()
                     .expect("session loads lock")
-                    .insert(session_id.clone(), generation);
+                    .insert(session_id.clone(), SessionLoad::new(generation));
                 ensure_view(&inner, summary);
                 inner.emit(EngineUpdate::WorkspaceOpened {
                     directory: directory.clone(),
@@ -4044,19 +4218,6 @@ fn set_error(inner: &Arc<Inner>, message: &str) {
         store.last_error = Some(message.to_string());
     }
     inner.emit(EngineUpdate::Error(message.to_string()));
-}
-
-fn is_critical(raw: &Value) -> bool {
-    raw.get("type").and_then(Value::as_str).is_some_and(|kind| {
-        kind.starts_with("permission.")
-            || kind.starts_with("session.execution.")
-            || kind == "session.error"
-            || kind == "global.error"
-            || kind == "session.idle"
-            || kind == "session.created"
-            || kind == "session.deleted"
-            || kind == "server.connected"
-    })
 }
 
 fn now() -> i64 {

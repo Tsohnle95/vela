@@ -48,6 +48,14 @@ pub struct Settings {
     pub hidden_providers: BTreeSet<String>,
     #[serde(default)]
     pub follow_up_behavior: crate::message_queue::FollowUpBehavior,
+    /// Source keeps the agent panel's GUI/TUI choice in renderer localStorage
+    /// per session. Native settings persist the same session-keyed choice.
+    #[serde(default)]
+    pub agent_panel_modes: std::collections::BTreeMap<String, String>,
+    /// Source persists its per-session post-compaction context estimate in
+    /// renderer localStorage. Native settings own the same session-keyed map.
+    #[serde(default)]
+    pub compaction_baselines: std::collections::BTreeMap<String, i64>,
 }
 
 fn schema_version() -> u32 {
@@ -91,6 +99,8 @@ impl Default for Settings {
             hidden_models: BTreeSet::new(),
             hidden_providers: BTreeSet::new(),
             follow_up_behavior: Default::default(),
+            agent_panel_modes: Default::default(),
+            compaction_baselines: Default::default(),
         }
     }
 }
@@ -271,6 +281,46 @@ mod tests {
         assert_eq!(loaded.last_session.as_deref(), Some("ses_1"));
         assert!(loaded.auto_approve_tools);
         assert_eq!(loaded.schema_version, SETTINGS_VERSION);
+    }
+
+    #[test]
+    fn compaction_baselines_round_trip_per_session() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut settings = Settings::load(Some(temp.path()));
+        assert!(settings.compaction_baselines.is_empty());
+        settings
+            .compaction_baselines
+            .insert("ses_one".into(), 21_000);
+        settings
+            .compaction_baselines
+            .insert("ses_two".into(), 0);
+        settings.save(Some(temp.path())).unwrap();
+        let loaded = Settings::load(Some(temp.path()));
+        assert_eq!(loaded.compaction_baselines, settings.compaction_baselines);
+        assert_eq!(
+            loaded.compaction_baselines.get("ses_one").copied(),
+            Some(21_000)
+        );
+    }
+
+    #[test]
+    fn agent_panel_modes_round_trip_per_session() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut settings = Settings::load(Some(temp.path()));
+        assert!(settings.agent_panel_modes.is_empty());
+        settings
+            .agent_panel_modes
+            .insert("ses_one".into(), "tui".into());
+        settings
+            .agent_panel_modes
+            .insert("ses_two".into(), "gui".into());
+        settings.save(Some(temp.path())).unwrap();
+        let loaded = Settings::load(Some(temp.path()));
+        assert_eq!(loaded.agent_panel_modes, settings.agent_panel_modes);
+        assert_eq!(
+            loaded.agent_panel_modes.get("ses_one").map(String::as_str),
+            Some("tui")
+        );
     }
 
     #[test]

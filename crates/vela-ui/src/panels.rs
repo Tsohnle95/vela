@@ -1,80 +1,25 @@
 //! Multi-panel activation state. The engine retains transcript/draft data per
 //! session; this model owns the UI-side selection, composer and scroll snapshot
 //! so switching panels does not reset them.
-use std::collections::HashSet;
 use std::sync::Arc;
 
 use gpui::ListOffset;
 use vela_core::event::{PermissionRequest, TodoItem};
 use vela_core::session::{SessionPhase, SessionUsage};
 use vela_core::transcript::Block;
+#[cfg(test)]
 use vela_core::transcript::BlockKind;
 use vela_opencode::{FormRequest, ModelInfo};
 
-pub const MAX_PANELS: usize = 8;
-/// Maximum transcript blocks kept in a tiled (inactive-panel) preview.
-pub const PREVIEW_BLOCKS: usize = 24;
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PanelPreviewRow {
-    /// Index into the panel's source block list, so the tiled renderer can
-    /// expose the original tool payload rather than the condensed summary.
-    pub source_index: usize,
-    pub kind: BlockKind,
-    pub label: &'static str,
-    pub text: String,
-    pub user: bool,
-}
-
-/// Condense the tail of a panel transcript for simultaneous tiled rendering.
-/// The active panel uses the full interactive renderer; inactive tiles show this
-/// snapshot, so every panel remains independently visible and scrollable.
-pub fn preview_rows(blocks: &[Block], limit: usize) -> Vec<PanelPreviewRow> {
-    let start = blocks.len().saturating_sub(limit);
-    blocks[start..]
-        .iter()
-        .enumerate()
-        .filter_map(|(offset, block)| {
-            let text = block.text.trim();
-            let text = if text.is_empty() {
-                block.detail.trim()
-            } else {
-                text
-            };
-            if text.is_empty() && block.output.trim().is_empty() {
-                return None;
-            }
-            let mut text = if text.is_empty() {
-                block.output.trim().to_owned()
-            } else {
-                text.to_owned()
-            };
-            if text.chars().count() > 400 {
-                text = text.chars().take(400).collect::<String>();
-                text.push('…');
-            }
-            let label = match block.kind {
-                BlockKind::User => "You",
-                BlockKind::Assistant => "Agent",
-                BlockKind::Reasoning => "Thinking",
-                BlockKind::Tool => "Tool",
-                BlockKind::Shell => "Shell",
-                BlockKind::System => "System",
-                BlockKind::Compaction => "Compacted",
-                BlockKind::Skill => "Skill",
-                BlockKind::Error => "Error",
-                BlockKind::Retry => "Retry",
-                BlockKind::Activity => "Activity",
-            };
-            Some(PanelPreviewRow {
-                source_index: start + offset,
-                kind: block.kind,
-                label,
-                text,
-                user: block.is_user(),
-            })
-        })
-        .collect()
+pub const MAX_PANELS: usize = vela_core::session::MAX_SIMULTANEOUS_PANELS;
+/// Source's Agent Mode panel slot geometry. Percentages keep the layout
+/// responsive; `left` and `width` are horizontal percentages.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PanelFreeSlot {
+    pub left: f32,
+    pub top: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 #[derive(Clone)]
@@ -83,6 +28,8 @@ pub struct PanelState {
     pub title: String,
     pub composer: String,
     pub blocks: Arc<Vec<Block>>,
+    pub transcript_revision: u64,
+    pub markdown: Arc<vela_core::markdown::PreparedMarkdown>,
     pub phase: SessionPhase,
     pub permissions: Vec<PermissionRequest>,
     pub todos: Vec<TodoItem>,
@@ -92,17 +39,11 @@ pub struct PanelState {
     pub selected_agent: Option<String>,
     pub scroll: ListOffset,
     pub stick: bool,
-    /// Expanded tool payloads in the inactive tile's compact transcript. Keys
-    /// are block ids scoped to this panel.
-    pub tool_open: HashSet<String>,
-    /// Most recently copied tool block in the inactive tile, used for its
-    /// transient "Copied" label.
-    pub copied_tool: Option<String>,
-    /// Expanded work groups in the inactive tile. Keys are tied to the first
-    /// source block in each consecutive reasoning/activity run.
-    pub work_open: HashSet<String>,
-    /// Most recently copied user message in the inactive tile.
-    pub copied_message: Option<String>,
+    /// Compact tile composer options toolbar visibility.
+    pub composer_options_open: bool,
+    /// Freed Agent Mode geometry; `None` keeps the grid layout.
+    #[allow(dead_code)] // consumed by the absolute tiled layout next.
+    pub free_slot: Option<PanelFreeSlot>,
     /// Explicit width fraction inside the panel's grid row. `None` shares the
     /// row evenly with other automatic panels.
     pub width: Option<f32>,
@@ -115,6 +56,8 @@ impl PanelState {
             title: title.into(),
             composer: String::new(),
             blocks: Arc::new(Vec::new()),
+            transcript_revision: u64::MAX,
+            markdown: Arc::new(vela_core::markdown::PreparedMarkdown::default()),
             phase: SessionPhase::Idle,
             permissions: Vec::new(),
             todos: Vec::new(),
@@ -127,10 +70,8 @@ impl PanelState {
                 offset_in_item: gpui::px(0.),
             },
             stick: true,
-            tool_open: HashSet::new(),
-            copied_tool: None,
-            work_open: HashSet::new(),
-            copied_message: None,
+            composer_options_open: false,
+            free_slot: None,
             width: None,
         }
     }
@@ -213,6 +154,13 @@ impl Panels {
     }
     /// Close one panel without touching its conversation. The neighboring panel
     /// becomes active; closing the final panel leaves no active session.
+    /// Source's `distributeEvenly` after Agent Mode enter/exit or a new panel.
+    pub fn even_widths(&mut self) {
+        for state in &mut self.states {
+            state.width = None;
+        }
+    }
+
     pub fn close(&mut self, session: &str) -> Option<PanelState> {
         let index = self
             .states
@@ -387,7 +335,27 @@ mod tests {
             files: Vec::new(),
             sub_calls: Vec::new(),
             attachments: Vec::new(),
+            progress: Arc::from(""),
+            interrupted: false,
         }
+    }
+
+    #[test]
+    fn agent_mode_resets_manual_widths() {
+        let mut panels = Panels::default();
+        let mut first = PanelState::new("a", "A");
+        first.width = Some(0.7);
+        let mut second = PanelState::new("b", "B");
+        second.width = Some(0.3);
+        panels.open(first).unwrap();
+        panels.open(second).unwrap();
+        panels.even_widths();
+        assert!(
+            panels
+                .entries()
+                .iter()
+                .all(|panel| panel.width.is_none())
+        );
     }
 
     #[test]
@@ -422,26 +390,24 @@ mod tests {
         assert!(!panels.resize_boundary(2, 0.1));
     }
 
+
+
     #[test]
-    fn tiled_preview_keeps_the_tail_and_labels_roles() {
+    fn shared_conversation_keeps_every_panel_block_with_source_indexes() {
         let blocks = vec![
             block(BlockKind::User, "first"),
             block(BlockKind::Assistant, "second"),
             block(BlockKind::Tool, "third"),
         ];
-        let rows = preview_rows(&blocks, 2);
-        assert_eq!(rows.len(), 2);
-        assert_eq!(rows[0].label, "Agent");
-        assert_eq!(rows[0].text, "second");
-        assert_eq!(rows[1].label, "Tool");
-        assert_eq!(rows[0].source_index, 1);
-        assert_eq!(rows[0].kind, BlockKind::Assistant);
-        assert_eq!(rows[1].source_index, 2);
-        assert!(!rows[0].user);
-        let rows = preview_rows(&blocks, 1);
-        assert_eq!(rows[0].text, "third");
-        assert_eq!(rows[0].source_index, 2);
-        assert!(preview_rows(&[], 8).is_empty());
+        let conversation = vela_core::conversation::project(&blocks);
+        let rows = conversation.nodes;
+        assert_eq!(rows.len(), 3);
+        assert_eq!(rows[0].block.text.as_ref(), "first");
+        assert_eq!(rows[1].block.text.as_ref(), "second");
+        assert_eq!(rows[1].block.kind, BlockKind::Assistant);
+        assert_eq!(rows[2].block.text.as_ref(), "third");
+        assert_eq!(rows.iter().map(|node| node.source_index).collect::<Vec<_>>(), vec![0, 1, 2]);
+        assert!(vela_core::conversation::project(&[]).nodes.is_empty());
     }
 
     struct ComposerProbe {
@@ -516,4 +482,14 @@ mod tests {
             );
         });
     }
+
+
+
+    #[test]
+    fn panel_state_starts_on_the_grid() {
+        let panel = crate::panels::PanelState::new("ses", "Session");
+        assert!(panel.free_slot.is_none());
+    }
+
+
 }

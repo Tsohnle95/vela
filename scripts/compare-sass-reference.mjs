@@ -11,7 +11,9 @@ import { randomUUID } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const checkout = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const reference = path.resolve(process.argv[2] ?? path.join(checkout, "../vela"));
+const reference = path.resolve(
+  process.argv[2] ?? process.env.VELA_REFERENCE_ROOT ?? path.join(checkout, "archive/vela-electron"),
+);
 const utility = path.join(checkout, "tools/preview", `.reference-sass-${randomUUID()}.mjs`);
 const fixtures = await mkdtemp(path.join(os.tmpdir(), "vela-sass-reference-"));
 let plans = 0;

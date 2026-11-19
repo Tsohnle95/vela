@@ -186,13 +186,20 @@ impl VelaApp {
     }
 
     pub(super) fn report_terminal_focus(&mut self, id: &str, gained: bool) {
-        let Some(bytes) = self
+        let bytes = self
             .terminals
             .views
             .iter()
             .find(|view| view.id == id)
             .and_then(|view| view.emulator.focus_report(gained))
-        else {
+            .or_else(|| {
+                self.agent_tui
+                    .views
+                    .values()
+                    .find(|entry| entry.view.id == id)
+                    .and_then(|entry| entry.view.emulator.focus_report(gained))
+            });
+        let Some(bytes) = bytes else {
             return;
         };
         self.engine.terminal_input(id.to_owned(), bytes);
@@ -398,6 +405,288 @@ impl VelaApp {
         if auto_scroll(view) {
             cx.notify();
         }
+        true
+    }
+
+    pub(super) fn scroll_agent_tui(
+        &mut self,
+        session: &str,
+        event: &gpui::ScrollWheelEvent,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(entry) = self.agent_tui.views.get_mut(session) else {
+            return;
+        };
+        let view = &mut entry.view;
+        if view.emulator.mouse_report_mode() != MouseReportMode::Off {
+            let delta = event.delta.pixel_delta(px(15.)).y;
+            if delta == px(0.) {
+                return;
+            }
+            let button = if delta > px(0.) {
+                EmuMouseButton::WheelUp
+            } else {
+                EmuMouseButton::WheelDown
+            };
+            let Some((row, col, _)) = cell_at(view, event.position) else {
+                return;
+            };
+            let Some(bytes) = view.emulator.encode_mouse(
+                MouseAction::Press,
+                button,
+                row,
+                col,
+                emu_modifiers(&event.modifiers),
+            ) else {
+                return;
+            };
+            let id = view.id.clone();
+            self.engine.terminal_input(id, bytes);
+            cx.stop_propagation();
+            cx.notify();
+            return;
+        }
+        view.scroll_pixels += f32::from(event.delta.pixel_delta(px(15.)).y);
+        let lines = (view.scroll_pixels / 15.).trunc() as i32;
+        if lines != 0 {
+            view.scroll_pixels -= lines as f32 * 15.;
+            view.emulator.scroll(lines);
+            if view.selecting
+                && let Some((row, col, right)) = selection_endpoint(view, event.position)
+            {
+                view.emulator.update_selection(row, col, right);
+            }
+            cx.notify();
+        }
+        cx.stop_propagation();
+    }
+
+    pub(super) fn copy_agent_tui(&mut self, session: &str, cx: &mut Context<Self>) {
+        if let Some(text) = self
+            .agent_tui
+            .views
+            .get(session)
+            .and_then(|entry| entry.view.emulator.selection_text())
+        {
+            cx.write_to_clipboard(gpui::ClipboardItem::new_string(text));
+        }
+        cx.stop_propagation();
+    }
+
+    pub(super) fn begin_agent_tui_selection(
+        &mut self,
+        session: &str,
+        event: &gpui::MouseDownEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(entry) = self.agent_tui.views.get_mut(session) else {
+            return;
+        };
+        let view = &mut entry.view;
+        if event.button != MouseButton::Left
+            && view.emulator.mouse_report_mode() == MouseReportMode::Off
+        {
+            return;
+        }
+        let Some((row, col, right)) = cell_at(view, event.position) else {
+            return;
+        };
+        if view.emulator.mouse_report_mode() != MouseReportMode::Off {
+            let button = emu_button(event.button);
+            let Some(bytes) = view.emulator.encode_mouse(
+                MouseAction::Press,
+                button,
+                row,
+                col,
+                emu_modifiers(&event.modifiers),
+            ) else {
+                return;
+            };
+            view.mouse_button = Some(button);
+            view.mouse_cell = Some((row, col));
+            let id = view.id.clone();
+            let focus = view.focus.clone();
+            window.focus(&focus, cx);
+            self.engine.terminal_input(id, bytes);
+            cx.stop_propagation();
+            cx.notify();
+            return;
+        }
+        window.focus(&view.focus, cx);
+        let kind = if event.click_count >= 3 {
+            SelectionKind::Line
+        } else if event.click_count == 2 {
+            SelectionKind::Word
+        } else if event.modifiers.alt {
+            SelectionKind::Block
+        } else {
+            SelectionKind::Simple
+        };
+        view.emulator
+            .begin_selection(row, col, right, kind, event.modifiers.shift);
+        view.selecting = true;
+        view.selection_pointer = Some(event.position);
+        view.selection_generation = view.selection_generation.wrapping_add(1);
+        let generation = view.selection_generation;
+        let id = view.id.clone();
+        let owner = session.to_owned();
+        let handle = window.window_handle();
+        cx.spawn(async move |app, cx| {
+            loop {
+                cx.background_executor()
+                    .timer(Duration::from_millis(50))
+                    .await;
+                let keep = handle
+                    .update(cx, |_, window, cx| {
+                        app.update(cx, |app, cx| {
+                            app.tick_agent_tui_selection(
+                                &owner,
+                                &id,
+                                generation,
+                                window.is_window_active(),
+                                cx,
+                            )
+                        })
+                    })
+                    .ok()
+                    .and_then(Result::ok)
+                    .unwrap_or(false);
+                if !keep {
+                    break;
+                }
+            }
+        })
+        .detach();
+        cx.stop_propagation();
+        cx.notify();
+    }
+
+    fn tick_agent_tui_selection(
+        &mut self,
+        session: &str,
+        id: &str,
+        generation: u64,
+        window_active: bool,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let current = self.agent_tui_visible(id);
+        let Some(entry) = self.agent_tui.views.get_mut(session) else {
+            return false;
+        };
+        let view = &mut entry.view;
+        if view.id != id || view.selection_generation != generation || !view.selecting {
+            return false;
+        }
+        if !current || !window_active {
+            view.selecting = false;
+            return false;
+        }
+        if auto_scroll(view) {
+            cx.notify();
+        }
+        true
+    }
+
+    pub(super) fn update_agent_tui_selection(
+        &mut self,
+        event: &gpui::MouseMoveEvent,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let session = self
+            .agent_tui
+            .views
+            .iter()
+            .find(|(_, entry)| {
+                entry.view.selecting || entry.view.mouse_button.is_some()
+            })
+            .map(|(session, _)| session.clone());
+        let Some(session) = session else {
+            return false;
+        };
+        let Some(entry) = self.agent_tui.views.get_mut(&session) else {
+            return false;
+        };
+        let view = &mut entry.view;
+        if view.emulator.mouse_report_mode() != MouseReportMode::Off {
+            let action = if event.pressed_button.is_some() {
+                MouseAction::Drag
+            } else {
+                MouseAction::Move
+            };
+            let button = event
+                .pressed_button
+                .map(emu_button)
+                .unwrap_or(EmuMouseButton::None);
+            let Some((row, col, _)) = cell_at(view, event.position) else {
+                return false;
+            };
+            if view.mouse_cell == Some((row, col)) {
+                return true;
+            }
+            let Some(bytes) = view.emulator.encode_mouse(
+                action,
+                button,
+                row,
+                col,
+                emu_modifiers(&event.modifiers),
+            ) else {
+                return false;
+            };
+            view.mouse_cell = Some((row, col));
+            let id = view.id.clone();
+            self.engine.terminal_input(id, bytes);
+            cx.notify();
+            return true;
+        }
+        if !view.selecting {
+            return false;
+        }
+        if let Some((row, col, right)) = selection_endpoint(view, event.position) {
+            view.selection_pointer = Some(event.position);
+            view.emulator.update_selection(row, col, right);
+            cx.notify();
+        }
+        true
+    }
+
+    pub(super) fn finish_agent_tui_mouse(
+        &mut self,
+        event: &gpui::MouseUpEvent,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let session = self
+            .agent_tui
+            .views
+            .iter()
+            .find(|(_, entry)| entry.view.mouse_button.is_some())
+            .map(|(session, _)| session.clone());
+        let Some(session) = session else {
+            return false;
+        };
+        let Some(entry) = self.agent_tui.views.get_mut(&session) else {
+            return false;
+        };
+        let view = &mut entry.view;
+        let Some(button) = view.mouse_button.take() else {
+            return false;
+        };
+        view.mouse_cell = None;
+        let Some((row, col, _)) = cell_at(view, event.position) else {
+            return true;
+        };
+        let Some(bytes) = view.emulator.encode_mouse(
+            MouseAction::Release,
+            button,
+            row,
+            col,
+            emu_modifiers(&event.modifiers),
+        ) else {
+            return true;
+        };
+        let id = view.id.clone();
+        self.engine.terminal_input(id, bytes);
+        cx.notify();
         true
     }
 }

@@ -41,6 +41,13 @@ Blocks let completed paragraphs keep identity while a streaming tail changes.
 Markdown styling is painted within a block; it does not change block
 boundaries.
 
+**Streaming renderer decision (2026-11-17):** preserve chronological prose,
+tool, and reasoning nodes in both focused and inactive panels. Use compact
+expandable activity in place of the archived work group, so a later tool never
+moves already visible prose. Show the complete published text without reveal
+delays. Engine snapshots carry source and prepared Markdown together; the UI
+owns list measurement and panel-local reading intent.
+
 ## ADR-004 — Engine-owned state with scoped notifications
 
 **Decision:** the Tokio engine owns network, projection, permissions, and warm
@@ -292,3 +299,25 @@ closing so children cannot outlive quit, including helpers that ignore SIGTERM
 and concurrent late starts. Engine completion supplements the synchronous
 termination path. A real bundled preview/terminal quit check and a process-tree
 regression protect this platform boundary.
+
+## ADR-022 — Native production stream identity and compact activity
+
+Per the user's 2026-11-18 request and screenshot, production streaming stays in
+Rust/GPUI. Compact disclosure lines summarize each work sequence between agent
+explanations; local successful calls fold, while failures, warnings, delegates
+and consequential/unknown operations remain visible. Headers exist from the
+first call and never reparent existing leaves as counts/statuses change.
+Retry success retains earlier failure details behind explicit disclosure.
+
+The engine appends normalized typed events with lifetime IDs, sequence, run
+ownership and captured timestamps before reduction, then publishes at 40ms.
+Private engine-owned replay journals record canonical checkpoints and local
+mutations too. OpenCode remains authoritative for startup/reconnect; its
+history/SSE overlap protocol is preserved. Source-less events receive distinct
+local IDs; exact network duplicate suppression requires source event identity.
+Journal contents are private user data and are removed with session deletion.
+Canonical owners describe storage limits/lifecycle and native validation.
+
+React/shadcn/Playwright requirements map to native list/disclosure/render and
+deterministic GPUI tests; the archived Electron implementation remains read-only.
+This decision does not grant final visual acceptance to any page.

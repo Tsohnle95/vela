@@ -5,7 +5,6 @@
 //! authenticated client, and a reconnecting, bounded event stream. It knows
 //! nothing about GPUI.
 
-pub mod inventory;
 pub mod client;
 pub mod commands;
 pub mod forms;

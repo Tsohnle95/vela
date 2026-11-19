@@ -82,15 +82,9 @@ pub struct PreviewProgram {
 }
 impl PreviewProgram {
     pub fn discover() -> Result<Self, String> {
-        let executable = std::env::current_exe().map_err(|error| error.to_string())?;
-        let bundled = executable
-            .parent()
-            .and_then(Path::parent)
-            .map(|path| path.join("Resources/preview"));
-        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let node_override = std::env::var_os("VELA_PREVIEW_NODE");
         let vite_override = std::env::var_os("VELA_PREVIEW_VITE");
-        let candidates = bundled
+        let candidates = super::preview_tools::bundled_root()
             .into_iter()
             .map(|root| {
                 (
@@ -98,10 +92,16 @@ impl PreviewProgram {
                     root.join("node_modules/vite/bin/vite.js"),
                 )
             })
-            .chain(std::iter::once((
-                source.join(".tools/preview/node/bin/node"),
-                source.join("tools/preview/node_modules/vite/bin/vite.js"),
-            )));
+            .chain([
+                (
+                    super::preview_tools::node(),
+                    super::preview_tools::vite(),
+                ),
+                (
+                    super::preview_tools::legacy_node(),
+                    super::preview_tools::legacy_vite(),
+                ),
+            ]);
         for (node, vite) in candidates {
             let node = node_override.as_ref().map(PathBuf::from).unwrap_or(node);
             let vite = vite_override.as_ref().map(PathBuf::from).unwrap_or(vite);

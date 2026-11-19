@@ -1,0 +1,5 @@
+# Keep Cargo output outside the source tree. This path is relative to this
+# config file: <repositories>/vela/.cargo -> <repositories>/build-junk.
+# Override with CARGO_TARGET_DIR when a different location is needed.
+[build]
+target-dir = "../build-junk/vela-target"

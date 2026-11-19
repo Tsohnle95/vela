@@ -17,6 +17,11 @@ impl VelaApp {
             return;
         }
         let (_, title) = self.session_deletions.remove(id).unwrap();
+        if error.is_none()
+            && self.settings.compaction_baselines.remove(id).is_some()
+        {
+            self.persist_preferences(cx);
+        }
         self.toasts.update(cx, |toasts, cx| match error {
             Some(error) => toasts.push(error, true, cx),
             None => toasts.push(format!("Deleted session {title}"), false, cx),
@@ -24,50 +29,75 @@ impl VelaApp {
         cx.notify();
     }
 
-    fn request_session_deletion(
+    /// Source deletes immediately from the context menu; its menu labels the
+    /// action as permanent and shows no confirmation prompt.
+    pub(super) fn session_title_for_delete(&self, id: &str) -> String {
+        self.panels
+            .entries()
+            .iter()
+            .find(|panel| panel.session == id)
+            .map(|panel| panel.title.clone())
+            .or_else(|| {
+                self.sessions
+                    .iter()
+                    .find(|session| session.id == id)
+                    .map(|session| session.display_title().to_owned())
+            })
+            .unwrap_or_else(|| id.to_owned())
+    }
+
+    /// Source asks `window.confirm` before deleting; use the native alert with
+    /// the same title, detail and OK/Cancel order.
+    pub(super) fn request_session_deletion(
         &mut self,
         id: String,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if self.session_delete_confirmation.is_some() || self.session_deletions.contains_key(&id) {
+        if self.session_deletions.contains_key(&id) || self.session_delete_prompt.is_some() {
             return;
         }
-        let title = self
-            .sessions
-            .iter()
-            .find(|session| session.id == id)
-            .map(|session| session.display_title().to_owned())
-            .unwrap_or_else(|| id.clone());
-        self.file_request += 1;
-        let request_id = self.file_request;
-        self.session_delete_confirmation = Some(request_id);
-        let confirmation = window.prompt(
-            gpui::PromptLevel::Warning,
+        let title = self.session_title_for_delete(&id);
+        self.session_delete_prompt = Some(id.clone());
+        let confirmation = crate::platform_prompt::document(
+            window,
             &format!("Delete session \"{title}\"?"),
             Some("This permanently removes it from opencode and cannot be undone."),
             &[
-                gpui::PromptButton::ok("Delete"),
+                gpui::PromptButton::ok("OK"),
                 gpui::PromptButton::cancel("Cancel"),
             ],
             cx,
         );
         cx.spawn(async move |this, cx| {
-            let accepted = confirmation.await == Ok(0);
+            let accepted = confirmation.await == 0;
             let _ = this.update(cx, |app, cx| {
-                if app.session_delete_confirmation != Some(request_id) {
+                if app.session_delete_prompt.as_deref() != Some(id.as_str()) {
                     return;
                 }
-                app.session_delete_confirmation = None;
+                app.session_delete_prompt = None;
                 if accepted {
-                    app.session_deletions
-                        .insert(id.clone(), (request_id, title));
-                    app.engine.delete_session(request_id, id);
+                    app.begin_session_deletion(id, cx);
                 }
-                cx.notify();
             });
         })
         .detach();
+        cx.notify();
+    }
+
+    pub(super) fn begin_session_deletion(&mut self, id: String, cx: &mut Context<Self>) {
+        if self.session_deletions.contains_key(&id) {
+            return;
+        }
+        let title = self.session_title_for_delete(&id);
+        if self.panels.contains(&id) {
+            self.close_panel(id.clone(), cx);
+        }
+        self.file_request += 1;
+        let request_id = self.file_request;
+        self.session_deletions.insert(id.clone(), (request_id, title));
+        self.engine.delete_session(request_id, id);
+        cx.notify();
     }
 
     pub(super) fn navigate_session_context(
@@ -119,6 +149,7 @@ impl VelaApp {
         };
         let menu = div()
             .id("session-context-menu")
+            .debug_selector(|| "session-context-menu".into())
             .role(Role::Menu)
             .absolute()
             .left(
@@ -134,22 +165,28 @@ impl VelaApp {
                     .min((size.height - px(78.)).max(px(4.))),
             )
             .w(px(190.))
-            .p(px(5.))
-            .rounded(px(8.))
+            .p(px(4.))
+            .rounded(px(6.))
             .border_1()
             .border_color(theme.border_strong)
             .bg(theme.elevated)
+            .shadow(theme.large_shadow())
             .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+            .on_mouse_down_out(cx.listener(|app, _, window, cx| {
+                app.session_context_menu = None;
+                window.focus(&app.session_filter_focus, cx);
+                cx.notify();
+            }))
             .child(
                 div()
                     .id("session-menu-pin")
                     .role(Role::MenuItem)
                     .aria_label(pin_label)
                     .track_focus(&self.session_context_focus[0])
-                    .px(px(10.))
-                    .py(px(7.))
+                    .px(px(8.))
+                    .py(px(6.))
                     .rounded(px(4.))
-                    .text_size(px(12.5))
+                    .text_size(px(11.5))
                     .cursor_pointer()
                     .hover(|style| style.bg(theme.selected))
                     .on_click(cx.listener(move |app, _, window, cx| {
@@ -166,10 +203,10 @@ impl VelaApp {
                     .role(Role::MenuItem)
                     .aria_label("Delete session")
                     .track_focus(&self.session_context_focus[1])
-                    .px(px(10.))
-                    .py(px(7.))
+                    .px(px(8.))
+                    .py(px(6.))
                     .rounded(px(4.))
-                    .text_size(px(12.5))
+                    .text_size(px(11.5))
                     .text_color(theme.red)
                     .cursor_pointer()
                     .hover(|style| style.bg(theme.selected))
@@ -216,6 +253,26 @@ impl VelaApp {
         self.clear_revert_requests.retain(|_, owner| owner != id);
         self.form_requests.retain(|_, (owner, _)| owner != id);
         self.slash_requests.retain(|_, owner| owner != id);
+        let live_requests = self
+            .slash_requests
+            .keys()
+            .copied()
+            .collect::<std::collections::HashSet<_>>();
+        self.slash_command_names
+            .retain(|request, _| live_requests.contains(request));
+        self.panel_close_saves.remove(id);
+        if self
+            .hidden_agent_anchor
+            .as_ref()
+            .is_some_and(|panel| panel.session == id)
+        {
+            self.hidden_agent_anchor = None;
+        }
+        self.clear_agent_menu_for(id);
+        self.forget_panel_widgets(id);
+        if self.session_delete_prompt.as_deref() == Some(id) {
+            self.session_delete_prompt = None;
+        }
         self.settings
             .recent_sessions
             .retain(|session| session != id);
@@ -230,13 +287,19 @@ impl VelaApp {
         let was_active = self.active_id.as_deref() == Some(id);
         self.panels.close(id);
         self.clear_active_session_ui(id, cx);
+        if self.agent_mode && self.panels.is_empty() {
+            self.agent_mode = false;
+            if let Some(open) = self.sidebar_before_agent_mode.take() {
+                self.sidebar_open = open;
+            }
+        }
         // Workspace documents/recovery survive session deletion, including
         // dirty buffers; deleting a conversation must not discard source edits.
         self.sessions = Arc::new(self.engine.sessions());
         self.refresh_session_filter();
         self.persist_preferences(cx);
         if was_active && let Some(next) = self.panels.active().map(|panel| panel.session.clone()) {
-            self.open_session(next, cx);
+            self.reopen_session(next, cx);
         }
         cx.notify();
     }
@@ -253,6 +316,8 @@ impl VelaApp {
                 .update(cx, |input, cx| input.set_text(String::new(), cx));
             self.blocks = Arc::new(Vec::new());
             self.transcript_rows = Arc::new(Vec::new());
+            self.transcript_ui = Default::default();
+            self.transcript_viewport = Default::default();
             self.transcript_list.reset(0);
             self.permissions.clear();
             self.todos.clear();
@@ -294,6 +359,7 @@ impl VelaApp {
             self.validation_summary = None;
             self.recovery_records.clear();
             self.usage_open = false;
+            self.usage_anchor = None;
             self.sass = Default::default();
             self.sidebar_tab = SidebarTab::Sessions;
             self.composer_focus_pending = true;
@@ -375,6 +441,14 @@ impl VelaApp {
                 recent.push(index);
             }
         }
+        let open = self
+            .panels
+            .entries()
+            .iter()
+            .map(|panel| panel.session.clone())
+            .collect::<HashSet<_>>();
+        sort_session_indices(&self.sessions, &open, &mut recent);
+        sort_session_indices(&self.sessions, &open, &mut pinned);
         self.filtered_sessions = Arc::new(recent);
         self.filtered_pinned_sessions = Arc::new(pinned);
         self.session_list.reset(self.filtered_sessions.len());
@@ -408,6 +482,7 @@ impl VelaApp {
             .map(|panel| panel.session.clone())
             .collect::<HashSet<_>>();
         let pin_focus = self.session_pin_focus.clone();
+        let codex = self.is_codex();
         list(state, move |ix, _window, cx| {
             let Some(session) = filtered.get(ix).and_then(|index| sessions.get(*index)) else {
                 return div().into_any_element();
@@ -424,6 +499,7 @@ impl VelaApp {
                 open.contains(&session.id),
                 focus,
                 None,
+                codex,
                 weak.clone(),
             )
         })
@@ -443,6 +519,7 @@ impl VelaApp {
         let size = window.viewport_size();
         let menu = div()
             .id("saved-workspace-menu")
+            .debug_selector(|| "saved-workspace-menu".into())
             .role(Role::Menu)
             .absolute()
             .left(
@@ -458,22 +535,28 @@ impl VelaApp {
                     .min((size.height - px(70.)).max(px(4.))),
             )
             .w(px(190.))
-            .p(px(5.))
-            .rounded(px(8.))
+            .p(px(4.))
+            .rounded(px(6.))
             .border_1()
             .border_color(theme.border_strong)
             .bg(theme.elevated)
+            .shadow(theme.large_shadow())
             .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+            .on_mouse_down_out(cx.listener(|app, _, window, cx| {
+                app.saved_workspace_menu = None;
+                window.focus(&app.saved_workspace_menu_focus, cx);
+                cx.notify();
+            }))
             .child(
                 div()
                     .id("remove-saved-workspace")
                     .role(Role::MenuItem)
                     .aria_label("Remove from Vela")
                     .track_focus(&self.saved_workspace_menu_focus)
-                    .px(px(10.))
-                    .py(px(7.))
+                    .px(px(8.))
+                    .py(px(6.))
                     .rounded(px(4.))
-                    .text_size(px(12.5))
+                    .text_size(px(11.5))
                     .cursor_pointer()
                     .hover(|style| style.bg(theme.selected))
                     .on_click(cx.listener(move |app, _, window, cx| {
@@ -513,17 +596,31 @@ impl VelaApp {
         let theme = Theme::default();
         let weak = cx.weak_entity();
         let sessions = self.sessions.clone();
-        let mut column = div().px(px(8.0)).flex().flex_col().gap(px(1.0));
+        let open_sessions = self
+            .panels
+            .entries()
+            .iter()
+            .map(|panel| panel.session.clone())
+            .collect::<HashSet<_>>();
+        let mut column = div().px(px(6.0)).flex().flex_col().gap(px(1.0));
         let mut project_height = self.settings.workspaces.len() as f32 * 27.;
         for (ix, bookmark) in self.settings.workspaces.iter().enumerate() {
             let directory = bookmark.directory.clone();
             let name = bookmark.name.clone();
-            let history = sessions
+            let mut history_indices = sessions
                 .iter()
-                .filter(|session| session.directory == directory)
+                .enumerate()
+                .filter(|(_, session)| session.directory == directory)
+                .map(|(index, _)| index)
+                .collect::<Vec<_>>();
+            sort_session_indices(&sessions, &open_sessions, &mut history_indices);
+            let history = history_indices
+                .into_iter()
+                .map(|index| &sessions[index])
                 .collect::<Vec<_>>();
             let expanded = self.expanded_session_projects.contains(&directory);
             let toggle_directory = directory.clone();
+            let row_toggle_directory = directory.clone();
             let menu_directory = directory.clone();
             let focus = self
                 .session_project_focus
@@ -538,19 +635,23 @@ impl VelaApp {
                 focus.clone(),
                 div()
                     .id(SharedString::from(format!("workspace-{ix}")))
+                    .debug_selector({
+                        let selector = format!("workspace-{ix}");
+                        move || selector.clone()
+                    })
                     .role(Role::Button)
-                    .aria_label(SharedString::from(format!("Open workspace {name}")))
+                    .aria_label(SharedString::from(format!("{name} sessions")))
                     .track_focus(&focus)
-                    .h(px(26.0))
+                    .h(px(if self.is_codex() { 30.0 } else { 28.0 }))
                     .px(px(8.0))
-                    .rounded(px(7.0))
+                    .rounded(px(if self.is_codex() { 10.0 } else { 999.0 }))
                     .cursor_pointer()
                     .flex()
                     .items_center()
                     .gap(px(7.0))
-                    .text_size(px(12.5))
+                    .text_size(px(13.0))
                     .text_color(theme.dim)
-                    .hover(|style| style.bg(theme.selected))
+                    .hover(|style| style.bg(theme.selected).text_color(theme.text))
                     .on_mouse_down(
                         MouseButton::Right,
                         cx.listener(move |app, event: &gpui::MouseDownEvent, window, cx| {
@@ -561,7 +662,33 @@ impl VelaApp {
                             cx.notify();
                         }),
                     )
-                    .on_click(move |_, _, cx| {
+                    .on_click(cx.listener(move |app, _, _, cx| {
+                        if !app.expanded_session_projects.remove(&row_toggle_directory) {
+                            app.expanded_session_projects
+                                .insert(row_toggle_directory.clone());
+                        }
+                        cx.notify();
+                    }))
+                    .child(
+                        div()
+                            .id(SharedString::from(format!("project-open-{ix}")))
+                            .debug_selector({
+                                let selector = format!("project-open-{ix}");
+                                move || selector.clone()
+                            })
+                            .role(Role::Button)
+                            .aria_label(SharedString::from(format!(
+                                "Open workspace {name}"
+                            )))
+                            .flex_1()
+                            .min_w_0()
+                            .flex()
+                            .items_center()
+                            .gap(px(7.))
+                            .cursor_pointer()
+                            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+                            .on_click(move |_, _, cx| {
+                        cx.stop_propagation();
                         let directory = directory.clone();
                         let _ = weak.update(cx, |app, cx| {
                             let requested = std::path::Path::new(&directory);
@@ -611,19 +738,20 @@ impl VelaApp {
                             }
                         });
                     })
-                    .child(div().text_size(px(11.0)).text_color(theme.faint).child("▱"))
-                    .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .truncate()
-                            .child(SharedString::from(name)),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(11.))
-                            .text_color(theme.faint)
-                            .child(history.len().to_string()),
+
+                            .child(
+                                div()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .truncate()
+                                    .child(SharedString::from(name)),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(9.5))
+                                    .text_color(theme.faint)
+                                    .child(history.len().to_string()),
+                            ),
                     )
                     .child(
                         div()
@@ -635,7 +763,15 @@ impl VelaApp {
                                 if expanded { "Collapse" } else { "Expand" },
                                 bookmark.name
                             )))
-                            .px(px(5.))
+                            .w(px(26.))
+                            .h(px(26.))
+                            .mr(px(4.))
+                            .rounded(px(999.))
+                            .cursor_pointer()
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .hover(|style| style.bg(theme.selected).text_color(theme.text))
                             .child(if expanded { "⌄" } else { "›" })
                             .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
                             .on_click(cx.listener(move |app, _, _, cx| {
@@ -692,6 +828,7 @@ impl VelaApp {
                         self.panels.contains(&session.id),
                         pin_focus.clone(),
                         Some(row_focus.clone()),
+                        self.is_codex(),
                         cx.weak_entity(),
                     );
                     let row = crate::scroll::FocusReveal::element(
@@ -731,6 +868,22 @@ impl VelaApp {
     }
 }
 
+/// Source orders Recents/Pinned with open sessions first, then by updatedAt.
+fn sort_session_indices(
+    sessions: &[SessionSummary],
+    open: &HashSet<String>,
+    indices: &mut [usize],
+) {
+    indices.sort_by(|left, right| {
+        let left = &sessions[*left];
+        let right = &sessions[*right];
+        open.contains(&right.id)
+            .cmp(&open.contains(&left.id))
+            .then_with(|| right.updated_at.cmp(&left.updated_at))
+    });
+}
+
+#[allow(clippy::too_many_arguments)]
 fn session_row(
     session: &SessionSummary,
     is_active: bool,
@@ -738,6 +891,7 @@ fn session_row(
     is_open: bool,
     focus: gpui::FocusHandle,
     row_focus: Option<gpui::FocusHandle>,
+    codex: bool,
     weak: gpui::WeakEntity<VelaApp>,
 ) -> AnyElement {
     let theme = Theme::default();
@@ -767,10 +921,10 @@ fn session_row(
         .w_full()
         .flex()
         .items_center()
-        .gap(px(4.))
-        .h(px(28.0))
+        .gap(px(7.))
+        .h(px(if codex { 30. } else { 28. }))
         .px(px(8.0))
-        .rounded(px(7.0))
+        .rounded(px(if codex { 10. } else { 999. }))
         .cursor_pointer()
         .bg(if is_active {
             theme.selected
@@ -779,7 +933,7 @@ fn session_row(
         })
         .text_size(px(12.5))
         .text_color(if is_active { theme.text } else { theme.dim })
-        .hover(|style| style.bg(theme.selected))
+        .hover(|style| style.bg(theme.selected).text_color(theme.text))
         .on_mouse_down(MouseButton::Right, move |event, window, cx| {
             cx.stop_propagation();
             let _ = menu_weak.update(cx, |app, cx| {
@@ -790,10 +944,14 @@ fn session_row(
             });
         })
         .on_click(move |_, _, cx| {
-            let _ = weak.update(cx, |app, cx| app.open_session(id.clone(), cx));
+            let _ = weak.update(cx, |app, cx| app.reopen_session(id.clone(), cx));
         })
         .child(
             div()
+                .debug_selector({
+                    let title_id = session.id.clone();
+                    move || format!("session-title:{title_id}")
+                })
                 .flex_1()
                 .min_w_0()
                 .truncate()
@@ -809,10 +967,20 @@ fn session_row(
                 } else {
                     "Pin session"
                 })
-                .px(px(4.))
+                .size(px(20.))
+                .flex()
+                .items_center()
+                .justify_center()
+                .rounded(px(4.))
+                .text_size(px(14.))
                 .opacity(if is_pinned { 1. } else { 0. })
                 .group_hover(group.clone(), |style| style.opacity(1.))
                 .focus_visible(|style| style.opacity(1.))
+                .hover(|style| {
+                    style
+                        .bg(theme.accent.opacity(0.12))
+                        .text_color(theme.accent)
+                })
                 .text_color(if is_pinned { theme.accent } else { theme.faint })
                 .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
                 .on_click(move |_, window, cx| {
@@ -822,7 +990,7 @@ fn session_row(
                         window.focus(&clicked_focus, cx);
                     });
                 })
-                .child(if is_pinned { "★" } else { "☆" }),
+                .child("★"),
         )
         .when(is_open, |row| {
             row.child(
@@ -861,4 +1029,42 @@ fn session_row(
             )
         })
         .into_any_element()
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn summary(id: &str, updated_at: i64) -> SessionSummary {
+        SessionSummary {
+            id: id.into(),
+            title: id.into(),
+            directory: "/workspace".into(),
+            updated_at,
+            parent_id: None,
+            agent: None,
+        }
+    }
+
+    #[test]
+    fn session_order_puts_open_sessions_first_then_updated_at() {
+        let sessions = vec![
+            summary("newer", 300),
+            summary("older-open", 100),
+            summary("middle", 200),
+            summary("newer-open", 50),
+        ];
+        let open = ["older-open", "newer-open"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect::<HashSet<_>>();
+        let mut indices = vec![0, 1, 2, 3];
+        sort_session_indices(&sessions, &open, &mut indices);
+        let order = indices
+            .into_iter()
+            .map(|index| sessions[index].id.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(order, ["older-open", "newer-open", "newer", "middle"]);
+    }
 }

@@ -4,6 +4,13 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+transcript-bench = []
+
+[[example]]
+name = "transcript-bench"
+required-features = ["transcript-bench"]
+
 [dependencies]
 uuid = { workspace = true }
 vela-core = { workspace = true }
@@ -27,7 +34,7 @@ image = { version = "=0.25.10", default-features = false, features = ["png"] }
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSDate", "NSDateFormatter", "NSFormatter", "NSString", "NSObject", "NSLocale", "NSTimeZone", "NSGeometry", "NSAttributedString", "NSDictionary", "NSArray", "NSURL"] }
-objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSAlert", "NSOpenPanel", "NSSavePanel", "NSButton", "NSApplication", "NSMenu", "NSMenuItem", "NSMenuItemCell", "NSView", "NSWindow", "NSResponder", "NSCell", "NSAppearance", "NSFont", "NSColor", "NSColorSpace", "NSPopUpButtonCell", "NSButtonCell", "NSActionCell", "NSControl", "NSParagraphStyle", "NSText", "NSAttributedString", "block2", "objc2-core-foundation"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSAlert", "NSOpenPanel", "NSSavePanel", "NSButton", "NSApplication", "NSMenu", "NSMenuItem", "NSMenuItemCell", "NSView", "NSWindow", "NSResponder", "NSCell", "NSAppearance", "NSFont", "NSColor", "NSColorSpace", "NSPasteboard", "NSPopUpButtonCell", "NSButtonCell", "NSActionCell", "NSControl", "NSParagraphStyle", "NSText", "NSAttributedString", "block2", "objc2-core-foundation"] }
 block2 = "0.6"
 raw-window-handle = "0.6"
 
@@ -35,5 +42,7 @@ raw-window-handle = "0.6"
 chrono = "=0.4.45"
 
 [dev-dependencies]
+axum = "0.8"
+futures-util = "0.3"
 gpui = { workspace = true, features = ["test-support"] }
 tempfile = "3"

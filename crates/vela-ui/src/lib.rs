@@ -22,6 +22,7 @@ mod highlights;
 mod hover;
 mod icons;
 mod import_duplicates;
+#[cfg(test)]
 mod inline_code;
 mod input;
 mod math;
@@ -53,6 +54,7 @@ mod syntax;
 pub mod theme;
 mod toasts;
 mod tree_icons;
+mod transcript_viewport;
 mod type_literals;
 mod type_members;
 mod type_parameters;
@@ -61,3 +63,7 @@ mod typography;
 mod window_state;
 
 pub use app::run;
+#[cfg(feature = "transcript-bench")]
+pub use app::transcript_native_bench::{LiveProbe, run_native_transcript_bench};
+
+mod turn_anchor;

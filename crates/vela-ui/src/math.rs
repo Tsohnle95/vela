@@ -265,6 +265,13 @@ impl Parser {
             }
             "mathbin" | "mathrel" | "mathop" | "mathord" | "mathopen" | "mathclose"
             | "mathpunct" | "mathinner" | "hbox" => self.argument(),
+            "href" => {
+                // URLs are metadata for the native text renderer; keep the
+                // visible label, matching KaTeX's text output.
+                let _url = self.raw_argument();
+                self.argument()
+            }
+            "url" => self.raw_argument(),
             "pmod" => format!(" (mod {})", self.argument()),
             "bmod" | "mod" => " mod ".into(),
             "textcolor" => {
@@ -710,6 +717,12 @@ mod tests {
         assert_eq!(render(r"\displaystyle x"), "x");
         assert_eq!(render(r"\left. x \right|"), "x |");
         assert_eq!(render(r"\phantom{x}y"), "y");
+    }
+
+    #[test]
+    fn renders_href_and_url_labels() {
+        assert_eq!(render(r"\href{https://example.com}{link}"), "link");
+        assert_eq!(render(r"\url{https://example.com}"), "https://example.com");
     }
 
     #[test]
