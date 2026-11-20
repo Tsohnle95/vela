@@ -10510,11 +10510,9 @@ impl VelaApp {
                 div()
                     .h(px(56.))
                     .flex_shrink_0()
-                    .pl(px(if self.sidebar_tab == SidebarTab::Sessions {
-                        10.
-                    } else {
-                        16.
-                    }))
+                    // Source keeps the brand at the same inset on every tab:
+                    // 6px pane padding plus 10px header padding.
+                    .pl(px(16.))
                     .pr(px(if self.sidebar_tab == SidebarTab::Sessions {
                         18.
                     } else {
@@ -10529,6 +10527,7 @@ impl VelaApp {
                     }))
                     .child(
                         div()
+                            .debug_selector(|| "sidebar-brand".into())
                             .flex_1()
                             .text_size(px(18.0))
                             .font_weight(FontWeight::SEMIBOLD)
@@ -23760,6 +23759,52 @@ mod tests {
         assert!((label_gap - 23.).abs() <= 1.5, "icon/label gap was {label_gap}");
         let height = f32::from(button.size.height);
         assert!((height - 30.).abs() <= 1., "button height was {height}");
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn sidebar_brand_keeps_one_place_across_tabs(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.agent_panel_open = false;
+            app.settings_open = false;
+            app.agent_mode = false;
+            app.sidebar_tab = SidebarTab::Sessions;
+        });
+        draw(cx);
+        let sidebar = cx.debug_bounds("sidebar-root").unwrap();
+        let sessions = cx.debug_bounds("sidebar-brand").unwrap();
+        assert!(cx.debug_bounds("new-session").is_some(), "sessions body did not render");
+        app.update(cx, |app, _| app.sidebar_tab = SidebarTab::Files);
+        draw(cx);
+        let files = cx.debug_bounds("sidebar-brand").unwrap();
+        assert!(cx.debug_bounds("new-session").is_none(), "tab switch did not redraw the body");
+
+        // Source puts the brand at 6px pane + 10px header padding on both tabs.
+        assert_eq!(sessions.left(), files.left(), "brand moved between tabs");
+        assert_eq!(sessions.top(), files.top(), "brand moved vertically");
+        let inset = f32::from(sessions.left() - sidebar.left());
+        assert!((inset - 16.).abs() <= 2., "brand inset was {inset}");
         runtime.block_on(engine.shutdown_and_wait());
     }
 
