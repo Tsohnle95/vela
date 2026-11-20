@@ -10692,7 +10692,9 @@ impl VelaApp {
         }
         body = body.child(
             div()
-                .pl(px(6.0))
+                // Source indents section labels by the pane's 6px plus the
+                // toggle's 8px padding, so they line up with row titles.
+                .pl(px(14.0))
                 .pr(px(6.0))
                 .pt(px(21.0))
                 .pb(px(4.0))
@@ -10716,7 +10718,11 @@ impl VelaApp {
                     this.session_projects_open = !this.session_projects_open;
                     cx.notify();
                 }))
-                .child("Projects")
+                .child(
+                    div()
+                        .debug_selector(|| "session-projects-label".into())
+                        .child("Projects"),
+                )
                 .child(
                     div()
                         .text_size(px(9.0))
@@ -10749,7 +10755,7 @@ impl VelaApp {
         }
         body = body.child(
             div()
-                .pl(px(6.0))
+                .pl(px(14.0))
                 .pr(px(6.0))
                 .pt(px(20.0))
                 .pb(px(4.0))
@@ -10773,7 +10779,11 @@ impl VelaApp {
                     this.session_recents_open = !this.session_recents_open;
                     cx.notify();
                 }))
-                .child("Recents")
+                .child(
+                    div()
+                        .debug_selector(|| "session-recents-label".into())
+                        .child("Recents"),
+                )
                 .child(
                     div()
                         .text_size(px(9.0))
@@ -23805,6 +23815,65 @@ mod tests {
         assert_eq!(sessions.top(), files.top(), "brand moved vertically");
         let inset = f32::from(sessions.left() - sidebar.left());
         assert!((inset - 16.).abs() <= 2., "brand inset was {inset}");
+        runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn session_section_labels_line_up_with_rows(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1200.), px(800.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, _| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.agent_panel_open = false;
+            app.settings_open = false;
+            app.agent_mode = false;
+            app.sidebar_tab = SidebarTab::Sessions;
+            app.active_id = Some("ses_rows".into());
+            app.sessions = Arc::new(vec![SessionSummary {
+                id: "ses_rows".into(),
+                title: "Rows".into(),
+                directory: "/workspace".into(),
+                updated_at: 1,
+                parent_id: None,
+                agent: None,
+            }]);
+            app.refresh_session_filter();
+        });
+        draw(cx);
+        let sidebar = cx.debug_bounds("sidebar-root").unwrap();
+        let title = cx.debug_bounds("session-title:ses_rows").unwrap();
+        let projects = cx.debug_bounds("session-projects-label").unwrap();
+        let recents = cx.debug_bounds("session-recents-label").unwrap();
+
+        // Source indents both section labels by 6px pane + 8px toggle padding,
+        // which is the same column as a session row's title.
+        for (label, bounds) in [("projects", projects), ("recents", recents)] {
+            let inset = f32::from(bounds.left() - sidebar.left());
+            let row_inset = f32::from(title.left() - sidebar.left());
+            assert!(
+                (inset - row_inset).abs() <= 0.5,
+                "{label} label sat at {inset}, rows at {row_inset}"
+            );
+            assert!((inset - 14.).abs() <= 2., "{label} inset was {inset}");
+        }
         runtime.block_on(engine.shutdown_and_wait());
     }
 
