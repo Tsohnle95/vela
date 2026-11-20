@@ -390,41 +390,58 @@ impl VelaApp {
         });
         cx.spawn(async move |this, cx| {
             let result = receiver.await;
+            let directory = match result {
+                Ok(Ok(Some(paths))) => paths
+                    .first()
+                    .map(|path| path.to_string_lossy().to_string()),
+                _ => None,
+            };
             let _ = this.update(cx, |app, cx| {
                 app.workspace_chooser_pending = false;
-                let Ok(Ok(Some(paths))) = result else {
-                    return;
-                };
-                let Some(path) = paths.first() else {
-                    return;
-                };
-                let directory = path.to_string_lossy().to_string();
-                if save {
-                    let name = path
-                        .file_name()
-                        .map(|name| name.to_string_lossy().to_string())
-                        .unwrap_or_else(|| directory.clone());
-                    if !app
-                        .settings
-                        .workspaces
-                        .iter()
-                        .any(|bookmark| bookmark.directory == directory)
-                    {
-                        app.settings
-                            .workspaces
-                            .push(vela_engine::migration::WorkspaceBookmark { directory, name });
-                        app.persist_preferences(cx);
-                    }
-                    app.session_projects_open = true;
-                } else {
-                    app.workspace_hint = Some(directory.clone());
-                    app.loading = true;
-                    app.engine.open_directory(directory);
-                }
-                cx.notify();
+                app.finish_workspace_choice(save, directory, cx);
             });
         })
         .detach();
+    }
+
+    /// Applies a completed workspace chooser. A cancelled or dismissed chooser
+    /// must clear the add-panel intent, otherwise the next workspace open
+    /// silently attaches another agent panel.
+    pub(super) fn finish_workspace_choice(
+        &mut self,
+        save: bool,
+        directory: Option<String>,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(directory) = directory else {
+            self.workspace_open_adds = false;
+            return;
+        };
+        if save {
+            let name = std::path::Path::new(&directory)
+                .file_name()
+                .map(|name| name.to_string_lossy().to_string())
+                .unwrap_or_else(|| directory.clone());
+            if !self
+                .settings
+                .workspaces
+                .iter()
+                .any(|bookmark| bookmark.directory == directory)
+            {
+                self.settings
+                    .workspaces
+                    .push(vela_engine::migration::WorkspaceBookmark { directory, name });
+                self.persist_preferences(cx);
+            }
+            // Saving a workspace never opens one; drop any stale add intent.
+            self.workspace_open_adds = false;
+            self.session_projects_open = true;
+        } else {
+            self.workspace_hint = Some(directory.clone());
+            self.loading = true;
+            self.engine.open_directory(directory);
+        }
+        cx.notify();
     }
 
     pub(super) fn refresh_session_filter(&mut self) {
@@ -729,9 +746,14 @@ impl VelaApp {
                                 .find(|session| session.directory == directory)
                                 .map(|session| session.id.clone());
                             match existing {
-                                Some(id) => app.open_session(id, cx),
+                                // Opening a project swaps the focused panel, matching
+                                // the folder-picker path; only the titlebar add control
+                                // grows the grid.
+                                Some(id) => app.reopen_session(id, cx),
                                 None => {
                                     app.loading = true;
+                                    // Opening a project replaces the focused panel.
+                                    app.workspace_open_adds = false;
                                     app.engine.open_directory(directory);
                                     cx.notify();
                                 }

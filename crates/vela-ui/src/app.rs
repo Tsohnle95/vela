@@ -3020,6 +3020,7 @@ impl VelaApp {
         } else {
             tracing::info!(%path, "opening workspace from hint");
             self.loading = true;
+            self.workspace_open_adds = false;
             self.engine.open_directory(path);
             cx.notify();
         }
@@ -3110,6 +3111,7 @@ impl VelaApp {
                 self.launch_directory = Some(path.clone());
                 self.workspace_hint = Some(path.clone());
                 self.loading = true;
+                self.workspace_open_adds = false;
                 self.engine.open_directory(path);
                 return;
             }
@@ -23875,6 +23877,188 @@ mod tests {
             assert!((inset - 14.).abs() <= 2., "{label} inset was {inset}");
         }
         runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn clicking_a_recent_session_replaces_the_panel(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.sidebar_tab = SidebarTab::Sessions;
+            app.test_workspace_directory = Some("/workspace".into());
+            app.sessions = Arc::new(vec![
+                SessionSummary {
+                    id: "ses_a".into(),
+                    title: "A".into(),
+                    directory: "/workspace".into(),
+                    updated_at: 2,
+                    parent_id: None,
+                    agent: None,
+                },
+                SessionSummary {
+                    id: "ses_b".into(),
+                    title: "B".into(),
+                    directory: "/workspace".into(),
+                    updated_at: 1,
+                    parent_id: None,
+                    agent: None,
+                },
+            ]);
+            app.refresh_session_filter();
+            app.open_session("ses_a".into(), cx);
+        });
+        draw(cx);
+        assert_eq!(app.read_with(cx, |app, _| app.panels.len()), 1);
+        let row = cx.debug_bounds("session-title:ses_b").unwrap();
+        cx.simulate_click(row.center(), gpui::Modifiers::default());
+        cx.run_until_parked();
+        draw(cx);
+        let (len, active) =
+            app.read_with(cx, |app, _| (app.panels.len(), app.panels.active().map(|p| p.session.clone())));
+        assert_eq!(len, 1, "clicking a session added a panel: {len} panels");
+        assert_eq!(active.as_deref(), Some("ses_b"));
+    }
+
+    #[gpui::test]
+    fn opening_a_project_swaps_the_panel_instead_of_adding_one(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.sidebar_tab = SidebarTab::Sessions;
+            app.session_projects_open = true;
+            app.test_workspace_directory = Some("/workspace".into());
+            app.settings.workspaces = vec![vela_engine::migration::WorkspaceBookmark {
+                directory: "/other".into(),
+                name: "Other".into(),
+            }];
+            app.sessions = Arc::new(vec![
+                SessionSummary {
+                    id: "ses_open".into(),
+                    title: "Open".into(),
+                    directory: "/workspace".into(),
+                    updated_at: 2,
+                    parent_id: None,
+                    agent: None,
+                },
+                SessionSummary {
+                    id: "ses_other".into(),
+                    title: "Other chat".into(),
+                    directory: "/other".into(),
+                    updated_at: 1,
+                    parent_id: None,
+                    agent: None,
+                },
+            ]);
+            app.refresh_session_filter();
+            app.open_session("ses_open".into(), cx);
+        });
+        draw(cx);
+        assert_eq!(app.read_with(cx, |app, _| app.panels.len()), 1);
+        let open = cx.debug_bounds("project-open-0").expect("project row");
+        cx.simulate_click(open.center(), gpui::Modifiers::default());
+        cx.run_until_parked();
+        draw(cx);
+        let (len, active) =
+            app.read_with(cx, |app, _| (app.panels.len(), app.panels.active().map(|p| p.session.clone())));
+        assert_eq!(len, 1, "opening a project added a panel: {len} panels");
+        assert_eq!(active.as_deref(), Some("ses_other"));
+    }
+
+    #[gpui::test]
+    fn cancelled_add_panel_clears_the_add_intent(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        app.update(cx, |app, cx| {
+            // The titlebar add control arms the intent before the chooser opens.
+            app.workspace_open_adds = true;
+            app.finish_workspace_choice(false, None, cx);
+            assert!(
+                !app.workspace_open_adds,
+                "a cancelled add left the next workspace open armed to attach a panel"
+            );
+
+            // A picked directory keeps the intent so the add flow can append.
+            app.workspace_open_adds = true;
+            app.finish_workspace_choice(false, Some("/picked".into()), cx);
+            assert!(app.workspace_open_adds);
+            assert_eq!(app.workspace_hint.as_deref(), Some("/picked"));
+        });
+    }
+
+    #[gpui::test]
+    fn opening_a_project_without_history_replaces_the_panel(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (app, cx) = agent_tui_test_app(cx, &runtime);
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1400.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.sidebar_open = true;
+            app.sidebar_tab = SidebarTab::Sessions;
+            app.session_projects_open = true;
+            app.test_workspace_directory = Some("/workspace".into());
+            app.settings.workspaces = vec![vela_engine::migration::WorkspaceBookmark {
+                directory: "/fresh".into(),
+                name: "Fresh".into(),
+            }];
+            app.sessions = Arc::new(vec![SessionSummary {
+                id: "ses_open".into(),
+                title: "Open".into(),
+                directory: "/workspace".into(),
+                updated_at: 1,
+                parent_id: None,
+                agent: None,
+            }]);
+            app.refresh_session_filter();
+            app.open_session("ses_open".into(), cx);
+            // A stale add intent left behind by a dismissed add must not turn
+            // this workspace open into a second panel.
+            app.workspace_open_adds = true;
+        });
+        draw(cx);
+        let open = cx.debug_bounds("project-open-0").expect("project row");
+        cx.simulate_click(open.center(), gpui::Modifiers::default());
+        cx.run_until_parked();
+        assert!(
+            !app.read_with(cx, |app, _| app.workspace_open_adds),
+            "opening a project kept the add-panel intent armed"
+        );
+        assert_eq!(app.read_with(cx, |app, _| app.panels.len()), 1);
     }
 
     #[test]
