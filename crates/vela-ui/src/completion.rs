@@ -2,7 +2,8 @@
 //!
 //! This is a bounded LSP-style word provider: identifiers are collected from
 //! the active buffer, ranked by prefix match, frequency and length, and the
-//! current word range is replaced on acceptance.
+//! current word range is replaced on acceptance. Script files add local member
+//! completion (`this.`/object-literal keys) and language keywords.
 
 use std::collections::HashMap;
 use std::ops::Range;
@@ -548,11 +549,240 @@ fn html_attribute_value_context(content: &str) -> Option<&str> {
     (!attribute.is_empty()).then_some(attribute)
 }
 
+const JS_KEYWORDS: &[&str] = &[
+    "async", "await", "break", "case", "catch", "class", "const", "continue", "debugger",
+    "default", "delete", "do", "else", "export", "extends", "false", "finally", "for",
+    "from", "function", "if", "import", "in", "instanceof", "let", "new", "null", "of",
+    "return", "static", "super", "switch", "this", "throw", "true", "try", "typeof",
+    "undefined", "var", "void", "while", "yield",
+];
+
+const TS_KEYWORDS: &[&str] = &[
+    "abstract", "any", "as", "asserts", "bigint", "boolean", "declare", "enum",
+    "implements", "infer", "interface", "is", "keyof", "never", "number", "object",
+    "override", "private", "protected", "public", "readonly", "satisfies", "string",
+    "symbol", "type", "unique", "unknown",
+];
+
+fn script_extension(rel: &str) -> Option<&str> {
+    let extension = rel.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
+    match extension.as_str() {
+        "js" | "mjs" | "cjs" | "jsx" => Some("js"),
+        "ts" | "tsx" | "mts" | "cts" => Some("ts"),
+        _ => None,
+    }
+}
+
+/// Keywords rank after document words so locals keep the top of the popup.
+fn keyword_candidates(rel: &str) -> Vec<String> {
+    match script_extension(rel) {
+        Some("js") => JS_KEYWORDS.iter().map(|item| (*item).to_owned()).collect(),
+        Some("ts") => JS_KEYWORDS
+            .iter()
+            .chain(TS_KEYWORDS.iter())
+            .map(|item| (*item).to_owned())
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// Members after `this.` (class members declared above the caret) and after a
+/// local object-literal binding. Type-checked member lists stay out of scope.
+fn member_candidates(text: &str, caret: usize, rel: &str) -> Vec<String> {
+    if script_extension(rel).is_none() {
+        return Vec::new();
+    }
+    let caret = caret.min(text.len());
+    let before = text[..caret].trim_end();
+    let Some(head) = before.strip_suffix('.') else {
+        return Vec::new();
+    };
+    let start = head
+        .rfind(|ch: char| !(ch.is_alphanumeric() || ch == '_' || ch == '$' || ch == '#'))
+        .map_or(0, |index| index + 1);
+    let ident = &head[start..];
+    if ident.is_empty() {
+        return Vec::new();
+    }
+    if ident == "this" {
+        return class_members(head);
+    }
+    object_literal_keys(text, head, ident)
+}
+
+fn class_members(prefix: &str) -> Vec<String> {
+    let Some(class_at) = prefix.rfind("class ") else {
+        return Vec::new();
+    };
+    let Some(open) = prefix[class_at..].find('{').map(|index| class_at + index) else {
+        return Vec::new();
+    };
+    let body = &prefix[open + 1..];
+    let chars = body.chars().collect::<Vec<_>>();
+    let modifiers = [
+        "static", "async", "get", "set", "public", "private", "protected", "readonly",
+        "override", "declare", "abstract", "accessor",
+    ];
+    let mut members = Vec::new();
+    let mut depth = 0usize;
+    let mut index = 0usize;
+    let mut at_statement_start = true;
+    while index < chars.len() {
+        let ch = chars[index];
+        if ch == '{' || ch == '(' || ch == '[' {
+            depth += 1;
+            index += 1;
+            continue;
+        }
+        if ch == '}' || ch == ')' || ch == ']' {
+            depth = depth.saturating_sub(1);
+            at_statement_start = depth == 0;
+            index += 1;
+            continue;
+        }
+        if depth == 0 && (ch == ';' || ch == ',') {
+            at_statement_start = true;
+            index += 1;
+            continue;
+        }
+        if depth > 0 || !at_statement_start {
+            index += 1;
+            continue;
+        }
+        if ch.is_whitespace() {
+            index += 1;
+            continue;
+        }
+        // Read an identifier (methods and fields may start with `#`).
+        let name_start = index;
+        let mut name_end = index;
+        let mut name = String::new();
+        if ch == '#' {
+            name.push(ch);
+            name_end += 1;
+        }
+        while name_end < chars.len()
+            && (chars[name_end].is_alphanumeric() || chars[name_end] == '_' || chars[name_end] == '$')
+        {
+            name.push(chars[name_end]);
+            name_end += 1;
+        }
+        if name.is_empty() || name == "#" {
+            at_statement_start = false;
+            index = name_end.max(name_start + 1);
+            continue;
+        }
+        let next = chars[name_end..]
+            .iter()
+            .find(|ch| !ch.is_whitespace())
+            .copied();
+        if modifiers.contains(&name.as_str()) {
+            // Keep scanning the same statement for the real member name.
+            index = name_end;
+            continue;
+        }
+        if matches!(next, Some('(' | ':' | '=' | '?' | '!' | '<' | ';' | '{')) {
+            members.push(name);
+        }
+        at_statement_start = false;
+        index = name_end;
+    }
+    members
+}
+
+fn object_literal_keys(text: &str, prefix: &str, ident: &str) -> Vec<String> {
+    let bindings = ["const ", "let ", "var "];
+    let mut binding_at = None;
+    for declaration in bindings {
+        let needle = format!("{declaration}{ident}");
+        if let Some(index) = prefix.rfind(&needle)
+            && binding_at.is_none_or(|current| index > current)
+        {
+            binding_at = Some(index);
+        }
+    }
+    let Some(binding_at) = binding_at else {
+        return Vec::new();
+    };
+    let after = &text[binding_at..];
+    let Some(equals) = after.find('=') else {
+        return Vec::new();
+    };
+    let Some(open) = after[equals..].find('{').map(|index| equals + index) else {
+        return Vec::new();
+    };
+    let chars = after.chars().collect::<Vec<_>>();
+    let open = after[..open].chars().count();
+    let mut depth = 0usize;
+    let mut keys = Vec::new();
+    let mut index = open;
+    while index < chars.len() {
+        let ch = chars[index];
+        if ch == '{' || ch == '[' || ch == '(' {
+            depth += 1;
+            index += 1;
+            continue;
+        }
+        if ch == '}' || ch == ']' || ch == ')' {
+            depth = depth.saturating_sub(1);
+            if depth == 0 {
+                break;
+            }
+            index += 1;
+            continue;
+        }
+        if depth != 1 {
+            index += 1;
+            continue;
+        }
+        if ch == '"' || ch == '\'' {
+            let quote = ch;
+            let mut end = index + 1;
+            let mut key = String::new();
+            while end < chars.len() && chars[end] != quote {
+                key.push(chars[end]);
+                end += 1;
+            }
+            let after_quote = if end < chars.len() { end + 1 } else { end };
+            let next = chars[after_quote..]
+                .iter()
+                .find(|ch| !ch.is_whitespace())
+                .copied();
+            if next == Some(':') {
+                keys.push(key);
+            }
+            index = after_quote;
+            continue;
+        }
+        if ch.is_alphabetic() || ch == '_' || ch == '$' {
+            let mut end = index;
+            let mut key = String::new();
+            while end < chars.len()
+                && (chars[end].is_alphanumeric() || chars[end] == '_' || chars[end] == '$')
+            {
+                key.push(chars[end]);
+                end += 1;
+            }
+            let next = chars[end..].iter().find(|ch| !ch.is_whitespace()).copied();
+            if matches!(next, Some(':') | Some(',') | Some('}')) {
+                keys.push(key);
+            }
+            index = end;
+            continue;
+        }
+        index += 1;
+    }
+    keys
+}
+
 fn semantic_candidates(text: &str, caret: usize, rel: &str) -> Vec<String> {
     let extension = rel.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
     let caret = caret.min(text.len());
     let before = &text[..caret];
     match extension.as_str() {
+        "js" | "mjs" | "cjs" | "jsx" | "ts" | "tsx" | "mts" | "cts" => {
+            member_candidates(text, caret, rel)
+        }
         "css" | "scss" | "less" => {
             let statement = before
                 .rsplit([';', '{', '}'])
@@ -680,10 +910,16 @@ pub(super) fn completions_at(
         return Vec::new();
     }
     let prefix_lower = prefix.to_lowercase();
+    let caret_at_field = text
+        .get(..caret.min(text.len()))
+        .is_some_and(|head| head.trim_end().ends_with('.'));
     let mut candidates = semantic_candidates(text, caret, rel);
     candidates.extend(completions_with(text, prefix, limit, |ch| {
         word_char_for(ch, rel)
     }));
+    if !caret_at_field {
+        candidates.extend(keyword_candidates(rel));
+    }
     let mut seen = std::collections::HashSet::new();
     candidates
         .into_iter()
@@ -691,6 +927,8 @@ pub(super) fn completions_at(
         .filter(|item| {
             prefix_lower.is_empty() || item.to_lowercase().starts_with(&prefix_lower)
         })
+        // Never offer the word already under the caret.
+        .filter(|item| prefix.is_empty() || !item.eq_ignore_ascii_case(prefix))
         .take(limit)
         .collect()
 }
@@ -741,6 +979,53 @@ fn completions_with(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn script_keywords_and_local_members_complete() {
+        let keyword = "fun";
+        let items = completions_at(keyword, keyword.len(), "fun", 8, "x.ts");
+        assert_eq!(items.first().map(String::as_str), Some("function"));
+
+        let js = "con";
+        let items = completions_at(js, js.len(), "con", 8, "x.js");
+        assert_eq!(items.first().map(String::as_str), Some("const"));
+
+        // Type-only keywords stay out of plain JavaScript.
+        let js_type = "inter";
+        let items = completions_at(js_type, js_type.len(), "inter", 8, "x.js");
+        assert!(!items.iter().any(|item| item == "interface"));
+
+        let ts_type = "inter";
+        let items = completions_at(ts_type, ts_type.len(), "inter", 8, "x.ts");
+        assert!(items.iter().any(|item| item == "interface"), "{items:?}");
+
+        // `this.` lists the class members declared above the caret.
+        let class = "class Panel {\n  count = 0;\n  static total = 0;\n  get label() { return 'x'; }\n  render() { this. }\n}\n";
+        let caret = class.find("this.").unwrap() + "this.".len();
+        assert_eq!(
+            member_candidates(class, caret, "x.ts"),
+            vec!["count".to_string(), "total".to_string(), "label".to_string(), "render".to_string()]
+        );
+
+        // A local object literal supplies its keys after the dot.
+        let object = "const settings = {\n  theme: \"dark\",\n  'font-size': 12,\n  size: 1,\n};\nsettings.\n";
+        let caret = object.find("settings.\n").unwrap() + "settings.".len();
+        assert_eq!(
+            member_candidates(object, caret, "x.ts"),
+            vec!["theme".to_string(), "font-size".to_string(), "size".to_string()]
+        );
+
+        // Unknown receivers contribute no members and field access never offers
+        // keywords; the generic document-word provider still applies.
+        let other = "const value = 1;\nother.";
+        let caret = other.len();
+        assert!(member_candidates(other, caret, "x.ts").is_empty());
+        let items = completions_at(other, caret, "", 8, "x.ts");
+        assert!(
+            !items.iter().any(|item| item == "await"),
+            "keywords stay out of field access: {items:?}"
+        );
+    }
 
     #[test]
     fn css_and_html_semantic_completions_precede_document_words() {

@@ -26,9 +26,11 @@ mod import_duplicates;
 mod inline_code;
 mod input;
 mod math;
+mod member_access;
 mod interfaces;
 mod multiple_selection;
 mod object_keys;
+mod object_types;
 mod panel_layout;
 mod panels;
 mod pixel_art;
@@ -67,3 +69,38 @@ pub use app::run;
 pub use app::transcript_native_bench::{LiveProbe, run_native_transcript_bench};
 
 mod turn_anchor;
+
+
+#[cfg(test)]
+mod build_profile_tests {
+    /// Interactive builds must stay optimized: an unoptimized GPUI frame costs
+    /// ~15x more, which shows up as lag while scrolling the editor.
+    #[test]
+    fn dev_profile_stays_optimized() {
+        let manifest = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../Cargo.toml"
+        ))
+        .expect("workspace manifest");
+        let mut in_dev = false;
+        let mut opt_level = None;
+        for line in manifest.lines() {
+            let line = line.trim();
+            if line.starts_with('[') {
+                in_dev = line == "[profile.dev]";
+                continue;
+            }
+            if in_dev
+                && let Some(value) = line.strip_prefix("opt-level")
+                && let Some(value) = value.split('=').nth(1)
+            {
+                opt_level = value.trim().parse::<u8>().ok();
+            }
+        }
+        let level = opt_level.expect("[profile.dev] opt-level must be set for interactive builds");
+        assert!(
+            level >= 1,
+            "dev builds run the real frame loop; opt-level {level} reintroduces input lag"
+        );
+    }
+}

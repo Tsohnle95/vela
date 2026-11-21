@@ -1,4 +1,5 @@
-//! Bounded function-call argument count checks for locally declared functions.
+//! Bounded function-call checks for locally declared functions: argument
+//! counts, plus literal argument kinds against primitive parameter annotations.
 //!
 //! Only top-level function declarations with a one-line parameter list are
 //! indexed. Calls are matched in comment-masked source so nested commas and
@@ -14,8 +15,16 @@ pub(super) struct CallSite {
     pub open: usize,
     pub close: usize,
     pub arguments: Vec<Range<usize>>,
+    pub params: Vec<Param>,
     pub min: usize,
     pub max: Option<usize>,
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct Param {
+    /// Primitive annotation when the parameter declares one.
+    pub annotation: Option<String>,
+    pub rest: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -25,11 +34,12 @@ pub(super) struct CallIssue {
     pub message: String,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct Spec {
     min: usize,
     max: Option<usize>,
     declaration: usize,
+    params: Vec<Param>,
 }
 
 fn split_parameters(text: &str) -> Vec<&str> {
@@ -103,17 +113,23 @@ fn function_spec(text: &str, line: &str, line_start: usize) -> Option<(String, S
     let mut required = 0;
     let mut total = 0;
     let mut rest = false;
+    let mut params = Vec::new();
     for parameter in split_parameters(&line[open + 1..close]) {
         let parameter = parameter.trim();
         if parameter.is_empty() {
             continue;
         }
         total += 1;
-        if parameter.starts_with("...") {
+        let is_rest = parameter.starts_with("...");
+        if is_rest {
             rest = true;
         } else if !parameter.contains('?') && !parameter.contains('=') {
             required += 1;
         }
+        params.push(Param {
+            annotation: parameter_annotation(parameter, is_rest),
+            rest: is_rest,
+        });
     }
     let _ = text;
     Some((
@@ -122,8 +138,33 @@ fn function_spec(text: &str, line: &str, line_start: usize) -> Option<(String, S
             min: required,
             max: (!rest).then_some(total),
             declaration: name_offset,
+            params,
         },
     ))
+}
+
+/// Only primitive annotations are comparable against literal arguments; named,
+/// literal, array, generic and function types stay unreported.
+fn parameter_annotation(parameter: &str, rest: bool) -> Option<String> {
+    if rest {
+        return None;
+    }
+    let parameter = parameter.trim_start_matches("...");
+    let (head, tail) = parameter.split_once(':')?;
+    if head.contains(['{', '[']) || tail.is_empty() {
+        return None;
+    }
+    let annotation = tail.split('=').next().unwrap_or(tail).trim();
+    if annotation.is_empty() {
+        return None;
+    }
+    let primitive = annotation.split('|').all(|part| {
+        matches!(
+            part.trim(),
+            "string" | "number" | "boolean" | "null" | "any" | "unknown"
+        )
+    });
+    primitive.then(|| annotation.to_owned())
 }
 
 fn matching_paren(text: &str, open: usize) -> Option<usize> {
@@ -282,6 +323,7 @@ pub(super) fn calls(text: &str) -> Vec<CallSite> {
             close,
             min: spec.min,
             max: spec.max,
+            params: spec.params.clone(),
             arguments,
         });
     }
@@ -324,6 +366,41 @@ pub(super) fn issues(text: &str) -> Vec<CallIssue> {
                 column: site.name_offset - line_start + 1,
                 message,
             });
+            continue;
+        }
+        if count < site.min || site.max.is_some_and(|max| count > max) {
+            continue;
+        }
+        for (index, argument) in site.arguments.iter().enumerate() {
+            let Some(param) = site.params.get(index) else {
+                break;
+            };
+            if param.rest {
+                break;
+            }
+            let Some(annotation) = param.annotation.as_deref() else {
+                continue;
+            };
+            let value = text[argument.clone()].trim();
+            let Some(kind) = crate::semantic::literal_kind(value) else {
+                continue;
+            };
+            if !matches!(kind, "string" | "number" | "boolean" | "null") {
+                continue;
+            }
+            if crate::semantic::annotation_accepts(annotation, kind) {
+                continue;
+            }
+            let offset = argument.start;
+            let line = masked[..offset].bytes().filter(|byte| *byte == b'\n').count() + 1;
+            let line_start = masked[..offset].rfind('\n').map(|index| index + 1).unwrap_or(0);
+            issues.push(CallIssue {
+                line,
+                column: offset - line_start + 1,
+                message: format!(
+                    "Argument of type '{kind}' is not assignable to parameter of type '{annotation}'."
+                ),
+            });
         }
     }
     issues
@@ -350,6 +427,58 @@ mod tests {
     use super::*;
 
     #[test]
+    fn literal_arguments_are_checked_against_primitive_annotations() {
+        let mismatch = issues("function greet(name: string) {}\ngreet(42);\n");
+        assert!(
+            mismatch
+                .iter()
+                .any(|issue| issue.message
+                    == "Argument of type 'number' is not assignable to parameter of type 'string'."),
+            "{mismatch:?}"
+        );
+        assert!(
+            issues("function greet(name: string) {}\ngreet(\"ada\");\n").is_empty(),
+            "matching literals stay clean"
+        );
+
+        let union = issues("function show(value: string | number) {}\nshow(true);\n");
+        assert!(
+            union
+                .iter()
+                .any(|issue| issue.message.contains("not assignable to parameter of type 'string | number'")),
+            "{union:?}"
+        );
+        assert!(
+            issues("function show(value: string | number) {}\nshow(7);\n").is_empty()
+        );
+
+        let optional = issues("function setAge(age?: number) {}\nsetAge(\"old\");\n");
+        assert!(optional.iter().any(|issue| issue.message.contains("'number'")), "{optional:?}");
+
+        let default = issues("function pad(width: number = 0) {}\npad(false);\n");
+        assert!(default.iter().any(|issue| issue.message.contains("'number'")), "{default:?}");
+
+        // Anything that is not a literal, and annotations that are not
+        // primitive unions, stay unreported.
+        for clean in [
+            "function f(x: string) {}\nconst value = 1;\nf(value);\n",
+            "function f(mode: \"light\" | \"dark\") {}\nf(\"dim\");\n",
+            "function f(p: Point) {}\nf({ x: 1 });\n",
+            "function f(x: string[]) {}\nf([\"a\"]);\n",
+            "function f(...rest: number[]) {}\nf(\"a\");\n",
+            "function f(x: number) {}\nf(1 + 2);\n",
+        ] {
+            let found = issues(clean);
+            assert!(found.is_empty(), "{clean:?} -> {found:?}");
+        }
+
+        // A count mismatch still reports the count rather than a type error.
+        let count = issues("function f(x: string) {}\nf(1, 2);\n");
+        assert_eq!(count.len(), 1, "{count:?}");
+        assert!(count[0].message.contains("expects at most"), "{count:?}");
+    }
+
+    #[test]
     fn argument_counts_handle_optional_default_rest_and_nesting() {
         let text =
             "function f(a, b) { return a + b; }\nf(1);\nf(1, 2, 3);\nf({x: 1, y: 2}, 'a,b');\n";
@@ -371,3 +500,4 @@ mod tests {
         assert!(issues("function f(a) {}\n  function g(b) {}\nf();").len() == 1);
     }
 }
+

@@ -35,11 +35,14 @@ enum MaskState {
 }
 
 /// Blank comments while preserving string contents, newlines and byte offsets.
+/// Regex literals are blanked too, so a `//` or `/*` inside a pattern is never
+/// mistaken for a comment.
 pub(super) fn mask_comments(text: &str) -> String {
     let chars = text.chars().collect::<Vec<_>>();
     let mut out = String::with_capacity(text.len());
     let mut state = MaskState::Code;
     let mut index = 0;
+    let mut previous: Option<char> = None;
     while index < chars.len() {
         let ch = chars[index];
         let next = chars.get(index + 1).copied();
@@ -52,6 +55,17 @@ pub(super) fn mask_comments(text: &str) -> String {
                         escaped: false,
                     };
                     index += 1;
+                }
+                '/' if next != Some('/')
+                    && next != Some('*')
+                    && regex_position(previous)
+                    && let Some(end) = regex_end(&chars, index) =>
+                {
+                    for _ in index..end {
+                        out.extend(std::iter::repeat_n(' ', 1));
+                    }
+                    previous = Some('/');
+                    index = end;
                 }
                 '/' if next == Some('/') => {
                     out.push(' ');
@@ -67,6 +81,9 @@ pub(super) fn mask_comments(text: &str) -> String {
                 }
                 _ => {
                     out.push(ch);
+                    if !ch.is_whitespace() {
+                        previous = Some(ch);
+                    }
                     index += 1;
                 }
             },
@@ -118,7 +135,61 @@ pub(super) fn mask_comments(text: &str) -> String {
     out
 }
 
-fn literal_kind(value: &str) -> Option<&'static str> {
+/// A `/` in these positions starts a regex literal rather than a division.
+fn regex_position(previous: Option<char>) -> bool {
+    matches!(
+        previous,
+        None | Some(
+            '(' | ','
+                | '='
+                | ':'
+                | '['
+                | '!'
+                | '&'
+                | '|'
+                | '?'
+                | '{'
+                | ';'
+                | '>'
+                | '+'
+                | '-'
+                | '*'
+                | '%'
+                | '~'
+                | '^'
+        )
+    )
+}
+
+/// End offset (exclusive) of a regex literal starting at `open`.
+fn regex_end(chars: &[char], open: usize) -> Option<usize> {
+    let mut index = open + 1;
+    let mut in_class = false;
+    let mut escaped = false;
+    while index < chars.len() {
+        let ch = chars[index];
+        if ch == '\n' {
+            return None;
+        }
+        if escaped {
+            escaped = false;
+        } else if ch == '\\' {
+            escaped = true;
+        } else if in_class {
+            if ch == ']' {
+                in_class = false;
+            }
+        } else if ch == '[' {
+            in_class = true;
+        } else if ch == '/' {
+            return Some(index + 1);
+        }
+        index += 1;
+    }
+    None
+}
+
+pub(super) fn literal_kind(value: &str) -> Option<&'static str> {
     let value = value.trim();
     if value.is_empty() {
         return None;
@@ -149,7 +220,7 @@ fn literal_kind(value: &str) -> Option<&'static str> {
     None
 }
 
-fn annotation_accepts(annotation: &str, literal: &str) -> bool {
+pub(super) fn annotation_accepts(annotation: &str, literal: &str) -> bool {
     let annotation = annotation.trim();
     if matches!(annotation, "any" | "unknown") {
         return true;
@@ -1062,6 +1133,27 @@ mod tests {
             "Type 'number' is not assignable to type 'string'."
         );
         assert!(type_diagnostics("let ok: number = 1;").is_empty());
+    }
+
+    #[test]
+    fn regex_literals_never_blank_following_code() {
+        let text = "const pattern = /\\/\\*# sourceMappingURL=.*?\\*\\//g;\nconst after = 1;\n";
+        let masked = mask_comments(text);
+        assert_eq!(masked.len(), text.len());
+        assert!(
+            masked.contains("const after = 1;"),
+            "regex slashes must not start a comment: {masked:?}"
+        );
+        assert!(
+            !masked.contains("sourceMappingURL"),
+            "the pattern itself is blanked: {masked:?}"
+        );
+        // Division still parses, and a real comment after it is removed.
+        let division = "const half = total / 2; // trailing\nconst next = 3;\n";
+        let masked = mask_comments(division);
+        assert!(masked.contains("total / 2;"), "{masked:?}");
+        assert!(!masked.contains("trailing"), "{masked:?}");
+        assert!(masked.contains("const next = 3;"), "{masked:?}");
     }
 
     #[test]

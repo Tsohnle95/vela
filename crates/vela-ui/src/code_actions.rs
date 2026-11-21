@@ -1106,7 +1106,11 @@ pub(super) fn actions_with_files(
                     .into_iter()
                     .collect()
             }
-            DiagnosticKind::Validation => Vec::new(),
+            DiagnosticKind::Validation
+            | DiagnosticKind::Lint
+            | DiagnosticKind::UnknownProperty
+            | DiagnosticKind::MissingProperty
+            | DiagnosticKind::UnknownMember => Vec::new(),
             DiagnosticKind::UnresolvedIdentifier => {
                 crate::auto_import::import_action(current_key, text, files, line, diagnostic.column)
                     .map(|(title, statement)| CodeAction {

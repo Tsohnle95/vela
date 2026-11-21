@@ -1589,64 +1589,7 @@ fn cell_image_width(nodes: &[Node], key: &str, context: &mut RenderContext) -> f
 }
 
 fn syntax_color(token: crate::syntax::SyntaxToken, theme: &Theme) -> gpui::Rgba {
-    match token {
-        crate::syntax::SyntaxToken::Keyword => {
-            if theme.dark {
-                gpui::rgb(0xff7b72)
-            } else {
-                gpui::rgb(0xcf222e)
-            }
-        }
-        crate::syntax::SyntaxToken::String => {
-            if theme.dark {
-                gpui::rgb(0xa5d6ff)
-            } else {
-                gpui::rgb(0x0a3069)
-            }
-        }
-        crate::syntax::SyntaxToken::Number => {
-            if theme.dark {
-                gpui::rgb(0x79c0ff)
-            } else {
-                gpui::rgb(0x0550ae)
-            }
-        }
-        crate::syntax::SyntaxToken::Comment => theme.faint,
-        crate::syntax::SyntaxToken::Function => {
-            if theme.dark {
-                gpui::rgb(0xd2a8ff)
-            } else {
-                gpui::rgb(0x8250df)
-            }
-        }
-        crate::syntax::SyntaxToken::Property | crate::syntax::SyntaxToken::Attribute => {
-            if theme.dark {
-                gpui::rgb(0x79c0ff)
-            } else {
-                gpui::rgb(0x0550ae)
-            }
-        }
-        crate::syntax::SyntaxToken::Type => {
-            if theme.dark {
-                gpui::rgb(0xffa657)
-            } else {
-                gpui::rgb(0x953800)
-            }
-        }
-        crate::syntax::SyntaxToken::Tag => {
-            if theme.dark {
-                gpui::rgb(0x7ee787)
-            } else {
-                gpui::rgb(0x116329)
-            }
-        }
-        crate::syntax::SyntaxToken::Added => theme.green,
-        crate::syntax::SyntaxToken::Removed => theme.red,
-        crate::syntax::SyntaxToken::Ansi(style) => style
-            .foreground
-            .map(gpui::rgb)
-            .unwrap_or(theme.text),
-    }
+    crate::syntax::color(token, theme)
 }
 
 /// Build complete, gap-free runs for a fenced code block. Unknown languages and

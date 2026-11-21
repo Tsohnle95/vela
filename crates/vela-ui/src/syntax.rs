@@ -1,4 +1,4 @@
-//! Bounded syntax tokenization for Markdown code fences. This is deliberately
+//! Bounded syntax tokenization for Markdown code fences and the source editor. This is deliberately
 //! a small, dependency-free approximation of the Shiki grammars Source loads:
 //! enough to color common keywords/strings/numbers/comments without claiming a
 //! full language parser. Unknown text and languages stay uncolored.
@@ -95,7 +95,7 @@ pub fn inline_code_kind(text: &str) -> Option<InlineCodeKind> {
     None
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
@@ -322,6 +322,68 @@ pub fn ansi(text: &str) -> (String, Vec<Span>) {
     }
     flush(&output, run_start, style, &mut spans);
     (output, spans)
+}
+
+/// Token color shared by transcript code fences and the source editor.
+pub fn color(token: SyntaxToken, theme: &crate::theme::Theme) -> gpui::Rgba {
+    match token {
+        crate::syntax::SyntaxToken::Keyword => {
+            if theme.dark {
+                gpui::rgb(0xff7b72)
+            } else {
+                gpui::rgb(0xcf222e)
+            }
+        }
+        crate::syntax::SyntaxToken::String => {
+            if theme.dark {
+                gpui::rgb(0xa5d6ff)
+            } else {
+                gpui::rgb(0x0a3069)
+            }
+        }
+        crate::syntax::SyntaxToken::Number => {
+            if theme.dark {
+                gpui::rgb(0x79c0ff)
+            } else {
+                gpui::rgb(0x0550ae)
+            }
+        }
+        crate::syntax::SyntaxToken::Comment => theme.faint,
+        crate::syntax::SyntaxToken::Function => {
+            if theme.dark {
+                gpui::rgb(0xd2a8ff)
+            } else {
+                gpui::rgb(0x8250df)
+            }
+        }
+        crate::syntax::SyntaxToken::Property | crate::syntax::SyntaxToken::Attribute => {
+            if theme.dark {
+                gpui::rgb(0x79c0ff)
+            } else {
+                gpui::rgb(0x0550ae)
+            }
+        }
+        crate::syntax::SyntaxToken::Type => {
+            if theme.dark {
+                gpui::rgb(0xffa657)
+            } else {
+                gpui::rgb(0x953800)
+            }
+        }
+        crate::syntax::SyntaxToken::Tag => {
+            if theme.dark {
+                gpui::rgb(0x7ee787)
+            } else {
+                gpui::rgb(0x116329)
+            }
+        }
+        crate::syntax::SyntaxToken::Added => theme.green,
+        crate::syntax::SyntaxToken::Removed => theme.red,
+        crate::syntax::SyntaxToken::Ansi(style) => style
+            .foreground
+            .map(gpui::rgb)
+            .unwrap_or(theme.text),
+    }
 }
 
 pub fn highlight(language: &str, text: &str) -> Vec<Span> {
@@ -13312,3 +13374,4 @@ impl Point {
         }
     }
 }
+

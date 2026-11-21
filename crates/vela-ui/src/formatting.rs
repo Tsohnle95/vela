@@ -328,9 +328,69 @@ struct JsxState {
     template: bool,
     quote: Option<char>,
     escaped: bool,
+    /// A start tag opened on an earlier line is still waiting for `>`/`/>`.
+    tag_pending: bool,
+    /// Arrow-function bodies (`=> {`) opened inside a JSX expression. Their
+    /// braces indent the body but do not add another expression level.
+    jsx_arrow_blocks: usize,
 }
 
 impl JsxState {
+    /// A tag opened on an earlier line stays open until its `>`/`/>` arrives;
+    /// closing it with `/>` must pop the opener that `scan_jsx_tags` pushed,
+    /// otherwise every later sibling keeps an extra level.
+    fn advance_tag_closure(&mut self, line: &str) {
+        let chars = line.chars().collect::<Vec<_>>();
+        let mut index = 0usize;
+        let mut unterminated = false;
+        let mut self_closed = false;
+        while index < chars.len() {
+            if chars[index] != '<' {
+                index += 1;
+                continue;
+            }
+            let next = chars.get(index + 1).copied();
+            match next {
+                Some('/') | Some('!') => {
+                    index += 1;
+                }
+                Some(ch) if ch.is_alphabetic() || matches!(ch, '_' | '$' | '>') => {
+                    match jsx_tag_close(&chars, index) {
+                        Some(end) => {
+                            let mut before = end.saturating_sub(2);
+                            while before > index && chars[before].is_whitespace() {
+                                before -= 1;
+                            }
+                            if chars.get(before) == Some(&'/') {
+                                self_closed = true;
+                            }
+                            index = end;
+                        }
+                        None => {
+                            unterminated = true;
+                            break;
+                        }
+                    }
+                }
+                _ => index += 1,
+            }
+        }
+        if unterminated {
+            self.tag_pending = true;
+            return;
+        }
+        if self.tag_pending {
+            if let Some(closed_self_closing) = line_tag_terminator(&chars) {
+                if closed_self_closing || self_closed {
+                    self.jsx_stack.pop();
+                }
+                self.tag_pending = false;
+            }
+            return;
+        }
+        self.tag_pending = false;
+    }
+
     fn format_line(&mut self, line: &str) -> String {
         let trimmed = line.trim_end();
         if trimmed.trim().is_empty() {
@@ -388,18 +448,23 @@ impl JsxState {
                 .saturating_sub(usize::from(closing_expression))
                 .saturating_sub(usize::from(closing));
             scan_jsx_tags(content, &mut self.jsx_stack);
-            self.jsx_expr_depth = self
-                .jsx_expr_depth
-                .saturating_add(opens)
-                .saturating_sub(closes);
+            scan_jsx_braces(
+                content,
+                &mut self.jsx_expr_depth,
+                &mut self.jsx_arrow_blocks,
+            );
+            let _ = (opens, closes);
             scan_jsx_parens(
                 content,
                 &mut self.jsx_parens,
                 &mut self.jsx_continuation_depth,
             );
+            self.advance_tag_closure(content);
             if self.jsx_stack.is_empty() && self.jsx_expr_depth == 0 {
                 self.jsx_parens.clear();
                 self.jsx_continuation_depth = 0;
+                self.jsx_arrow_blocks = 0;
+                self.tag_pending = false;
             }
             return format!("{}{content}", "  ".repeat(indent));
         }
@@ -442,6 +507,7 @@ impl JsxState {
         }
         if has_jsx {
             scan_jsx_tags(&normalized, &mut self.jsx_stack);
+            self.advance_tag_closure(&normalized);
         }
         format!("{}{normalized}", "  ".repeat(indent))
     }
@@ -489,6 +555,59 @@ fn scan_jsx_parens(line: &str, stack: &mut Vec<bool>, continuation_depth: &mut u
         }
         index += 1;
     }
+}
+
+/// Tracks JSX expression braces, ignoring the block a `=>` opens so a callback
+/// body indents one level instead of two.
+fn scan_jsx_braces(line: &str, expr_depth: &mut usize, arrow_blocks: &mut usize) {
+    let chars = line.chars().collect::<Vec<_>>();
+    let mut index = 0usize;
+    let mut quote: Option<char> = None;
+    let mut escaped = false;
+    while index < chars.len() {
+        let ch = chars[index];
+        if let Some(end) = quote {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == end {
+                quote = None;
+            }
+            index += 1;
+            continue;
+        }
+        match ch {
+            '"' | '\'' | '`' => {
+                quote = Some(ch);
+            }
+            '{' => {
+                if is_arrow_block(&chars, index) {
+                    *arrow_blocks += 1;
+                } else {
+                    *expr_depth += 1;
+                }
+            }
+            '}' => {
+                if *arrow_blocks > 0 {
+                    *arrow_blocks -= 1;
+                } else {
+                    *expr_depth = expr_depth.saturating_sub(1);
+                }
+            }
+            _ => {}
+        }
+        index += 1;
+    }
+}
+
+/// True when the `{` at `index` closes an arrow head (`=>` + optional space).
+fn is_arrow_block(chars: &[char], index: usize) -> bool {
+    let mut before = index;
+    while before > 0 && chars[before - 1].is_whitespace() {
+        before -= 1;
+    }
+    before >= 2 && chars[before - 1] == '>' && chars[before - 2] == '='
 }
 
 fn brace_delta(line: &str) -> (usize, usize) {
@@ -911,6 +1030,71 @@ fn scan_jsx_tag_end(chars: &[char], start: usize) -> usize {
         index += 1;
     }
     chars.len()
+}
+
+/// `scan_jsx_tag_end` equivalent that reports an unterminated tag.
+fn jsx_tag_close(chars: &[char], start: usize) -> Option<usize> {
+    let mut index = start + 1;
+    let mut quote: Option<char> = None;
+    let mut escaped = false;
+    let mut braces = 0usize;
+    while index < chars.len() {
+        let ch = chars[index];
+        if let Some(end) = quote {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == end {
+                quote = None;
+            }
+        } else if ch == '"' || ch == '\'' || ch == '`' {
+            quote = Some(ch);
+        } else if ch == '{' {
+            braces += 1;
+        } else if ch == '}' {
+            braces = braces.saturating_sub(1);
+        } else if ch == '>' && braces == 0 {
+            return Some(index + 1);
+        }
+        index += 1;
+    }
+    None
+}
+
+/// The tag terminator on a continuation line: `Some(true)` for `/>`,
+/// `Some(false)` for `>`, `None` while the tag is still open.
+fn line_tag_terminator(chars: &[char]) -> Option<bool> {
+    let mut index = 0usize;
+    let mut quote: Option<char> = None;
+    let mut escaped = false;
+    let mut braces = 0usize;
+    while index < chars.len() {
+        let ch = chars[index];
+        if let Some(end) = quote {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == end {
+                quote = None;
+            }
+        } else if ch == '"' || ch == '\'' || ch == '`' {
+            quote = Some(ch);
+        } else if ch == '{' {
+            braces += 1;
+        } else if ch == '}' {
+            braces = braces.saturating_sub(1);
+        } else if ch == '>' && braces == 0 {
+            let mut before = index;
+            while before > 0 && chars[before - 1].is_whitespace() {
+                before -= 1;
+            }
+            return Some(chars.get(before.wrapping_sub(1)) == Some(&'/'));
+        }
+        index += 1;
+    }
+    None
 }
 
 fn scan_parens(line: &str, depth: &mut usize) {
@@ -2508,4 +2692,88 @@ mod tests {
             "    \"a\": 1,\n    \"b\": [\n      2,\n      3\n    ]"
         );
     }
+
+    #[test]
+    fn jsx_alignment_matches_the_typescript_formatter() {
+        // Expected output produced by TypeScript 5.9.3 `getFormattingEditsForDocument`
+        // (2-space indent), the formatter Source runs in its TypeScript worker.
+        let cases: &[(&str, &str)] = &[
+            // children
+            (
+                "const view = (\n<div>\n<span>hi</span>\n</div>\n);\n",
+                "const view = (\n  <div>\n    <span>hi</span>\n  </div>\n);\n",
+            ),
+            // attributes
+            (
+                "const view = <Row\nkey={item.id}\ntitle={item.title}\n/>;\n",
+                "const view = <Row\n  key={item.id}\n  title={item.title}\n/>;\n",
+            ),
+            // map
+            (
+                "const view = (\n<div>\n{items.map((item) => (\n<Row\nkey={item.id}\n/>\n))}\n</div>\n);\n",
+                "const view = (\n  <div>\n    {items.map((item) => (\n      <Row\n        key={item.id}\n      />\n    ))}\n  </div>\n);\n",
+            ),
+            // conditional
+            (
+                "const view = (\n<div>\n{ready ? (\n<Panel />\n) : (\n<Loading />\n)}\n</div>\n);\n",
+                "const view = (\n  <div>\n    {ready ? (\n      <Panel />\n    ) : (\n      <Loading />\n    )}\n  </div>\n);\n",
+            ),
+            // ternary
+            (
+                "const v = (\n<div>\n{a ? (\n<b />\n) : c ? (\n<d />\n) : (\n<e />\n)}\n</div>\n);\n",
+                "const v = (\n  <div>\n    {a ? (\n      <b />\n    ) : c ? (\n      <d />\n    ) : (\n      <e />\n    )}\n  </div>\n);\n",
+            ),
+            // fragment
+            (
+                "const v = (\n<>\n<span />\n<span />\n</>\n);\n",
+                "const v = (\n  <>\n    <span />\n    <span />\n  </>\n);\n",
+            ),
+            // nested
+            (
+                "const v = (\n<div>\n<section>\n<p>text</p>\n</section>\n</div>\n);\n",
+                "const v = (\n  <div>\n    <section>\n      <p>text</p>\n    </section>\n  </div>\n);\n",
+            ),
+            // and
+            (
+                "const v = cond && (\n<div>\n<span />\n</div>\n);\n",
+                "const v = cond && (\n  <div>\n    <span />\n  </div>\n);\n",
+            ),
+            // inside_and
+            (
+                "const v = (\n<div>\n{cond && (\n<span />\n)}\n</div>\n);\n",
+                "const v = (\n  <div>\n    {cond && (\n      <span />\n    )}\n  </div>\n);\n",
+            ),
+            // block_callback
+            (
+                "const v = (\n<div>\n{list.map((item) => {\nreturn <Row />;\n})}\n</div>\n);\n",
+                "const v = (\n  <div>\n    {list.map((item) => {\n      return <Row />;\n    })}\n  </div>\n);\n",
+            ),
+            // attr_callback
+            (
+                "const v = (\n<Row\nkey={item.id}\nonClick={() => {\nrun();\n}}\n/>\n);\n",
+                "const v = (\n  <Row\n    key={item.id}\n    onClick={() => {\n      run();\n    }}\n  />\n);\n",
+            ),
+            // array
+            (
+                "const rows = [\n<Row key=\"a\" />,\n<Row key=\"b\" />,\n];\n",
+                "const rows = [\n  <Row key=\"a\" />,\n  <Row key=\"b\" />,\n];\n",
+            ),
+            // jsx_comment
+            (
+                "const v = (\n<div>\n{/* note */}\n<span />\n</div>\n);\n",
+                "const v = (\n  <div>\n    {/* note */}\n    <span />\n  </div>\n);\n",
+            ),
+            // return_paren
+            (
+                "function render() {\nreturn (\n<div>\n<span />\n</div>\n);\n}\n",
+                "function render() {\n  return (\n    <div>\n      <span />\n    </div>\n  );\n}\n",
+            ),
+        ];
+        for (input, expected) in cases {
+            let formatted = super::document("x.tsx", input).unwrap_or_else(|| input.to_string());
+            assert_eq!(&formatted, expected, "input: {input:?}");
+        }
+    }
 }
+
+
