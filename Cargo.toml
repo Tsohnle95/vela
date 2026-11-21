@@ -41,3 +41,10 @@ dirs = "6"
 # macOS 26 window-blur fixes. Upstream GPUI remains the base implementation.
 gpui = { git = "https://github.com/zeronsh/zui", rev = "361ff20b919fdfb80199ee6d9aed725300cb7d54" }
 gpui_platform = { git = "https://github.com/zeronsh/zui", rev = "361ff20b919fdfb80199ee6d9aed725300cb7d54", features = ["font-kit", "runtime_shaders"] }
+
+# Interactive development runs the real GPUI frame loop. Unoptimized code makes
+# an editor scroll frame ~20x slower than release (measured 15-18 ms vs ~1 ms),
+# which reads as input lag. Optimize the dev profile: level 1 keeps rebuilds
+# usable while interactive surfaces stay responsive.
+[profile.dev]
+opt-level = 1

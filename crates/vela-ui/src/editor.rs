@@ -22,6 +22,10 @@ use vela_core::{
     text::TextBuffer,
 };
 
+/// Files above this size keep plain text coloring so an edit never stalls on a
+/// full-file tokenizer pass.
+const HIGHLIGHT_LIMIT: usize = 2_000_000;
+
 const LINE_HEIGHT: f32 = 20.;
 static EDITOR_INSTANCE: AtomicU64 = AtomicU64::new(1);
 
@@ -412,9 +416,9 @@ fn block_comment_fold_ranges(
 /// JavaScript/TypeScript, JSON, CSS-family and HTML-family documents. Other
 /// languages use indentation folding and must not invent comment ranges from
 /// their block-comment tokens.
-fn block_comment_fold_ranges_for(rel: &str, text: &str) -> Vec<FoldRange> {
+fn comment_fold_language(rel: &str) -> bool {
     let extension = rel.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
-    if !matches!(
+    matches!(
         extension.as_str(),
         "js" | "mjs"
             | "cjs"
@@ -432,10 +436,128 @@ fn block_comment_fold_ranges_for(rel: &str, text: &str) -> Vec<FoldRange> {
             | "htm"
             | "xml"
             | "svg"
-    ) {
+    )
+}
+
+fn block_comment_fold_ranges_for(rel: &str, text: &str) -> Vec<FoldRange> {
+    if !comment_fold_language(rel) {
         return Vec::new();
     }
     block_comment_fold_ranges(text, comment_config(rel).block)
+}
+
+/// Runs of own-line `//` comments fold as one `Comment` span, like
+/// TypeScript's outlining collector (`FoldingRangeKind.Comment`). A single
+/// comment line and a comment trailing code never fold.
+fn line_comment_fold_ranges(text: &str, marker: Option<&'static str>) -> Vec<FoldRange> {
+    let Some(marker) = marker else {
+        return Vec::new();
+    };
+    let lines = text.split('\n').collect::<Vec<_>>();
+    let mut ranges = Vec::new();
+    let mut run_start: Option<usize> = None;
+    for (index, line) in lines.iter().enumerate() {
+        if line.trim_start().starts_with(marker) {
+            run_start.get_or_insert(index);
+            continue;
+        }
+        if let Some(start) = run_start.take()
+            && index > start + 1
+        {
+            ranges.push(FoldRange { start, end: index - 1 });
+        }
+    }
+    if let Some(start) = run_start
+        && lines.len() > start + 1
+    {
+        ranges.push(FoldRange {
+            start,
+            end: lines.len() - 1,
+        });
+    }
+    ranges
+}
+
+fn line_comment_fold_ranges_for(rel: &str, text: &str) -> Vec<FoldRange> {
+    if !comment_fold_language(rel) {
+        return Vec::new();
+    }
+    line_comment_fold_ranges(text, comment_config(rel).line)
+}
+
+/// Consecutive `import` declarations fold as one `Imports` span, matching
+/// TypeScript's outlining collector. Only the JavaScript/TypeScript family has
+/// an import graph; a lone declaration never folds.
+fn import_fold_ranges(rel: &str, text: &str) -> Vec<FoldRange> {
+    let extension = rel.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
+    if !matches!(
+        extension.as_str(),
+        "js" | "mjs" | "cjs" | "jsx" | "ts" | "mts" | "cts" | "tsx"
+    ) {
+        return Vec::new();
+    }
+    let lines = text.split('\n').collect::<Vec<_>>();
+    let starts_import = |line: &str| {
+        let trimmed = line.trim_start();
+        let Some(rest) = trimmed.strip_prefix("import") else {
+            return false;
+        };
+        matches!(
+            rest.chars().next(),
+            Some(' ') | Some('{') | Some('"') | Some('\'') | Some('*')
+        )
+    };
+    // An import statement ends on the first line where its brackets balance
+    // and the statement is terminated, so multi-line specifier lists group
+    // with the statements around them.
+    let end_of_import = |start: usize| {
+        let mut depth = 0i32;
+        for (offset, line) in lines[start..].iter().enumerate() {
+            for character in line.chars() {
+                match character {
+                    '{' | '(' | '[' => depth += 1,
+                    '}' | ')' | ']' => depth -= 1,
+                    _ => {}
+                }
+            }
+            let trimmed = line.trim_end();
+            if depth <= 0
+                && (trimmed.ends_with(';')
+                    || trimmed.ends_with('"')
+                    || trimmed.ends_with('\''))
+            {
+                return start + offset;
+            }
+        }
+        start
+    };
+
+    let mut ranges = Vec::new();
+    let mut run_start: Option<usize> = None;
+    let mut run_end = 0usize;
+    let mut index = 0;
+    while index < lines.len() {
+        if starts_import(lines[index]) {
+            let end = end_of_import(index);
+            run_start.get_or_insert(index);
+            run_end = end;
+            index = end + 1;
+            continue;
+        }
+        if !lines[index].trim().is_empty()
+            && let Some(start) = run_start.take()
+            && run_end > start
+        {
+            ranges.push(FoldRange { start, end: run_end });
+        }
+        index += 1;
+    }
+    if let Some(start) = run_start
+        && run_end > start
+    {
+        ranges.push(FoldRange { start, end: run_end });
+    }
+    ranges
 }
 
 #[cfg(test)]
@@ -451,6 +573,8 @@ fn fold_ranges_for_language(rel: &str, text: &str) -> Vec<FoldRange> {
         .chain(region_fold_ranges(text))
         .chain(markup_fold_ranges(text))
         .chain(block_comment_fold_ranges_for(rel, text))
+        .chain(line_comment_fold_ranges_for(rel, text))
+        .chain(import_fold_ranges(rel, text))
     {
         by_start
             .entry(range.start)
@@ -532,15 +656,13 @@ pub struct CodeEditor {
     documents: Rc<RefCell<Documents>>,
     focus: FocusHandle,
     caret: gpui::Entity<SmoothCaret>,
-    scroll_remaining: f32,
-    scroll_running: bool,
-    scroll_generation: u64,
+    wheel_motion: crate::scroll::WheelMotion,
     last_scroll_top: gpui::ListOffset,
     list: ListState,
     starts: Vec<usize>,
     revision: Option<u64>,
     workspace_revision: u64,
-    painted: BTreeMap<usize, PaintedLine>,
+    painted: std::rc::Rc<std::cell::RefCell<BTreeMap<usize, PaintedLine>>>,
     bounds: Option<Bounds<Pixels>>,
     folds: Vec<FoldRange>,
     folded: BTreeSet<usize>,
@@ -576,6 +698,24 @@ pub struct CodeEditor {
     occurrences: Vec<Range<usize>>,
     brackets: Vec<Range<usize>>,
     bracket_colors: Vec<(Range<usize>, usize)>,
+    /// Bracket colours bucketed by line so painting a line never scans the file.
+    bracket_lines: LineBracketColors,
+    /// Per-frame analysis caches. Scrolling re-renders without changing the
+    /// buffer or caret, so these must not rescan the document every frame.
+    occurrences_key: Option<(u64, usize, bool)>,
+    brackets_key: Option<(u64, usize)>,
+    signature_key: Option<(u64, usize, bool)>,
+    signature_cache: Option<crate::signature::SignatureHelp>,
+    hover_key: Option<(u64, usize)>,
+    hover_cache: Option<Option<crate::hover::Hover>>,
+    aria_text: SharedString,
+    syntax_language: Option<&'static str>,
+    syntax_spans: std::sync::Arc<Vec<crate::syntax::Span>>,
+    /// Spans bucketed per logical line so painting a line never scans the file.
+    syntax_lines: LineSpans,
+    /// Colors of the most recently painted line. The rendered tests use this to
+    /// prove syntax highlighting actually reaches the glyph runs.
+    last_painted_runs: Vec<gpui::Rgba>,
     rename_open: bool,
     rename_input: Entity<crate::input::TextInput>,
     rename_original: String,
@@ -2705,6 +2845,7 @@ impl CodeEditor {
         documents: Rc<RefCell<Documents>>,
         cx: &mut Context<Self>,
     ) -> Self {
+        let syntax_language = editor_language(&key.rel);
         let find_query = cx.new(|cx| crate::input::TextInput::new(false, "Find", cx));
         let replacement = cx.new(|cx| crate::input::TextInput::new(false, "Replace", cx));
         let rename_input = cx.new(|cx| crate::input::TextInput::new(false, "New name", cx));
@@ -2751,9 +2892,7 @@ impl CodeEditor {
             documents,
             focus: cx.focus_handle(),
             caret: cx.new(SmoothCaret::new),
-            scroll_remaining: 0.,
-            scroll_running: false,
-            scroll_generation: 0,
+            wheel_motion: crate::scroll::WheelMotion::default(),
             last_scroll_top: gpui::ListOffset {
                 item_ix: 0,
                 offset_in_item: px(0.),
@@ -2762,7 +2901,7 @@ impl CodeEditor {
             starts: vec![0],
             revision: None,
             workspace_revision: 0,
-            painted: BTreeMap::new(),
+            painted: Default::default(),
             bounds: None,
             folds: Vec::new(),
             folded: BTreeSet::new(),
@@ -2798,6 +2937,18 @@ impl CodeEditor {
             occurrences: Vec::new(),
             brackets: Vec::new(),
             bracket_colors: Vec::new(),
+            bracket_lines: std::sync::Arc::new(Vec::new()),
+            occurrences_key: None,
+            brackets_key: None,
+            signature_key: None,
+            signature_cache: None,
+            hover_key: None,
+            hover_cache: None,
+            aria_text: SharedString::default(),
+            syntax_language,
+            syntax_spans: std::sync::Arc::new(Vec::new()),
+            syntax_lines: std::sync::Arc::new(Vec::new()),
+            last_painted_runs: Vec::new(),
             rename_open: false,
             rename_input,
             rename_original: String::new(),
@@ -4238,7 +4389,17 @@ impl CodeEditor {
             self.workspace_revision = fingerprint;
             return;
         }
-        let (starts, folds, bracket_colors, revision, diagnostics) = {
+        let (
+            starts,
+            folds,
+            bracket_colors,
+            syntax_spans,
+            syntax_lines,
+            bracket_lines,
+            aria_text,
+            revision,
+            diagnostics,
+        ) = {
             let documents = self.documents.borrow();
             let Some(document) = documents.get(&self.key) else {
                 return;
@@ -4268,10 +4429,51 @@ impl CodeEditor {
                 self.validation_diagnostics.clear();
                 self.validation_revision = None;
             }
+            // Bounded: skip highlighting pathological documents rather than
+            // stalling an edit behind a full-file tokenizer pass.
+            let syntax_spans = match self.syntax_language {
+                Some(language) if text.len() <= HIGHLIGHT_LIMIT => {
+                    crate::syntax::highlight(language, text)
+                }
+                _ => Vec::new(),
+            };
+            let mut syntax_lines = (0..starts.len())
+                .map(|_| std::sync::Arc::new(Vec::new()))
+                .collect::<Vec<_>>();
+            for span in &syntax_spans {
+                let first = starts
+                    .partition_point(|start| *start <= span.start)
+                    .saturating_sub(1);
+                let last = starts
+                    .partition_point(|start| *start < span.end.max(span.start + 1))
+                    .saturating_sub(1)
+                    .min(starts.len().saturating_sub(1));
+                if let Some(range) = syntax_lines.get_mut(first..=last) {
+                    for bucket in range {
+                        std::sync::Arc::make_mut(bucket).push(*span);
+                    }
+                }
+            }
+            let bracket_colors = crate::brackets::colorized(text);
+            let mut bracket_lines = (0..starts.len())
+                .map(|_| std::sync::Arc::new(Vec::new()))
+                .collect::<Vec<_>>();
+            for color in &bracket_colors {
+                let line = starts
+                    .partition_point(|start| *start <= color.0.start)
+                    .saturating_sub(1);
+                if let Some(bucket) = bracket_lines.get_mut(line) {
+                    std::sync::Arc::make_mut(bucket).push(color.clone());
+                }
+            }
             (
                 starts,
                 fold_ranges_for_language(&self.key.rel, text),
-                crate::brackets::colorized(text),
+                bracket_colors,
+                std::sync::Arc::new(syntax_spans),
+                std::sync::Arc::new(syntax_lines),
+                std::sync::Arc::new(bracket_lines),
+                SharedString::from(text.to_owned()),
                 buffer.revision(),
                 diagnostics,
             )
@@ -4280,6 +4482,10 @@ impl CodeEditor {
         self.starts = starts;
         self.folds = folds;
         self.bracket_colors = bracket_colors;
+        self.bracket_lines = bracket_lines;
+        self.syntax_spans = syntax_spans;
+        self.syntax_lines = syntax_lines;
+        self.aria_text = aria_text;
         self.diagnostics = diagnostics;
         self.folded
             .retain(|start| self.folds.iter().any(|range| range.start == *start));
@@ -4306,7 +4512,7 @@ impl CodeEditor {
             self.list = self.list.clone().with_uniform_item_height(px(LINE_HEIGHT));
         }
         self.visible_lines = visible;
-        self.painted.clear();
+        self.painted.borrow_mut().clear();
     }
 
     fn toggle_fold(&mut self, line: usize, cx: &mut Context<Self>) {
@@ -4981,11 +5187,11 @@ impl CodeEditor {
         cx.notify();
     }
     fn index_at(&self, position: Point<Pixels>) -> usize {
-        let Some(line) = self
-            .painted
+        let painted = self.painted.borrow();
+        let Some(line) = painted
             .values()
             .find(|l| position.y < l.origin.y + l.layout.size(px(LINE_HEIGHT)).height)
-            .or_else(|| self.painted.values().next_back())
+            .or_else(|| painted.values().next_back())
         else {
             return 0;
         };
@@ -5000,8 +5206,8 @@ impl CodeEditor {
         line.source_index(index).min(line.end)
     }
     fn position_at(&self, index: usize) -> Option<Point<Pixels>> {
-        let line = self
-            .painted
+        let painted = self.painted.borrow();
+        let line = painted
             .values()
             .find(|line| index >= line.start && index <= line.end)?;
         line.layout
@@ -6821,62 +7027,67 @@ impl CodeEditor {
     fn scroll_editor(
         &mut self,
         event: &ScrollWheelEvent,
-        _: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         let native = self.list.logical_scroll_top();
         let native_pixels = self.list.offset_for_item(native.item_ix) + native.offset_in_item;
         let previous_pixels =
             self.list.offset_for_item(self.last_scroll_top.item_ix) + self.last_scroll_top.offset_in_item;
-        let delta = if native_pixels != previous_pixels {
-            self.list.scroll_to(self.last_scroll_top);
+        let native_moved = native_pixels != previous_pixels;
+        // Precise input (trackpads) and reduced motion scroll exactly like the
+        // native list: the applied movement lands in the same frame.
+        let immediate = matches!(event.delta, ScrollDelta::Pixels(_)) || cx.reduce_motion();
+        let delta = if native_moved {
+            if !immediate {
+                // Discrete wheel ticks are eased; roll back the native step first.
+                self.list.scroll_to(self.last_scroll_top);
+            }
             f32::from(native_pixels - previous_pixels)
         } else {
-            -f32::from(event.delta.pixel_delta(px(LINE_HEIGHT * 3.)).y)
+            let delta = -f32::from(event.delta.pixel_delta(px(LINE_HEIGHT * 3.)).y);
+            if delta == 0. {
+                return;
+            }
+            if immediate {
+                self.list.scroll_by(px(delta));
+            }
+            delta
         };
         if delta == 0. {
             return;
         }
-        self.scroll_remaining += delta;
-        if !self.scroll_running {
-            self.scroll_running = true;
-            self.scroll_generation = self.scroll_generation.wrapping_add(1);
-            let generation = self.scroll_generation;
-            cx.spawn(async move |this, cx| loop {
-                cx.background_executor()
-                    .timer(Duration::from_millis(16))
-                    .await;
-                let keep = this
-                    .update(cx, |editor, cx| {
-                        if !editor.scroll_running || editor.scroll_generation != generation {
-                            return false;
-                        }
-                        let step = if editor.scroll_remaining.abs() < 1. {
-                            editor.scroll_remaining
-                        } else {
-                            editor.scroll_remaining * 0.35
-                        };
-                        if step.abs() > 0.01 {
-                            editor.list.scroll_by(px(step));
-                            editor.scroll_remaining -= step;
-                            cx.notify();
-                        }
-                        if editor.scroll_remaining.abs() < 0.5 {
-                            editor.scroll_remaining = 0.;
-                            editor.scroll_running = false;
-                            cx.notify();
-                            return false;
-                        }
-                        true
-                    })
-                    .unwrap_or(false);
-                if !keep {
-                    break;
-                }
-            })
-            .detach();
+        if immediate {
+            cx.stop_propagation();
+            return;
+        }
+        let now = cx.background_executor().now();
+        if let Some(token) = self.wheel_motion.queue(px(delta), now) {
+            Self::animate_editor_wheel(cx.weak_entity(), token, window);
         }
         cx.stop_propagation();
+    }
+
+    /// Discrete wheel ticks ease across native window frames, so motion lands on
+    /// the same cadence as the display instead of a drifting background timer.
+    fn animate_editor_wheel(owner: gpui::WeakEntity<Self>, token: std::rc::Rc<()>, window: &Window) {
+        window.on_next_frame(move |window, cx| {
+            let keep = owner
+                .update(cx, |editor, cx| {
+                    let now = cx.background_executor().now();
+                    let Some(step) = editor.wheel_motion.advance(&token, now) else {
+                        return false;
+                    };
+                    editor.list.scroll_by(step);
+                    if editor.wheel_motion.is_running() {
+                        Self::animate_editor_wheel(owner.clone(), token.clone(), window);
+                    }
+                    cx.notify();
+                    true
+                })
+                .unwrap_or(false);
+            let _ = keep;
+        });
     }
 }
 
@@ -7040,6 +7251,141 @@ impl EntityInputHandler for CodeEditor {
     }
 }
 
+/// Map a document path to the tokenizer Source's editor would use for it.
+/// Mirrors `languageForPath` in the reference `monaco.ts`, resolved against the
+/// tokenizers this crate actually implements; unknown paths stay plain.
+pub(super) fn editor_language(rel: &str) -> Option<&'static str> {
+    let base = rel.rsplit('/').next().unwrap_or(rel).to_ascii_lowercase();
+    if base == "dockerfile" {
+        return Some("dockerfile");
+    }
+    let extension = base.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
+    Some(match extension.as_str() {
+        "ts" | "tsx" | "mts" | "cts" => "typescript",
+        "js" | "jsx" | "mjs" | "cjs" => "javascript",
+        "json" | "jsonc" => "json",
+        "css" => "css",
+        "scss" | "sass" | "less" => "sass",
+        "html" | "htm" | "vue" | "svelte" => "html",
+        "md" | "markdown" => "markdown",
+        "py" => "python",
+        "rb" => "ruby",
+        "go" => "go",
+        "rs" => "rust",
+        "java" => "java",
+        "c" | "h" => "c",
+        "cpp" | "cc" | "hpp" => "cpp",
+        "cs" => "csharp",
+        "php" => "php",
+        "swift" => "swift",
+        "kt" | "kts" => "kotlin",
+        "sh" | "bash" | "zsh" | "fish" => "bash",
+        "yml" | "yaml" => "yaml",
+        "toml" => "toml",
+        "ini" => "ini",
+        "xml" => "html",
+        "sql" => "sql",
+        "graphql" => "graphql",
+        "diff" => "diff",
+        "lua" => "lua",
+        "r" => "r",
+        "scala" => "scala",
+        "dart" => "dart",
+        "ex" | "exs" => "elixir",
+        "hs" => "haskell",
+        "clj" => "clojure",
+        "jl" => "julia",
+        "ml" | "mli" => "ocaml",
+        "erl" => "erlang",
+        "elm" => "elm",
+        "zig" => "zig",
+        "proto" => "protobuf",
+        _ => return None,
+    })
+}
+
+/// Build gap-free glyph runs for one display line: bracket colorization wins,
+/// then syntax token colors, then the theme's plain text color.
+fn line_text_runs(
+    text_len: usize,
+    mapping: &[(usize, usize)],
+    start: usize,
+    end: usize,
+    brackets: &[(Range<usize>, usize)],
+    spans: &[crate::syntax::Span],
+    theme: &Theme,
+) -> Vec<(usize, usize, gpui::Rgba)> {
+    let display_of = |local: usize| -> usize {
+        mapping
+            .iter()
+            .find(|(_, source)| *source >= local)
+            .map(|(display, _)| *display)
+            .unwrap_or(text_len)
+    };
+    let mut bounds = vec![0usize];
+    let bracket_runs = bracket_display_runs(text_len, mapping, start, end, brackets);
+    for (offset, len, depth) in &bracket_runs {
+        if depth.is_some() {
+            bounds.push(*offset);
+            bounds.push((offset + len).min(text_len));
+        }
+    }
+    for span in spans {
+        if span.end <= start || span.start >= end {
+            continue;
+        }
+        let from = span.start.max(start) - start;
+        let to = span.end.min(end) - start;
+        let from = display_of(from).min(text_len);
+        let to = display_of(to).min(text_len);
+        if from < to {
+            bounds.push(from);
+            bounds.push(to);
+        }
+    }
+    bounds.push(text_len);
+    bounds.sort_unstable();
+    bounds.dedup();
+    let color_at = |position: usize| -> gpui::Rgba {
+        if let Some((_, _, Some(depth))) = bracket_runs
+            .iter()
+            .find(|(offset, len, depth)| depth.is_some() && position >= *offset && position < offset + len)
+        {
+            return bracket_color(*depth);
+        }
+        for span in spans {
+            if span.end <= start || span.start >= end {
+                continue;
+            }
+            let from = display_of(span.start.max(start) - start);
+            let to = display_of(span.end.min(end) - start);
+            if position >= from && position < to {
+                return crate::syntax::color(span.token, theme);
+            }
+        }
+        theme.text
+    };
+    let mut runs: Vec<(usize, usize, gpui::Rgba)> = Vec::new();
+    for pair in bounds.windows(2) {
+        let (from, to) = (pair[0], pair[1]);
+        if to <= from {
+            continue;
+        }
+        let color = color_at(from);
+        match runs.last_mut() {
+            Some((offset, len, last)) if *last == color && *offset + *len == from => {
+                *len += to - from;
+            }
+            _ => runs.push((from, to - from, color)),
+        }
+    }
+    runs
+}
+
+/// Per-line caches keyed by logical line index.
+type LineSpans = std::sync::Arc<Vec<std::sync::Arc<Vec<crate::syntax::Span>>>>;
+type LineBracketColors = std::sync::Arc<Vec<std::sync::Arc<Vec<(Range<usize>, usize)>>>>;
+
 struct CodeLine {
     index: usize,
     editor: Entity<CodeEditor>,
@@ -7112,31 +7458,50 @@ impl Element for CodeLine {
     ) -> PaintedLine {
         let style = window.text_style();
         let theme = Theme::default();
-        let colors = self.editor.read(cx).bracket_colors.clone();
-        let spans = bracket_display_runs(
+        let (colors, syntax) = {
+            let editor = self.editor.read(cx);
+            (
+                editor
+                    .bracket_lines
+                    .get(self.index)
+                    .cloned()
+                    .unwrap_or_default(),
+                editor
+                    .syntax_lines
+                    .get(self.index)
+                    .cloned()
+                    .unwrap_or_default(),
+            )
+        };
+        let segments = line_text_runs(
             self.text.len(),
             &self.mapping,
             self.start,
             self.end,
             &colors,
+            &syntax,
+            &theme,
         );
         let mut runs = Vec::new();
-        for (offset, len, depth) in spans {
-            if len == 0 {
+        for (_, len, color) in &segments {
+            if *len == 0 {
                 continue;
             }
-            let mut run = style.to_run(len);
-            run.color = match depth {
-                Some(depth) => bracket_color(depth).into(),
-                None => theme.text.into(),
-            };
-            let _ = offset;
+            let mut run = style.to_run(*len);
+            run.color = (*color).into();
             runs.push(run);
         }
         if runs.is_empty() {
             let mut run = style.to_run(self.text.len());
             run.color = theme.text.into();
             runs.push(run);
+        }
+        #[cfg(test)]
+        {
+            let painted_colors = segments.iter().map(|(_, _, color)| *color).collect::<Vec<_>>();
+            self.editor.update(cx, |editor, _| {
+                editor.last_painted_runs.extend(painted_colors);
+            });
         }
         let layout = window
             .text_system()
@@ -7151,6 +7516,7 @@ impl Element for CodeLine {
             .into_iter()
             .next()
             .unwrap();
+
         PaintedLine {
             start: self.start,
             end: self.end,
@@ -7338,9 +7704,8 @@ impl Element for CodeLine {
                 }
             }
         }
-        self.editor.update(cx, |editor, _| {
-            editor.painted.insert(self.index, line.clone());
-        });
+        let painted = self.editor.read(cx).painted.clone();
+        painted.borrow_mut().insert(self.index, line.clone());
     }
 }
 const BRACKET_COLORS: [u32; 3] = [0xffd700, 0xda70d6, 0x179fff];
@@ -7368,6 +7733,7 @@ fn bracket_display_runs(
     let mut segments = Vec::new();
     let mut cursor = 0usize;
     for (range, depth) in colors {
+        paint_probe::note_bracket_scan();
         if range.start < start || range.start >= end {
             continue;
         }
@@ -7418,6 +7784,7 @@ fn expand_tabs(text: &str) -> (SharedString, Vec<(usize, usize)>) {
 }
 impl Render for CodeEditor {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        self.last_painted_runs.clear();
         if self.blur_subscription.is_none() {
             self.blur_subscription = Some(cx.on_blur(&self.focus, window, |editor, _, cx| {
                 editor.k_chord = false;
@@ -7429,28 +7796,42 @@ impl Render for CodeEditor {
         self.last_scroll_top = self.list.logical_scroll_top();
         self.sync_lines();
         self.refresh_find();
-        let occurrences = self
+        let (revision, caret, selection_empty) = self
             .read(|buffer| {
-                if buffer.selection().is_empty() {
+                (
+                    buffer.revision(),
+                    buffer.caret(),
+                    buffer.selection().is_empty(),
+                )
+            })
+            .unwrap_or((0, 0, true));
+        if self.occurrences_key != Some((revision, caret, selection_empty)) {
+            self.occurrences = if selection_empty {
+                self.read(|buffer| {
                     crate::highlights::word_occurrences(
                         buffer.text(),
                         buffer.caret(),
                         crate::highlights::MAX_OCCURRENCES,
                     )
-                } else {
-                    Vec::new()
-                }
-            })
-            .unwrap_or_default();
-        self.occurrences = occurrences;
-        let brackets = self
-            .read(|buffer| {
-                crate::brackets::matching_pair(buffer.text(), buffer.caret())
-                    .map(|(open, close)| vec![open, close])
-                    .unwrap_or_default()
-            })
-            .unwrap_or_default();
-        self.brackets = brackets;
+                })
+                .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            self.occurrences_key = Some((revision, caret, selection_empty));
+            note_text_scan();
+        }
+        if self.brackets_key != Some((revision, caret)) {
+            self.brackets = self
+                .read(|buffer| {
+                    crate::brackets::matching_pair(buffer.text(), buffer.caret())
+                        .map(|(open, close)| vec![open, close])
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default();
+            self.brackets_key = Some((revision, caret));
+            note_text_scan();
+        }
         let find_panel = self.find_open.then(|| self.render_find(cx));
         let goto_panel = self.goto_open.then(|| self.render_goto_line(cx));
         let palette_panel = self.palette_open.then(|| self.render_palette(cx));
@@ -7514,13 +7895,19 @@ impl Render for CodeEditor {
                         .child(SharedString::from(hover.detail.clone())),
                 )
         });
-        let signature_help =
-            if self.completion_open || self.symbols_open || self.workspace_symbols_open {
+        let signature_gated =
+            self.completion_open || self.symbols_open || self.workspace_symbols_open;
+        if self.signature_key != Some((revision, caret, signature_gated)) {
+            self.signature_cache = if signature_gated {
                 None
             } else {
                 self.read(|buffer| crate::signature::signature_help(buffer.text(), buffer.caret()))
                     .flatten()
             };
+            self.signature_key = Some((revision, caret, signature_gated));
+            note_text_scan();
+        }
+        let signature_help = self.signature_cache.clone();
         let signature_panel = signature_help.map(|signature| {
             let theme = Theme::default();
             let active = signature
@@ -7574,7 +7961,18 @@ impl Render for CodeEditor {
                         .child(SharedString::from(active)),
                 )
         });
-        let diagnostic_banner = self.diagnostics.first().cloned().map(|diagnostic| {
+        let banner_source = self
+            .diagnostics
+            .iter()
+            .find(|diagnostic| !diagnostic.is_warning())
+            .or_else(|| self.diagnostics.first())
+            .cloned();
+        let diagnostic_banner = banner_source.map(|diagnostic| {
+            let accent = if diagnostic.is_warning() {
+                Theme::default().yellow
+            } else {
+                Theme::default().red
+            };
             let message = format!(
                 "{} · Line {}, Column {}: {}",
                 diagnostic.source, diagnostic.line, diagnostic.column, diagnostic.message
@@ -7593,10 +7991,10 @@ impl Render for CodeEditor {
                 .py(px(6.))
                 .rounded(px(6.))
                 .border_1()
-                .border_color(Theme::default().red)
-                .bg(Theme::default().red.opacity(0.12))
+                .border_color(accent)
+                .bg(accent.opacity(0.12))
                 .text_size(px(11.))
-                .text_color(Theme::default().red)
+                .text_color(accent)
                 .child(SharedString::from(message))
         });
         let digit_width = f32::from(
@@ -7647,7 +8045,7 @@ impl Render for CodeEditor {
                 });
             }
         }
-        self.painted.clear();
+        self.painted.borrow_mut().clear();
         let entity = cx.entity();
         let input = entity.clone();
         let painted = entity.clone();
@@ -7671,9 +8069,7 @@ impl Render for CodeEditor {
             .line_height(px(LINE_HEIGHT))
             .role(Role::MultilineTextInput)
             .aria_label(label)
-            .aria_value(SharedString::from(
-                self.read(|b| b.text().to_owned()).unwrap_or_default(),
-            ))
+            .aria_value(self.aria_text.clone())
             .tab_stop(true)
             .track_focus(&self.focus)
             .cursor(CursorStyle::IBeam)
@@ -7724,9 +8120,15 @@ impl Render for CodeEditor {
                     && !this.workspace_symbols_open
                 {
                     let index = this.index_at(event.position);
-                    let hover = this
-                        .read(|buffer| crate::hover::hover_at(buffer.text(), index))
-                        .flatten();
+                    let revision = this.read(|buffer| buffer.revision()).unwrap_or(0);
+                    if this.hover_key != Some((revision, index)) {
+                        this.hover_cache = Some(this
+                            .read(|buffer| crate::hover::hover_at(buffer.text(), index))
+                            .flatten());
+                        this.hover_key = Some((revision, index));
+                        note_text_scan();
+                    }
+                    let hover = this.hover_cache.clone().flatten();
                     if let Some(hover) = hover {
                         this.hover_popup = Some((hover, event.position));
                         cx.notify();
@@ -7780,7 +8182,11 @@ impl Render for CodeEditor {
                     let line_error = editor
                         .diagnostics
                         .iter()
-                        .any(|diagnostic| diagnostic.line == logical + 1);
+                        .any(|diagnostic| diagnostic.line == logical + 1 && !diagnostic.is_warning());
+                    let line_warning = editor
+                        .diagnostics
+                        .iter()
+                        .any(|diagnostic| diagnostic.line == logical + 1 && diagnostic.is_warning());
                     let fold_entity = entity.clone();
                     let current_line = editor
                         .read(|buffer| buffer.caret())
@@ -7810,6 +8216,22 @@ impl Render for CodeEditor {
                                     .bottom_0()
                                     .w(px(2.))
                                     .bg(Theme::default().red),
+                            )
+                        })
+                        .when(!line_error && line_warning, |row| {
+                            let selector = format!("editor-warning-marker-{logical}");
+                            row.child(
+                                div()
+                                    .id(SharedString::from(format!(
+                                        "editor-warning-marker-{logical}"
+                                    )))
+                                    .debug_selector(move || selector.clone())
+                                    .absolute()
+                                    .left_0()
+                                    .top_0()
+                                    .bottom_0()
+                                    .w(px(2.))
+                                    .bg(Theme::default().yellow),
                             )
                         })
                         .flex()
@@ -7971,6 +8393,47 @@ impl Render for CodeEditor {
 }
 
 #[cfg(test)]
+mod paint_probe {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    pub(super) static TEXT_SCANS: AtomicUsize = AtomicUsize::new(0);
+    pub(super) static BRACKET_SCANS: AtomicUsize = AtomicUsize::new(0);
+
+
+    pub(super) fn note_text_scan() {
+        TEXT_SCANS.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub(super) fn note_bracket_scan() {
+        BRACKET_SCANS.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub(super) fn reset() {
+        TEXT_SCANS.store(0, Ordering::Relaxed);
+        BRACKET_SCANS.store(0, Ordering::Relaxed);
+    }
+
+
+    pub(super) fn counts() -> (usize, usize) {
+        (
+            TEXT_SCANS.load(Ordering::Relaxed),
+            BRACKET_SCANS.load(Ordering::Relaxed),
+        )
+    }
+}
+
+#[cfg(not(test))]
+mod paint_probe {
+    pub(super) fn note_text_scan() {}
+    pub(super) fn note_bracket_scan() {}
+
+}
+
+fn note_text_scan() {
+    paint_probe::note_text_scan();
+}
+
+#[cfg(test)]
 mod tests {
     use super::{
         CARET_FRAME, CARET_HOLD_FRAMES, CaseStyle, FoldRange, PairAction, QuoteRule, SmoothCaret,
@@ -8017,6 +8480,56 @@ mod tests {
         assert_eq!(
             visible_lines_after_folds(7, &folds, &BTreeSet::from([2])),
             vec![0, 1, 2, 5, 6]
+        );
+    }
+
+    #[test]
+    fn fold_categories_cover_line_comments_and_import_runs() {
+        // Consecutive own-line comments fold as one Comment span.
+        let comments = "// first\n// second\nconst a = 1;\n// one\n// two\n// three\ntail";
+        let folds = fold_ranges_for_language("x.ts", comments);
+        assert!(folds.contains(&FoldRange { start: 0, end: 1 }));
+        assert!(folds.contains(&FoldRange { start: 3, end: 5 }));
+        assert!(
+            !fold_ranges_for_language("x.ts", "// lone\ncode")
+                .iter()
+                .any(|range| range.start == 0),
+            "a single comment line does not fold"
+        );
+        assert!(
+            !fold_ranges_for_language("x.ts", "const a = 1; // note\nconst b = 2; // note")
+                .iter()
+                .any(|range| range.start == 0),
+            "comments trailing code never start a run"
+        );
+        assert!(
+            !fold_ranges_for_language("x.css", "a { color: red; }\n// not a comment\n// still")
+                .iter()
+                .any(|range| range.start == 1),
+            "CSS has no line-comment provider"
+        );
+
+        // Consecutive import declarations fold as one Imports span, including a
+        // multi-line specifier list.
+        let imports = "import a from \"a\";\nimport {\n  b,\n  c\n} from \"bc\";\n\nconst x = 1;\ntail";
+        let folds = fold_ranges_for_language("x.ts", imports);
+        assert!(
+            folds
+                .iter()
+                .any(|range| range.start == 0 && range.end >= 4),
+            "import run did not fold: {folds:?}"
+        );
+        assert!(
+            !fold_ranges_for_language("x.ts", "import a from \"a\";\ncode")
+                .iter()
+                .any(|range| range.start == 0),
+            "a lone import does not fold"
+        );
+        assert!(
+            !fold_ranges_for_language("x.py", "import a\nimport b")
+                .iter()
+                .any(|range| range.start == 0),
+            "languages without an import graph never gain import folds"
         );
     }
 
@@ -13398,6 +13911,145 @@ mod tests {
     }
 
     #[gpui::test]
+    fn css_lint_findings_render_a_warning_marker(cx: &mut gpui::TestAppContext) {
+        use super::*;
+        let key = DocumentKey::new("/fixture".into(), "empty.css".into());
+        let documents = Rc::new(RefCell::new(Documents::default()));
+        documents.borrow_mut().open(1, key.clone(), true);
+        documents
+            .borrow_mut()
+            .finish_load(1, &key.rel, Some("a {}\n".into()));
+        let retained = documents.clone();
+        let (editor, cx) = cx.add_window_view(|window, cx| {
+            let editor = CodeEditor::new(key.clone(), documents, cx);
+            window.focus(&editor.focus, cx);
+            editor
+        });
+        cx.simulate_resize(size(px(675.), px(300.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(675.), px(300.)), |_, _| {
+                editor.clone().into_any_element()
+            });
+        };
+        draw(cx);
+        assert!(cx.debug_bounds("editor-diagnostics-banner").is_some());
+        assert!(cx.debug_bounds("editor-warning-marker-0").is_some());
+        assert!(
+            cx.debug_bounds("editor-error-marker-0").is_none(),
+            "lint findings are warnings, not errors"
+        );
+        editor.read_with(cx, |editor, _| {
+            assert_eq!(editor.diagnostics.len(), 1);
+            assert!(editor.diagnostics[0].is_warning());
+            assert_eq!(editor.diagnostics[0].message, "Do not use empty rulesets");
+        });
+
+        retained.borrow_mut().edit(&key, |buffer| {
+            buffer.select_all();
+            buffer.insert("a { color: red; }\n");
+        });
+        draw(cx);
+        assert!(cx.debug_bounds("editor-diagnostics-banner").is_none());
+        assert!(cx.debug_bounds("editor-warning-marker-0").is_none());
+    }
+
+    #[test]
+    fn editor_language_follows_the_reference_monaco_mapping() {
+        for (rel, expected) in [
+            ("src/a.ts", Some("typescript")),
+            ("a.tsx", Some("typescript")),
+            ("a.js", Some("javascript")),
+            ("a.jsx", Some("javascript")),
+            ("a.json", Some("json")),
+            ("a.css", Some("css")),
+            ("a.scss", Some("sass")),
+            ("a.html", Some("html")),
+            ("a.md", Some("markdown")),
+            ("a.py", Some("python")),
+            ("a.rs", Some("rust")),
+            ("a.toml", Some("toml")),
+            ("Dockerfile", Some("dockerfile")),
+            ("a.sh", Some("bash")),
+            ("a.txt", None),
+            ("LICENSE", None),
+        ] {
+            assert_eq!(super::editor_language(rel), expected, "{rel}");
+        }
+    }
+
+    #[test]
+    fn line_text_runs_apply_token_colors_through_expanded_tabs() {
+        let text = "\tconst answer = \"x\"; // note";
+        let (display, mapping) = expand_tabs(text);
+        let theme = Theme::default();
+        let syntax = crate::syntax::highlight("typescript", text);
+        assert!(!syntax.is_empty());
+        let runs = super::line_text_runs(
+            display.len(),
+            &mapping,
+            0,
+            text.len(),
+            &[],
+            &syntax,
+            &theme,
+        );
+        assert_eq!(
+            runs.iter().map(|(_, len, _)| *len).sum::<usize>(),
+            display.len(),
+            "runs cover the whole display line"
+        );
+        let colors = runs.iter().map(|(_, _, color)| *color).collect::<Vec<_>>();
+        let keyword = crate::syntax::color(crate::syntax::SyntaxToken::Keyword, &theme);
+        let string = crate::syntax::color(crate::syntax::SyntaxToken::String, &theme);
+        assert!(colors.contains(&keyword), "keyword is colored: {runs:?}");
+        assert!(colors.contains(&string), "string is colored: {runs:?}");
+        assert!(
+            colors.iter().filter(|color| **color != theme.text).count() > 1,
+            "multiple token colors reach the runs: {runs:?}"
+        );
+    }
+
+    #[gpui::test]
+    fn rendered_editor_colors_syntax_tokens(cx: &mut gpui::TestAppContext) {
+        use super::*;
+        let key = DocumentKey::new("/fixture".into(), "highlight.ts".into());
+        let documents = Rc::new(RefCell::new(Documents::default()));
+        documents.borrow_mut().open(1, key.clone(), true);
+        documents.borrow_mut().finish_load(
+            1,
+            &key.rel,
+            Some("const answer = \"forty two\"; // note\n".into()),
+        );
+        let documents_for_editor = documents.clone();
+        let (editor, cx) = cx.add_window_view(|window, cx| {
+            let editor = CodeEditor::new(key.clone(), documents_for_editor, cx);
+            window.focus(&editor.focus, cx);
+            editor
+        });
+        cx.simulate_resize(size(px(675.), px(300.)));
+        cx.draw(point(px(0.), px(0.)), size(px(675.), px(300.)), |_, _| {
+            editor.clone().into_any_element()
+        });
+        let theme = Theme::default();
+        let keyword = crate::syntax::color(crate::syntax::SyntaxToken::Keyword, &theme);
+        let string = crate::syntax::color(crate::syntax::SyntaxToken::String, &theme);
+        editor.read_with(cx, |editor, _| {
+            assert_eq!(editor.syntax_language, Some("typescript"));
+            assert!(!editor.syntax_spans.is_empty(), "spans are cached");
+            assert!(
+                editor.last_painted_runs.contains(&keyword),
+                "keyword run painted: {:?}",
+                editor.last_painted_runs
+            );
+            assert!(
+                editor.last_painted_runs.contains(&string),
+                "string run painted: {:?}",
+                editor.last_painted_runs
+            );
+        });
+    }
+
+    #[gpui::test]
     fn json_diagnostics_render_a_line_marker_and_clear_after_fixing(cx: &mut gpui::TestAppContext) {
         use super::*;
         let key = DocumentKey::new("/fixture".into(), "broken.json".into());
@@ -13606,7 +14258,67 @@ mod tests {
     }
 
     #[gpui::test]
-    fn editor_wheel_scroll_animates_in_frames(cx: &mut gpui::TestAppContext) {
+    fn scrolling_a_large_file_does_not_rescan_the_document(cx: &mut gpui::TestAppContext) {
+        use super::*;
+        let key = DocumentKey::new("/fixture".into(), "large.ts".into());
+        let documents = Rc::new(RefCell::new(Documents::default()));
+        documents.borrow_mut().open(1, key.clone(), true);
+        let text = (0..1500)
+            .map(|line| {
+                format!(
+                    "function line{line}(value: number) {{ if (value) {{ return value * 2; }} return 0; }}\n"
+                )
+            })
+            .collect::<String>();
+        documents
+            .borrow_mut()
+            .finish_load(1, &key.rel, Some(text.clone()));
+        let (editor, cx) = cx.add_window_view(|window, cx| {
+            let editor = CodeEditor::new(key.clone(), documents, cx);
+            window.focus(&editor.focus, cx);
+            editor
+        });
+        cx.simulate_resize(size(px(700.), px(400.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(700.), px(400.)), |_, _| {
+                editor.clone().into_any_element()
+            });
+        };
+        for _ in 0..3 {
+            draw(cx);
+        }
+        super::paint_probe::reset();
+        for _ in 0..6 {
+            cx.simulate_event(gpui::ScrollWheelEvent {
+                position: point(px(300.), px(200.)),
+                delta: gpui::ScrollDelta::Pixels(point(px(0.), px(-420.))),
+                ..Default::default()
+            });
+            cx.executor().advance_clock(Duration::from_millis(16));
+            cx.run_until_parked();
+            draw(cx);
+        }
+        let (text_scans, bracket_scans) = super::paint_probe::counts();
+        assert!(
+            text_scans <= 2,
+            "scrolling rescanned the document text {text_scans} times"
+        );
+        assert!(
+            bracket_scans < 20_000,
+            "scrolling rescanned {bracket_scans} bracket ranges; per-line bucketing regressed"
+        );
+        let top = editor.read_with(cx, |editor, _| editor.list.logical_scroll_top());
+        assert!(top.item_ix > 0, "the probe actually scrolled: {top:?}");
+        let _ = text;
+    }
+
+    fn scroll_fixture(
+        cx: &mut gpui::TestAppContext,
+        lines: usize,
+    ) -> (
+        gpui::Entity<super::CodeEditor>,
+        &mut gpui::VisualTestContext,
+    ) {
         use super::*;
         let key = DocumentKey::new("/fixture".into(), "scroll.ts".into());
         let documents = Rc::new(RefCell::new(Documents::default()));
@@ -13614,48 +14326,87 @@ mod tests {
         documents.borrow_mut().finish_load(
             1,
             &key.rel,
-            Some((0..80).map(|line| format!("line {line}\n")).collect()),
+            Some(
+                (0..lines)
+                    .map(|line| format!("function line{line}(value: number) {{ return value; }}\n"))
+                    .collect(),
+            ),
         );
         let (editor, cx) = cx.add_window_view(|window, cx| {
             let editor = CodeEditor::new(key.clone(), documents, cx);
             window.focus(&editor.focus, cx);
             editor
         });
-        cx.simulate_resize(size(px(500.), px(300.)));
+        cx.simulate_resize(size(px(600.), px(320.)));
+        (editor, cx)
+    }
+
+
+    #[gpui::test]
+    fn precise_wheel_input_scrolls_without_animation_frames(cx: &mut gpui::TestAppContext) {
+        use super::*;
+        let (editor, cx) = scroll_fixture(cx, 400);
         let draw = |cx: &mut gpui::VisualTestContext| {
-            cx.draw(point(px(0.), px(0.)), size(px(500.), px(300.)), |_, _| {
+            cx.draw(point(px(0.), px(0.)), size(px(600.), px(320.)), |_, _| {
                 editor.clone().into_any_element()
             });
         };
         draw(cx);
         let before = editor.read_with(cx, |editor, _| editor.list.logical_scroll_top());
         cx.simulate_event(gpui::ScrollWheelEvent {
-            position: point(px(100.), px(100.)),
-            delta: gpui::ScrollDelta::Pixels(point(px(0.), px(-120.))),
+            position: point(px(200.), px(150.)),
+            delta: gpui::ScrollDelta::Pixels(point(px(0.), px(-240.))),
+            ..Default::default()
+        });
+        let after = editor.read_with(cx, |editor, _| editor.list.logical_scroll_top());
+        assert!(
+            after.item_ix > before.item_ix || after.offset_in_item > before.offset_in_item,
+            "precise input lands in the same frame: {before:?} -> {after:?}"
+        );
+        assert!(
+            !editor.read_with(cx, |editor, _| editor.wheel_motion.is_running()),
+            "precise input never queues an animation"
+        );
+    }
+
+    #[gpui::test]
+    fn discrete_wheel_ticks_ease_on_native_frames(cx: &mut gpui::TestAppContext) {
+        use super::*;
+        let (editor, cx) = scroll_fixture(cx, 400);
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(600.), px(320.)), |_, _| {
+                editor.clone().into_any_element()
+            });
+        };
+        draw(cx);
+        let before = editor.read_with(cx, |editor, _| editor.list.logical_scroll_top());
+        cx.simulate_event(gpui::ScrollWheelEvent {
+            position: point(px(200.), px(150.)),
+            delta: gpui::ScrollDelta::Lines(point(0., -3.)),
             ..Default::default()
         });
         let immediate = editor.read_with(cx, |editor, _| editor.list.logical_scroll_top());
         assert_eq!(
             (immediate.item_ix, immediate.offset_in_item),
             (before.item_ix, before.offset_in_item),
-            "native list scroll is rewound before the smooth animation"
+            "a discrete tick is rewound before it eases"
         );
-        cx.executor().advance_clock(Duration::from_millis(16));
-        cx.run_until_parked();
-        draw(cx);
-        let first_frame = editor.read_with(cx, |editor, _| editor.list.logical_scroll_top());
-        assert!(
-            first_frame.item_ix > before.item_ix
-                || first_frame.offset_in_item > before.offset_in_item,
-            "the first animation frame advances the viewport"
-        );
-        cx.executor().advance_clock(Duration::from_millis(16 * 20));
-        cx.run_until_parked();
-        draw(cx);
+        assert!(editor.read_with(cx, |editor, _| editor.wheel_motion.is_running()));
+        let mut frames = 0;
+        while editor.read_with(cx, |editor, _| editor.wheel_motion.is_running()) && frames < 40 {
+            cx.executor().advance_clock(Duration::from_millis(8));
+            cx.update(|window, cx| {
+                window.simulate_next_frame(cx);
+            });
+            cx.run_until_parked();
+            draw(cx);
+            frames += 1;
+        }
+        assert!(frames < 40, "the eased scroll converges");
         let after = editor.read_with(cx, |editor, _| editor.list.logical_scroll_top());
         assert!(
-            after.item_ix >= 6,
-            "the smooth animation converges on the native wheel target: {after:?}"
+            after.offset_in_item > before.offset_in_item || after.item_ix > before.item_ix,
+            "the tick reached its destination: {before:?} -> {after:?}"
         );
     }
 
@@ -15613,7 +16364,7 @@ mod tests {
                     .expect("matching logical line must be painted");
                 assert!(editor.bounds.unwrap().contains(&position), "{position:?}");
                 assert!(
-                    editor.painted.len() < 100,
+                    editor.painted.borrow().len() < 100,
                     "Find must not render the entire file"
                 );
                 assert_eq!(editor.find_matches.ranges.len(), 1);
@@ -15870,7 +16621,7 @@ mod tests {
             );
             assert!(editor.list.logical_scroll_top().item_ix > 5900);
             assert!(
-                editor.painted.len() < 200,
+                editor.painted.borrow().len() < 200,
                 "offscreen rows must remain virtualized"
             );
         });

@@ -37,6 +37,14 @@ execution protocol only summarize and route to this owner.
 prior conversations remain available from Recents. It does not automatically
 reopen the last conversation.
 
+The workspace `dev` profile builds at `opt-level = 1` (see the root `Cargo.toml`).
+An unoptimized GPUI frame costs ~15x more, which is visible as input lag while
+scrolling the editor (measured 15-18 ms per scroll frame at `opt-level = 0` vs
+~1.2 ms at level 1 and ~0.9 ms in release). Keep the profile: a unit test fails
+if `[profile.dev] opt-level` is removed or lowered. The trade-off is slower cold
+compiles for dependencies; the first build after changing profile settings
+rebuilds the graph.
+
 Release build and run:
 
 ```sh
