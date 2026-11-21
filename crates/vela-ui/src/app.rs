@@ -53,8 +53,32 @@ const OPENCODE_INTER_FONT: &[u8] = include_bytes!("../assets/opencode-inter.ttf"
 /// single-panel layout keeps its fixed source width; tiled mode needs more room
 /// for legible side-by-side transcripts.
 const TILED_PANEL_FRACTION: f32 = 0.68;
+/// Source caps the agent composer at `min(100%, 105ch)`
+/// (`.agent-panel [data-component="session-prompt-dock"] > .composer`). At the
+/// 13px UI font that is 105 x the zero advance of the macOS system font
+/// (~7.75px), so the composer never spans a wide workspace panel.
+const AGENT_COMPOSER_MAX_WIDTH: f32 = 814.0;
 /// Height reserved for the browser download shelf while it is open.
 const BROWSER_DOWNLOADS_HEIGHT: f32 = 108.0;
+
+/// Centre the composer at Source's capped width; the full-width shell around it
+/// keeps the dock's background and key handling unchanged.
+fn composer_column(content: AnyElement) -> AnyElement {
+    div()
+        .debug_selector(|| "composer-slot".into())
+        .w_full()
+        .flex()
+        .justify_center()
+        .child(
+            div()
+                .debug_selector(|| "composer-column".into())
+                .w_full()
+                .max_w(px(AGENT_COMPOSER_MAX_WIDTH))
+                .min_w_0()
+                .child(content),
+        )
+        .into_any_element()
+}
 
 fn validation_summary_label(errors: usize, warnings: usize) -> String {
     match (errors, warnings) {
@@ -9018,20 +9042,25 @@ impl VelaApp {
         }
 
         let send_session = session.clone();
-        let mut composer = div()
+        let composer_shell = div()
             .w_full()
             .flex_shrink_0()
             .p(px(8.))
             .border_t_1()
             .border_color(theme.border)
-            .flex()
-            .flex_col()
-            .gap(px(3.))
             .on_key_down(cx.listener(move |app, event: &KeyDownEvent, window, cx| {
                 if app.on_tile_composer_key(&send_session, event, window, cx) {
                     cx.stop_propagation();
                 }
             }));
+        let mut composer = div()
+            .w_full()
+            .max_w(px(AGENT_COMPOSER_MAX_WIDTH))
+            .mx_auto()
+            .min_w_0()
+            .flex()
+            .flex_col()
+            .gap(px(3.));
         if let Some(input) = input {
             let send = session.clone();
             let attach = session.clone();
@@ -9269,6 +9298,8 @@ impl VelaApp {
             }
         }
 
+        let composer = composer_shell.child(composer);
+
         let tile_forms = (!panel.forms.is_empty()).then(|| {
             let dock = self.tile_form_dock(&session, cx);
             div()
@@ -9307,7 +9338,7 @@ impl VelaApp {
                 .flex_col()
                 .child(rich_transcript)
                 .child(forms)
-                .child(rich_composer)
+                .child(composer_column(rich_composer))
                 .into_any_element(),
             None => div()
                 .flex_1()
@@ -9394,8 +9425,10 @@ impl VelaApp {
                 .into_any_element(),
             }
         };
+        let tile_selector = format!("panel-tile-{session}");
         let mut tile = div()
             .id(SharedString::from(format!("panel-tile-{session}")))
+            .debug_selector(move || tile_selector.clone())
             .role(Role::TabPanel)
             .aria_label(panel.title.clone())
             .relative()
@@ -10032,7 +10065,7 @@ impl VelaApp {
                 .when_some(notice, |body, notice| body.child(notice))
                 .child(self.render_transcript(window, cx))
                 .child(self.forms.clone())
-                .child(self.render_composer(window, cx))
+                .child(composer_column(self.render_composer(window, cx)))
                 .child(self.render_picker(cx))
                 .when(!self.is_codex() && (timer.is_some() || options.is_some()), |body| {
                     let mut row = div()
@@ -18314,6 +18347,77 @@ mod tests {
         assert_eq!(workspaces[0].directory, "/work/demo");
         assert_eq!(workspaces[0].name, "demo");
         runtime.block_on(engine.shutdown_and_wait());
+    }
+
+    #[gpui::test]
+    fn agent_mode_composer_is_capped_and_centred(cx: &mut gpui::TestAppContext) {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let engine = Engine::spawn(vela_engine::EngineConfig::default(), runtime.handle());
+        let settings = engine.settings();
+        let pending = Rc::new(std::cell::RefCell::new(PendingOpenPaths::default()));
+        let engine_for_app = engine.clone();
+        let (app, cx) = cx.add_window_view(move |_, cx| {
+            VelaApp::new(engine_for_app, settings, None, pending, cx)
+        });
+        cx.simulate_resize(size(px(1600.), px(900.)));
+        let draw = |cx: &mut gpui::VisualTestContext| {
+            cx.draw(point(px(0.), px(0.)), size(px(1600.), px(900.)), |_, _| {
+                app.clone().into_any_element()
+            });
+        };
+        app.update(cx, |app, cx| {
+            app.bootstrapped = true;
+            app.loading = false;
+            app.workspace_closed = false;
+            app.active_id = Some("ses_wide".into());
+            app.panels
+                .open(crate::panels::PanelState::new("ses_wide", "Wide"))
+                .unwrap();
+            app.panels.activate("ses_wide");
+            app.agent_mode = true;
+            app.agent_panel_open = true;
+            app.ensure_panel_input("ses_wide", cx);
+        });
+        draw(cx);
+        let column = cx
+            .debug_bounds("composer-column")
+            .expect("composer column renders");
+        let width = f32::from(column.size.width);
+        assert!(
+            (width - AGENT_COMPOSER_MAX_WIDTH).abs() <= 1.,
+            "a single full-width panel still caps the composer; width was {width}"
+        );
+        let slot = cx
+            .debug_bounds("composer-slot")
+            .expect("composer slot renders");
+        let left = f32::from(column.left() - slot.left());
+        let right = f32::from(slot.right() - column.right());
+        assert!(
+            (left - right).abs() <= 2.,
+            "composer is centred (left {left}, right {right})"
+        );
+
+        // Two tiles are narrower than the cap, so each composer fills its own
+        // panel instead of the workspace.
+        app.update(cx, |app, cx| {
+            app.panels
+                .open(crate::panels::PanelState::new("ses_other", "Other"))
+                .unwrap();
+            app.ensure_panel_input("ses_other", cx);
+            app.panels.activate("ses_wide");
+        });
+        draw(cx);
+        let tile_composer = cx
+            .debug_bounds("composer-column")
+            .expect("tiled composer renders");
+        let tile_width = f32::from(tile_composer.size.width);
+        assert!(
+            tile_width < AGENT_COMPOSER_MAX_WIDTH,
+            "a tile composer stays inside its panel; width was {tile_width}"
+        );
     }
 
     #[gpui::test]
