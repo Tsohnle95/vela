@@ -30,6 +30,9 @@ documents from its own scope.
 ## Editor behavior
 
 - One logical line is wrapped and virtualized; only visible lines are painted.
+- A render never rescans the document: per-frame analyses (occurrences, matching
+  pair, signature help, hover) are cached by buffer revision plus caret/index, and
+  syntax/bracket spans are bucketed per line so scrolling is O(visible lines).
 - Native input supports Unicode, selection, clipboard, undo/redo, composition
   ranges, and platform UTF-16 accessibility ranges. OS IME sessions remain a
   live-validation gap.
@@ -50,8 +53,8 @@ documents from its own scope.
 
 | Concern | Modules |
 |---|---|
-| Syntax/grammar/folding | `syntax.rs`, `brackets.rs`, `inline_code.rs` |
-| Diagnostics | `diagnostics.rs`, `semantic.rs`, duplicate validators (`calls`, `class_members`, `destructuring`, `enums`, `export_duplicates`, `import_duplicates`, `interfaces`, `object_keys`, `switch_cases`, `type_*`) |
+| Syntax/grammar/folding | `syntax.rs` (tokens + shared token palette; the editor resolves its language like Source's `languageForPath` and buckets spans per line), `brackets.rs`, `inline_code.rs` |
+| Diagnostics | `diagnostics.rs`, `semantic.rs`, `object_types.rs`, `member_access.rs`, duplicate validators (`calls`, `class_members`, `destructuring`, `enums`, `export_duplicates`, `import_duplicates`, `interfaces`, `object_keys`, `switch_cases`, `type_*`) |
 | Completion/editing aids | `completion.rs`, `emmet.rs`, `auto_import.rs`, `code_actions.rs` |
 | Navigation/understanding | `hover.rs`, `signature.rs`, `symbols.rs`, `rename.rs`, `highlights.rs` |
 | Formatting | `formatting.rs` |

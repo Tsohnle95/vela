@@ -12426,3 +12426,486 @@ editor/docked layout. The panel is temporarily rendered in flex mode for this
 path without changing the shell's agent-mode state.
 
 Canonical gate: `codex-conversation-width-gate.txt` (1074/0/3).
+
+## Editor comment and import folding (2026-11-19)
+
+Source's bundled TypeScript worker folds two span kinds while outlining that
+native did not: consecutive own-line `//` comments and runs of `import`
+declarations (`getOutliningSpans` → `Comment`/`Imports`). Native already folded
+block comments, `#region` markers, indentation, braces and markup containers.
+
+JavaScript/TypeScript-family documents now fold both. A comment run only folds
+when it holds two or more own-line comments and is broken by any line that is
+not a comment, so a single comment and a comment trailing code never fold. An
+import run spans consecutive declarations, including blank lines between them
+and multi-line specifier lists, and only folds when it covers more than one
+line. Both stay language-gated: Python never gains import folds and CSS never
+gains line-comment folds. A comment run containing a `#region` delimiter still
+folds as one comment range instead of splitting at the delimiter like
+`getOutliningSpans`.
+
+Focused tests cover the run rules, the single-line and comment-after-code
+exclusions, the multi-line import span, a lone import, and the per-language
+gates.
+
+Canonical gate: `editor-folding-comment-import-gate.txt` (813/0/3).
+
+## JSON diagnostics follow the JSON worker (2026-11-19)
+
+Source's JSON worker reports many syntax errors with specific messages; the
+native provider parsed with serde and surfaced only the first parser error as
+raw serde text. `.jsonc` was not routed at all.
+
+The native provider is now a bounded scanner that reports the worker's
+messages: `Value expected`, `Expected comma`, `Trailing comma`, `Property keys
+must be double-quoted`, `Expected ':'`, `Expected '}'`/`Expected ']'`,
+`Invalid number`, `Unexpected end of string`, `End of file expected` and
+`Comments are not permitted in JSON.`. It recovers by skipping to the end of
+the broken container, so one bad object yields one row instead of a cascade,
+while independent comments each report. `.json` rejects comments and `.jsonc`
+allows them, both routed through `language_diagnostics`. Output is capped at
+100 rows so a pathological document cannot grow the Problems list without
+bound. Trailing commas are anchored at the comma like `_errorAtRange`, so a
+comma on line 2 reports line 2 instead of the parser's later line 3.
+
+Schema validation and jsonc-parser's finer multi-error recovery remain
+unimplemented and are not claimed.
+
+Canonical gate: `editor-json-diagnostics-gate.txt` (814/0/3).
+
+## CSS declaration diagnostics follow the CSS worker (2026-11-19)
+
+The native CSS provider only ran the shared delimiter scanner, so a declaration
+missing its colon or value (`a { color red; }`, `a { color: ; }`) produced no
+diagnostic while Source's CSS worker reports parser errors for both.
+
+CSS files now also run a bounded declaration scanner that reports the worker's
+messages `colon expected`, `property value expected` and `identifier expected`.
+It splits statements only outside strings, parentheses and brackets, treats a
+`{` inside a block as CSS nesting (so nested selectors and at-rule blocks are
+never mistaken for declarations), drops at-rules, ignores `url(data:…;base64,…)`
+colons and semicolons, and accepts declaration blocks without a trailing
+semicolon or with Houdini-style `--custom: { … }` values. Output is capped at
+100 rows and sorted.
+
+False-positive check used the reference's own built stylesheets
+(`out/renderer/assets/vela-live.css` and `@vscode/codicons/dist/codicon.css`):
+zero diagnostics. Those were ad-hoc checks, not committed fixtures; the
+committed test covers each error message plus nesting, at-rules, strings,
+`url()`, missing trailing semicolons and the SCSS exclusion.
+
+The CSS linter rules the worker also enables by default (unknown property,
+unknown at-rule, vendor prefix, empty ruleset, duplicate declarations, hex
+color length, `@font-face` requirements) need Monaco's style database and a
+warning severity model the native problem surface does not have yet; they stay
+unimplemented and unclaimed. SCSS/Less keep the delimiter-only provider.
+
+The first canonical run hit `OSError: [Errno 48] Address already in use` in
+`preview::tests::preview_readiness_failures_exit_diagnostics_and_shutdown_clean_up_children`;
+the test passed in isolation and the authoritative rerun was green, so this is
+recorded as an environmental fixture-port collision rather than a regression.
+
+Canonical gate: `editor-css-diagnostics-gate.txt` (815/0/3).
+
+## HTML diagnostics follow the HTML worker (2026-11-19)
+
+`.html`/`.htm` documents had no language diagnostics at all. Source's HTML
+worker reports tokenizer-level errors and never validates element nesting, so
+that is exactly what the native provider now mirrors: `Tag name must directly
+follow the open bracket.`, `Start tag name expected.`, `End tag name expected.`,
+`Closing bracket expected.` and `Unexpected character in tag.`.
+
+The scanner follows the worker's scanner states: element names use its
+`[_:\w][_:\w-.\d]*` shape, attribute names its excluded-character set, quoted
+and unquoted attribute values are consumed, `/>` self-closes, comments,
+doctypes and processing instructions are skipped, and `<script>`, `<style>`,
+`<textarea>` and `<title>` contents stay literal until their own closing tag so
+`if (a < b)` and `"</div>"` inside script text cannot produce false errors.
+Nesting, unclosed elements, `<>` and `</>` stay silent like the worker. Output
+is capped at 100 rows and sorted.
+
+False-positive checks ran the scanner over three real HTML pages in the
+reference design tree; all were clean (ad-hoc checks, not committed fixtures).
+The committed test covers every message, the silent cases, raw-text handling,
+comments/doctypes, attribute quoting, custom elements and the `.htm` route.
+The worker's data-driven tag/attribute validation remains unimplemented.
+
+Canonical gate: `editor-html-diagnostics-gate.txt` (816/0/3).
+
+## SCSS and Less share the declaration parser (2026-11-19)
+
+SCSS and Less previously ran only the delimiter scanner, so `color red;` inside
+a rule produced nothing while Source's shared CSS/SCSS/Less worker reports the
+same parser errors it reports for CSS.
+
+Both languages now run the CSS declaration parser with their own source labels
+(`SCSS`, `Less`) and preprocessor handling:
+
+- `//` line comments are skipped (outside parentheses), so comment text can
+  contain `;` or `{` without corrupting statements;
+- `$name: value` (SCSS) and `@name: value` (Less) variable declarations and
+  `@`-directives (`@include`, `@extend`, `@if`, `@mixin`, …) are never treated
+  as declarations;
+- statements starting with `.`, `#`, `&`, `%`, `[`, `>`, `+`, `~`, `*` or `:`
+  stay selector/mixin-call syntax, covering `%placeholder` rules, nested `&`
+  rules, `#id()` and Less `.mixin();` calls;
+- nested property blocks (`font: { family: … }`) and map/paren values keep
+  working.
+
+False-positive validation covered all 38 `.scss`/`.less` sources under the
+reference design and styles trees: zero diagnostics (ad-hoc, not committed
+fixtures). The committed test covers both new error labels plus each skipped
+preprocessor form for SCSS and Less.
+
+The worker's data-driven linter rules (unknown property, vendor prefixes, empty
+rulesets, duplicate declarations, hex color lengths) remain unimplemented for
+all three style languages; they need Monaco's style database and a warning
+severity model.
+
+Canonical gate: `editor-scss-declarations-gate.txt` (817/0/3).
+
+## CSS lint warnings match the worker (2026-11-19)
+
+Source's CSS/SCSS/Less worker reports parser errors plus lint findings at
+warning severity. Native had no severity concept at all: every diagnostic
+painted a red gutter marker and a red banner, so the data-light lint rules were
+skipped.
+
+`DiagnosticKind::Lint` now carries warning severity (`Diagnostic::is_warning`).
+The editor picks the first error for its banner and falls back to the first
+warning with a yellow accent, and a line with only warnings gets a yellow
+`editor-warning-marker-{line}` instead of the red error marker. Error kinds keep
+their red treatment.
+
+The style provider now reports the worker's data-light rules verbatim:
+
+- `Do not use empty rulesets` (warning) for selector rulesets with no content,
+  while at-rule blocks such as `@media {}` stay exempt like the visitor;
+- `Do not use duplicate style definitions` (warning) for repeated property
+  names, with the worker's `background` and leading-`-` value exemptions;
+- `Hex colors must consist of three, four, six or eight hex numbers` (error),
+  skipping `url(...)` contents so fragments cannot trip it;
+- `@font-face rule must define 'src' and 'font-family' properties` (warning);
+- `Unknown at rule @name` (warning) against a bounded at-rule set that includes
+  `layer`, `container`, `scope`, `property`, `font-palette-values`,
+  `position-try`, `view-transition`, `startup-style` and vendor-prefixed
+  `keyframes`; SCSS/Less directives are never reported.
+
+A lint survey over 90 real stylesheets (reference design SCSS, app SCSS and the
+built Monaco/vela CSS) produced only genuine findings: duplicate
+`border-radius`/`color` declarations in `vela-live.css` and no at-rule or
+hex-color false positives. Those were ad-hoc checks; the committed tests cover
+each rule, the exemptions, the known-at-rule set and the rendered warning
+marker/banner.
+
+The data-driven rules (unknown property, vendor prefixes, color-function arity,
+display-aware properties) still need Monaco's style database and remain
+unimplemented.
+
+Canonical gate: `editor-css-lint-gate.txt` (819/0/3).
+
+## Script keywords and local member completion (2026-11-19)
+
+Completion in JavaScript/TypeScript files was document-word only, so a keyword
+prefix (`fun`, `con`) and any `this.`/instance member list offered nothing
+beyond words already in the buffer. Source's TypeScript worker supplies
+keywords, snippets and type-checked members.
+
+The native provider now adds two bounded sets:
+
+- **Keywords.** JavaScript keywords plus TypeScript-only keywords (`interface`,
+  `type`, `enum`, `satisfies`, …). They are appended after document words so
+  locals keep the top of the popup, are filtered by the typed prefix, never
+  repeat the word already under the caret, and are suppressed after a
+  field-access dot.
+- **Local members.** After `this.` inside a class body the provider lists class
+  fields, static members, getters and methods declared above the caret, skipping
+  modifiers (`static`, `get`, `async`, visibility, `readonly`, …). After
+  `identifier.` it lists the top-level keys of a local `const`/`let`/`var`
+  object literal, including quoted keys and shorthand properties. Unknown
+  receivers contribute no members.
+
+Type-checked member lists, snippets and the worker's remaining semantic sets
+remain unimplemented and unclaimed.
+
+Canonical gate: `editor-script-completion-gate.txt` (820/0/3).
+
+## Object-literal type diagnostics (2026-11-19)
+
+Source's TypeScript worker reports excess-property errors on object literals
+assigned to an annotated binding and missing-required-property errors on the
+same shape. Native had literal/annotation mismatch checks but neither of these.
+
+`object_types.rs` adds both for object types declared in the same document
+(`interface Name { … }` and `type Name = { … }`):
+
+- `Object literal may only specify known properties, and '{key}' does not exist
+  in type '{Name}'.` at the offending key;
+- `Property '{name}' is missing in type '{Name}'.` at the annotated type (the
+  worker renders the literal's inferred type instead; the native wording is
+  bounded).
+
+The provider skips generic, `extends`-ing and index-signature types, literals
+that spread another value, computed keys, non-local type names and nested
+literals (only top-level keys are compared), so it never guesses. New
+`DiagnosticKind::UnknownProperty`/`MissingProperty` kinds carry the findings and
+their code-action arms stay empty.
+
+Two real defects were found and fixed while validating against the reference
+tree: an imported `type Name` in an import list could capture a later alias body
+(now an alias must be followed by `=`), and a comma inside generic arguments
+(`new Map<string, FileBaseline>()`) could invent keys (segments now require a
+property terminator). A byte-index panic on multi-byte source was also fixed.
+
+A survey over all 471 reference `.ts`/`.tsx` sources produced zero findings
+(ad-hoc, not committed). Committed tests cover excess/missing, aliases,
+optional/index/extends/generic exclusions, spread/computed/nested literals,
+quoted keys, methods, shorthand and offsets.
+
+Type-checked assignability beyond these checks and the worker's remaining type
+diagnostics stay unimplemented.
+
+Canonical gate: `editor-object-type-diagnostics-gate.txt` (825/0/3).
+
+## Literal argument type checks (2026-11-19)
+
+Call sites to locally declared functions only reported argument counts. Source's
+TypeScript worker also reports `Argument of type 'number' is not assignable to
+parameter of type 'string'.` for an argument whose literal kind cannot satisfy
+the parameter annotation.
+
+`calls.rs` now carries each parameter's annotation (skipping rest parameters)
+and compares literal arguments after the count check passes:
+
+- string, number, boolean and `null` literals are compared against primitive
+  parameter annotations and unions of them (`any`/`unknown` accept everything);
+- identifiers, expressions, template interpolation, object and array literals,
+  named/literal/array/function parameter types and rest parameters stay
+  unreported, so the provider only speaks when the kind is unambiguous;
+- a count mismatch keeps its existing message instead of adding type errors.
+
+A survey over all 471 reference `.ts`/`.tsx` sources produced zero argument-type
+findings (ad-hoc, not committed). Committed tests cover the mismatch, matching
+literals, unions, optional and defaulted parameters, the exclusions above and
+the count-first behaviour.
+
+Deeper assignability (object/array element types, generics, overloads) and the
+worker's remaining type diagnostics stay unimplemented.
+
+Canonical gate: `editor-argument-type-gate.txt` (826/0/3).
+
+## JSX alignment verified against the TypeScript formatter (2026-11-19)
+
+Two JSX/TSX indentation defects remained: a start tag opened on an earlier line
+(`<Row` … `/>`) never popped the tag it pushed, so the closing `))}` and every
+later sibling stayed one level too deep; and an arrow-function block body
+(`=> {`) added two JSX expression levels, so callback bodies and their closing
+braces were indented one level too far.
+
+`formatting.rs` now tracks a pending start tag until its `>`/`/>` (popping the
+opener on a self-closing continuation, ignoring `>` inside braces or strings)
+and counts an `=> {` block as one indentation level rather than another
+expression brace.
+
+The expected outputs were generated with TypeScript 5.9.3's
+`getFormattingEditsForDocument` (2-space indent) — the same formatter Source's
+TypeScript worker runs — over 14 shapes: nested elements, fragments, multi-line
+self-closing tags, attribute continuations, arrow callbacks with expression and
+block bodies, nested callbacks, conditionals, `&&` expressions, JSX comments,
+JSX arrays and `return (`. Native output now matches all 14 exactly; the
+committed test embeds those expected strings.
+
+JSX expression nesting beyond this corpus (for example `} else {` chains inside
+an expression container) remains unverified.
+
+Canonical gate: `editor-jsx-alignment-gate.txt` (827/0/3).
+
+## `this.` member diagnostics (2026-11-19)
+
+Source's TypeScript worker reports `Property 'x' does not exist on type 'Name'.`
+for a class body reading a member the class never declares. Native had no
+member-existence check.
+
+`member_access.rs` adds it for TypeScript classes declared in the same document:
+fields, methods, accessors, private `#members`, quoted names and constructor
+parameter properties count as members; a method literally named `get`/`set` is
+recognised as a member rather than an accessor modifier. Classes that extend
+another class, declare computed members, or live in JavaScript files are skipped
+so the provider never guesses. New `DiagnosticKind::UnknownMember` carries the
+findings (no quick fix yet).
+
+Validating against the reference tree exposed two genuine defects, both fixed:
+
+- the shared `semantic::mask_comments` treated the `//` inside a regex literal
+  (`/\/\*# sourceMappingURL=…/g`) as a line comment and blanked the rest of the
+  line, losing closing brackets for every provider that uses the mask. Regex
+  literals in expression position are now blanked whole (escapes and character
+  classes handled) before comment detection;
+- a method named `get` was swallowed as an accessor modifier, so `this.get()`
+  reported a missing member.
+
+After both fixes a combined survey over all 471 reference `.ts`/`.tsx` sources
+reported zero object-type, argument-type and member findings (ad-hoc, not
+committed). Committed tests cover unknown members, constructor parameter
+properties, accessors, private/quoted members, the `get`/`set` method case, the
+keyword/extending/computed/JavaScript exclusions, offsets and the regex masker.
+
+Deeper assignability (inheritance, generics, declaration merging) stays
+unimplemented.
+
+Canonical gate: `editor-member-access-gate.txt` (833/0/3).
+
+## Editor functional phase audit (2026-11-19)
+
+The user asked to finish editor functionality item by item before moving to live
+desktop checks. Every row in the matrix's "Workspace, editor, and files" section
+was re-read against current source, tests and the reference. Disposition:
+
+| Row | Disposition |
+|---|---|
+| File explorer | Implemented to Source's controls; Source's tree keyboard handler is only Escape + Delete/Backspace, which native matches. Remaining: visual/keyboard acceptance only. |
+| File open/save | Implemented; OS Quit routing is in place with live evidence. Remaining: failure paths and visuals. Save journaling is native-only hardening (Source has no journal), not a parity gap. |
+| Editor capabilities | Implemented as bounded local providers (folding, JSON/CSS/HTML/SCSS/Less diagnostics, CSS lint + severity, script keywords/local members, object-literal and `this.` member types, argument types, JSX alignment verified against TypeScript 5.9.3). Remaining: Monaco data-driven sets (unknown CSS property/at-rule data, HTML tag/attribute data), type-checked completions/snippets and assignability beyond the bounded corpus. |
+| LSP / diagnostics | N/A by architecture: bounded providers, no embedded Monaco or external LSP. |
+| File create/rename/move/delete | Implemented including the exact Source context-menu labels, ordering and multi-select behaviour (label/action tests). Remaining: non-macOS Trash, remaining root/panel edge actions, paired visuals. |
+| External file drop / import | Implemented and tested; remaining: live physical drag and paired visuals. |
+| File watching / changes | Implemented including agent tool-input baselines; remaining: live tool-event timing, full paired projection visuals. |
+| Diff view | Implemented; remaining: live acceptance, VoiceOver/platform accessibility, paired visuals. |
+| Git status/branch | N/A: current Source has no branch/status/staging UI. |
+| Recovery artifacts | Implemented (manifests, proposals, install/reconcile, retention, legacy import); remaining: cross-platform/live exercise and exact visuals. |
+| Sass watcher | Implemented (pinned compiler, shared owners, preferences, logs, selection/copy, status metadata); remaining: platform and paired visuals. |
+| Vite preview | Implemented (processes, ordering, stop controls, exit cleanup); remaining: live/visual acceptance. |
+| W3C validation | Implemented (engine validation, parsing, Problems/status integration, cancel/retry); remaining: live validator/network and visuals. |
+| DevTools/source links | N/A (no Electron); a native inspector remains unplanned. |
+
+Verification run for this audit: the section's own test owners all pass — UI
+editor 164, explorer 7, changes 16, core document 29, engine observation 16,
+engine recovery 14 — plus the full canonical gate.
+
+No code-only editor functionality item remains that is not either (a) the
+explicitly deferred live/paired acceptance phase, (b) a documented non-goal
+(Monaco data/LSP parity), or (c) native-only hardening with no Source
+counterpart. The editor phase is therefore functionally complete at the
+project's bounded-provider, macOS-first scope; the next phase is live desktop
+and paired visual acceptance.
+
+Canonical gate: `editor-phase-audit-gate.txt` (833/0/3).
+
+## The editor applies syntax highlighting (2026-11-20)
+
+Reported by the user after opening the editor: every line rendered in a single
+colour (theme text), so dark themes showed white code and light themes dark
+code. The tokenizer existed but was only consumed by transcript code fences;
+`CodeLine::prepaint` built its glyph runs from bracket colourization plus
+`theme.text`, so the editor never coloured a token.
+
+Fixed:
+
+- `editor_language` resolves a document path to a tokenizer the way Source's
+  `languageForPath` resolves to a Monaco language (ts/tsx→typescript,
+  js/jsx→javascript, json, css, scss/sass/less→sass, html, markdown, py, rb, go,
+  rs, java, c/h, cpp, cs, php, swift, kt, shell, yaml, toml, ini, xml, sql,
+  dockerfile, graphql, diff, lua, r, scala, dart, elixir, haskell, clojure,
+  julia, ocaml, erlang, elm, zig, protobuf); unknown paths stay plain.
+- The token palette moved into `syntax::color` so transcript fences and the
+  editor share one GitHub-style mapping (keyword/string/number/comment/
+  function/property/type/tag, light and dark).
+- Spans are highlighted when the buffer revision changes (skipping documents
+  above 2 MB), bucketed per logical line so painting a line never scans the
+  whole file, and merged with bracket colours — brackets win, then token
+  colours, then `theme.text` — through `line_text_runs`, which maps source
+  offsets through expanded tabs.
+
+Evidence: unit tests cover the path mapping, token colours through expanded
+tabs (runs stay gap-free and contain keyword/string colours), and a rendered
+test opens a `.ts` document and asserts the painted glyph runs contain the
+keyword and string palette colours rather than one flat colour.
+
+Canonical gate: `editor-syntax-highlighting-gate.txt` (836/0/3).
+
+## Composer keeps Source's maximum width (2026-11-20)
+
+Reported with a screenshot: in Agent Mode a full-width panel stretched the
+prompt box across the whole window (~1255px). Source caps the dock child at
+`min(100%, 105ch)`:
+
+- `.agent-panel [data-component="session-prompt-dock"] > .composer { width: min(100%, 105ch); margin-inline: auto; }`
+- `[data-component="session-prompt-dock"] > * { max-width: min(100%, 140ch); }`
+
+At the 13px UI font the macOS system font's zero advance is ~7.75px, so 105ch is
+~814px. `AGENT_COMPOSER_MAX_WIDTH = 814` now caps and centres the composer in
+all three hosts: the main conversation, the focused tile's rich composer, and
+the inactive tile composer (whose full-width shell keeps the dock background and
+key handling while its inner column is capped). Tiles narrower than the cap
+still let the composer fill their own panel (`min(100%, cap)`).
+
+A rendered test opens a 1600px-wide window in Agent Mode and asserts the
+composer column is exactly the cap and centred in its slot, then opens a second
+tile and asserts the tiled composer stays inside its narrower panel. A
+`panel-tile-{session}` debug selector was added for panel-relative geometry, and
+two test attributes were repaired after an insertion ate them.
+
+Canonical gate: `composer-max-width-gate.txt` (837/0/3).
+
+## Editor scrolling is O(visible lines) (2026-11-20)
+
+Reported: opening a file and scrolling lagged immediately. Every render did
+document-sized work even though scrolling changes neither text nor caret:
+
+- `word_occurrences` scanned the whole buffer for caret-word highlighting;
+- `brackets::matching_pair` scanned the whole buffer for bracket matching;
+- `signature::signature_help` scanned the whole buffer for call context;
+- `aria_value` cloned the entire buffer text into a `SharedString`;
+- each painted line cloned the document-wide bracket-colour vector and scanned
+  it in full (`bracket_display_runs`), making a frame O(visible x document);
+- hover re-ran `hover_at` on every pointer move over a symbol.
+
+Fixes:
+
+- occurrence highlighting, matching-pair lookups, signature help and hover are
+  cached by (buffer revision, caret / pointer index), so a scroll re-render is
+  all cache hits; the accessibility value is refreshed only when the text
+  changes;
+- token spans and bracket colours are bucketed per logical line, so a painted
+  line scans only its own colours;
+- the paint-probe write used by the rendered highlighting test is `#[cfg(test)]`
+  instead of mutating the editor entity on every frame.
+
+Reproduction test `scrolling_a_large_file_does_not_rescan_the_document` opens a
+1,500-line TypeScript file, scrolls six frames, and reads deterministic probes
+(document text scans and bracket ranges considered). Simulating the pre-fix
+behaviour measured **72 document text scans and 5,940,000 bracket-range
+iterations**; the fixed code measures **0 text scans and 3,960 bracket
+iterations** during the same six frames.
+
+Canonical gate: `editor-scroll-performance-gate.txt` (838/0/3).
+
+## Editor frames fit the budget in dev builds (2026-11-20)
+
+Follow-up after the O(visible)-lines fixes: scrolling still felt slightly delayed
+with occasional stutter. Instrumented prepaint/shape/paint and render counts with
+a scratch probe, then compared profiles on a 1,200-line document:
+
+| Profile | Static redraw | Scroll frame |
+|---|---|---|
+| dev, `opt-level = 0` (before) | 10.8 ms | 15.6-18.2 ms |
+| dev, `opt-level = 1` | 0.76 ms | **1.2 ms** |
+| release | 0.74 ms | 0.94 ms |
+
+So the remaining latency was unoptimized code, not algorithmic work: prepaint and
+paint together were only ~2.2 ms and ~2.4 ms per frame; the rest was GPUI layout
+and element work compiled without optimization. Interactive development runs the
+real frame loop, so the workspace `dev` profile now builds at `opt-level = 1`
+(root `Cargo.toml`, documented in `docs/development.md`). That is ~13x faster
+frames with headroom inside a 16.6 ms budget, and the same setting makes the
+debug test suite faster too.
+
+Alongside it: precise trackpad wheel input scrolls immediately in the native
+list (no animation queue), discrete wheel ticks ease on native window frames via
+`WheelMotion` instead of a drifting 16 ms background timer, and the editor's
+`painted` cache left the entity so painting a line no longer mutates the editor.
+A unit test asserts `[profile.dev] opt-level >= 1` so the frame budget cannot be
+removed by accident; deterministic probe tests cover the per-line bucketing and
+both wheel paths.
+
+Canonical gate: `editor-frame-budget-gate.txt` (840/0/3).
